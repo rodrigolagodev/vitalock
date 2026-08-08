@@ -1,0 +1,7 @@
+{
+  "extends": "@vitalock/config-typescript/react-library.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "composite": true
+  }
+}

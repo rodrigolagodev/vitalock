@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "apps/admin" },
+    { "path": "apps/installer" },
+    { "path": "packages/ui" },
+    { "path": "packages/supabase" },
+    { "path": "packages/shared" }
+  ]
+}

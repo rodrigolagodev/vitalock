@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+.turbo
+.vite
+pnpm-lock.yaml
+packages/supabase/src/database.types.ts
+supabase/.branches
+supabase/.temp

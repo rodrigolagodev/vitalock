@@ -1,0 +1,27 @@
+{
+  "name": "@vitalock/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tailwind.preset.js": "./tailwind.preset.js",
+    "./globals.css": "./globals.css"
+  },
+  "dependencies": {
+    "clsx": "2.1.1",
+    "tailwind-merge": "2.5.4"
+  },
+  "devDependencies": {
+    "@vitalock/config-typescript": "workspace:*",
+    "@vitalock/config-eslint": "workspace:*",
+    "eslint": "9.13.0",
+    "typescript": "5.6.3",
+    "tailwindcss": "3.4.14",
+    "tailwindcss-animate": "1.0.7"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  }
+}

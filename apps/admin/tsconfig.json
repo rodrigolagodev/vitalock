@@ -1,0 +1,11 @@
+{
+  "extends": "@vitalock/config-typescript/vite-app.json",
+  "include": ["src", "vite.config.ts"],
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}

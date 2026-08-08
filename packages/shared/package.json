@@ -1,0 +1,21 @@
+{
+  "name": "@vitalock/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "zod": "3.23.8" },
+  "devDependencies": {
+    "@vitalock/config-typescript": "workspace:*",
+    "@vitalock/config-eslint": "workspace:*",
+    "@types/node": "22.7.5",
+    "eslint": "9.13.0",
+    "typescript": "5.6.3",
+    "vitest": "2.1.4"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  }
+}
