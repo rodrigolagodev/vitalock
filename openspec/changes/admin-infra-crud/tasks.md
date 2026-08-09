@@ -57,21 +57,21 @@ Chain strategy: stacked-to-main
 
 ## Phase 2 — PR2: BuildingDetailPage + Units CRUD (→ main after PR1)
 
-- [ ] 2.1 Install shadcn primitive for PR2: `tabs` (+ `@radix-ui/react-tabs`) into `apps/admin/src/components/ui/`.
-- [ ] 2.2 Create `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` — fetches `buildingKey(id)`, renders header (name + status badge) + `<Tabs defaultValue="unidades">`; tab state via `useSearchParams()` (`?tab=unidades|equipos`); Equipos tab content is placeholder until PR3. Satisfies: Route Tree (deep link), Tab state via URL.
-- [ ] 2.3 Create `apps/admin/src/hooks/useUnits.ts` — TanStack Query keyed by `unitsKey(buildingId)`; selects identifier/name/status/is_administrative ordered by identifier.
-- [ ] 2.4 Create `apps/admin/src/hooks/useMutateUnit.ts` — `createUnit` (building_id from arg, not form), `updateUnit`, `deactivateUnit`; `onSuccess` invalidates `unitsKey(buildingId)` + toast; `onError` calls `mapMutationError`.
-- [ ] 2.5 Create `apps/admin/src/components/units/UnitFormSheet.tsx` — RHF+Zod; fields: name/identifier, is_administrative (`<Switch>`); building_id pre-populated, hidden; id/created_at absent from form. Satisfies: Create Unit (building_id not in form), Edit Unit, is_administrative Toggle.
-- [ ] 2.6 Create `apps/admin/src/components/units/UnitsTable.tsx` — columns: identifier/name, status, is_administrative, edit + deactivate actions; no delete action. Satisfies: Units List, No Delete.
-- [ ] 2.7 Wire `UnitsTable` + `UnitFormSheet` into BuildingDetailPage Unidades tab. Satisfies: Units List Nested in Building.
-- [ ] 2.8 Add loading skeleton + 404/error boundary to `BuildingDetailPage`. Satisfies: Design risk "loading/404 handling".
+- [x] 2.1 Install shadcn primitive for PR2: `tabs` (+ `@radix-ui/react-tabs`) into `apps/admin/src/components/ui/`.
+- [x] 2.2 Create `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` — fetches `buildingKey(id)`, renders header (name + status badge) + `<Tabs defaultValue="unidades">`; tab state via `useSearchParams()` (`?tab=unidades|equipos`); Equipos tab content is placeholder until PR3. Satisfies: Route Tree (deep link), Tab state via URL.
+- [x] 2.3 Create `apps/admin/src/hooks/useUnits.ts` — TanStack Query keyed by `unitsKey(buildingId)`; selects identifier/name/status/is_administrative ordered by identifier.
+- [x] 2.4 Create `apps/admin/src/hooks/useMutateUnit.ts` — `createUnit` (building_id from arg, not form), `updateUnit`, `deactivateUnit`; `onSuccess` invalidates `unitsKey(buildingId)` + toast; `onError` calls `mapMutationError`.
+- [x] 2.5 Create `apps/admin/src/components/units/UnitFormSheet.tsx` — RHF+Zod; fields: name/identifier, is_administrative (`<Switch>`); building_id pre-populated, hidden; id/created_at absent from form. Satisfies: Create Unit (building_id not in form), Edit Unit, is_administrative Toggle.
+- [x] 2.6 Create `apps/admin/src/components/units/UnitsTable.tsx` — columns: identifier/name, status, is_administrative, edit + deactivate actions; no delete action. Satisfies: Units List, No Delete.
+- [x] 2.7 Wire `UnitsTable` + `UnitFormSheet` into BuildingDetailPage Unidades tab. Satisfies: Units List Nested in Building.
+- [x] 2.8 Add loading skeleton + 404/error boundary to `BuildingDetailPage`. Satisfies: Design risk "loading/404 handling".
 
 ### PR2 Tests
 
-- [ ] 2.9 **RED** `useMutateUnit.test.ts` — happy path create → `invalidateQueries(unitsKey(buildingId))`; happy path `deactivateUnit`; error 23505 with `units_one_admin_per_building` constraint → `mapMutationError` branch produces correct Spanish text; immutable-field contract (building_id NOT sent in `updateUnit` payload).
-- [ ] 2.10 **GREEN** `useMutateUnit.test.ts` — implement until passes.
-- [ ] 2.11 **RED** `UnitFormSheet.test.tsx` — building_id not rendered in form; is_administrative toggle present; on 23505 toast shown and toggle reverted.
-- [ ] 2.12 **GREEN** `UnitFormSheet.test.tsx` — implement until passes.
+- [x] 2.9 **RED** `useMutateUnit.test.ts` — happy path create → `invalidateQueries(unitsKey(buildingId))`; happy path `deactivateUnit`; error 23505 with `units_one_admin_per_building` constraint → `mapMutationError` branch produces correct Spanish text; immutable-field contract (building_id NOT sent in `updateUnit` payload).
+- [x] 2.10 **GREEN** `useMutateUnit.test.ts` — implement until passes.
+- [x] 2.11 **RED** `UnitFormSheet.test.tsx` — building_id not rendered in form; is_administrative toggle present; on 23505 toast shown and toggle reverted.
+- [x] 2.12 **GREEN** `UnitFormSheet.test.tsx` — implement until passes.
 
 ---
 

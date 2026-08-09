@@ -11,6 +11,7 @@ import App from './App';
 import LoginPage from './routes/LoginPage';
 import AuthErrorPage from './routes/AuthErrorPage';
 import BuildingsPage from './routes/buildings/BuildingsPage';
+import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
 import './styles/globals.css';
 
 const env = loadClientEnv(import.meta.env); // fail-fast at boot
@@ -33,8 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route element={<App />}>
                 <Route index element={<Navigate to="/buildings" replace />} />
                 <Route path="buildings" element={<BuildingsPage />} />
-                {/* PR2: /buildings/:buildingId → BuildingDetailPage */}
-                <Route path="buildings/:buildingId" element={<div className="p-4 text-muted-foreground">Detalle del edificio (disponible en PR2)</div>} />
+                <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
               </Route>
             </Route>
           </Routes>

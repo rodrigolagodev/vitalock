@@ -92,6 +92,68 @@
 
 ---
 
-## Remaining Tasks (PR2 + PR3)
+---
 
-Phase 2 (tasks 2.1–2.12) and Phase 3 (tasks 3.1–3.21) are untouched. PR2 scope next.
+## Completed Tasks (PR2 scope — tasks 2.1 → 2.12)
+
+**Batch**: PR2 — BuildingDetailPage + Units CRUD
+**Date**: 2026-08-09
+
+- [x] 2.1 Installed `@radix-ui/react-tabs` via pnpm; created `apps/admin/src/components/ui/tabs.tsx` (standard shadcn Tabs primitive)
+- [x] 2.2 Created `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` — fetches via `useBuilding(id)`; header with building name + status badge; `<Tabs>` with `useSearchParams()` for `?tab=unidades|equipos`; Equipos tab is placeholder; wired into router replacing PR1 placeholder div
+- [x] 2.3 `useUnits.ts` already existed from PR1 (created for BuildingStatusToggle). Selects `id/number/status/is_administrative/building_id` ordered by `number`. No changes needed.
+- [x] 2.4 Created `apps/admin/src/hooks/useMutateUnit.ts` — `createUnit` (building_id from arg), `updateUnit` (building_id NOT in payload), `deactivateUnit`; `onSuccess` invalidates `unitsKey(buildingId)` + toast; `onError` calls `toastMutationError`
+- [x] 2.5 Created `apps/admin/src/components/units/UnitFormSheet.tsx` — RHF+Zod; fields: number + is_administrative (Switch); building_id pre-populated from prop, hidden; id/created_at absent
+- [x] 2.6 Created `apps/admin/src/components/units/UnitsTable.tsx` — columns: number/status/is_administrative/actions; edit + deactivate; no delete action
+- [x] 2.7 Wired `UnitsTable` + `UnitFormSheet` into BuildingDetailPage Unidades tab
+- [x] 2.8 Loading skeleton + 404/null error boundary in `BuildingDetailPage`; also created `apps/admin/src/hooks/useBuilding.ts` for single building fetch via `maybeSingle()`
+- [x] 2.9 Wrote `useMutateUnit.test.ts` (RED phase) — 4 cases: create happy → invalidates unitsKey; deactivate happy → invalidates unitsKey; 23505 error → toastMutationError called; updateUnit payload excludes building_id
+- [x] 2.10 All `useMutateUnit.test.ts` tests pass (GREEN)
+- [x] 2.11 Wrote `UnitFormSheet.test.tsx` (RED phase) — 4 cases: building_id not in DOM; is_administrative toggle present; create submits with building_id from prop; edit calls updateUnit without building_id
+- [x] 2.12 All `UnitFormSheet.test.tsx` tests pass (GREEN); added ResizeObserver + matchMedia polyfills to `src/test/setup.ts`
+
+---
+
+## Files Changed (PR2)
+
+| File | Action | Notes |
+|---|---|---|
+| `apps/admin/src/test/setup.ts` | Modified | Added ResizeObserver + matchMedia polyfills for jsdom |
+| `apps/admin/src/main.tsx` | Modified | Import + wire BuildingDetailPage replacing PR1 placeholder |
+| `apps/admin/src/hooks/useBuilding.ts` | Created | Single building fetch via maybeSingle() |
+| `apps/admin/src/hooks/useMutateUnit.ts` | Created | createUnit/updateUnit/deactivateUnit; plain invalidation |
+| `apps/admin/src/components/ui/tabs.tsx` | Created | shadcn Tabs primitive |
+| `apps/admin/src/components/units/UnitFormSheet.tsx` | Created | RHF+Zod, number+is_administrative, building_id from prop |
+| `apps/admin/src/components/units/UnitsTable.tsx` | Created | Full table + empty state; no delete action |
+| `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` | Created | Header + Tabs; URL-driven tab state; loading skeleton + 404 |
+| `apps/admin/src/hooks/__tests__/useMutateUnit.test.ts` | Created | 4 tests |
+| `apps/admin/src/components/units/__tests__/UnitFormSheet.test.tsx` | Created | 4 tests |
+
+---
+
+## Work Unit Evidence (PR2)
+
+| Evidence | Value |
+|---|---|
+| Focused test command | `pnpm --filter admin test` |
+| Test result | 5 suites / 32 tests PASSED (24 PR1 + 8 PR2) |
+| Typecheck | `pnpm --filter admin typecheck` → clean (0 errors) |
+| Lint | `pnpm --filter admin lint` → 0 errors (4 pre-existing react-refresh warnings) |
+| Build | `pnpm --filter admin build` → clean |
+| Runtime harness | `pnpm --filter admin dev` → navigate /buildings/:id?tab=unidades |
+| Rollback boundary | Revert `routes/buildings/BuildingDetailPage.tsx`, `components/units/`, `hooks/useBuilding.ts`, `hooks/useMutateUnit.ts`, `components/ui/tabs.tsx`, `main.tsx` BuildingDetailPage import+route, `test/setup.ts` polyfills |
+
+---
+
+## Deviations from Design (PR2)
+
+1. **useUnits already existed** — PR1 created it for BuildingStatusToggle; no changes needed (task 2.3 was a no-op).
+2. **useBuilding created** — design showed `buildingKey` in queryKeys.ts but didn't spell out a `useBuilding` hook separately. Created it as a minimal single-row query using `maybeSingle()` to handle 404 cleanly.
+3. **units.number column** — confirmed from PR1: DB column is `number`, not `identifier`. Carried forward consistently.
+4. **ResizeObserver polyfill added to setup.ts** — jsdom doesn't include ResizeObserver; needed for `@radix-ui/react-switch` inside Sheet (UnitFormSheet tests). This also retroactively fixes the same gap for any future tests rendering Switch inside Sheet.
+
+---
+
+## Remaining Tasks (PR3)
+
+Phase 3 (tasks 3.1–3.21) is untouched. PR3 scope next.
