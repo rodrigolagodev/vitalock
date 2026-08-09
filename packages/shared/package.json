@@ -3,13 +3,24 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "zod": "3.23.8" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "@vitalock/supabase": "workspace:^",
+    "react": "^18.3.1",
+    "zod": "3.23.8"
+  },
   "devDependencies": {
-    "@vitalock/config-typescript": "workspace:*",
-    "@vitalock/config-eslint": "workspace:*",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.0.0",
     "@types/node": "22.7.5",
+    "@types/react": "^18.3.12",
+    "@vitalock/config-eslint": "workspace:*",
+    "@vitalock/config-typescript": "workspace:*",
     "eslint": "9.13.0",
+    "jsdom": "^30.0.1",
     "typescript": "5.6.3",
     "vitest": "2.1.4"
   },
