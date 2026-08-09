@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -12,12 +12,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useMutateBuilding } from '@/hooks/useMutateBuilding';
+import { useAdministrations } from '@/hooks/useAdministrations';
 import type { BuildingRow } from '@/hooks/useBuildings';
 
 const schema = z.object({
   name: z.string().min(1, 'El nombre es obligatorio'),
   address: z.string().optional(),
+  administration_id: z.string().uuid('Seleccioná una administración'),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -25,27 +34,27 @@ type FormValues = z.infer<typeof schema>;
 interface BuildingFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  building?: Pick<BuildingRow, 'id' | 'name' | 'address'> | null;
-  administrationId?: string;
+  building?: Pick<BuildingRow, 'id' | 'name' | 'address' | 'administration_id'> | null;
 }
 
 export function BuildingFormSheet({
   open,
   onOpenChange,
   building,
-  administrationId = '',
 }: BuildingFormSheetProps) {
   const isEdit = Boolean(building);
   const { createBuilding, updateBuilding } = useMutateBuilding();
+  const { data: administrations = [], isLoading: adminsLoading } = useAdministrations();
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', address: '' },
+    defaultValues: { name: '', address: '', administration_id: '' },
   });
 
   useEffect(() => {
@@ -53,18 +62,23 @@ export function BuildingFormSheet({
       reset({
         name: building?.name ?? '',
         address: building?.address ?? '',
+        administration_id: building?.administration_id ?? '',
       });
     }
   }, [open, building, reset]);
 
   const onSubmit = async (values: FormValues) => {
     if (isEdit && building) {
-      await updateBuilding.mutateAsync({ id: building.id, ...values });
+      await updateBuilding.mutateAsync({
+        id: building.id,
+        name: values.name,
+        address: values.address,
+      });
     } else {
       await createBuilding.mutateAsync({
         name: values.name,
         address: values.address || null,
-        administration_id: administrationId,
+        administration_id: values.administration_id,
       });
     }
     onOpenChange(false);
@@ -85,6 +99,37 @@ export function BuildingFormSheet({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-1 flex-col gap-6 overflow-y-auto px-6"
         >
+          {!isEdit && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="administration_id">Administración *</Label>
+              <Controller
+                control={control}
+                name="administration_id"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={adminsLoading}
+                  >
+                    <SelectTrigger id="administration_id">
+                      <SelectValue placeholder={adminsLoading ? 'Cargando...' : 'Elegí una administración'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {administrations.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.company_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.administration_id && (
+                <p className="text-sm text-destructive">{errors.administration_id.message}</p>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Nombre *</Label>
             <Input id="name" {...register('name')} placeholder="Ej. Torre Callao" />

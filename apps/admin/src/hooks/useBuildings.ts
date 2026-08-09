@@ -7,6 +7,7 @@ export interface BuildingRow {
   name: string;
   address: string | null;
   status: string;
+  administration_id: string;
   unit_count: number;
   equipment_count: number;
 }
@@ -17,7 +18,7 @@ export function useBuildings() {
     queryFn: async (): Promise<BuildingRow[]> => {
       const { data, error } = await supabase
         .from('buildings')
-        .select('id, name, address, status')
+        .select('id, name, address, status, administration_id')
         .order('name');
 
       if (error) throw error;
@@ -58,6 +59,7 @@ export function useBuildings() {
         name: b.name,
         address: b.address,
         status: b.status,
+        administration_id: b.administration_id,
         unit_count: unitCounts[b.id] ?? 0,
         equipment_count: equipmentCounts[b.id] ?? 0,
       }));

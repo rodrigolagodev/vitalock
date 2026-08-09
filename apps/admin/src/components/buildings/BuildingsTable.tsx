@@ -15,10 +15,9 @@ import type { BuildingRow } from '@/hooks/useBuildings';
 
 interface BuildingsTableProps {
   buildings: BuildingRow[];
-  administrationId?: string;
 }
 
-export function BuildingsTable({ buildings, administrationId = '' }: BuildingsTableProps) {
+export function BuildingsTable({ buildings }: BuildingsTableProps) {
   const [editingBuilding, setEditingBuilding] = useState<BuildingRow | null>(null);
 
   if (buildings.length === 0) {
@@ -84,7 +83,6 @@ export function BuildingsTable({ buildings, administrationId = '' }: BuildingsTa
           if (!open) setEditingBuilding(null);
         }}
         building={editingBuilding}
-        administrationId={administrationId}
       />
     </>
   );
