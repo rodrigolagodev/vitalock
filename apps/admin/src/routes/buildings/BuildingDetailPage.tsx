@@ -5,18 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useUnits } from '@/hooks/useUnits';
+import { useEquipment } from '@/hooks/useEquipment';
 import { UnitsTable } from '@/components/units/UnitsTable';
 import { UnitFormSheet } from '@/components/units/UnitFormSheet';
+import { EquipmentTable } from '@/components/equipment/EquipmentTable';
+import { EquipmentFormSheet } from '@/components/equipment/EquipmentFormSheet';
 
 export default function BuildingDetailPage() {
   const { buildingId } = useParams<{ buildingId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [unitSheetOpen, setUnitSheetOpen] = useState(false);
+  const [equipmentSheetOpen, setEquipmentSheetOpen] = useState(false);
 
   const activeTab = searchParams.get('tab') ?? 'unidades';
 
   const { data: building, isLoading, isError } = useBuilding(buildingId ?? '');
   const { data: units = [] } = useUnits(buildingId ?? '');
+  const { data: equipment = [] } = useEquipment(buildingId ?? '');
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
@@ -106,12 +111,19 @@ export default function BuildingDetailPage() {
           />
         </TabsContent>
 
-        <TabsContent value="equipos" className="mt-4">
-          <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-            <p className="text-sm text-muted-foreground">
-              La gestión de equipos estará disponible próximamente.
-            </p>
+        <TabsContent value="equipos" className="mt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Equipos</h2>
+            <Button size="sm" onClick={() => setEquipmentSheetOpen(true)}>
+              Nuevo equipo
+            </Button>
           </div>
+          <EquipmentTable buildingId={buildingId} equipment={equipment} />
+          <EquipmentFormSheet
+            open={equipmentSheetOpen}
+            onOpenChange={setEquipmentSheetOpen}
+            buildingId={buildingId}
+          />
         </TabsContent>
       </Tabs>
     </div>

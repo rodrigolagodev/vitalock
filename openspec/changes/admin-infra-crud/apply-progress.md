@@ -154,6 +154,82 @@
 
 ---
 
-## Remaining Tasks (PR3)
+---
 
-Phase 3 (tasks 3.1–3.21) is untouched. PR3 scope next.
+## Completed Tasks (PR3 scope — tasks 3.1 → 3.21)
+
+**Batch**: PR3 — Equipment CRUD + Decommission + Replace
+**Date**: 2026-08-09
+
+- [x] 3.1 Created `apps/admin/src/components/ui/textarea.tsx` (standard shadcn Textarea wrapper); `select.tsx` was already installed from prior PR. No new radix peer needed for textarea.
+- [x] 3.2 `useEquipment.ts` already existed from PR1 (created for BuildingStatusToggle). No changes needed.
+- [x] 3.3 Created `apps/admin/src/hooks/useDecommissionImpact.ts` — COUNT query on `operations.key_authorizations` filtered by `equipment_id + sync_state in {pending_install, pending_removal}`; `{count:'exact',head:true}`; only enabled when dialog is open.
+- [x] 3.4 Created `apps/admin/src/hooks/useMutateEquipment.ts` — `createEquipment` (building_id from arg, replaces_equipment_id absent from payload), `updateEquipment` (serial_number/building_id/installed_at/replaces_equipment_id NOT in payload — enforced by type and destructure), `updateStatus`; plain invalidation + toast; toastMutationError on error.
+- [x] 3.5 Created `apps/admin/src/hooks/useReplaceEquipment.ts` — wraps `.schema('operations').rpc('replace_equipment', {p_old_equipment_id, p_new_serial_number, p_new_model, p_new_description})`; invalidates equipmentKey + toast; toastMutationError on error.
+- [x] 3.6 Created `apps/admin/src/components/equipment/EquipmentStatusSelect.tsx` — `<Select>` with active/maintenance/dead; dead fires onDeadSelected callback instead of onChange; fully disabled when current status is dead.
+- [x] 3.7 Created `apps/admin/src/components/equipment/DecommissionDialog.tsx` — opens on dead selection; calls useDecommissionImpact(equipmentId, open); shows count; requires non-empty decommission_reason (RHF+Zod min-1); on confirm calls onConfirm callback; on cancel calls onOpenChange(false).
+- [x] 3.8 Created `apps/admin/src/components/equipment/ReplaceEquipmentDialog.tsx` — Dialog (not sheet); shows old device details read-only; collects new_serial_number + new_model (RHF+Zod); on confirm calls useReplaceEquipment.replaceEquipment.mutateAsync; toast on error.
+- [x] 3.9 Created `apps/admin/src/components/equipment/EquipmentFormSheet.tsx` — create fields: model/serial_number/installed_at (building_id hidden prop, replaces_equipment_id absent); edit fields: model editable, serial_number/building_id/installed_at rendered as readOnly Input with data-immutable attr; EquipmentStatusSelect embedded; DecommissionDialog conditionally mounted; dead status disables save.
+- [x] 3.10 Created `apps/admin/src/components/equipment/EquipmentTable.tsx` — columns: model/serial_number/status/installed_at/actions; edit + "Reemplazar" (opens ReplaceEquipmentDialog) actions; no delete action; dead equipment hides Reemplazar button.
+- [x] 3.11 Wired `EquipmentTable` + `EquipmentFormSheet` + `useEquipment` into BuildingDetailPage Equipos tab; replaced placeholder div with full equipment tab content.
+- [x] 3.12 Wrote `useMutateEquipment.test.ts` (RED phase) — 6 cases covering create happy, create payload excludes replaces_equipment_id, updateEquipment payload excludes all 4 immutable fields, 23514 immutable branch, updateStatus with decommission_reason, 23514 dead-transition branch.
+- [x] 3.13 All `useMutateEquipment.test.ts` tests pass (GREEN).
+- [x] 3.14 Wrote `useDecommissionImpact.test.ts` (RED phase) — 5 cases: disabled returns idle, count 3, count 0, count null fallback, error, plus schema/filter verification.
+- [x] 3.15 All `useDecommissionImpact.test.ts` tests pass (GREEN).
+- [x] 3.16 Wrote `useReplaceEquipment.test.ts` (RED phase) — 3 cases: happy path → invalidates + toast; RPC called with p_-prefixed params; P0001 → toastMutationError.
+- [x] 3.17 All `useReplaceEquipment.test.ts` tests pass (GREEN).
+- [x] 3.18 Wrote `DecommissionDialog.test.tsx` (RED phase) — 6 cases: shows impact count; singular label; loading state; confirm with payload; Zod blocks empty reason; cancel → no mutation.
+- [x] 3.19 All `DecommissionDialog.test.tsx` tests pass (GREEN).
+- [x] 3.20 Wrote `EquipmentFormSheet.test.tsx` (RED phase) — 10 cases: create renders model/serial/installed fields; replaces_equipment_id absent from create; building_id not in DOM; edit model editable; serial_number readonly; installed_at readonly; building_id readonly; replaces_equipment_id not editable in edit; dead submit disabled; dead shows status label.
+- [x] 3.21 All `EquipmentFormSheet.test.tsx` tests pass (GREEN).
+
+---
+
+## Files Changed (PR3)
+
+| File | Action | Notes |
+|---|---|---|
+| `apps/admin/src/components/ui/textarea.tsx` | Created | shadcn Textarea primitive (no radix peer) |
+| `apps/admin/src/hooks/useDecommissionImpact.ts` | Created | COUNT query, enabled gate |
+| `apps/admin/src/hooks/useMutateEquipment.ts` | Created | create/update/updateStatus; immutable exclusion by type |
+| `apps/admin/src/hooks/useReplaceEquipment.ts` | Created | RPC wrapper with p_-prefixed params |
+| `apps/admin/src/components/equipment/EquipmentStatusSelect.tsx` | Created | Dead-terminal guard; onDeadSelected callback |
+| `apps/admin/src/components/equipment/DecommissionDialog.tsx` | Created | Impact preview + reason form |
+| `apps/admin/src/components/equipment/ReplaceEquipmentDialog.tsx` | Created | RPC dialog; old device read-only display |
+| `apps/admin/src/components/equipment/EquipmentFormSheet.tsx` | Created | Create+edit; immutable fields readOnly; DecommissionDialog mounted |
+| `apps/admin/src/components/equipment/EquipmentTable.tsx` | Created | Full table + empty state; no delete |
+| `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` | Modified | Equipos tab wired with real components |
+| `apps/admin/src/hooks/__tests__/useMutateEquipment.test.ts` | Created | 6 tests |
+| `apps/admin/src/hooks/__tests__/useDecommissionImpact.test.ts` | Created | 6 tests |
+| `apps/admin/src/hooks/__tests__/useReplaceEquipment.test.ts` | Created | 3 tests |
+| `apps/admin/src/components/equipment/__tests__/DecommissionDialog.test.tsx` | Created | 6 tests |
+| `apps/admin/src/components/equipment/__tests__/EquipmentFormSheet.test.tsx` | Created | 10 tests |
+
+---
+
+## Work Unit Evidence (PR3)
+
+| Evidence | Value |
+|---|---|
+| Focused test command | `pnpm --filter admin test` |
+| Test result | 10 suites / 63 tests PASSED (32 PR1+PR2 + 31 PR3) |
+| Typecheck | `pnpm --filter admin typecheck` → clean (0 errors) |
+| Lint | `pnpm --filter admin lint` → 0 errors (4 pre-existing react-refresh warnings) |
+| Build | `pnpm --filter admin build` → clean |
+| Runtime harness | `pnpm --filter admin dev` → navigate /buildings/:id?tab=equipos |
+| Rollback boundary | Revert `components/equipment/`, `hooks/useMutateEquipment.ts`, `hooks/useReplaceEquipment.ts`, `hooks/useDecommissionImpact.ts`, `components/ui/textarea.tsx`, `routes/buildings/BuildingDetailPage.tsx` Equipos tab changes |
+
+---
+
+## Deviations from Design (PR3)
+
+1. **RPC params use p_ prefix** — database.types.ts defines `replace_equipment` with `p_old_equipment_id`, `p_new_serial_number`, `p_new_model`, `p_new_description` (not `old_equipment_id` etc.). `p_new_description` is required by the RPC type; passed as empty string since the form collects model but not a separate description. `ReplaceEquipmentInput` interface uses unprefixed names for the hook's public API; the translation happens inside `useReplaceEquipment`.
+2. **equipment.description required on insert** — the DB Insert type requires `description: string` (non-nullable). Passed as empty string `''` in `createEquipment` since the spec/form doesn't include a description field. This is a DB schema detail not surfaced in the design.
+3. **EquipmentStatusSelect in EquipmentFormSheet** — status transitions on edit are tracked as local state; non-dead status changes (active↔maintenance) are applied when the form submits via updateEquipment payload, not via immediate updateStatus call. This keeps the save-on-submit UX consistent with other forms. The updateStatus path is only triggered via DecommissionDialog confirm.
+4. **useEquipment was already complete** — task 3.2 was a no-op (useEquipment already existed from PR1, complete with .schema('operations') and all required fields).
+
+---
+
+## Remaining Tasks
+
+Phase 4 (tasks 4.1–4.4) are manual gate/smoke tasks. All implementation tasks complete.

@@ -77,30 +77,30 @@ Chain strategy: stacked-to-main
 
 ## Phase 3 — PR3: Equipment CRUD + Decommission + Replace (→ main after PR2)
 
-- [ ] 3.1 Install shadcn primitives for PR3: `select`, `textarea` (+ `@radix-ui/react-select`) into `apps/admin/src/components/ui/`.
-- [ ] 3.2 Create `apps/admin/src/hooks/useEquipment.ts` — TanStack Query keyed by `equipmentKey(buildingId)`; `.schema('operations')` direct query; selects model/serial_number/status/installed_at.
-- [ ] 3.3 Create `apps/admin/src/hooks/useDecommissionImpact.ts` — COUNT query on `operations.key_authorizations` filtered by `equipment_id` + `sync_state in {pending_install, pending_removal}` with `{count:'exact',head:true}`; keyed by `decommissionImpactKey(equipmentId)`; only enabled when dialog is open.
-- [ ] 3.4 Create `apps/admin/src/hooks/useMutateEquipment.ts` — `createEquipment` (building_id from arg, replaces_equipment_id absent from payload), `updateEquipment` (serial_number/building_id/installed_at/replaces_equipment_id NOT sent), `updateStatus`; `onSuccess` invalidates `equipmentKey(buildingId)` + toast; `onError` calls `mapMutationError`.
-- [ ] 3.5 Create `apps/admin/src/hooks/useReplaceEquipment.ts` — wraps `.schema('operations').rpc('replace_equipment', {old_equipment_id, new_serial_number, new_model})`; `onSuccess` invalidates `equipmentKey(buildingId)` + toast; `onError` calls `mapMutationError` (P0001 substring branch).
-- [ ] 3.6 Create `apps/admin/src/components/equipment/EquipmentStatusSelect.tsx` — `<Select>` with `active/maintenance/dead`; when `dead` selected fires callback instead of direct save; disabled entirely when current status is `dead`. Satisfies: Equipment Status Transitions (dead read-only guard).
-- [ ] 3.7 Create `apps/admin/src/components/equipment/DecommissionDialog.tsx` — opens on `dead` selection; calls `useDecommissionImpact(equipmentId)` and shows count; requires non-empty `decommission_reason` (RHF+Zod min-1); on confirm calls `updateStatus({id, status:'dead', decommission_reason})`; on cancel reverts selector; no mutation on cancel. Satisfies: Decommission Impact Preview, Equipment Status Transitions (dialog flow).
-- [ ] 3.8 Create `apps/admin/src/components/equipment/ReplaceEquipmentDialog.tsx` — separate Dialog (not edit sheet); shows old device details read-only; collects new serial_number + model (RHF+Zod); on confirm calls `useReplaceEquipment`; on error toast only (RPC atomic). Satisfies: Replace Equipment Dialog.
-- [ ] 3.9 Create `apps/admin/src/components/equipment/EquipmentFormSheet.tsx` — RHF+Zod; create fields: model, serial_number, installed_at (building_id hidden, replaces_equipment_id absent); edit fields: model only — serial_number/building_id/installed_at/replaces_equipment_id rendered as `readonly` `<Input>` and excluded from update payload; `<EquipmentStatusSelect>` embedded; `<DecommissionDialog>` conditionally mounted. Satisfies: Create Equipment, Edit Equipment (immutable read-only), No Physical Delete.
-- [ ] 3.10 Create `apps/admin/src/components/equipment/EquipmentTable.tsx` — columns: model, serial_number, status, installed_at, edit + "Reemplazar" (open `ReplaceEquipmentDialog`) actions; no delete action. Satisfies: Equipment List, No Physical Delete.
-- [ ] 3.11 Wire `EquipmentTable` + `EquipmentFormSheet` + `ReplaceEquipmentDialog` into BuildingDetailPage Equipos tab. Satisfies: Equipment List Nested in Building.
+- [x] 3.1 Install shadcn primitives for PR3: `select`, `textarea` (+ `@radix-ui/react-select`) into `apps/admin/src/components/ui/`.
+- [x] 3.2 Create `apps/admin/src/hooks/useEquipment.ts` — TanStack Query keyed by `equipmentKey(buildingId)`; `.schema('operations')` direct query; selects model/serial_number/status/installed_at.
+- [x] 3.3 Create `apps/admin/src/hooks/useDecommissionImpact.ts` — COUNT query on `operations.key_authorizations` filtered by `equipment_id` + `sync_state in {pending_install, pending_removal}` with `{count:'exact',head:true}`; keyed by `decommissionImpactKey(equipmentId)`; only enabled when dialog is open.
+- [x] 3.4 Create `apps/admin/src/hooks/useMutateEquipment.ts` — `createEquipment` (building_id from arg, replaces_equipment_id absent from payload), `updateEquipment` (serial_number/building_id/installed_at/replaces_equipment_id NOT sent), `updateStatus`; `onSuccess` invalidates `equipmentKey(buildingId)` + toast; `onError` calls `mapMutationError`.
+- [x] 3.5 Create `apps/admin/src/hooks/useReplaceEquipment.ts` — wraps `.schema('operations').rpc('replace_equipment', {old_equipment_id, new_serial_number, new_model})`; `onSuccess` invalidates `equipmentKey(buildingId)` + toast; `onError` calls `mapMutationError` (P0001 substring branch).
+- [x] 3.6 Create `apps/admin/src/components/equipment/EquipmentStatusSelect.tsx` — `<Select>` with `active/maintenance/dead`; when `dead` selected fires callback instead of direct save; disabled entirely when current status is `dead`. Satisfies: Equipment Status Transitions (dead read-only guard).
+- [x] 3.7 Create `apps/admin/src/components/equipment/DecommissionDialog.tsx` — opens on `dead` selection; calls `useDecommissionImpact(equipmentId)` and shows count; requires non-empty `decommission_reason` (RHF+Zod min-1); on confirm calls `updateStatus({id, status:'dead', decommission_reason})`; on cancel reverts selector; no mutation on cancel. Satisfies: Decommission Impact Preview, Equipment Status Transitions (dialog flow).
+- [x] 3.8 Create `apps/admin/src/components/equipment/ReplaceEquipmentDialog.tsx` — separate Dialog (not edit sheet); shows old device details read-only; collects new serial_number + model (RHF+Zod); on confirm calls `useReplaceEquipment`; on error toast only (RPC atomic). Satisfies: Replace Equipment Dialog.
+- [x] 3.9 Create `apps/admin/src/components/equipment/EquipmentFormSheet.tsx` — RHF+Zod; create fields: model, serial_number, installed_at (building_id hidden, replaces_equipment_id absent); edit fields: model only — serial_number/building_id/installed_at/replaces_equipment_id rendered as `readonly` `<Input>` and excluded from update payload; `<EquipmentStatusSelect>` embedded; `<DecommissionDialog>` conditionally mounted. Satisfies: Create Equipment, Edit Equipment (immutable read-only), No Physical Delete.
+- [x] 3.10 Create `apps/admin/src/components/equipment/EquipmentTable.tsx` — columns: model, serial_number, status, installed_at, edit + "Reemplazar" (open `ReplaceEquipmentDialog`) actions; no delete action. Satisfies: Equipment List, No Physical Delete.
+- [x] 3.11 Wire `EquipmentTable` + `EquipmentFormSheet` + `ReplaceEquipmentDialog` into BuildingDetailPage Equipos tab. Satisfies: Equipment List Nested in Building.
 
 ### PR3 Tests
 
-- [ ] 3.12 **RED** `useMutateEquipment.test.ts` — happy path create → `invalidateQueries(equipmentKey(buildingId))`; immutable-field contract: serial_number/building_id/installed_at/replaces_equipment_id NOT present in `updateEquipment` payload; 23514 immutable branch → correct toast; 23514 dead-transition branch → correct toast; `createEquipment` payload excludes `replaces_equipment_id`.
-- [ ] 3.13 **GREEN** `useMutateEquipment.test.ts` — implement until passes.
-- [ ] 3.14 **RED** `useDecommissionImpact.test.ts` — query disabled when `enabled: false`; returns count from COUNT response; happy path count > 0; zero count still resolves.
-- [ ] 3.15 **GREEN** `useDecommissionImpact.test.ts` — implement until passes.
-- [ ] 3.16 **RED** `useReplaceEquipment.test.ts` — happy path RPC → `invalidateQueries(equipmentKey(buildingId))`; P0001 error → `mapMutationError` P0001 branch called.
-- [ ] 3.17 **GREEN** `useReplaceEquipment.test.ts` — implement until passes.
-- [ ] 3.18 **RED** `DecommissionDialog.test.tsx` — dialog shows impact count from `useDecommissionImpact`; confirm disabled when reason empty; on confirm calls `updateStatus` with correct payload; on cancel no mutation fired and selector reverted.
-- [ ] 3.19 **GREEN** `DecommissionDialog.test.tsx` — implement until passes.
-- [ ] 3.20 **RED** `EquipmentFormSheet.test.tsx` — immutable fields (serial_number, building_id, installed_at, replaces_equipment_id) not editable in edit mode; replaces_equipment_id absent from create form; dead-status form renders status read-only.
-- [ ] 3.21 **GREEN** `EquipmentFormSheet.test.tsx` — implement until passes.
+- [x] 3.12 **RED** `useMutateEquipment.test.ts` — happy path create → `invalidateQueries(equipmentKey(buildingId))`; immutable-field contract: serial_number/building_id/installed_at/replaces_equipment_id NOT present in `updateEquipment` payload; 23514 immutable branch → correct toast; 23514 dead-transition branch → correct toast; `createEquipment` payload excludes `replaces_equipment_id`.
+- [x] 3.13 **GREEN** `useMutateEquipment.test.ts` — implement until passes.
+- [x] 3.14 **RED** `useDecommissionImpact.test.ts` — query disabled when `enabled: false`; returns count from COUNT response; happy path count > 0; zero count still resolves.
+- [x] 3.15 **GREEN** `useDecommissionImpact.test.ts` — implement until passes.
+- [x] 3.16 **RED** `useReplaceEquipment.test.ts` — happy path RPC → `invalidateQueries(equipmentKey(buildingId))`; P0001 error → `mapMutationError` P0001 branch called.
+- [x] 3.17 **GREEN** `useReplaceEquipment.test.ts` — implement until passes.
+- [x] 3.18 **RED** `DecommissionDialog.test.tsx` — dialog shows impact count from `useDecommissionImpact`; confirm disabled when reason empty; on confirm calls `updateStatus` with correct payload; on cancel no mutation fired and selector reverted.
+- [x] 3.19 **GREEN** `DecommissionDialog.test.tsx` — implement until passes.
+- [x] 3.20 **RED** `EquipmentFormSheet.test.tsx` — immutable fields (serial_number, building_id, installed_at, replaces_equipment_id) not editable in edit mode; replaces_equipment_id absent from create form; dead-status form renders status read-only.
+- [x] 3.21 **GREEN** `EquipmentFormSheet.test.tsx` — implement until passes.
 
 ---
 
