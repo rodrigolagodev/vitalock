@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { loadClientEnv } from '@vitalock/shared';
 import { createSupabaseClient } from '@vitalock/supabase';
 import { AuthProvider } from './auth/AuthProvider';
@@ -34,6 +35,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               </Route>
             </Route>
           </Routes>
+          <Toaster richColors position="bottom-center" />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

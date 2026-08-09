@@ -2,10 +2,13 @@
 
 ## PR Chain Position
 
-- **Current batch**: PR#1 (Foundation — Phase 4 smoke gate + Phase 1 deps/hooks + Phase 3 hook tests)
+- **Current batch**: PR#2 (Components + Route — Phase 2)
 - **Chain strategy**: stacked-to-main
-- **PR#2 scope (next batch)**: Phase 2 — components + route (not started)
-- **PR#3 scope (future)**: Phase 3 CI verification task 3.9 (not started)
+- **PR#1 base**: main → cbf0248
+- **PR#2 base**: cbf0248 (PR#1 merged)
+- **PR#3 scope (next)**: Phase 3 task 3.9 — CI verification (not started)
+
+---
 
 ## Batch Completed: PR#1
 
@@ -49,17 +52,9 @@
 | 3.7 mapMutationError SQLSTATE mapping | DONE | 6 tests | mapMutationError.test.ts |
 | 3.8 Realtime filterless fallback simulation | DONE | 1 test | useWorklist.test.ts |
 
-**Total tests**: 20 passing, 0 failing.
+**Total tests (PR#1)**: 20 passing, 0 failing.
 
-## Work Unit Evidence
-
-| Evidence | Result |
-|----------|--------|
-| Focused test command | `pnpm --filter installer test` → 20/20 tests pass, 6 test files |
-| Runtime harness | `supabase start` running; Phase 4 smoke confirmed DB accessible and seed data present; flat fetch approach validated |
-| Rollback boundary | Revert all files in `apps/installer/src/hooks/`, `apps/installer/src/lib/queryKeys.ts`, `apps/installer/src/test/setup.ts`, `apps/installer/src/components/ui/{card,badge,skeleton,collapsible,textarea,sonner,separator}.tsx`, `apps/installer/vite.config.ts`, `apps/installer/package.json`. No UI change visible. |
-
-## Pipeline Results (PR#1 gate)
+### PR#1 Pipeline Results
 
 | Command | Result |
 |---------|--------|
@@ -68,34 +63,75 @@
 | `pnpm --filter installer lint` | PASS — 0 errors (4 pre-existing warnings in shadcn/AuthProvider files) |
 | `pnpm --filter installer build` | PASS — 180 modules, clean build |
 
+---
+
+## Batch Completed: PR#2
+
+### Phase 2 — Components + Route
+
+| Task | Status | File |
+|------|--------|------|
+| 2.1 EmptyState.tsx | DONE | apps/installer/src/components/common/EmptyState.tsx |
+| 2.2 ConnectivityBanner.tsx | DONE | apps/installer/src/components/common/ConnectivityBanner.tsx |
+| 2.3 AuthorizationRow.tsx | DONE | apps/installer/src/components/work/AuthorizationRow.tsx |
+| 2.4 EquipmentGroup.tsx | DONE | apps/installer/src/components/work/EquipmentGroup.tsx |
+| 2.5 AuthorizationsSection.tsx | DONE | apps/installer/src/components/work/AuthorizationsSection.tsx |
+| 2.6 TicketCommentsList.tsx | DONE | apps/installer/src/components/work/TicketCommentsList.tsx |
+| 2.7 AddCommentForm.tsx | DONE | apps/installer/src/components/work/AddCommentForm.tsx |
+| 2.8 ResolveTicketForm.tsx | DONE | apps/installer/src/components/work/ResolveTicketForm.tsx |
+| 2.9 TicketCard.tsx | DONE | apps/installer/src/components/work/TicketCard.tsx |
+| 2.10 TicketsSection.tsx | DONE | apps/installer/src/components/work/TicketsSection.tsx |
+| 2.11 BuildingWorkCard.tsx | DONE | apps/installer/src/components/work/BuildingWorkCard.tsx |
+| 2.12 Mount Toaster in main.tsx | DONE | apps/installer/src/main.tsx |
+| 2.13 Replace routes/index.tsx with HomePage | DONE | apps/installer/src/routes/index.tsx |
+
+### Key implementation details
+
+- **Toaster**: Imported directly from `sonner` (not the shadcn wrapper) to avoid `next-themes` ThemeProvider requirement. No ThemeProvider is mounted in the installer app.
+- **AuthorizationRow two-step confirm**: Local `confirming` boolean state. First tap shows "Confirmar" + optional textarea; second tap fires pessimistic mutation. Spinner blocks row on `isPending`.
+- **AuthorizationsSection grouping**: Groups authorizations by `equipment.id`, sorts groups A-Z by `description` via `localeCompare('es')`.
+- **TicketsSection sort**: `in_progress` before `open`; within same status, earlier `opened_at` first.
+- **TicketCard comments**: `useTicketComments` only enabled when `ticketId` is non-empty (passed only when expanded) to avoid unnecessary queries on collapsed cards.
+- **HomePage merge**: `mergeIntoBuildings` builds a Map keyed by `building.id`, iterating authorizations then tickets. Sorted A-Z by building name. Both hooks' loading states checked separately; `isLoading` true only when data has never arrived.
+- **ResolveTicketForm**: Two-step via local `expanded` boolean. RHF+Zod with `zodResolver`. `resolution_notes` min(1) with Spanish message.
+
+### PR#2 Pipeline Results
+
+| Command | Result |
+|---------|--------|
+| `pnpm --filter installer test` | PASS — 20/20 tests (no regression) |
+| `pnpm --filter installer typecheck` | PASS — 0 errors |
+| `pnpm --filter installer lint` | PASS — 0 errors (4 pre-existing warnings unchanged) |
+| `pnpm --filter installer build` | PASS — 1997 modules, clean build |
+
+## Work Unit Evidence (PR#2)
+
+| Evidence | Result |
+|----------|--------|
+| Focused test command | `pnpm --filter installer test` → 20/20 pass, no regression |
+| Build command | `pnpm --filter installer build` → 1997 modules, no errors |
+| Typecheck | `pnpm --filter installer typecheck` → clean |
+| Runtime harness | `pnpm --filter installer build` confirms full app compiles; visual verification requires `supabase start && pnpm --filter installer dev` + login as Bruno |
+| Rollback boundary | Revert: `apps/installer/src/routes/index.tsx`, `apps/installer/src/main.tsx`, all files in `apps/installer/src/components/common/` and `apps/installer/src/components/work/`. App reverts to placeholder home. Hook tests unaffected. |
+
 ## Deviations from Design
 
-1. **Nested embed is not viable (PGRST200)**: The smoke test confirmed that the cross-schema FK `operations.equipment.building_id → public.buildings` is not in PostgREST's schema cache. The design said "attempt nested embed first, fallback on PGRST200" — that is exactly what the hook does, but in practice the fallback fires every time. This is documented in `useWorklist.ts` with a prominent comment. Test 3.2 covers this exact scenario.
-
-2. **`support.tickets` has no `title` column**: Only `description` exists. The `AssignedTicket` interface uses `description` as `title` (both fields map to the same DB column). This is noted in `useAssignedTickets.ts` comments.
-
-3. **`lucide-react` added as dependency**: The shadcn `sonner` component imports from `lucide-react`. This was installed automatically.
-
-4. **`vite.config.ts` includes `globals: true`**: Required for `@testing-library/jest-dom` to bind `expect` before Vitest's own setup runs. This is the standard Vitest + jest-dom pattern.
+1. **Nested embed PGRST200** (PR#1, unchanged): two-step flat fetch is the primary code path.
+2. **`support.tickets` has no `title` column** (PR#1, unchanged): `title` maps to `description`.
+3. **`lucide-react` added as dependency** (PR#1, unchanged): required by shadcn sonner component.
+4. **`vite.config.ts` includes `globals: true`** (PR#1, unchanged): required for jest-dom binding.
+5. **Toaster imported from `sonner` directly (not shadcn wrapper)**: The shadcn `Toaster` wrapper uses `useTheme` from `next-themes`, which requires a `ThemeProvider`. No `ThemeProvider` exists in the installer app. Importing directly from `sonner` avoids this without any functional difference — the same Sonner toast library is used.
 
 ## Remaining Tasks
-
-### Phase 2 — Components + Route (PR#2, not started)
-
-- [ ] 2.1 EmptyState.tsx
-- [ ] 2.2 ConnectivityBanner.tsx
-- [ ] 2.3 AuthorizationRow.tsx
-- [ ] 2.4 EquipmentGroup.tsx
-- [ ] 2.5 AuthorizationsSection.tsx
-- [ ] 2.6 TicketCommentsList.tsx
-- [ ] 2.7 AddCommentForm.tsx
-- [ ] 2.8 ResolveTicketForm.tsx
-- [ ] 2.9 TicketCard.tsx
-- [ ] 2.10 TicketsSection.tsx
-- [ ] 2.11 BuildingWorkCard.tsx
-- [ ] 2.12 Mount Toaster in main.tsx
-- [ ] 2.13 Replace routes/index.tsx with HomePage
 
 ### Phase 3 — CI (PR#3, not started)
 
 - [ ] 3.9 Full pipeline verification
+
+## PR Chain State
+
+| PR | Scope | Status |
+|----|-------|--------|
+| PR#1 | Foundation (Phase 1 + Phase 3 tests + Phase 4 smoke) | DONE — merged at cbf0248 |
+| PR#2 | Components + Route (Phase 2) | DONE — ready for commit + review |
+| PR#3 | CI verification (Phase 3 task 3.9) | NOT STARTED |
