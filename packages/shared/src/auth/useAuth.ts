@@ -88,15 +88,18 @@ export function useAuth(
   useEffect(() => {
     let mounted = true;
 
-    // Subscribe to auth state changes first
+    // Subscribe to auth state changes. supabase-js fires INITIAL_SESSION on subscribe
+    // with the persisted session (if any); SIGNED_IN fires only on fresh login.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      if (event === 'SIGNED_IN' && session) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         setState((prev) => ({ ...prev, session, phase: 'fetching_profile' }));
         await fetchProfile(session.user.id);
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        setState({ phase: 'anonymous', session: null, staff: null, error: null });
       } else if (event === 'SIGNED_OUT') {
         setState({
           phase: 'anonymous',
@@ -105,20 +108,10 @@ export function useAuth(
           error: null,
         });
       } else if (event === 'TOKEN_REFRESHED' && session) {
-        // Stay authenticated; update session token but do not re-fetch profile
         setState((prev) =>
           prev.phase === 'authenticated' ? { ...prev, session } : prev,
         );
       }
-    });
-
-    // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      if (!session) {
-        setState({ phase: 'anonymous', session: null, staff: null, error: null });
-      }
-      // If session exists, onAuthStateChange SIGNED_IN fires and handles it
     });
 
     return () => {

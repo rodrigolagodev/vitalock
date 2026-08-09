@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Navigate } from 'react-router-dom';
 import { useAuthContext } from '../auth/AuthProvider';
 
 const schema = z.object({
@@ -12,7 +13,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
   const { signIn, phase, error } = useAuthContext();
-  const isPending = phase === 'authenticating';
+  const isPending = phase === 'authenticating' || phase === 'fetching_profile';
 
   const {
     register,
@@ -23,6 +24,10 @@ export default function LoginPage() {
   const onSubmit = async (data: FormValues) => {
     await signIn(data.email, data.password);
   };
+
+  if (phase === 'authenticated') {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

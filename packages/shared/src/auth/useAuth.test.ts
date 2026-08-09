@@ -18,7 +18,10 @@ interface MockSupabase {
   profileQueryMock: Mock;
 }
 
-function createMockSupabase(profileData: unknown = null): MockSupabase {
+function createMockSupabase(
+  profileData: unknown = null,
+  initialSession: unknown = null,
+): MockSupabase {
   let authCallback: AuthStateChangeCallback | null = null;
 
   const signInMock = vi.fn();
@@ -37,11 +40,12 @@ function createMockSupabase(profileData: unknown = null): MockSupabase {
 
   const client = {
     auth: {
+      // Mirror real supabase-js: fire INITIAL_SESSION on subscribe.
       onAuthStateChange: vi.fn((cb: AuthStateChangeCallback) => {
         authCallback = cb;
+        setTimeout(() => cb('INITIAL_SESSION', initialSession), 0);
         return { data: { subscription: { unsubscribe: vi.fn() } } };
       }),
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
       signInWithPassword: signInMock,
       signOut: signOutMock,
     },
@@ -171,13 +175,7 @@ describe('useAuth', () => {
 
   it('5. session restore on mount sets phase=authenticated without calling signIn', async () => {
     const session = makeSession();
-    const { client, triggerAuthEvent } = createMockSupabase(makeProfile());
-
-    // Simulate existing session: getSession returns it, then SIGNED_IN fires
-    (client.auth.getSession as Mock).mockImplementation(async () => {
-      setTimeout(() => triggerAuthEvent('SIGNED_IN', session), 0);
-      return { data: { session } };
-    });
+    const { client } = createMockSupabase(makeProfile(), session);
 
     const { result } = renderHook(() => useAuth(client, 'admin'));
 
@@ -187,12 +185,7 @@ describe('useAuth', () => {
 
   it('6. signOut sets phase=anonymous with null staff and session', async () => {
     const session = makeSession();
-    const { client, triggerAuthEvent } = createMockSupabase(makeProfile());
-
-    (client.auth.getSession as Mock).mockImplementation(async () => {
-      setTimeout(() => triggerAuthEvent('SIGNED_IN', session), 0);
-      return { data: { session } };
-    });
+    const { client, triggerAuthEvent } = createMockSupabase(makeProfile(), session);
 
     const { result } = renderHook(() => useAuth(client, 'admin'));
     await waitFor(() => expect(result.current.phase).toBe('authenticated'));
