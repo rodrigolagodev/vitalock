@@ -95,7 +95,7 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('ana@vitalock.example', 'admin1234');
+      await result.current.signIn('ana@vitalock.example', 'test-password');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('authenticated'));
