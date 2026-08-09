@@ -586,5 +586,48 @@ insert into support.ticket_comments (ticket_id, author_staff_id, body, created_a
    'Consultado con administrador, confirma que el UPS del tablero se apago. Pendiente coordinar visita tecnica.',
    now() - interval '1 hour');
 
+------------------------------------------------------------
+-- auth users for local dev testing
+-- LOCAL DEV ONLY — never use in production.
+-- These rows are NOT representative of production provisioning.
+-- Production users are created via Supabase Auth admin API.
+-- Passwords are intentionally weak — never use in production.
+------------------------------------------------------------
 
+-- Ana Alvarez (admin)
+INSERT INTO auth.users (
+  id, instance_id, email, aud, role,
+  encrypted_password,
+  email_confirmed_at, created_at, updated_at
+) VALUES (
+  'aa000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000000',
+  'ana@vitalock.example',
+  'authenticated', 'authenticated',
+  crypt('admin1234', gen_salt('bf')),
+  now(), now(), now()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Bruno Benitez (installer)
+INSERT INTO auth.users (
+  id, instance_id, email, aud, role,
+  encrypted_password,
+  email_confirmed_at, created_at, updated_at
+) VALUES (
+  'bb000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000000',
+  'bruno@vitalock.example',
+  'authenticated', 'authenticated',
+  crypt('installer1234', gen_salt('bf')),
+  now(), now(), now()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Link auth.users to identity.staff
+UPDATE identity.staff
+  SET auth_user_id = 'aa000000-0000-0000-0000-000000000001'
+  WHERE id = '99999999-9999-9999-9999-999999999901';  -- Ana Alvarez
+
+UPDATE identity.staff
+  SET auth_user_id = 'bb000000-0000-0000-0000-000000000001'
+  WHERE id = '99999999-9999-9999-9999-999999999902';  -- Bruno Benitez
 

@@ -21,5 +21,10 @@ if ! (cd "$SUPABASE_DIR" && supabase status > /dev/null 2>&1); then
 fi
 
 echo "→ generating types from local Supabase schema..."
-(cd "$SUPABASE_DIR" && supabase gen types typescript --local --schema public) > "$OUT_FILE"
+(cd "$SUPABASE_DIR" && supabase gen types typescript --local \
+  --schema public \
+  --schema identity \
+  --schema operations \
+  --schema sales \
+  --schema support) > "$OUT_FILE"
 echo "✓ wrote $OUT_FILE"
