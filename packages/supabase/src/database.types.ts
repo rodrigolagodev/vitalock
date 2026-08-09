@@ -134,6 +134,7 @@ export type Database = {
           installed_at: string | null
           installed_by_staff_id: string | null
           notes: string | null
+          reject_reason: string | null
           remove_reason: string | null
           removed_at: string | null
           removed_by_staff_id: string | null
@@ -148,6 +149,7 @@ export type Database = {
           installed_at?: string | null
           installed_by_staff_id?: string | null
           notes?: string | null
+          reject_reason?: string | null
           remove_reason?: string | null
           removed_at?: string | null
           removed_by_staff_id?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           installed_at?: string | null
           installed_by_staff_id?: string | null
           notes?: string | null
+          reject_reason?: string | null
           remove_reason?: string | null
           removed_at?: string | null
           removed_by_staff_id?: string | null

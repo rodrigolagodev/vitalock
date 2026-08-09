@@ -595,31 +595,41 @@ insert into support.ticket_comments (ticket_id, author_staff_id, body, created_a
 ------------------------------------------------------------
 
 -- Ana Alvarez (admin)
+-- GoTrue reads confirmation_token / recovery_token / email_change* / reauthentication_token
+-- as NOT NULL strings; NULL causes 500 "Database error querying schema" at login.
 INSERT INTO auth.users (
   id, instance_id, email, aud, role,
   encrypted_password,
-  email_confirmed_at, created_at, updated_at
+  email_confirmed_at, created_at, updated_at,
+  confirmation_token, recovery_token,
+  email_change_token_new, email_change, email_change_token_current,
+  reauthentication_token
 ) VALUES (
   'aa000000-0000-0000-0000-000000000001',
   '00000000-0000-0000-0000-000000000000',
   'ana@vitalock.example',
   'authenticated', 'authenticated',
   crypt('admin1234', gen_salt('bf')),
-  now(), now(), now()
+  now(), now(), now(),
+  '', '', '', '', '', ''
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Bruno Benitez (installer)
 INSERT INTO auth.users (
   id, instance_id, email, aud, role,
   encrypted_password,
-  email_confirmed_at, created_at, updated_at
+  email_confirmed_at, created_at, updated_at,
+  confirmation_token, recovery_token,
+  email_change_token_new, email_change, email_change_token_current,
+  reauthentication_token
 ) VALUES (
   'bb000000-0000-0000-0000-000000000001',
   '00000000-0000-0000-0000-000000000000',
   'bruno@vitalock.example',
   'authenticated', 'authenticated',
   crypt('installer1234', gen_salt('bf')),
-  now(), now(), now()
+  now(), now(), now(),
+  '', '', '', '', '', ''
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Link auth.users to identity.staff
@@ -630,4 +640,72 @@ UPDATE identity.staff
 UPDATE identity.staff
   SET auth_user_id = 'bb000000-0000-0000-0000-000000000001'
   WHERE id = '99999999-9999-9999-9999-999999999902';  -- Bruno Benitez
+
+------------------------------------------------------------
+-- Extra worklist for Bruno (installer) — richer UI dev seed
+-- Pending installs across 3 buildings + 4 equipment groups + 4 tickets.
+-- LOCAL DEV ONLY — kept at end so it runs after the base authorization/ticket rows.
+------------------------------------------------------------
+
+-- Torre Callao — porton peatonal
+INSERT INTO operations.key_authorizations (rfid_key_id, equipment_id) VALUES
+  ((SELECT id FROM public.rfid_keys WHERE rfid_code = 'RFID-REQ1-001'), 'f0000000-0000-0000-0000-000000000001'),
+  ((SELECT id FROM public.rfid_keys WHERE rfid_code = 'RFID-REQ1-002'), 'f0000000-0000-0000-0000-000000000001')
+ON CONFLICT (rfid_key_id, equipment_id) DO NOTHING;
+
+-- Torre Callao — porton cochera
+INSERT INTO operations.key_authorizations (rfid_key_id, equipment_id) VALUES
+  ((SELECT id FROM public.rfid_keys WHERE rfid_code = 'RFID-REQ1-003'), 'f0000000-0000-0000-0000-000000000002')
+ON CONFLICT (rfid_key_id, equipment_id) DO NOTHING;
+
+-- Complejo Barracas — porton peatonal
+INSERT INTO operations.key_authorizations (rfid_key_id, equipment_id) VALUES
+  ((SELECT id FROM public.rfid_keys WHERE rfid_code = 'RFID-CB-ADM-001'), 'f0000000-0000-0000-0000-000000000006'),
+  ((SELECT id FROM public.rfid_keys WHERE rfid_code = 'RFID-REQ3-001'), 'f0000000-0000-0000-0000-000000000006')
+ON CONFLICT (rfid_key_id, equipment_id) DO NOTHING;
+
+-- Edificio Palermo Loft — controladora unica peatonal
+INSERT INTO operations.key_authorizations (rfid_key_id, equipment_id) VALUES
+  ((SELECT id FROM public.rfid_keys WHERE rfid_code = 'RFID-PL-A201-001'), 'f0000000-0000-0000-0000-000000000005'),
+  ((SELECT id FROM public.rfid_keys WHERE rfid_code = 'RFID-PL-A201-002'), 'f0000000-0000-0000-0000-000000000005')
+ON CONFLICT (rfid_key_id, equipment_id) DO NOTHING;
+
+-- Promote 2 existing installed auths to pending_removal for UI variety
+UPDATE operations.key_authorizations
+  SET sync_state = 'pending_removal'
+  WHERE id IN (
+    SELECT id FROM operations.key_authorizations
+    WHERE sync_state = 'installed'
+      AND equipment_id IN ('f0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000006')
+    ORDER BY created_at LIMIT 2
+  );
+
+-- Tickets assigned to Bruno — 4 tickets across 3 buildings, mix of categories/statuses
+INSERT INTO support.tickets (
+  administration_id, building_id, category, description, status,
+  assigned_to_staff_id, opened_by_staff_id, opened_at
+) VALUES
+  ((SELECT administration_id FROM public.buildings WHERE name='Torre Callao'),
+   (SELECT id FROM public.buildings WHERE name='Torre Callao'),
+   'maintenance', 'Revisar controladora del porton cochera — ruidos extranos al abrir',
+   'in_progress', '99999999-9999-9999-9999-999999999902', '99999999-9999-9999-9999-999999999901',
+   now() - interval '2 days'),
+
+  ((SELECT administration_id FROM public.buildings WHERE name='Torre Callao'),
+   (SELECT id FROM public.buildings WHERE name='Torre Callao'),
+   'installation', 'Instalar controladora nueva en entrada de servicio (reemplazo por equipo quemado)',
+   'open', '99999999-9999-9999-9999-999999999902', '99999999-9999-9999-9999-999999999901',
+   now() - interval '1 day'),
+
+  ((SELECT administration_id FROM public.buildings WHERE name='Complejo Barracas'),
+   (SELECT id FROM public.buildings WHERE name='Complejo Barracas'),
+   'maintenance', 'Cambiar bateria de respaldo controladora locales',
+   'open', '99999999-9999-9999-9999-999999999902', '99999999-9999-9999-9999-999999999901',
+   now() - interval '3 hours'),
+
+  ((SELECT administration_id FROM public.buildings WHERE name='Edificio Palermo Loft'),
+   (SELECT id FROM public.buildings WHERE name='Edificio Palermo Loft'),
+   'installation', 'Configuracion inicial de controladora peatonal (unidad A-201 owners)',
+   'in_progress', '99999999-9999-9999-9999-999999999902', '99999999-9999-9999-9999-999999999901',
+   now() - interval '4 hours');
 
