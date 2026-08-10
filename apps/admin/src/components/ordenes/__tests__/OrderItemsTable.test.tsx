@@ -71,6 +71,7 @@ const pendingKeyItem: OrderItemRow = {
   status: 'pending',
   building_id: 'bld-1',
   produced_key_id: null,
+  rfid_keys: null,
 };
 
 const configuredKeyItem: OrderItemRow = {
@@ -82,6 +83,7 @@ const configuredKeyItem: OrderItemRow = {
   status: 'configured',
   building_id: 'bld-1',
   produced_key_id: 'key-id-1',
+  rfid_keys: null,
 };
 
 const cancelledItem: OrderItemRow = {
@@ -93,6 +95,7 @@ const cancelledItem: OrderItemRow = {
   status: 'cancelled',
   building_id: null,
   produced_key_id: null,
+  rfid_keys: null,
 };
 
 const pendingNonKeyItem: OrderItemRow = {
@@ -104,6 +107,7 @@ const pendingNonKeyItem: OrderItemRow = {
   status: 'pending',
   building_id: null,
   produced_key_id: null,
+  rfid_keys: null,
 };
 
 describe('OrderItemsTable', () => {

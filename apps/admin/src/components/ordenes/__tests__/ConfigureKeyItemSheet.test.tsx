@@ -68,6 +68,7 @@ const sampleItem: OrderItemRow = {
   status: 'pending',
   building_id: 'bld-1',
   produced_key_id: null,
+  rfid_keys: null,
 };
 
 function makeWrapper() {
