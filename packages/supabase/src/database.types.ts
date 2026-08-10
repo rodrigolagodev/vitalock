@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   identity: {
     Tables: {
       staff: {
@@ -327,7 +302,7 @@ export type Database = {
           event_type: string
           id: string
           key_id: string
-          note: string
+          note: string | null
           occurred_at: string
         }
         Insert: {
@@ -335,7 +310,7 @@ export type Database = {
           event_type: string
           id?: string
           key_id: string
-          note: string
+          note?: string | null
           occurred_at?: string
         }
         Update: {
@@ -343,7 +318,7 @@ export type Database = {
           event_type?: string
           id?: string
           key_id?: string
-          note?: string
+          note?: string | null
           occurred_at?: string
         }
         Relationships: [
@@ -591,6 +566,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_key_status: {
+        Args: {
+          p_actor_staff_id?: string
+          p_key_id: string
+          p_note?: string
+          p_status: string
+        }
+        Returns: undefined
+      }
       configure_key_order_item: {
         Args: {
           p_equipment_ids: string[]
@@ -1476,9 +1460,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   identity: {
     Enums: {},
   },
