@@ -340,6 +340,7 @@ export type Database = {
           item_type: string
           order_id: string
           produced_key_id: string | null
+          product_id: string | null
           quantity: number
           status: string
           updated_at: string
@@ -352,6 +353,7 @@ export type Database = {
           item_type: string
           order_id: string
           produced_key_id?: string | null
+          product_id?: string | null
           quantity: number
           status?: string
           updated_at?: string
@@ -364,6 +366,7 @@ export type Database = {
           item_type?: string
           order_id?: string
           produced_key_id?: string | null
+          product_id?: string | null
           quantity?: number
           status?: string
           updated_at?: string
@@ -390,6 +393,13 @@ export type Database = {
             referencedRelation: "rfid_keys"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
         ]
       }
       orders: {
@@ -403,7 +413,9 @@ export type Database = {
           particular_dni: string | null
           particular_email: string | null
           particular_full_name: string | null
+          particular_id: string | null
           particular_phone: string | null
+          pickup_particular_id: string | null
           status: string
           updated_at: string
         }
@@ -417,7 +429,9 @@ export type Database = {
           particular_dni?: string | null
           particular_email?: string | null
           particular_full_name?: string | null
+          particular_id?: string | null
           particular_phone?: string | null
+          pickup_particular_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -431,7 +445,9 @@ export type Database = {
           particular_dni?: string | null
           particular_email?: string | null
           particular_full_name?: string | null
+          particular_id?: string | null
           particular_phone?: string | null
+          pickup_particular_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -443,7 +459,95 @@ export type Database = {
             referencedRelation: "administrations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "orders_particular_id_fkey"
+            columns: ["particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_pickup_particular_id_fkey"
+            columns: ["pickup_particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      particulares: {
+        Row: {
+          created_at: string
+          dni: string
+          email: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          unit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dni: string
+          email?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          unit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dni?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          unit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "particulares_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: true
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          cost_price: number | null
+          created_at: string
+          id: string
+          name: string
+          stock_reservado: number
+          stock_total: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          stock_reservado?: number
+          stock_total?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          stock_reservado?: number
+          stock_total?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       rfid_keys: {
         Row: {
@@ -513,6 +617,73 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          order_id: string | null
+          order_item_id: string | null
+          product_id: string
+          quantity: number
+          staff_id: string | null
+          ticket_id: string | null
+          type: string
+          unit_cost: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          product_id: string
+          quantity: number
+          staff_id?: string | null
+          ticket_id?: string | null
+          type: string
+          unit_cost?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          order_item_id?: string | null
+          product_id?: string
+          quantity?: number
+          staff_id?: string | null
+          ticket_id?: string | null
+          type?: string
+          unit_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -591,6 +762,16 @@ export type Database = {
       gen_order_number: { Args: never; Returns: string }
       recompute_order_status: {
         Args: { p_order_id: string }
+        Returns: undefined
+      }
+      record_order_key_pickup: {
+        Args: {
+          p_actor_staff_id?: string
+          p_key_id: string
+          p_picked_up_by_dni: string
+          p_picked_up_by_name: string
+          p_picked_up_by_surname: string
+        }
         Returns: undefined
       }
     }
@@ -801,6 +982,7 @@ export type Database = {
           created_at: string
           id: string
           notes: string | null
+          pickup_particular_id: string | null
           pickup_person_dni: string | null
           pickup_person_name: string | null
           pickup_person_surname: string | null
@@ -812,6 +994,7 @@ export type Database = {
           requester_contact: string | null
           requester_dni: string | null
           requester_name: string | null
+          requester_particular_id: string | null
           requester_surname: string | null
           requester_type: string
           status: string
@@ -826,6 +1009,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          pickup_particular_id?: string | null
           pickup_person_dni?: string | null
           pickup_person_name?: string | null
           pickup_person_surname?: string | null
@@ -837,6 +1021,7 @@ export type Database = {
           requester_contact?: string | null
           requester_dni?: string | null
           requester_name?: string | null
+          requester_particular_id?: string | null
           requester_surname?: string | null
           requester_type: string
           status?: string
@@ -851,6 +1036,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          pickup_particular_id?: string | null
           pickup_person_dni?: string | null
           pickup_person_name?: string | null
           pickup_person_surname?: string | null
@@ -862,6 +1048,7 @@ export type Database = {
           requester_contact?: string | null
           requester_dni?: string | null
           requester_name?: string | null
+          requester_particular_id?: string | null
           requester_surname?: string | null
           requester_type?: string
           status?: string
