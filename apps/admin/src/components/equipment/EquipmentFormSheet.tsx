@@ -102,10 +102,16 @@ export function EquipmentFormSheet({
 
   const onEditSubmit = async (values: EditFormValues) => {
     if (!equipment) return;
-    await updateEquipment.mutateAsync({
-      id: equipment.id,
-      model: values.model,
-    });
+    const modelChanged = values.model !== (equipment.model ?? '');
+    const statusChanged =
+      currentStatus !== equipment.status && currentStatus !== 'dead';
+
+    if (modelChanged) {
+      await updateEquipment.mutateAsync({ id: equipment.id, model: values.model });
+    }
+    if (statusChanged) {
+      await updateStatus.mutateAsync({ id: equipment.id, status: currentStatus });
+    }
     onOpenChange(false);
   };
 
@@ -168,10 +174,7 @@ export function EquipmentFormSheet({
                 <Label>Estado</Label>
                 <EquipmentStatusSelect
                   value={currentStatus}
-                  onChange={(val) => {
-                    setCurrentStatus(val);
-                    // status transitions (non-dead) are saved via updateStatus immediately on sheet submit
-                  }}
+                  onChange={setCurrentStatus}
                   onDeadSelected={handleDeadSelected}
                   disabled={isDead}
                 />
