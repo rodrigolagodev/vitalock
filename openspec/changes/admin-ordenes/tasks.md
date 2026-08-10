@@ -67,23 +67,23 @@ Chain strategy: stacked-to-main
 
 ## Phase 3 — Detail Page + Configure Flow (PR 3)
 
-- [ ] 3.1 Create `apps/admin/src/components/ordenes/QuickUnitCreateDialog.tsx`: `props: { buildingId: string; onCreated: (unitId: string) => void }`; wraps `useMutateUnit(buildingId).createUnit`; on success calls `onCreated(newUnitId)` and auto-selects that unit in parent (caller passes callback); Dialog closes on success; Sonner direct import.
-- [ ] 3.2 Create `apps/admin/src/components/ordenes/ConfigureKeyItemSheet.tsx`: `props: { item: OrderItemRow; orderId: string }`; RHF + Zod; `rfid_code` (required text), `unit_id` (required select from `useUnits(building_id)` + QuickUnitCreateDialog trigger button; `onCreated` callback updates `unit_id` field), equipment multi-select from `useEquipment(building_id)` (optional); submit calls `useMutateOrderItem.configureKeyItem`; sheet closes on success; `toastMutationError` on error.
-- [ ] 3.3 Create `apps/admin/src/components/ordenes/OrderItemsTable.tsx`: Shadcn Table of `OrderItemRow[]`; columns: type, quantity, description, status badge, actions; "Configurar" button visible only when `item_type='key'` AND `status='pending'`; opens `ConfigureKeyItemSheet`; "Cancelar" button visible when `status='pending'`; calls `useMutateOrderItem.cancelOrderItem`; no button for configured/cancelled items.
-- [ ] 3.4 Create `apps/admin/src/routes/ordenes/OrdenDetailPage.tsx`: reads `ordenId` from params; calls `useOrden(ordenId)`; header: `order_number`, client identity (administration company_name or particular_full_name + DNI), `OrdenStatusBadge`; notes section; `OrderItemsTable`; action buttons: "Iniciar preparación" (visible when status='draft'; calls `advanceOrdenStatus`), "Cancelar orden" (visible when status non-terminal; calls `cancelOrden`; disabled + tooltip when terminal), "Retirada completada" (visible when status='ready_for_pickup'; reserved for future — disabled with tooltip "Próximamente" this cycle).
+- [x] 3.1 Create `apps/admin/src/components/ordenes/QuickUnitCreateDialog.tsx`: `props: { buildingId: string; onCreated: (unitId: string) => void }`; wraps `useMutateUnit(buildingId).createUnit`; on success calls `onCreated(newUnitId)` and auto-selects that unit in parent (caller passes callback); Dialog closes on success; Sonner direct import.
+- [x] 3.2 Create `apps/admin/src/components/ordenes/ConfigureKeyItemSheet.tsx`: `props: { item: OrderItemRow; orderId: string }`; RHF + Zod; `rfid_code` (required text), `unit_id` (required select from `useUnits(building_id)` + QuickUnitCreateDialog trigger button; `onCreated` callback updates `unit_id` field), equipment multi-select from `useEquipment(building_id)` (optional); submit calls `useMutateOrderItem.configureKeyItem`; sheet closes on success; `toastMutationError` on error.
+- [x] 3.3 Create `apps/admin/src/components/ordenes/OrderItemsTable.tsx`: Shadcn Table of `OrderItemRow[]`; columns: type, quantity, description, status badge, actions; "Configurar" button visible only when `item_type='key'` AND `status='pending'`; opens `ConfigureKeyItemSheet`; "Cancelar" button visible when `status='pending'`; calls `useMutateOrderItem.cancelOrderItem`; no button for configured/cancelled items.
+- [x] 3.4 Create `apps/admin/src/routes/ordenes/OrdenDetailPage.tsx`: reads `ordenId` from params; calls `useOrden(ordenId)`; header: `order_number`, client identity (administration company_name or particular_full_name + DNI), `OrdenStatusBadge`; notes section; `OrderItemsTable`; action buttons: "Iniciar preparación" (visible when status='draft'; calls `advanceOrdenStatus`), "Cancelar orden" (visible when status non-terminal; calls `cancelOrden`; disabled + tooltip when terminal), "Retirada completada" (visible when status='ready_for_pickup'; reserved for future — disabled with tooltip "Próximamente" this cycle).
 
 ### Phase 3 Tests
 
-- [ ] 3.5 Write `apps/admin/src/components/ordenes/__tests__/ConfigureKeyItemSheet.test.tsx`: submit blocked when `rfid_code` empty; submit blocked when `unit_id` not selected; submit calls RPC with correct `{ p_order_item_id, p_rfid_code, p_unit_id, p_equipment_ids }` payload; QuickUnitCreateDialog `onCreated` callback auto-selects the new unit_id in the unit select field.
-- [ ] 3.6 Write `apps/admin/src/components/ordenes/__tests__/QuickUnitCreateDialog.test.tsx`: calls `createUnit` on submit; invokes `onCreated(newUnitId)` on mutation success.
-- [ ] 3.7 Write `apps/admin/src/components/ordenes/__tests__/OrderItemsTable.test.tsx`: "Configurar" button rendered only for pending key items; "Cancelar" button rendered only for pending items; no action buttons for configured or cancelled items.
+- [x] 3.5 Write `apps/admin/src/components/ordenes/__tests__/ConfigureKeyItemSheet.test.tsx`: submit blocked when `rfid_code` empty; submit blocked when `unit_id` not selected; submit calls RPC with correct `{ p_order_item_id, p_rfid_code, p_unit_id, p_equipment_ids }` payload; QuickUnitCreateDialog `onCreated` callback auto-selects the new unit_id in the unit select field.
+- [x] 3.6 Write `apps/admin/src/components/ordenes/__tests__/QuickUnitCreateDialog.test.tsx`: calls `createUnit` on submit; invokes `onCreated(newUnitId)` on mutation success.
+- [x] 3.7 Write `apps/admin/src/components/ordenes/__tests__/OrderItemsTable.test.tsx`: "Configurar" button rendered only for pending key items; "Cancelar" button rendered only for pending items; no action buttons for configured or cancelled items.
 
 ---
 
 ## Phase 4 — Pipeline Gate
 
-- [ ] 4.1 Run `pnpm vitest run` across the admin app; confirm all new and modified test files pass.
-- [ ] 4.2 Run `pnpm tsc --noEmit` in `apps/admin`; confirm no new TypeScript errors from widened `CreateKeyInput`, new hook types, and regenerated `database.types.ts`.
-- [ ] 4.3 Verify `supabase db reset` applies all three migrations cleanly in correct numeric order (22 → 23 → 24).
-- [ ] 4.4 Confirm `rfid_keys.order_item_id` immutability: attempt an UPDATE of `order_item_id` on an inserted row and verify the trigger raises `check_violation`.
-- [ ] 4.5 Confirm `recompute_order_status` trigger edge case: all key items cancelled → no auto-transition to `ready_for_pickup`.
+- [x] 4.1 Run `pnpm vitest run` across the admin app; confirm all new and modified test files pass.
+- [x] 4.2 Run `pnpm tsc --noEmit` in `apps/admin`; confirm no new TypeScript errors from widened `CreateKeyInput`, new hook types, and regenerated `database.types.ts`.
+- [ ] 4.3 Verify `supabase db reset` applies all three migrations cleanly in correct numeric order (22 → 23 → 24). (Verified in PR#1 run)
+- [ ] 4.4 Confirm `rfid_keys.order_item_id` immutability: attempt an UPDATE of `order_item_id` on an inserted row and verify the trigger raises `check_violation`. (DB-level; verified in PR#1 run)
+- [ ] 4.5 Confirm `recompute_order_status` trigger edge case: all key items cancelled → no auto-transition to `ready_for_pickup`. (DB-level; verified in PR#1 run)

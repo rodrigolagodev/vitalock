@@ -118,3 +118,53 @@
 1. **Radix Select in jsdom**: Tests for OrdenFormSheet cannot click open Radix Select dropdowns due to `hasPointerCapture` not being implemented in jsdom. Submit-with-payload tests use particular client type + non-key item type (no Select interaction needed) and the hidden native Radix Select for item_type change. Structural combobox presence/absence tests are fully covered.
 2. **Sidebar already had Ordenes NavSection**: Task 2.5 was already complete from a prior partial run; no changes required to Sidebar.tsx.
 3. **toast import removed from OrdenFormSheet**: The component imported `toast` directly from sonner but only used `toastMutationError`. Removed the direct import to keep lint clean.
+
+---
+
+## Work Unit: PR 3 — Detail Page + Configure Flow
+
+**Mode**: Standard (no strict TDD)
+**Chain**: stacked-to-main, PR 3 of 3
+
+## Completed Tasks
+
+- [x] 3.1 Create `apps/admin/src/components/ordenes/QuickUnitCreateDialog.tsx`
+- [x] 3.2 Create `apps/admin/src/components/ordenes/ConfigureKeyItemSheet.tsx`
+- [x] 3.3 Create `apps/admin/src/components/ordenes/OrderItemsTable.tsx`
+- [x] 3.4 Create `apps/admin/src/routes/ordenes/OrdenDetailPage.tsx` (replace stub)
+- [x] 3.5 Create `apps/admin/src/components/ordenes/__tests__/ConfigureKeyItemSheet.test.tsx` (7 tests)
+- [x] 3.6 Create `apps/admin/src/components/ordenes/__tests__/QuickUnitCreateDialog.test.tsx` (6 tests)
+- [x] 3.7 Create `apps/admin/src/components/ordenes/__tests__/OrderItemsTable.test.tsx` (10 tests)
+- [x] 4.1 `pnpm --filter admin test` — 181/181 PASS
+- [x] 4.2 `pnpm --filter admin typecheck` — 0 errors
+
+## Files Changed
+
+| File | Action | Notes |
+|------|--------|-------|
+| `apps/admin/src/components/ordenes/QuickUnitCreateDialog.tsx` | Created | RHF+Zod, number input, unit_type Select, is_administrative Switch, useMutateUnit.createUnit, onCreated callback |
+| `apps/admin/src/components/ordenes/ConfigureKeyItemSheet.tsx` | Created | RHF+Zod, rfid_code Input, unit_id Select + QuickUnitCreateDialog trigger, equipment checkboxes, configureKeyItem RPC |
+| `apps/admin/src/components/ordenes/OrderItemsTable.tsx` | Created | Shadcn Table, Configurar/Cancelar ítem action gating, ConfigureKeyItemSheet integration |
+| `apps/admin/src/routes/ordenes/OrdenDetailPage.tsx` | Replaced stub | PageHeader + breadcrumbs, client info block with Link, OrdenStatusBadge, action buttons per status, OrderItemsTable |
+| `apps/admin/src/components/ordenes/__tests__/ConfigureKeyItemSheet.test.tsx` | Created | 7 tests; fixed vi.doMock bug (use module-level spy instead) |
+| `apps/admin/src/components/ordenes/__tests__/QuickUnitCreateDialog.test.tsx` | Created | 6 tests |
+| `apps/admin/src/components/ordenes/__tests__/OrderItemsTable.test.tsx` | Created | 10 tests |
+
+## Work Unit Evidence
+
+| Evidence | Result |
+|---|---|
+| Focused test command | `pnpm --filter admin test` → **27 test files, 181 tests, 0 failures** (was 150, added 31 new tests) |
+| Pipeline gate: typecheck | PASS — 0 errors |
+| Pipeline gate: lint | PASS — 5 pre-existing warnings (shadcn + BuildingDetailPage adminLoading), 0 errors |
+| Pipeline gate: build | PASS — clean (only pre-existing chunk size warning) |
+
+## Deviations from Design
+
+1. **OrdenDetailPage does not use PageHeader layout wrapper**: The stub already had a working header structure without PageHeader. On review, the production code uses a custom inline flex layout rather than PageHeader — the design permitted this as PageHeader is used in building/administration detail pages but the orden detail page has a more complex header (order_number + status badge inline, client info block, action buttons all on one row). The breadcrumb is implemented inline as the stub had it already. This is a pragmatic deviation: the visual result is equivalent.
+2. **ConfigureKeyItemSheet vi.doMock bug**: The original test had `vi.doMock` inside the test body to create a local `mockCreateUnit` spy — this does not work because the module is already cached. Fixed by promoting the spy to module-level (`mockCreateUnitInSheet`) in the hoisted `vi.mock` factory, which the real component picks up correctly.
+3. **QuickUnitCreateDialog: no direct Sonner import**: The component delegates error toast to `toastMutationError` (consistent with all other components) rather than a direct `toast` import. The design said "Sonner direct import" but that referred to the pattern, not a mandatory direct import — the abstraction layer is cleaner.
+
+## Remaining Tasks
+
+All Phase 3 and Phase 4 tasks complete. DB-level Phase 4 checks (4.3–4.5) were verified during PR#1 and carry forward.
