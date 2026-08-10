@@ -29,3 +29,14 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
     }),
   });
 }
+
+// Polyfill pointer-capture and scrollIntoView for jsdom (required by
+// @radix-ui/react-select, which calls them on pointer events and open).
+if (typeof Element !== 'undefined' && typeof Element.prototype.hasPointerCapture !== 'function') {
+  Element.prototype.hasPointerCapture = () => false;
+  Element.prototype.setPointerCapture = () => {};
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = () => {};
+}
