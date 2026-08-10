@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   identity: {
     Tables: {
       staff: {
@@ -331,6 +356,120 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          building_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          item_type: string
+          order_id: string
+          produced_key_id: string | null
+          quantity: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          building_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_type: string
+          order_id: string
+          produced_key_id?: string | null
+          quantity: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          building_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_type?: string
+          order_id?: string
+          produced_key_id?: string | null
+          quantity?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_produced_key_id_fkey"
+            columns: ["produced_key_id"]
+            isOneToOne: false
+            referencedRelation: "rfid_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          administration_id: string | null
+          client_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          order_number: string
+          particular_dni: string | null
+          particular_email: string | null
+          particular_full_name: string | null
+          particular_phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          administration_id?: string | null
+          client_type: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_number?: string
+          particular_dni?: string | null
+          particular_email?: string | null
+          particular_full_name?: string | null
+          particular_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          administration_id?: string | null
+          client_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_number?: string
+          particular_dni?: string | null
+          particular_email?: string | null
+          particular_full_name?: string | null
+          particular_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "administrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfid_keys: {
         Row: {
           activated_at: string
@@ -340,6 +479,7 @@ export type Database = {
           id: string
           key_request_item_id: string | null
           notes: string | null
+          order_item_id: string | null
           picked_up_at: string | null
           picked_up_by_dni: string | null
           picked_up_by_name: string | null
@@ -357,6 +497,7 @@ export type Database = {
           id?: string
           key_request_item_id?: string | null
           notes?: string | null
+          order_item_id?: string | null
           picked_up_at?: string | null
           picked_up_by_dni?: string | null
           picked_up_by_name?: string | null
@@ -374,6 +515,7 @@ export type Database = {
           id?: string
           key_request_item_id?: string | null
           notes?: string | null
+          order_item_id?: string | null
           picked_up_at?: string | null
           picked_up_by_dni?: string | null
           picked_up_by_name?: string | null
@@ -384,6 +526,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rfid_keys_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rfid_keys_unit_id_fkey"
             columns: ["unit_id"]
@@ -442,7 +591,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      configure_key_order_item: {
+        Args: {
+          p_equipment_ids: string[]
+          p_order_item_id: string
+          p_rfid_code: string
+          p_unit_id: string
+        }
+        Returns: string
+      }
+      create_order_with_items: {
+        Args: { p_items: Json[]; p_order: Json }
+        Returns: string
+      }
+      gen_order_number: { Args: never; Returns: string }
+      recompute_order_status: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1310,6 +1476,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   identity: {
     Enums: {},
   },
