@@ -31,3 +31,5 @@ export const tareasKey = (
     status ?? 'all',
   ] as const;
 export const staffKey = () => ['admin', 'staff'] as const;
+export const personalKey = (search?: string, role?: string) =>
+  ['admin', 'personal', search ?? '', role ?? 'all'] as const;
