@@ -44,7 +44,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
             <TableHead>Nombre</TableHead>
             <TableHead>Dirección</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead className="text-center">Unidades</TableHead>
+            <TableHead className="text-center">Llaves</TableHead>
             <TableHead className="text-center">Equipos</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
@@ -77,7 +77,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
             <TableHead>Nombre</TableHead>
             <TableHead>Dirección</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead className="text-center">Unidades</TableHead>
+            <TableHead className="text-center">Llaves</TableHead>
             <TableHead className="text-center">Equipos</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
@@ -103,7 +103,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
                   {building.status === 'active' ? 'Activo' : 'Inactivo'}
                 </Badge>
               </TableCell>
-              <TableCell className="text-center">{building.unit_count}</TableCell>
+              <TableCell className="text-center">{building.key_count}</TableCell>
               <TableCell className="text-center">{building.equipment_count}</TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">

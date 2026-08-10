@@ -74,7 +74,7 @@ describe('BuildingStatusToggle', () => {
 
   it('shows block dialog when activeUnits > 0', async () => {
     mockUnits = [
-      { id: 'u-1', number: '101', status: 'active', is_administrative: false, building_id: 'b-1' },
+      { id: 'u-1', number: '101', unit_type: null, status: 'active', is_administrative: false, building_id: 'b-1' },
     ];
 
     const user = userEvent.setup();

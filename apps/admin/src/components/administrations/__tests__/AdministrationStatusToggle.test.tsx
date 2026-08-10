@@ -57,7 +57,7 @@ const makeBuilding = (id: string, status: string): BuildingRow => ({
   address: null,
   status,
   administration_id: 'a-1',
-  unit_count: 0,
+  key_count: 0,
   equipment_count: 0,
 });
 

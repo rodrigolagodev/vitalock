@@ -22,7 +22,7 @@ export function useBuilding(buildingId: string) {
         address: data.address,
         status: data.status,
         administration_id: data.administration_id,
-        unit_count: 0,
+        key_count: 0,
         equipment_count: 0,
       };
     },

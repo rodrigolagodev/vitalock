@@ -5,27 +5,25 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useAdministration } from '@/hooks/useAdministration';
-import { useUnits } from '@/hooks/useUnits';
 import { useEquipment } from '@/hooks/useEquipment';
-import { UnitsTable } from '@/components/units/UnitsTable';
-import { UnitFormSheet } from '@/components/units/UnitFormSheet';
+import { useKeys } from '@/hooks/useKeys';
 import { EquipmentTable } from '@/components/equipment/EquipmentTable';
 import { EquipmentFormSheet } from '@/components/equipment/EquipmentFormSheet';
+import { KeysTable } from '@/components/keys/KeysTable';
 
 export default function BuildingDetailPage() {
   const { buildingId } = useParams<{ buildingId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [unitSheetOpen, setUnitSheetOpen] = useState(false);
   const [equipmentSheetOpen, setEquipmentSheetOpen] = useState(false);
 
-  const activeTab = searchParams.get('tab') ?? 'unidades';
+  const activeTab = searchParams.get('tab') ?? 'llaves';
 
   const { data: building, isLoading, isError } = useBuilding(buildingId ?? '');
   const { data: administration, isLoading: adminLoading } = useAdministration(
     building?.administration_id ?? '',
   );
-  const { data: units = [] } = useUnits(buildingId ?? '');
   const { data: equipment = [] } = useEquipment(buildingId ?? '');
+  const { data: keys = [], isFetching: keysFetching } = useKeys(buildingId);
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
@@ -109,23 +107,13 @@ export default function BuildingDetailPage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
-          <TabsTrigger value="unidades">Unidades</TabsTrigger>
+          <TabsTrigger value="llaves">Llaves</TabsTrigger>
           <TabsTrigger value="equipos">Equipos</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="unidades" className="mt-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Unidades</h2>
-            <Button size="sm" onClick={() => setUnitSheetOpen(true)}>
-              Nueva unidad
-            </Button>
-          </div>
-          <UnitsTable buildingId={buildingId} units={units} />
-          <UnitFormSheet
-            open={unitSheetOpen}
-            onOpenChange={setUnitSheetOpen}
-            buildingId={buildingId}
-          />
+        <TabsContent value="llaves" className="mt-4 space-y-4">
+          <h2 className="text-lg font-semibold">Llaves</h2>
+          <KeysTable buildingId={buildingId} keys={keys} isFetching={keysFetching} />
         </TabsContent>
 
         <TabsContent value="equipos" className="mt-4 space-y-4">

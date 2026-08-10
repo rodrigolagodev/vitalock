@@ -7,6 +7,7 @@ import { toastMutationError } from './mapMutationError';
 export interface CreateUnitInput {
   building_id: string;
   number: string;
+  unit_type?: string | null;
   is_administrative?: boolean;
 }
 
@@ -31,6 +32,7 @@ export function useMutateUnit(buildingId: string) {
         .insert({
           building_id: input.building_id,
           number: input.number,
+          unit_type: input.unit_type ?? null,
           is_administrative: input.is_administrative ?? false,
         })
         .select()

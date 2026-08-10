@@ -50,7 +50,7 @@ const sampleBuildings: BuildingRow[] = [
     address: 'Av. Callao 123',
     status: 'active',
     administration_id: 'adm-1',
-    unit_count: 5,
+    key_count: 5,
     equipment_count: 2,
   },
   {
@@ -59,7 +59,7 @@ const sampleBuildings: BuildingRow[] = [
     address: null,
     status: 'inactive',
     administration_id: 'adm-1',
-    unit_count: 0,
+    key_count: 0,
     equipment_count: 0,
   },
 ];
