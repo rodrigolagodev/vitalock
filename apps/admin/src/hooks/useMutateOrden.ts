@@ -7,6 +7,7 @@ import { toastMutationError } from './mapMutationError';
 export interface CreateOrderInput {
   client_type: 'administration' | 'particular';
   administration_id?: string | null;
+  particular_id?: string | null;
   particular_full_name?: string | null;
   particular_dni?: string | null;
   particular_phone?: string | null;
@@ -34,6 +35,12 @@ export interface CancelOrdenInput {
 
 export interface AdvanceOrdenStatusInput {
   id: string;
+}
+
+export interface SetPickupPersonInput {
+  id: string;
+  /** Order-level authorized retirer. null clears the explicit pickup person. */
+  pickup_particular_id: string | null;
 }
 
 export function useMutateOrden() {
@@ -90,5 +97,21 @@ export function useMutateOrden() {
     onError: toastMutationError,
   });
 
-  return { createOrden, cancelOrden, advanceOrdenStatus };
+  const setPickupPerson = useMutation({
+    mutationFn: async ({ id, pickup_particular_id }: SetPickupPersonInput) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ pickup_particular_id })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ordensKey() });
+      void queryClient.invalidateQueries({ queryKey: ordenKey(vars.id) });
+      toast.success('Persona de retiro actualizada.');
+    },
+    onError: toastMutationError,
+  });
+
+  return { createOrden, cancelOrden, advanceOrdenStatus, setPickupPerson };
 }

@@ -65,6 +65,11 @@ export function toastMutationError(err: unknown): void {
           toast.error('Ya existe una administración con ese CUIT/CUIL.');
         } else if (err.details?.includes('orders_order_number')) {
           toast.error('Ya existe una orden con ese número. Reintentá.');
+        } else if (
+          err.details?.includes('particulares') ||
+          err.message.includes('particulares')
+        ) {
+          toast.error('Ya existe un particular con ese DNI o unidad.');
         } else {
           toast.error('Ya existe un registro con esos datos.');
         }
@@ -76,6 +81,11 @@ export function toastMutationError(err: unknown): void {
           toast.error('Un equipo dado de baja no puede reactivarse.');
         } else if (err.message.includes('invalid equipment.status transition')) {
           toast.error('Transición de estado no permitida.');
+        } else if (
+          err.message.includes('pickup DNI') &&
+          err.message.includes('does not match')
+        ) {
+          toast.error('El DNI de retiro no coincide con la persona autorizada para retirar.');
         } else {
           toast.error('Validación fallida. Revisá los datos.');
         }
@@ -109,6 +119,11 @@ export function toastMutationError(err: unknown): void {
           err.message.toLowerCase().includes('replace')
         ) {
           toast.error('No se pudo completar el reemplazo. Revisá los datos.');
+        } else if (
+          typeof err.message === 'string' &&
+          err.message.toLowerCase().includes('record_order_key_pickup')
+        ) {
+          toast.error('Error al registrar el retiro. La orden debe estar lista para retiro.');
         } else {
           toast.error(`Error del servidor. Intentá de nuevo.`);
         }

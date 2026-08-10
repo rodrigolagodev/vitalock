@@ -188,4 +188,77 @@ describe('toastMutationError', () => {
       'No se puede desactivar: tiene registros activos asociados.',
     );
   });
+
+  // --- particulares change branches ---
+
+  // 23505 particulares unit key
+  it('23505 with particulares_unit_id_key detail → duplicate particular toast', () => {
+    toastMutationError({
+      code: '23505',
+      message: 'duplicate key value violates unique constraint "particulares_unit_id_key"',
+      details: 'Key (unit_id)=(u-1) already exists.',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'Ya existe un particular con ese DNI o unidad.',
+    );
+  });
+
+  // 23505 particulares dni key
+  it('23505 with particulares in details → duplicate particular toast', () => {
+    toastMutationError({
+      code: '23505',
+      message: 'duplicate key value',
+      details: 'Key (dni)=(30111222) conflicts with particulares_dni_key',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'Ya existe un particular con ese DNI o unidad.',
+    );
+  });
+
+  // 23505 particulares via message (details absent)
+  it('23505 with particulares in message → duplicate particular toast', () => {
+    toastMutationError({
+      code: '23505',
+      message: 'particulares unique violation',
+      details: null,
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'Ya existe un particular con ese DNI o unidad.',
+    );
+  });
+
+  // 23514 pickup DNI mismatch (order pickup path)
+  it('23514 pickup DNI mismatch → authorized pickup person toast', () => {
+    toastMutationError({
+      code: '23514',
+      message: 'pickup DNI (99999999) does not match the order authorized DNI',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'El DNI de retiro no coincide con la persona autorizada para retirar.',
+    );
+  });
+
+  // 23514 pickup DNI mismatch (key_request path)
+  it('23514 key_request pickup DNI mismatch → authorized pickup person toast', () => {
+    toastMutationError({
+      code: '23514',
+      message:
+        'pickup DNI (99999999) does not match the authorized pickup person DNI (30111222) for this request',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'El DNI de retiro no coincide con la persona autorizada para retirar.',
+    );
+  });
+
+  // P0001 record_order_key_pickup
+  it('P0001 with record_order_key_pickup in message → pickup error toast', () => {
+    toastMutationError({
+      code: 'P0001',
+      message:
+        'record_order_key_pickup: order must be ready_for_pickup to register pickups',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'Error al registrar el retiro. La orden debe estar lista para retiro.',
+    );
+  });
 });

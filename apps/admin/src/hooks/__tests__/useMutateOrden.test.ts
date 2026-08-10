@@ -114,6 +114,34 @@ describe('useMutateOrden', () => {
     );
   });
 
+  it('createOrden forwards particular_id inside p_order when present', async () => {
+    const newOrderId = 'new-uuid-2';
+    mockRpc.mockResolvedValueOnce({ data: newOrderId, error: null });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.createOrden.mutateAsync({
+        order: {
+          client_type: 'particular',
+          particular_id: 'part-1',
+          particular_full_name: 'García Juan',
+        },
+        items: sampleItems,
+      });
+    });
+
+    expect(mockRpc).toHaveBeenCalledWith('create_order_with_items', {
+      p_order: expect.objectContaining({
+        client_type: 'particular',
+        particular_id: 'part-1',
+        particular_full_name: 'García Juan',
+      }),
+      p_items: sampleItems,
+    });
+  });
+
   it('createOrden error → calls toastMutationError', async () => {
     const dbError = { code: 'P0001', message: 'create_order: at least one item required' };
     mockRpc.mockResolvedValueOnce({ data: null, error: dbError });
@@ -194,5 +222,87 @@ describe('useMutateOrden', () => {
 
     await waitFor(() => expect(result.current.advanceOrdenStatus.isSuccess).toBe(true));
     expect(toast.success).toHaveBeenCalledWith('Preparación iniciada.');
+  });
+
+  // setPickupPerson
+  it('setPickupPerson calls UPDATE with pickup_particular_id and filters by id', async () => {
+    mockEq.mockResolvedValueOnce({ error: null });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.setPickupPerson.mutateAsync({
+        id: 'order-abc',
+        pickup_particular_id: 'part-2',
+      });
+    });
+
+    expect(mockFrom).toHaveBeenCalledWith('orders');
+    expect(mockUpdate).toHaveBeenCalledWith({ pickup_particular_id: 'part-2' });
+    expect(mockEq).toHaveBeenCalledWith('id', 'order-abc');
+  });
+
+  it('setPickupPerson success → shows pickup person toast', async () => {
+    mockEq.mockResolvedValueOnce({ error: null });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.setPickupPerson.mutateAsync({
+        id: 'order-abc',
+        pickup_particular_id: 'part-2',
+      });
+    });
+
+    await waitFor(() => expect(result.current.setPickupPerson.isSuccess).toBe(true));
+    expect(toast.success).toHaveBeenCalledWith('Persona de retiro actualizada.');
+  });
+
+  it('setPickupPerson success → invalidates the order detail and the ordens list', async () => {
+    mockEq.mockResolvedValueOnce({ error: null });
+
+    const { queryClient, Wrapper } = makeWrapper();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.setPickupPerson.mutateAsync({
+        id: 'order-abc',
+        pickup_particular_id: 'part-2',
+      });
+    });
+
+    await waitFor(() => expect(result.current.setPickupPerson.isSuccess).toBe(true));
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ['admin', 'orden', 'order-abc'],
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ['admin', 'ordenes', 'all', ''],
+    });
+  });
+
+  it('setPickupPerson error → calls toastMutationError', async () => {
+    const dbError = { code: 'P0001', message: 'record_order_key_pickup: order not found' };
+    mockEq.mockResolvedValueOnce({ error: dbError });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
+
+    await act(async () => {
+      try {
+        await result.current.setPickupPerson.mutateAsync({
+          id: 'order-abc',
+          pickup_particular_id: 'part-2',
+        });
+      } catch { /* expected */ }
+    });
+
+    await waitFor(() => expect(result.current.setPickupPerson.isError).toBe(true));
+    const calls = (toastMutationError as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0]![0]).toEqual(dbError);
   });
 });

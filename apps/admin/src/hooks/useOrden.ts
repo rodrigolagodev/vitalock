@@ -11,6 +11,23 @@ export interface OrderItemRow {
   status: 'pending' | 'configured' | 'in_progress' | 'completed' | 'cancelled';
   building_id: string | null;
   produced_key_id: string | null;
+  /** Produced key pickup state (null when the item has no key yet). */
+  rfid_keys: {
+    picked_up_at: string | null;
+    picked_up_by_name: string | null;
+    picked_up_by_surname: string | null;
+    picked_up_by_dni: string | null;
+    delivered_by_staff_id: string | null;
+  } | null;
+}
+
+export interface ParticularRef {
+  id: string;
+  unit_id: string;
+  dni: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
 }
 
 export interface OrdenDetailRow {
@@ -19,6 +36,9 @@ export interface OrdenDetailRow {
   client_type: 'administration' | 'particular';
   administration_id: string | null;
   administrations: { company_name: string } | null;
+  particular_id: string | null;
+  pickup_particular_id: string | null;
+  particulares: ParticularRef | null;
   particular_full_name: string | null;
   particular_dni: string | null;
   particular_phone: string | null;
@@ -44,6 +64,16 @@ export function useOrden(id: string | undefined) {
           client_type,
           administration_id,
           administrations ( company_name ),
+          particular_id,
+          pickup_particular_id,
+          particulares (
+            id,
+            unit_id,
+            dni,
+            full_name,
+            phone,
+            email
+          ),
           particular_full_name,
           particular_dni,
           particular_phone,
@@ -59,7 +89,14 @@ export function useOrden(id: string | undefined) {
             description,
             status,
             building_id,
-            produced_key_id
+            produced_key_id,
+            rfid_keys (
+              picked_up_at,
+              picked_up_by_name,
+              picked_up_by_surname,
+              picked_up_by_dni,
+              delivered_by_staff_id
+            )
           )
         `)
         .eq('id', id)

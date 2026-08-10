@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { keysKey } from '@/lib/queryKeys';
+import { keysKey, ordenKey, ordensKey } from '@/lib/queryKeys';
 import { keyEventsKey } from './useKeyEvents';
 import { toastMutationError } from './mapMutationError';
 
@@ -23,6 +23,16 @@ export interface ChangeStatusInput {
   id: string;
   status: 'active' | 'disabled';
   note?: string | null;
+  actor_staff_id?: string | null;
+}
+
+export interface RecordPickupInput {
+  /** Order owning the key — required to invalidate its detail query. */
+  order_id: string;
+  key_id: string;
+  picked_up_by_name: string;
+  picked_up_by_surname: string;
+  picked_up_by_dni: string;
   actor_staff_id?: string | null;
 }
 
@@ -78,5 +88,34 @@ export function useMutateKey(buildingId: string | undefined) {
     onError: toastMutationError,
   });
 
-  return { createKey, changeStatus };
+  const recordPickup = useMutation({
+    mutationFn: async ({
+      order_id,
+      key_id,
+      picked_up_by_name,
+      picked_up_by_surname,
+      picked_up_by_dni,
+      actor_staff_id,
+    }: RecordPickupInput) => {
+      const { error } = await supabase.rpc('record_order_key_pickup', {
+        p_key_id: key_id,
+        p_picked_up_by_name: picked_up_by_name,
+        p_picked_up_by_surname: picked_up_by_surname,
+        p_picked_up_by_dni: picked_up_by_dni,
+        ...(actor_staff_id ? { p_actor_staff_id: actor_staff_id } : {}),
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      // The RPC may auto-complete the order (status → completed), so the
+      // order detail + list and the keys list all need a refresh.
+      void queryClient.invalidateQueries({ queryKey: ordenKey(vars.order_id) });
+      void queryClient.invalidateQueries({ queryKey: ordensKey() });
+      void invalidateKeys();
+      toast.success('Retiro registrado.');
+    },
+    onError: toastMutationError,
+  });
+
+  return { createKey, changeStatus, recordPickup };
 }
