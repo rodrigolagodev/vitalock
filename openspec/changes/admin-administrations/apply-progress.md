@@ -84,12 +84,65 @@
 - `mapMutationError.ts` was extended with the 23505 administration case (design specified this as an addition to the function, consistent with the existing pattern)
 - Route tree is in `main.tsx` only (design mentioned both `main.tsx` and `routes/index.tsx`; `routes/index.tsx` is preserved as a redirect component but the route tree lives in `main.tsx` per existing pattern)
 
-## Remaining Tasks (PR2)
+---
 
-- [ ] 3.1 `useAdministration.ts` — single by id
-- [ ] 3.2 `AdministrationDetailPage.tsx` — full implementation
-- [ ] 3.3 `BuildingFormSheet.tsx` — `administrationId?` prop
-- [ ] 3.4 `BuildingsTable.tsx` — building name as Link
-- [ ] 3.5 `BuildingDetailPage.tsx` — breadcrumb via useAdministration
-- [ ] 4.9-4.12 BuildingFormSheet and BuildingsTable tests
-- [ ] 5.3-5.5 Full verification + smoke tests
+# Apply Progress: admin-administrations PR2
+
+**Batch**: PR2 — AdministrationDetailPage + useAdministration + BuildingFormSheet prop + BuildingsTable Link + BuildingDetailPage breadcrumb
+**Mode**: Standard
+**Status**: done (Phase 3 + Phase 4 PR2 subset + Phase 5 partial)
+**Date**: 2026-08-09
+
+## Completed Tasks (PR2)
+
+### Phase 3 — Core Implementation: Administration Detail + Building Wiring
+- [x] 3.1 Created `apps/admin/src/hooks/useAdministration.ts` — single-record query `['admin','administration',id]`; fetches `id, company_name, tax_id, address, status` by PK via `.maybeSingle()`; returns null when not found; `enabled: Boolean(id)`
+- [x] 3.2 Created (replaced stub) `apps/admin/src/routes/administraciones/AdministrationDetailPage.tsx` — breadcrumb header (company_name, tax_id, address, status badge, "Editar" button opening AdministrationFormSheet); nested BuildingsTable scoped to `administrationId` with isFetching prop; "Nuevo edificio" CTA opening BuildingFormSheet with `administrationId` prop; inline loading/not-found/error states
+- [x] 3.3 Extended `apps/admin/src/components/buildings/BuildingFormSheet.tsx` — added optional `administrationId?: string` prop; when provided, hides the Select (`!isEdit && !administrationId`); `useEffect` pre-fills `administration_id` from prop (takes priority over `building?.administration_id`); backward-compatible (existing callers without prop unchanged)
+- [x] 3.4 Updated `apps/admin/src/components/buildings/BuildingsTable.tsx` — building name cell now `<Link to={/buildings/${building.id}}>` with `hover:underline`; added optional `isFetching?: boolean` prop with 3 skeleton rows; empty state preserved; existing callers without `isFetching` unaffected (defaults to false)
+- [x] 3.5 Updated `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` — added `useAdministration` import + call with `building?.administration_id ?? ''`; breadcrumb shows "Administraciones / <admin name link> / <building name>"; skeleton during admin load; graceful when `administration_id` is null (shows "Sin administración" text); back links updated from `/buildings` to `/administraciones`
+
+### Phase 4 — Tests (PR2 subset)
+- [x] 4.9 + 4.10 Created `BuildingFormSheet.test.tsx` — 3 tests: Select present without administrationId, Select absent with administrationId, name field present with administrationId
+- [x] 4.11 + 4.12 Created `BuildingsTable.test.tsx` — 4 tests: names are anchor links, link tagName is A, empty state, skeleton rows when isFetching
+- [x] (bonus) Created `useAdministration.test.ts` — 4 tests: happy path fetch, null when not found, correct queryKey `['admin','administration',id]`, disabled when id is empty
+
+### Phase 5 — Verification (PR2)
+- [x] 5.3 Full Vitest suite: 97/97 pass (17 test files) — all prior 86 pass + 11 new pass
+
+## Files Changed (PR2)
+
+| File | Action | Description |
+|------|--------|-------------|
+| `apps/admin/src/hooks/useAdministration.ts` | Created | Single admin by id; queryKey `['admin','administration',id]` |
+| `apps/admin/src/routes/administraciones/AdministrationDetailPage.tsx` | Replaced stub | Full implementation: header + edit sheet + scoped BuildingsTable + "Nuevo edificio" CTA |
+| `apps/admin/src/components/buildings/BuildingFormSheet.tsx` | Modified | Added `administrationId?` prop; hides Select; pre-fills field |
+| `apps/admin/src/components/buildings/BuildingsTable.tsx` | Modified | Building name → Link; added `isFetching?` prop with skeleton rows |
+| `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` | Modified | Breadcrumb with useAdministration; null-safe; back links → /administraciones |
+| `apps/admin/src/hooks/__tests__/useAdministration.test.ts` | Created | 4 tests for hook |
+| `apps/admin/src/components/buildings/__tests__/BuildingFormSheet.test.tsx` | Created | 3 tests (Select hide/show + pre-fill) |
+| `apps/admin/src/components/buildings/__tests__/BuildingsTable.test.tsx` | Created | 4 tests (Link, empty state, skeleton) |
+
+## Work Unit Evidence (PR2)
+
+| Evidence | Value |
+|---|---|
+| Focused test command | `pnpm --filter admin exec vitest run --reporter=verbose` |
+| Test result | 97/97 passed (17 test files) |
+| Typecheck | `pnpm --filter admin typecheck` → clean |
+| Lint | `pnpm --filter admin lint` → 0 errors, 4 pre-existing shadcn warnings |
+| Build | `pnpm --filter admin build` → clean |
+| Runtime harness | Navigate to `/administraciones/:adminId`; buildings scoped; "Nuevo edificio" hides Select; building name link navigates to detail; breadcrumb shows admin name |
+| Rollback boundary | Revert 5 modified/replaced + 3 new test files; PR1 base stays intact |
+
+## Deviations from Design
+
+- `BuildingsTable` gained an `isFetching?` prop (defaults false) to support skeleton rendering from `AdministrationDetailPage`; the design mentioned skeleton behavior implicitly, this makes it explicit and backward-compatible.
+- `AdministrationDetailPage` fetches `address` from `useAdministration` (in addition to `id, company_name, tax_id, status`) to display in the header. This is a minor extension consistent with the spec's "renders info section" requirement.
+- `BuildingDetailPage` back links changed from `/buildings` (now a redirect) to `/administraciones` for consistency with the removed top-level route.
+
+## Remaining Tasks
+
+- [ ] 5.4 Manual smoke-test PR1 slice
+- [ ] 5.5 Manual smoke-test PR2 slice
+(These are manual verification steps; automated pipeline gates all pass)

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBuilding } from '@/hooks/useBuilding';
+import { useAdministration } from '@/hooks/useAdministration';
 import { useUnits } from '@/hooks/useUnits';
 import { useEquipment } from '@/hooks/useEquipment';
 import { UnitsTable } from '@/components/units/UnitsTable';
@@ -20,6 +21,9 @@ export default function BuildingDetailPage() {
   const activeTab = searchParams.get('tab') ?? 'unidades';
 
   const { data: building, isLoading, isError } = useBuilding(buildingId ?? '');
+  const { data: administration, isLoading: adminLoading } = useAdministration(
+    building?.administration_id ?? '',
+  );
   const { data: units = [] } = useUnits(buildingId ?? '');
   const { data: equipment = [] } = useEquipment(buildingId ?? '');
 
@@ -31,8 +35,8 @@ export default function BuildingDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <p className="text-lg font-medium text-muted-foreground">ID de edificio inválido.</p>
-        <Link to="/buildings" className="mt-4 text-sm underline">
-          Volver a edificios
+        <Link to="/administraciones" className="mt-4 text-sm underline">
+          Volver a administraciones
         </Link>
       </div>
     );
@@ -55,8 +59,8 @@ export default function BuildingDetailPage() {
         <p className="text-lg font-medium text-muted-foreground">
           {isError ? 'Error al cargar el edificio.' : 'Edificio no encontrado.'}
         </p>
-        <Link to="/buildings" className="mt-4 text-sm underline">
-          Volver a edificios
+        <Link to="/administraciones" className="mt-4 text-sm underline">
+          Volver a administraciones
         </Link>
       </div>
     );
@@ -67,13 +71,26 @@ export default function BuildingDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Link
-              to="/buildings"
+              to="/administraciones"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Edificios
+              Administraciones
             </Link>
+            <span className="text-muted-foreground">/</span>
+            {building.administration_id == null ? (
+              <span className="text-sm text-muted-foreground">Sin administración</span>
+            ) : adminLoading ? (
+              <div className="h-4 w-32 animate-pulse rounded-md bg-muted" />
+            ) : (
+              <Link
+                to={`/administraciones/${building.administration_id}`}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {administration?.company_name ?? 'Administración'}
+              </Link>
+            )}
             <span className="text-muted-foreground">/</span>
             <h1 className="text-2xl font-bold">{building.name}</h1>
           </div>

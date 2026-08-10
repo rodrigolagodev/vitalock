@@ -45,11 +45,11 @@ Chain strategy: stacked-to-main
 
 ## Phase 3 — Core Implementation: Administration Detail + Building Wiring (PR2)
 
-- [ ] 3.1 Create `apps/admin/src/hooks/useAdministration.ts` — single-record query `['admin','administration',id]`; fetches `id, company_name, tax_id, status` by PK; returns null when not found.
-- [ ] 3.2 Create `apps/admin/src/routes/administrations/AdministrationDetailPage.tsx` — fetches administration via `useAdministration(adminId)`; renders info section (company_name, tax_id, status), nested `BuildingsTable` scoped to `administrationId`, and "Nuevo edificio" CTA opening `BuildingFormSheet` with `administrationId` prop; inline not-found state when id invalid.
-- [ ] 3.3 Extend `apps/admin/src/components/buildings/BuildingFormSheet.tsx` — add optional `administrationId?: string` prop; when provided, pre-fill field and hide administration Select; backward-compatible (existing callers pass nothing).
-- [ ] 3.4 Update `apps/admin/src/components/buildings/BuildingsTable.tsx` — render each building name as `<Link to={/buildings/${id}}>` instead of plain text; no other behavior change.
-- [ ] 3.5 Update `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` — add breadcrumb that calls `useAdministration(building.administration_id)`; renders "administrationName → building.name" with link to `/administraciones/:adminId`; shows skeleton while resolving; graceful when `administration_id` is null.
+- [x] 3.1 Create `apps/admin/src/hooks/useAdministration.ts` — single-record query `['admin','administration',id]`; fetches `id, company_name, tax_id, status` by PK; returns null when not found.
+- [x] 3.2 Create `apps/admin/src/routes/administrations/AdministrationDetailPage.tsx` — fetches administration via `useAdministration(adminId)`; renders info section (company_name, tax_id, status), nested `BuildingsTable` scoped to `administrationId`, and "Nuevo edificio" CTA opening `BuildingFormSheet` with `administrationId` prop; inline not-found state when id invalid.
+- [x] 3.3 Extend `apps/admin/src/components/buildings/BuildingFormSheet.tsx` — add optional `administrationId?: string` prop; when provided, pre-fill field and hide administration Select; backward-compatible (existing callers pass nothing).
+- [x] 3.4 Update `apps/admin/src/components/buildings/BuildingsTable.tsx` — render each building name as `<Link to={/buildings/${id}}>` instead of plain text; no other behavior change.
+- [x] 3.5 Update `apps/admin/src/routes/buildings/BuildingDetailPage.tsx` — add breadcrumb that calls `useAdministration(building.administration_id)`; renders "administrationName → building.name" with link to `/administraciones/:adminId`; shows skeleton while resolving; graceful when `administration_id` is null.
 
 ## Phase 4 — Tests
 
@@ -61,16 +61,16 @@ Chain strategy: stacked-to-main
 - [x] 4.6 GREEN: run tests; confirm pass after Phase 2 implementation of `useMutateAdministration`.
 - [x] 4.7 RED: write failing test for `AdministrationStatusToggle` — assert toggle is disabled when active buildings count > 0; assert dialog shows "N edificios activos"; assert no delete action rendered. File: `apps/admin/src/components/administrations/__tests__/AdministrationStatusToggle.test.tsx`.
 - [x] 4.8 GREEN: run tests; confirm pass after Phase 2 implementation of `AdministrationStatusToggle`.
-- [ ] 4.9 RED: write failing test for `BuildingFormSheet` with `administrationId` prop — assert Select is not in the document; assert pre-filled hidden field value equals the prop. File: `apps/admin/src/components/buildings/__tests__/BuildingFormSheet.test.tsx` (extend existing file).
-- [ ] 4.10 GREEN: run tests; confirm pass after Phase 3 implementation of `BuildingFormSheet` prop.
-- [ ] 4.11 RED: write failing test for `BuildingsTable` — assert each building name renders as an `<a>` or `<Link>` with `href` matching `/buildings/:id`. File: `apps/admin/src/components/buildings/__tests__/BuildingsTable.test.tsx`.
-- [ ] 4.12 GREEN: run tests; confirm pass after Phase 3 implementation of `BuildingsTable`.
+- [x] 4.9 RED: write failing test for `BuildingFormSheet` with `administrationId` prop — assert Select is not in the document; assert pre-filled hidden field value equals the prop. File: `apps/admin/src/components/buildings/__tests__/BuildingFormSheet.test.tsx` (extend existing file).
+- [x] 4.10 GREEN: run tests; confirm pass after Phase 3 implementation of `BuildingFormSheet` prop.
+- [x] 4.11 RED: write failing test for `BuildingsTable` — assert each building name renders as an `<a>` or `<Link>` with `href` matching `/buildings/:id`. File: `apps/admin/src/components/buildings/__tests__/BuildingsTable.test.tsx`.
+- [x] 4.12 GREEN: run tests; confirm pass after Phase 3 implementation of `BuildingsTable`.
 - [x] 4.13 Write test for `useMutateBuilding` prefix invalidation — assert `queryClient.invalidateQueries` called with `['admin','buildings']` (prefix, not exact key). File: `apps/admin/src/hooks/__tests__/useMutateBuilding.test.ts` (extend existing).
 
 ## Phase 5 — Cleanup + Verification
 
 - [x] 5.1 Remove `apps/admin/src/routes/buildings/BuildingsPage.tsx` — top-level buildings list page no longer reachable; delete file after confirming PR1 route redirects are in place.
 - [x] 5.2 Update `apps/admin/src/main.tsx` if root redirect is configured there (align with `routes/index.tsx` change; one source of truth for redirect).
-- [ ] 5.3 Run full Vitest suite `pnpm vitest run` in `apps/admin`; assert zero failures.
+- [x] 5.3 Run full Vitest suite `pnpm vitest run` in `apps/admin`; assert zero failures. (97/97 pass)
 - [ ] 5.4 Manual smoke-test PR1 slice: `/` → redirects to `/administraciones`; `/buildings` → redirects to `/administraciones`; sidebar shows "Administraciones"; list renders with skeleton then data; search debounces and filters; create sheet works; edit sheet excludes status; deactivation blocked by active buildings.
 - [ ] 5.5 Manual smoke-test PR2 slice: `/administraciones/:adminId` → detail renders; buildings scoped; "Nuevo edificio" CTA hides Select; building name link navigates to `/buildings/:id`; BuildingDetailPage breadcrumb shows admin name linking to `/administraciones/:adminId`; cold-nav breadcrumb resolves.

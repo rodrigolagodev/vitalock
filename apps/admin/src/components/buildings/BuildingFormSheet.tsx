@@ -35,12 +35,15 @@ interface BuildingFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   building?: Pick<BuildingRow, 'id' | 'name' | 'address' | 'administration_id'> | null;
+  /** When provided, the administration Select is hidden and this id is pre-filled. */
+  administrationId?: string;
 }
 
 export function BuildingFormSheet({
   open,
   onOpenChange,
   building,
+  administrationId,
 }: BuildingFormSheetProps) {
   const isEdit = Boolean(building);
   const { createBuilding, updateBuilding } = useMutateBuilding();
@@ -62,10 +65,11 @@ export function BuildingFormSheet({
       reset({
         name: building?.name ?? '',
         address: building?.address ?? '',
-        administration_id: building?.administration_id ?? '',
+        // When administrationId prop is supplied, use it unconditionally (pre-fill from context)
+        administration_id: administrationId ?? building?.administration_id ?? '',
       });
     }
-  }, [open, building, reset]);
+  }, [open, building, administrationId, reset]);
 
   const onSubmit = async (values: FormValues) => {
     if (isEdit && building) {
@@ -99,7 +103,7 @@ export function BuildingFormSheet({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-1 flex-col gap-6 overflow-y-auto px-6"
         >
-          {!isEdit && (
+          {!isEdit && !administrationId && (
             <div className="flex flex-col gap-2">
               <Label htmlFor="administration_id">Administración *</Label>
               <Controller

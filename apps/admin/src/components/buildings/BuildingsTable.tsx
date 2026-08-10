@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -15,10 +16,47 @@ import type { BuildingRow } from '@/hooks/useBuildings';
 
 interface BuildingsTableProps {
   buildings: BuildingRow[];
+  /** When true, replaces rows with 3 skeleton placeholders */
+  isFetching?: boolean;
 }
 
-export function BuildingsTable({ buildings }: BuildingsTableProps) {
+function SkeletonRow() {
+  return (
+    <TableRow>
+      <TableCell><div className="h-4 w-40 animate-pulse rounded-md bg-muted" /></TableCell>
+      <TableCell><div className="h-4 w-32 animate-pulse rounded-md bg-muted" /></TableCell>
+      <TableCell><div className="h-5 w-16 animate-pulse rounded-md bg-muted" /></TableCell>
+      <TableCell className="text-center"><div className="mx-auto h-4 w-8 animate-pulse rounded-md bg-muted" /></TableCell>
+      <TableCell className="text-center"><div className="mx-auto h-4 w-8 animate-pulse rounded-md bg-muted" /></TableCell>
+      <TableCell className="text-right"><div className="ml-auto h-8 w-24 animate-pulse rounded-md bg-muted" /></TableCell>
+    </TableRow>
+  );
+}
+
+export function BuildingsTable({ buildings, isFetching = false }: BuildingsTableProps) {
   const [editingBuilding, setEditingBuilding] = useState<BuildingRow | null>(null);
+
+  if (isFetching) {
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Dirección</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead className="text-center">Unidades</TableHead>
+            <TableHead className="text-center">Equipos</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+        </TableBody>
+      </Table>
+    );
+  }
 
   if (buildings.length === 0) {
     return (
@@ -47,7 +85,14 @@ export function BuildingsTable({ buildings }: BuildingsTableProps) {
         <TableBody>
           {buildings.map((building) => (
             <TableRow key={building.id}>
-              <TableCell className="font-medium">{building.name}</TableCell>
+              <TableCell className="font-medium">
+                <Link
+                  to={`/buildings/${building.id}`}
+                  className="hover:underline"
+                >
+                  {building.name}
+                </Link>
+              </TableCell>
               <TableCell className="text-muted-foreground">
                 {building.address ?? '—'}
               </TableCell>
