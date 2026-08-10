@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAdministration } from '@/hooks/useAdministration';
 import { useBuildings } from '@/hooks/useBuildings';
 import { BuildingsTable } from '@/components/buildings/BuildingsTable';
 import { BuildingFormSheet } from '@/components/buildings/BuildingFormSheet';
 import { AdministrationFormSheet } from '@/components/administrations/AdministrationFormSheet';
+import { PageHeader } from '@/components/layout/PageHeader';
 import type { AdministrationRow } from '@/hooks/useAdministrations';
 
 export default function AdministrationDetailPage() {
   const { adminId } = useParams<{ adminId: string }>();
   const [buildingSheetOpen, setBuildingSheetOpen] = useState(false);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [buildingSearch, setBuildingSearch] = useState('');
 
   const { data: administration, isLoading, isError } = useAdministration(adminId ?? '');
   const { data: buildings = [], isFetching: buildingsFetching } = useBuildings({
@@ -58,37 +61,38 @@ export default function AdministrationDetailPage() {
   // its shape is a superset-compatible AdministrationRow.
   const administrationForEdit: AdministrationRow = administration;
 
+  const subtitleParts: string[] = [];
+  if (administration.tax_id) {
+    subtitleParts.push(`CUIT/CUIL: ${administration.tax_id}`);
+  }
+  if (administration.address) {
+    subtitleParts.push(administration.address);
+  }
+  const subtitle = subtitleParts.length > 0 ? subtitleParts.join(' · ') : undefined;
+
+  const filteredBuildings = buildings.filter((b) => {
+    const q = buildingSearch.trim().toLowerCase();
+    if (q === '') return true;
+    return (
+      b.name.toLowerCase().includes(q) ||
+      (b.address != null && b.address.toLowerCase().includes(q))
+    );
+  });
+
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Breadcrumb + Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <Link
-              to="/administraciones"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Administraciones
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <h1 className="text-2xl font-bold">{administration.company_name}</h1>
-          </div>
-          {administration.tax_id && (
-            <p className="text-sm text-muted-foreground">CUIT/CUIL: {administration.tax_id}</p>
-          )}
-          {administration.address && (
-            <p className="text-sm text-muted-foreground">{administration.address}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Badge variant={administration.status === 'active' ? 'default' : 'secondary'}>
-            {administration.status === 'active' ? 'Activa' : 'Inactiva'}
-          </Badge>
-          <Button variant="outline" size="sm" onClick={() => setEditSheetOpen(true)}>
-            Editar
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={administration.company_name}
+        subtitle={subtitle}
+        breadcrumbs={[{ label: 'Administraciones', to: '/administraciones' }]}
+      >
+        <Badge variant={administration.status === 'active' ? 'default' : 'secondary'}>
+          {administration.status === 'active' ? 'Activa' : 'Inactiva'}
+        </Badge>
+        <Button variant="outline" size="sm" onClick={() => setEditSheetOpen(true)}>
+          Editar
+        </Button>
+      </PageHeader>
 
       {/* Buildings section */}
       <div className="flex flex-col gap-4">
@@ -98,7 +102,13 @@ export default function AdministrationDetailPage() {
             Nuevo edificio
           </Button>
         </div>
-        <BuildingsTable buildings={buildings} isFetching={buildingsFetching} />
+        <Input
+          placeholder="Buscar edificios por nombre o dirección..."
+          value={buildingSearch}
+          onChange={(e) => setBuildingSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <BuildingsTable buildings={filteredBuildings} isFetching={buildingsFetching} />
       </div>
 
       {/* Edit administration sheet */}

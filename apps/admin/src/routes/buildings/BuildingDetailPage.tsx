@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useAdministration } from '@/hooks/useAdministration';
 import { useEquipment } from '@/hooks/useEquipment';
 import { useKeys } from '@/hooks/useKeys';
 import { EquipmentTable } from '@/components/equipment/EquipmentTable';
-import { EquipmentFormSheet } from '@/components/equipment/EquipmentFormSheet';
 import { KeysTable } from '@/components/keys/KeysTable';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export default function BuildingDetailPage() {
   const { buildingId } = useParams<{ buildingId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [equipmentSheetOpen, setEquipmentSheetOpen] = useState(false);
+  const [llavesSearch, setLlavesSearch] = useState('');
+  const [equiposSearch, setEquiposSearch] = useState('');
 
   const activeTab = searchParams.get('tab') ?? 'llaves';
 
@@ -64,45 +65,46 @@ export default function BuildingDetailPage() {
     );
   }
 
+  const filteredKeys = keys.filter((k) => {
+    const q = llavesSearch.trim().toLowerCase();
+    if (q === '') return true;
+    return (
+      k.rfid_code.toLowerCase().includes(q) ||
+      k.unit.number.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredEquipment = equipment.filter((e) => {
+    const q = equiposSearch.trim().toLowerCase();
+    if (q === '') return true;
+    return (
+      e.serial_number.toLowerCase().includes(q) ||
+      (e.model != null && e.model.toLowerCase().includes(q))
+    );
+  });
+
   return (
-    <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              to="/administraciones"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Administraciones
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            {building.administration_id == null ? (
-              <span className="text-sm text-muted-foreground">Sin administración</span>
-            ) : adminLoading ? (
-              <div className="h-4 w-32 animate-pulse rounded-md bg-muted" />
-            ) : (
-              <Link
-                to={`/administraciones/${building.administration_id}`}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {administration?.company_name ?? 'Administración'}
-              </Link>
-            )}
-            <span className="text-muted-foreground">/</span>
-            <h1 className="text-2xl font-bold">{building.name}</h1>
-          </div>
-          {building.address && (
-            <p className="text-sm text-muted-foreground">{building.address}</p>
-          )}
-        </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={building.name}
+        subtitle={building.address ?? undefined}
+        breadcrumbs={[
+          { label: 'Administraciones', to: '/administraciones' },
+          building.administration_id
+            ? {
+                label: administration?.company_name ?? 'Administración',
+                to: `/administraciones/${building.administration_id}`,
+              }
+            : { label: 'Sin administración' },
+        ]}
+      >
         <Badge
           variant={building.status === 'active' ? 'default' : 'secondary'}
           className="shrink-0"
         >
           {building.status === 'active' ? 'Activo' : 'Inactivo'}
         </Badge>
-      </div>
+      </PageHeader>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
@@ -113,22 +115,24 @@ export default function BuildingDetailPage() {
 
         <TabsContent value="llaves" className="mt-4 space-y-4">
           <h2 className="text-lg font-semibold">Llaves</h2>
-          <KeysTable buildingId={buildingId} keys={keys} isFetching={keysFetching} />
+          <Input
+            placeholder="Buscar llaves por código o unidad..."
+            value={llavesSearch}
+            onChange={(e) => setLlavesSearch(e.target.value)}
+            className="max-w-sm"
+          />
+          <KeysTable buildingId={buildingId} keys={filteredKeys} isFetching={keysFetching} />
         </TabsContent>
 
         <TabsContent value="equipos" className="mt-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Equipos</h2>
-            <Button size="sm" onClick={() => setEquipmentSheetOpen(true)}>
-              Nuevo equipo
-            </Button>
-          </div>
-          <EquipmentTable buildingId={buildingId} equipment={equipment} />
-          <EquipmentFormSheet
-            open={equipmentSheetOpen}
-            onOpenChange={setEquipmentSheetOpen}
-            buildingId={buildingId}
+          <h2 className="text-lg font-semibold">Equipos</h2>
+          <Input
+            placeholder="Buscar equipos por serie o modelo..."
+            value={equiposSearch}
+            onChange={(e) => setEquiposSearch(e.target.value)}
+            className="max-w-sm"
           />
+          <EquipmentTable buildingId={buildingId} equipment={filteredEquipment} />
         </TabsContent>
       </Tabs>
     </div>

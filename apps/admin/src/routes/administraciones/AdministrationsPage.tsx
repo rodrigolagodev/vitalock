@@ -5,6 +5,7 @@ import { useAdministrations } from '@/hooks/useAdministrations';
 import { useDebounce } from '@/hooks/useDebounce';
 import { AdministrationsTable } from '@/components/administrations/AdministrationsTable';
 import { AdministrationFormSheet } from '@/components/administrations/AdministrationFormSheet';
+import { PageHeader } from '@/components/layout/PageHeader';
 
 export default function AdministrationsPage() {
   const [search, setSearch] = useState('');
@@ -28,10 +29,12 @@ export default function AdministrationsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Administraciones</h1>
+      <PageHeader
+        title="Administraciones"
+        subtitle="Gestioná las administraciones y sus edificios."
+      >
         <Button onClick={() => setCreateOpen(true)}>Nueva administración</Button>
-      </div>
+      </PageHeader>
 
       <Input
         placeholder="Buscar por razón social o CUIT/CUIL..."
