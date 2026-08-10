@@ -22,7 +22,7 @@ export interface CreateKeyInput {
 export interface ChangeStatusInput {
   id: string;
   status: 'active' | 'disabled';
-  note: string;
+  note?: string | null;
   actor_staff_id?: string | null;
 }
 
@@ -31,8 +31,9 @@ export interface ChangeStatusInput {
  *
  * NOTE: keys are semi-immutable post-creation. There is no `updateKey` — only
  * `createKey` (typically invoked from an Orden preparation flow, still to be
- * built) and `changeStatus`, which requires a mandatory note recorded to
- * `public.key_events`.
+ * built) and `changeStatus`, which atomically updates the key status, records
+ * the event (optional note), and queues physical key removal/install on
+ * operations.key_authorizations via public.change_key_status.
  */
 export function useMutateKey(buildingId: string | undefined) {
   const queryClient = useQueryClient();
@@ -58,29 +59,14 @@ export function useMutateKey(buildingId: string | undefined) {
 
   const changeStatus = useMutation({
     mutationFn: async ({ id, status, note, actor_staff_id }: ChangeStatusInput) => {
-      const trimmed = note.trim();
-      if (!trimmed) throw new Error('La nota es requerida.');
-
-      const update: Record<string, unknown> = { status };
-      if (status === 'disabled') {
-        update.deactivated_at = new Date().toISOString();
-      } else {
-        update.deactivated_at = null;
-      }
-
-      const { error: updErr } = await supabase
-        .from('rfid_keys')
-        .update(update)
-        .eq('id', id);
-      if (updErr) throw updErr;
-
-      const { error: evtErr } = await supabase.from('key_events').insert({
-        key_id: id,
-        event_type: status === 'active' ? 'activated' : 'deactivated',
-        note: trimmed,
-        actor_staff_id: actor_staff_id ?? null,
+      const trimmedNote = note?.trim();
+      const { error } = await supabase.rpc('change_key_status', {
+        p_key_id: id,
+        p_status: status,
+        ...(trimmedNote ? { p_note: trimmedNote } : {}),
+        ...(actor_staff_id ? { p_actor_staff_id: actor_staff_id } : {}),
       });
-      if (evtErr) throw evtErr;
+      if (error) throw error;
     },
     onSuccess: (_data, vars) => {
       void invalidateKeys();

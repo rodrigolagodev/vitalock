@@ -5,7 +5,7 @@ export interface KeyEventRow {
   id: string;
   key_id: string;
   event_type: 'activated' | 'deactivated';
-  note: string;
+  note: string | null;
   actor_staff_id: string | null;
   actor_name: string | null;
   occurred_at: string;

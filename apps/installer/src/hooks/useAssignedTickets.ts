@@ -26,8 +26,9 @@ export interface AssignedTicket {
 // ---------------------------------------------------------------------------
 
 async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> {
-  // Note: support.tickets has no 'title' column; 'description' serves as the
-  // display title (short summary). We alias it here for the hook contract.
+  // Note: PostgREST cannot embed cross-schema FKs (support -> public), so we
+  // fetch flat rows and resolve building + administration names with batch
+  // lookups. An embed like building:building_id(...) fails with PGRST200.
   const { data, error } = await supabase
     .schema('support')
     .from('tickets')
@@ -36,29 +37,59 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       description,
       status,
       opened_at,
-      building:building_id(
-        id,
-        name,
-        administration:administration_id(id, company_name)
-      )
+      building_id
     `)
     .eq('assigned_to_staff_id', staffId)
     .in('status', ['open', 'in_progress']);
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => {
-    const r = row as unknown as {
-      id: string;
-      description: string;
-      status: string;
-      opened_at: string;
-      building: {
-        id: string;
-        name: string;
-        administration: { id: string; company_name: string } | null;
-      } | null;
-    };
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    description: string;
+    status: string;
+    opened_at: string;
+    building_id: string | null;
+  }[];
+
+  // Batch lookup of building names + their administration.
+  const buildingIds = [
+    ...new Set(rows.map((r) => r.building_id).filter((v): v is string => Boolean(v))),
+  ];
+  const buildingMap = new Map<string, { id: string; name: string; administration_id: string | null }>();
+  if (buildingIds.length > 0) {
+    const { data: buildings } = await supabase
+      .from('buildings')
+      .select('id, name, administration_id')
+      .in('id', buildingIds);
+    for (const b of buildings ?? []) {
+      buildingMap.set(b.id, { id: b.id, name: b.name, administration_id: b.administration_id });
+    }
+  }
+
+  const administrationIds = [
+    ...new Set(
+      [...buildingMap.values()]
+        .map((b) => b.administration_id)
+        .filter((v): v is string => Boolean(v)),
+    ),
+  ];
+  const administrationMap = new Map<string, { id: string; company_name: string }>();
+  if (administrationIds.length > 0) {
+    const { data: administrations } = await supabase
+      .from('administrations')
+      .select('id, company_name')
+      .in('id', administrationIds);
+    for (const a of administrations ?? []) {
+      administrationMap.set(a.id, { id: a.id, company_name: a.company_name });
+    }
+  }
+
+  return rows.map((r) => {
+    const buildingInfo = r.building_id ? buildingMap.get(r.building_id) : undefined;
+    const administration = buildingInfo?.administration_id
+      ? administrationMap.get(buildingInfo.administration_id)
+      : undefined;
 
     return {
       id: r.id,
@@ -67,11 +98,11 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       description: r.description,
       status: r.status as 'open' | 'in_progress',
       opened_at: r.opened_at,
-      building: r.building
+      building: buildingInfo
         ? {
-            id: r.building.id,
-            name: r.building.name,
-            administration: r.building.administration ?? { id: '', company_name: '' },
+            id: buildingInfo.id,
+            name: buildingInfo.name,
+            administration: administration ?? { id: '', company_name: '' },
           }
         : { id: '', name: '', administration: { id: '', company_name: '' } },
     };

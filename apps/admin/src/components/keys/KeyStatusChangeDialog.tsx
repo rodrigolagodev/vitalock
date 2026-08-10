@@ -41,7 +41,7 @@ export function KeyStatusChangeDialog({
     keyRow.status === 'active' ? 'disabled' : 'active';
   const actionLabel = targetStatus === 'active' ? 'Activar' : 'Dar de baja';
   const trimmed = note.trim();
-  const canConfirm = trimmed.length > 0 && !changeStatus.isPending;
+  const canConfirm = !changeStatus.isPending;
 
   const handleConfirm = async () => {
     if (!canConfirm) return;
@@ -71,7 +71,7 @@ export function KeyStatusChangeDialog({
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="status-note">
-            Motivo del cambio <span className="text-destructive">*</span>
+            Motivo del cambio
           </Label>
           <Textarea
             id="status-note"
