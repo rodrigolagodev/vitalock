@@ -130,4 +130,62 @@ describe('toastMutationError', () => {
     toastMutationError(new Error('Something exploded'));
     expect(toast.error).toHaveBeenCalledWith('Ocurrió un error. Intentá de nuevo.');
   });
+
+  // --- admin-ordenes new branches ---
+
+  // 23505 orders_order_number
+  it('23505 with orders_order_number detail → order number duplicate toast', () => {
+    toastMutationError({
+      code: '23505',
+      message: 'duplicate key value',
+      details: 'Key (order_number)=(...) conflicts with orders_order_number',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'Ya existe una orden con ese número. Reintentá.',
+    );
+  });
+
+  // P0001 configure_key
+  it('P0001 with configure_key in message → configure key error toast', () => {
+    toastMutationError({
+      code: 'P0001',
+      message: 'configure_key: order item not found',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'Error al configurar la llave. Revisá los datos.',
+    );
+  });
+
+  // P0001 create_order
+  it('P0001 with create_order in message → create order error toast', () => {
+    toastMutationError({
+      code: 'P0001',
+      message: 'create_order: at least one item is required',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'Error al crear la orden. Revisá los datos.',
+    );
+  });
+
+  // 23503 cancel context
+  it('23503 with cancel in message → cancel context toast', () => {
+    toastMutationError({
+      code: '23503',
+      message: 'cannot cancel: foreign key violation on order_items',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'No se puede cancelar: tiene registros asociados.',
+    );
+  });
+
+  // 23503 non-cancel context still uses the generic message
+  it('23503 without cancel in message → generic deactivate toast', () => {
+    toastMutationError({
+      code: '23503',
+      message: 'foreign key violation on buildings',
+    });
+    expect(toast.error).toHaveBeenCalledWith(
+      'No se puede desactivar: tiene registros activos asociados.',
+    );
+  });
 });

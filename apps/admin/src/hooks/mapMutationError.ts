@@ -63,6 +63,8 @@ export function toastMutationError(err: unknown): void {
           err.details?.includes('tax_id')
         ) {
           toast.error('Ya existe una administración con ese CUIT/CUIL.');
+        } else if (err.details?.includes('orders_order_number')) {
+          toast.error('Ya existe una orden con ese número. Reintentá.');
         } else {
           toast.error('Ya existe un registro con esos datos.');
         }
@@ -79,13 +81,30 @@ export function toastMutationError(err: unknown): void {
         }
         return;
       case '23503':
-        toast.error('No se puede desactivar: tiene registros activos asociados.');
+        if (
+          typeof err.message === 'string' &&
+          err.message.toLowerCase().includes('cancel')
+        ) {
+          toast.error('No se puede cancelar: tiene registros asociados.');
+        } else {
+          toast.error('No se puede desactivar: tiene registros activos asociados.');
+        }
         return;
       case '42501':
         toast.error('No tenés permiso para esta operación.');
         return;
       case 'P0001':
         if (
+          typeof err.message === 'string' &&
+          err.message.toLowerCase().includes('configure_key')
+        ) {
+          toast.error('Error al configurar la llave. Revisá los datos.');
+        } else if (
+          typeof err.message === 'string' &&
+          err.message.toLowerCase().includes('create_order')
+        ) {
+          toast.error('Error al crear la orden. Revisá los datos.');
+        } else if (
           typeof err.message === 'string' &&
           err.message.toLowerCase().includes('replace')
         ) {

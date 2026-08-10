@@ -15,6 +15,8 @@ export interface CreateKeyInput {
   picked_up_by_dni?: string | null;
   picked_up_at?: string | null;
   delivered_by_staff_id?: string | null;
+  /** When set, links this key to an order item from the ordenes flow. */
+  order_item_id?: string | null;
 }
 
 export interface ChangeStatusInput {

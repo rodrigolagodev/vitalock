@@ -13,3 +13,6 @@ export const keysKey = (buildingId: string | undefined) =>
   ['admin', 'keys', buildingId ?? 'none'] as const;
 export const decommissionImpactKey = (equipmentId: string) =>
   ['admin', 'decommission-impact', equipmentId] as const;
+export const ordensKey = (status?: string, search?: string) =>
+  ['admin', 'ordenes', status ?? 'all', search ?? ''] as const;
+export const ordenKey = (id: string) => ['admin', 'orden', id] as const;
