@@ -296,6 +296,41 @@ export type Database = {
           },
         ]
       }
+      key_events: {
+        Row: {
+          actor_staff_id: string | null
+          event_type: string
+          id: string
+          key_id: string
+          note: string
+          occurred_at: string
+        }
+        Insert: {
+          actor_staff_id?: string | null
+          event_type: string
+          id?: string
+          key_id: string
+          note: string
+          occurred_at?: string
+        }
+        Update: {
+          actor_staff_id?: string | null
+          event_type?: string
+          id?: string
+          key_id?: string
+          note?: string
+          occurred_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_events_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "rfid_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfid_keys: {
         Row: {
           activated_at: string
