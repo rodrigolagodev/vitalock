@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { ParticularSelector } from '../particulares/ParticularSelector';
+import type { ParticularRow } from '@/hooks/useParticulares';
 import {
   Sheet,
   SheetContent,
@@ -42,6 +44,7 @@ const itemSchema = z.object({
 const baseSchema = z.object({
   client_type: z.enum(['administration', 'particular']),
   administration_id: z.string().optional().nullable(),
+  particular_id: z.string().optional().nullable(),
   particular_full_name: z.string().optional(),
   particular_dni: z.string().optional(),
   particular_phone: z.string().optional(),
@@ -59,14 +62,11 @@ const schema = baseSchema
         path: ['administration_id'],
       });
     }
-    if (
-      data.client_type === 'particular' &&
-      (!data.particular_full_name || data.particular_full_name.trim() === '')
-    ) {
+    if (data.client_type === 'particular' && !data.particular_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'El nombre completo es obligatorio',
-        path: ['particular_full_name'],
+        message: 'Seleccioná un particular',
+        path: ['particular_id'],
       });
     }
     data.items.forEach((item, i) => {
@@ -104,12 +104,14 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
     control,
     watch,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       client_type: 'administration',
       administration_id: null,
+      particular_id: null,
       particular_full_name: '',
       particular_dni: '',
       particular_phone: '',
@@ -120,6 +122,8 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+
+  const [particular, setParticular] = useState<ParticularRow | null>(null);
 
   const clientType = watch('client_type');
   const administrationId = watch('administration_id');
@@ -137,6 +141,7 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
       reset({
         client_type: 'administration',
         administration_id: null,
+        particular_id: null,
         particular_full_name: '',
         particular_dni: '',
         particular_phone: '',
@@ -144,8 +149,20 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
         notes: '',
         items: [],
       });
+      setParticular(null);
     }
   }, [open, reset]);
+
+  // Selecting a particular binds the entity id and autofills the flat
+  // snapshot fields (defensive RPC-side autofill is the fallback).
+  const handleParticularChange = (p: ParticularRow | null) => {
+    setParticular(p);
+    setValue('particular_id', p?.id ?? null);
+    setValue('particular_full_name', p?.full_name ?? '');
+    setValue('particular_dni', p?.dni ?? '');
+    setValue('particular_phone', p?.phone ?? '');
+    setValue('particular_email', p?.email ?? '');
+  };
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -153,6 +170,7 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
         order: {
           client_type: values.client_type,
           administration_id: values.administration_id ?? null,
+          particular_id: values.particular_id ?? null,
           particular_full_name: values.particular_full_name || null,
           particular_dni: values.particular_dni || null,
           particular_phone: values.particular_phone || null,
@@ -242,56 +260,17 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
             </div>
           )}
 
-          {/* ---- Particular fields ---- */}
+          {/* ---- Particular selector ---- */}
           {clientType === 'particular' && (
-            <>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="particular_full_name">Nombre completo *</Label>
-                <Input
-                  id="particular_full_name"
-                  placeholder="Ej. Juan García"
-                  {...register('particular_full_name')}
-                />
-                {errors.particular_full_name && (
-                  <p className="text-sm text-destructive">
-                    {errors.particular_full_name.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="particular_dni">DNI</Label>
-                <Input
-                  id="particular_dni"
-                  placeholder="Ej. 28123456"
-                  {...register('particular_dni')}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="particular_phone">Teléfono</Label>
-                <Input
-                  id="particular_phone"
-                  placeholder="Ej. +54 11 1234-5678"
-                  {...register('particular_phone')}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="particular_email">Email</Label>
-                <Input
-                  id="particular_email"
-                  type="email"
-                  placeholder="Ej. juan@mail.com"
-                  {...register('particular_email')}
-                />
-                {errors.particular_email && (
-                  <p className="text-sm text-destructive">
-                    {errors.particular_email.message}
-                  </p>
-                )}
-              </div>
-            </>
+            <div className="flex flex-col gap-2">
+              <Label>Particular *</Label>
+              <ParticularSelector value={particular} onChange={handleParticularChange} />
+              {errors.particular_id && (
+                <p className="text-sm text-destructive">
+                  {errors.particular_id.message}
+                </p>
+              )}
+            </div>
           )}
 
           {/* ---- Items field array ---- */}

@@ -37,6 +37,25 @@ vi.mock('@/hooks/useBuildings', () => ({
   }),
 }));
 
+const mockUseParticulares = vi.fn();
+
+vi.mock('@/hooks/useParticulares', () => ({
+  useParticulares: (opts: { search?: string }) => mockUseParticulares(opts),
+}));
+
+vi.mock('@/hooks/useUnits', () => ({
+  useUnits: () => ({
+    data: [],
+    isLoading: false,
+  }),
+}));
+
+vi.mock('@/hooks/useMutateParticular', () => ({
+  useMutateParticular: () => ({
+    createParticular: { mutateAsync: vi.fn(), isPending: false },
+  }),
+}));
+
 vi.mock('@/hooks/mapMutationError', () => ({
   toastMutationError: vi.fn(),
 }));
@@ -56,9 +75,44 @@ function makeWrapper() {
   };
 }
 
+const buyer = {
+  id: 'p-1',
+  unit_id: 'u-1',
+  dni: '30111222',
+  full_name: 'García Juan',
+  phone: '+54 11 1234-5678',
+  email: 'juan@mail.com',
+};
+
+async function addEquipmentItem(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
+  // Change the item type to 'equipment' via the hidden native select Radix
+  // renders (avoids the building_id requirement for key items).
+  const hiddenSelects = document.querySelectorAll('select[aria-hidden="true"]');
+  for (const sel of Array.from(hiddenSelects)) {
+    const s = sel as HTMLSelectElement;
+    if (Array.from(s.options).some((o) => o.value === 'equipment')) {
+      await act(async () => {
+        fireEvent.change(s, { target: { value: 'equipment' } });
+      });
+      return;
+    }
+  }
+}
+
+async function selectParticular(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByDisplayValue('particular'));
+  await waitFor(() => {
+    expect(screen.getByLabelText('Buscar particular')).toBeInTheDocument();
+  });
+  await user.type(screen.getByLabelText('Buscar particular'), 'garcia');
+  await user.click(await screen.findByRole('option', { name: /garcía juan/i }));
+}
+
 describe('OrdenFormSheet', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseParticulares.mockReturnValue({ data: [], isFetching: false });
   });
 
   it('renders the sheet when open=true', () => {
@@ -87,11 +141,11 @@ describe('OrdenFormSheet', () => {
 
     // Administration select trigger is present by default
     expect(screen.getByRole('combobox')).toBeInTheDocument();
-    // Particular fields should not be visible
-    expect(screen.queryByLabelText(/nombre completo/i)).not.toBeInTheDocument();
+    // Particular selector should not be visible
+    expect(screen.queryByLabelText('Buscar particular')).not.toBeInTheDocument();
   });
 
-  it('shows particular fields after switching client_type radio to "particular"', async () => {
+  it('shows ParticularSelector after switching client_type radio to "particular"', async () => {
     const user = userEvent.setup();
     render(
       <OrdenFormSheet open={true} onOpenChange={vi.fn()} />,
@@ -102,39 +156,27 @@ describe('OrdenFormSheet', () => {
     await user.click(particularRadio);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument();
+      expect(screen.getByLabelText('Buscar particular')).toBeInTheDocument();
     });
     // Administration select should not be visible anymore
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/administración \*/i)).not.toBeInTheDocument();
   });
 
-  it('shows DNI, phone, and email inputs only for particular client type', async () => {
+  it('shows ParticularSelector only for particular client type', async () => {
     const user = userEvent.setup();
     render(
       <OrdenFormSheet open={true} onOpenChange={vi.fn()} />,
       { wrapper: makeWrapper() },
     );
 
-    const particularRadio = screen.getByDisplayValue('particular');
-    await user.click(particularRadio);
+    // Default administration: no selector
+    expect(screen.queryByLabelText('Buscar particular')).not.toBeInTheDocument();
+
+    await user.click(screen.getByDisplayValue('particular'));
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/dni/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(screen.getByLabelText('Buscar particular')).toBeInTheDocument();
     });
-  });
-
-  it('hides DNI, phone, email, and full_name when client_type is administration', () => {
-    render(
-      <OrdenFormSheet open={true} onOpenChange={vi.fn()} />,
-      { wrapper: makeWrapper() },
-    );
-
-    expect(screen.queryByLabelText(/nombre completo/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/dni/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/teléfono/i)).not.toBeInTheDocument();
   });
 
   it('blocks submit when items array is empty and shows validation message', async () => {
@@ -209,7 +251,7 @@ describe('OrdenFormSheet', () => {
     });
   });
 
-  it('blocks submit for particular client with empty full_name', async () => {
+  it('blocks submit for particular client without selecting a particular', async () => {
     const user = userEvent.setup();
     render(
       <OrdenFormSheet open={true} onOpenChange={vi.fn()} />,
@@ -220,69 +262,35 @@ describe('OrdenFormSheet', () => {
     const particularRadio = screen.getByDisplayValue('particular');
     await user.click(particularRadio);
 
-    // Add an item
-    const addButton = screen.getByRole('button', { name: /agregar ítem/i });
-    await user.click(addButton);
-
-    // Submit without filling full_name
+    // Submit without selecting a particular
     const submitButton = screen.getByRole('button', { name: /guardar/i });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/el nombre completo es obligatorio/i)).toBeInTheDocument();
+      expect(screen.getByText(/seleccioná un particular/i)).toBeInTheDocument();
     });
     expect(mockCreateOrden).not.toHaveBeenCalled();
   });
 
-  it('calls createOrden with correct payload for a particular client with a non-key item', async () => {
-    // Use particular client + non-key item to avoid Radix Select interactions
-    // (Radix Select has hasPointerCapture issues in jsdom; we test the form logic, not the dropdown)
-    const user = userEvent.setup();
+  it('submits payload with particular_id and snapshot autofill for a particular client', async () => {
+    mockUseParticulares.mockReturnValue({ data: [buyer], isFetching: false });
     mockCreateOrden.mockResolvedValue('new-order-id');
 
-    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
     render(
-      <OrdenFormSheet open={true} onOpenChange={onOpenChange} />,
+      <OrdenFormSheet open={true} onOpenChange={vi.fn()} />,
       { wrapper: makeWrapper() },
     );
 
-    // Switch to particular
-    const particularRadio = screen.getByDisplayValue('particular');
-    await user.click(particularRadio);
+    // Search + select the buyer via the selector
+    await selectParticular(user);
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument();
-    });
+    // The bound selector shows the selected particular
+    expect(screen.getByLabelText('Buscar particular')).toHaveValue('García Juan');
 
-    // Fill full_name (required)
-    await user.type(screen.getByLabelText(/nombre completo/i), 'Juan Pérez');
+    // Add a non-key item to skip the building requirement
+    await addEquipmentItem(user);
 
-    // Add an item (default type = 'key'); change it to equipment via hidden select to skip building requirement
-    await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
-
-    // Use hidden aria-hidden select to change item_type to 'equipment' (no building_id required)
-    const { container } = render(<></>, { wrapper: makeWrapper() });
-    void container; // unused — we rely on the outer render's DOM
-
-    // Change item_type to 'equipment' via the hidden native select Radix renders
-    const hiddenSelects = document.querySelectorAll('select[aria-hidden="true"]');
-    // First hidden select is administration_id (not visible), then item_type
-    // Find the one with 'equipment' option
-    let itemTypeSelect: HTMLSelectElement | null = null;
-    for (const sel of Array.from(hiddenSelects)) {
-      const s = sel as HTMLSelectElement;
-      if (Array.from(s.options).some((o) => o.value === 'equipment')) {
-        itemTypeSelect = s;
-        break;
-      }
-    }
-    if (itemTypeSelect) {
-      await act(async () => {
-        fireEvent.change(itemTypeSelect!, { target: { value: 'equipment' } });
-      });
-    }
-
-    // Fill quantity (default is 1, which is valid)
     const submitButton = screen.getByRole('button', { name: /guardar/i });
     await user.click(submitButton);
 
@@ -291,7 +299,11 @@ describe('OrdenFormSheet', () => {
         expect.objectContaining({
           order: expect.objectContaining({
             client_type: 'particular',
-            particular_full_name: 'Juan Pérez',
+            particular_id: 'p-1',
+            particular_full_name: 'García Juan',
+            particular_dni: '30111222',
+            particular_phone: '+54 11 1234-5678',
+            particular_email: 'juan@mail.com',
             status: 'draft',
           }),
           items: expect.arrayContaining([
@@ -306,6 +318,7 @@ describe('OrdenFormSheet', () => {
 
   it('closes the sheet on successful mutation', async () => {
     const user = userEvent.setup();
+    mockUseParticulares.mockReturnValue({ data: [buyer], isFetching: false });
     mockCreateOrden.mockResolvedValue('new-order-id');
 
     const onOpenChange = vi.fn();
@@ -314,34 +327,8 @@ describe('OrdenFormSheet', () => {
       { wrapper: makeWrapper() },
     );
 
-    // Use particular client to avoid Radix Select for administration_id
-    const particularRadio = screen.getByDisplayValue('particular');
-    await user.click(particularRadio);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument();
-    });
-
-    // Fill full_name
-    await user.type(screen.getByLabelText(/nombre completo/i), 'María García');
-
-    // Add an item and change type to 'equipment' via the hidden native select
-    await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
-
-    const hiddenSelects = document.querySelectorAll('select[aria-hidden="true"]');
-    let itemTypeSelect: HTMLSelectElement | null = null;
-    for (const sel of Array.from(hiddenSelects)) {
-      const s = sel as HTMLSelectElement;
-      if (Array.from(s.options).some((o) => o.value === 'equipment')) {
-        itemTypeSelect = s;
-        break;
-      }
-    }
-    if (itemTypeSelect) {
-      await act(async () => {
-        fireEvent.change(itemTypeSelect!, { target: { value: 'equipment' } });
-      });
-    }
+    await selectParticular(user);
+    await addEquipmentItem(user);
 
     const submitButton = screen.getByRole('button', { name: /guardar/i });
     await user.click(submitButton);
