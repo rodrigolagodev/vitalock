@@ -12,14 +12,20 @@ export interface BuildingRow {
   equipment_count: number;
 }
 
-export function useBuildings() {
+export function useBuildings({ administrationId }: { administrationId?: string } = {}) {
   return useQuery({
-    queryKey: buildingsKey(),
+    queryKey: buildingsKey(administrationId),
     queryFn: async (): Promise<BuildingRow[]> => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('buildings')
         .select('id, name, address, status, administration_id')
         .order('name');
+
+      if (administrationId) {
+        query = query.eq('administration_id', administrationId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 

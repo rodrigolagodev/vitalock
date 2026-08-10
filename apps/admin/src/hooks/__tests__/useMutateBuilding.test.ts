@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
-import { buildingsKey } from '@/lib/queryKeys';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
@@ -46,12 +45,15 @@ function makeWrapper() {
 
 import { useMutateBuilding } from '../useMutateBuilding';
 
+// The prefix used for all buildings invalidation
+const buildingsPrefix = ['admin', 'buildings'];
+
 describe('useMutateBuilding', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('createBuilding happy path → invalidates buildingsKey and shows success toast', async () => {
+  it('createBuilding happy path → invalidates buildings prefix and shows success toast', async () => {
     const fakeBuilding = { id: 'b-1', name: 'Torre Norte', address: null, status: 'active' };
     mockSingle.mockResolvedValueOnce({ data: fakeBuilding, error: null });
 
@@ -71,7 +73,7 @@ describe('useMutateBuilding', () => {
     await waitFor(() => expect(result.current.createBuilding.isSuccess).toBe(true));
 
     expect(invalidateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: buildingsKey() }),
+      expect.objectContaining({ queryKey: buildingsPrefix }),
     );
     expect(toast.success).toHaveBeenCalledWith('Edificio creado correctamente.');
   });
@@ -99,7 +101,7 @@ describe('useMutateBuilding', () => {
     expect(toastMutationError).toHaveBeenCalledWith(dbError);
   });
 
-  it('deactivateBuilding happy path → invalidates buildingsKey and shows success toast', async () => {
+  it('deactivateBuilding happy path → invalidates buildings prefix and shows success toast', async () => {
     const fakeBuilding = { id: 'b-2', status: 'inactive' };
     mockSingle.mockResolvedValueOnce({ data: fakeBuilding, error: null });
 
@@ -115,7 +117,7 @@ describe('useMutateBuilding', () => {
     await waitFor(() => expect(result.current.deactivateBuilding.isSuccess).toBe(true));
 
     expect(invalidateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: buildingsKey() }),
+      expect.objectContaining({ queryKey: buildingsPrefix }),
     );
     expect(toast.success).toHaveBeenCalledWith('Edificio desactivado correctamente.');
   });
@@ -137,5 +139,26 @@ describe('useMutateBuilding', () => {
 
     await waitFor(() => expect(result.current.deactivateBuilding.isError).toBe(true));
     expect(toastMutationError).toHaveBeenCalledWith(dbError);
+  });
+
+  it('prefix invalidation covers both scoped and unscoped buildings keys (task 4.13)', async () => {
+    // Verify that the invalidation uses ['admin','buildings'] prefix (covers all variants)
+    const fakeBuilding = { id: 'b-5', status: 'inactive' };
+    mockSingle.mockResolvedValueOnce({ data: fakeBuilding, error: null });
+
+    const { queryClient, Wrapper } = makeWrapper();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = renderHook(() => useMutateBuilding(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.deactivateBuilding.mutateAsync({ id: 'b-5' });
+    });
+
+    await waitFor(() => expect(result.current.deactivateBuilding.isSuccess).toBe(true));
+
+    // Must use prefix ['admin','buildings'] — not a specific scoped key
+    const call = (invalidateSpy.mock.calls[0] as [{ queryKey: unknown[] }])[0];
+    expect(call.queryKey).toEqual(buildingsPrefix);
   });
 });

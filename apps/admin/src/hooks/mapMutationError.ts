@@ -58,6 +58,11 @@ export function toastMutationError(err: unknown): void {
       case '23505':
         if (err.details?.includes('units_one_admin_per_building')) {
           toast.error('Ya existe una unidad administrativa en este edificio.');
+        } else if (
+          err.details?.includes('administrations_tax_id_key') ||
+          err.details?.includes('tax_id')
+        ) {
+          toast.error('Ya existe una administración con ese CUIT/CUIL.');
         } else {
           toast.error('Ya existe un registro con esos datos.');
         }

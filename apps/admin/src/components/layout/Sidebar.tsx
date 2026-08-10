@@ -15,7 +15,7 @@ export function Sidebar({ className }: SidebarProps) {
   const navContent = (
     <nav className="flex flex-col gap-4 p-4">
       <NavSection label="Infraestructura" icon={<Building2 className="h-4 w-4" />}>
-        <NavItem label="Edificios" to="/buildings" />
+        <NavItem label="Administraciones" to="/administraciones" />
       </NavSection>
       <NavSection label="Personal" disabled />
       <NavSection label="Ventas" disabled />

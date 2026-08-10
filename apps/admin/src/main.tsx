@@ -10,7 +10,8 @@ import { ProtectedRoute } from './auth/ProtectedRoute';
 import App from './App';
 import LoginPage from './routes/LoginPage';
 import AuthErrorPage from './routes/AuthErrorPage';
-import BuildingsPage from './routes/buildings/BuildingsPage';
+import AdministrationsPage from './routes/administraciones/AdministrationsPage';
+import AdministrationDetailPage from './routes/administraciones/AdministrationDetailPage';
 import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
 import './styles/globals.css';
 
@@ -32,8 +33,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/error" element={<AuthErrorPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<App />}>
-                <Route index element={<Navigate to="/buildings" replace />} />
-                <Route path="buildings" element={<BuildingsPage />} />
+                <Route index element={<Navigate to="/administraciones" replace />} />
+                <Route path="administraciones" element={<AdministrationsPage />} />
+                <Route path="administraciones/:adminId" element={<AdministrationDetailPage />} />
+                <Route path="buildings" element={<Navigate to="/administraciones" replace />} />
                 <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
               </Route>
             </Route>
