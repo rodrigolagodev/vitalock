@@ -13,6 +13,8 @@ import AuthErrorPage from './routes/AuthErrorPage';
 import AdministrationsPage from './routes/administraciones/AdministrationsPage';
 import AdministrationDetailPage from './routes/administraciones/AdministrationDetailPage';
 import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
+import OrdenesPage from './routes/ordenes/OrdenesPage';
+import OrdenDetailPage from './routes/ordenes/OrdenDetailPage';
 import './styles/globals.css';
 
 const env = loadClientEnv(import.meta.env); // fail-fast at boot
@@ -38,6 +40,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="administraciones/:adminId" element={<AdministrationDetailPage />} />
                 <Route path="buildings" element={<Navigate to="/administraciones" replace />} />
                 <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
+                <Route path="ordenes" element={<OrdenesPage />} />
+                <Route path="ordenes/:ordenId" element={<OrdenDetailPage />} />
               </Route>
             </Route>
           </Routes>

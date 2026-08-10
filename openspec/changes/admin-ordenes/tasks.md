@@ -51,17 +51,17 @@ Chain strategy: stacked-to-main
 
 ## Phase 2 — List Page + Create Form (PR 2)
 
-- [ ] 2.1 Create `apps/admin/src/components/ordenes/OrdenStatusBadge.tsx`: maps `orders.status` enum to Spanish label + Shadcn Badge `variant`; no props other than `status`.
-- [ ] 2.2 Create `apps/admin/src/components/ordenes/OrdenesTable.tsx`: Shadcn Table, skeleton rows while loading, `OrdenStatusBadge`, item-count column, `created_at` formatted, row click → navigate to `/ordenes/:id`; two empty states (no-records vs no-results driven by `hasFilters` prop).
-- [ ] 2.3 Create `apps/admin/src/components/ordenes/OrdenFormSheet.tsx`: RHF + Zod; client_type radio (administration → useAdministrations combobox, particular → full_name/dni/phone/email fields); `useFieldArray` for items (type select, quantity, optional description, building_id select for key items); submit blocked if items empty; calls `useMutateOrden.createOrden`; sheet closes on success; `toastMutationError` on error; Sonner direct import.
-- [ ] 2.4 Create `apps/admin/src/routes/ordenes/OrdenesPage.tsx`: renders search `Input` (debounced 300 ms, local state), status filter pills (all/draft/in_preparation/ready_for_pickup/completed/cancelled), "Nueva orden" Button that opens `OrdenFormSheet`, `OrdenesTable`; passes `{ search, status }` to `useOrdens`.
-- [ ] 2.5 Modify `apps/admin/src/components/layout/Sidebar.tsx`: add "Ordenes" `NavSection` with one `NavItem` `/ordenes` between Infraestructura and Personal sections.
-- [ ] 2.6 Modify `apps/admin/src/main.tsx`: add `/ordenes` → `OrdenesPage` and `/ordenes/:ordenId` → `OrdenDetailPage` inside existing `ProtectedRoute` + `App` wrapper.
+- [x] 2.1 Create `apps/admin/src/components/ordenes/OrdenStatusBadge.tsx`: maps `orders.status` enum to Spanish label + Shadcn Badge `variant`; no props other than `status`.
+- [x] 2.2 Create `apps/admin/src/components/ordenes/OrdenesTable.tsx`: Shadcn Table, skeleton rows while loading, `OrdenStatusBadge`, item-count column, `created_at` formatted, row click → navigate to `/ordenes/:id`; two empty states (no-records vs no-results driven by `hasFilters` prop).
+- [x] 2.3 Create `apps/admin/src/components/ordenes/OrdenFormSheet.tsx`: RHF + Zod; client_type radio (administration → useAdministrations combobox, particular → full_name/dni/phone/email fields); `useFieldArray` for items (type select, quantity, optional description, building_id select for key items); submit blocked if items empty; calls `useMutateOrden.createOrden`; sheet closes on success; `toastMutationError` on error; Sonner direct import.
+- [x] 2.4 Create `apps/admin/src/routes/ordenes/OrdenesPage.tsx`: renders search `Input` (debounced 300 ms, local state), status filter pills (all/draft/in_preparation/ready_for_pickup/completed/cancelled), "Nueva orden" Button that opens `OrdenFormSheet`, `OrdenesTable`; passes `{ search, status }` to `useOrdens`.
+- [x] 2.5 Modify `apps/admin/src/components/layout/Sidebar.tsx`: add "Ordenes" `NavSection` with one `NavItem` `/ordenes` between Infraestructura and Personal sections.
+- [x] 2.6 Modify `apps/admin/src/main.tsx`: add `/ordenes` → `OrdenesPage` and `/ordenes/:ordenId` → `OrdenDetailPage` inside existing `ProtectedRoute` + `App` wrapper.
 
 ### Phase 2 Tests
 
-- [ ] 2.7 Write `apps/admin/src/components/ordenes/__tests__/OrdenFormSheet.test.tsx`: submit blocked when items array empty; client_type radio toggles administration vs particular fields; submit calls `createOrden` with correct payload including items array; form closes on mutation success.
-- [ ] 2.8 Write `apps/admin/src/components/ordenes/__tests__/OrdenesTable.test.tsx`: renders skeleton during loading; renders two distinct empty-state messages; renders status badge per row; row click fires navigate.
+- [x] 2.7 Write `apps/admin/src/components/ordenes/__tests__/OrdenFormSheet.test.tsx`: submit blocked when items array empty; client_type radio toggles administration vs particular fields; submit calls `createOrden` with correct payload including items array; form closes on mutation success.
+- [x] 2.8 Write `apps/admin/src/components/ordenes/__tests__/OrdenesTable.test.tsx`: renders skeleton during loading; renders two distinct empty-state messages; renders status badge per row; row click fires navigate.
 
 ---
 

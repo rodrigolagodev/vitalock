@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, Menu, X } from 'lucide-react';
+import { Building2, ClipboardList, Menu, X } from 'lucide-react';
 import { cn } from '@vitalock/ui';
 import { Button } from '@/components/ui/button';
 import { NavSection } from './NavSection';
@@ -16,6 +16,9 @@ export function Sidebar({ className }: SidebarProps) {
     <nav className="flex flex-col gap-4 p-4">
       <NavSection label="Infraestructura" icon={<Building2 className="h-4 w-4" />}>
         <NavItem label="Administraciones" to="/administraciones" />
+      </NavSection>
+      <NavSection label="Ordenes" icon={<ClipboardList className="h-4 w-4" />}>
+        <NavItem label="Ordenes" to="/ordenes" />
       </NavSection>
       <NavSection label="Personal" disabled />
       <NavSection label="Ventas" disabled />

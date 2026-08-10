@@ -68,8 +68,53 @@
 3. **TanStack Query onError signature**: `onError` passes `(err, variables, context)` — test assertions updated to check only `mock.calls[0]![0]` instead of `toHaveBeenCalledWith(err)` directly.
 4. **`.order()` placement in useOrdens**: Moved `.order()` to be the last call in the chain (after optional `.eq()` and `.or()`) to ensure the mock terminal step works correctly in tests. Functionally identical.
 
-## Remaining Tasks (Phase 2 + 3)
+## Remaining Tasks
 
-- [ ] 2.1–2.8 Phase 2: OrdenesPage, OrdenesTable, OrdenFormSheet, OrdenStatusBadge, Sidebar, routes, tests
 - [ ] 3.1–3.7 Phase 3: OrdenDetailPage, OrderItemsTable, ConfigureKeyItemSheet, QuickUnitCreateDialog, tests
 - [ ] 4.1–4.5 Pipeline gate phase
+
+---
+
+## Work Unit: PR 2 — List Page + Create Form
+
+**Mode**: Standard (no strict TDD)
+**Chain**: stacked-to-main, PR 2 of 3
+
+## Completed Tasks
+
+- [x] 2.1 Create `apps/admin/src/components/ordenes/OrdenStatusBadge.tsx`
+- [x] 2.2 Create `apps/admin/src/components/ordenes/OrdenesTable.tsx`
+- [x] 2.3 Create `apps/admin/src/components/ordenes/OrdenFormSheet.tsx`
+- [x] 2.4 Create `apps/admin/src/routes/ordenes/OrdenesPage.tsx`
+- [x] 2.5 Modify `apps/admin/src/components/layout/Sidebar.tsx` (already had Ordenes NavSection)
+- [x] 2.6 Modify `apps/admin/src/main.tsx` — registered `/ordenes` + `/ordenes/:ordenId` routes
+- [x] 2.7 Create `apps/admin/src/components/ordenes/__tests__/OrdenFormSheet.test.tsx` (12 tests)
+- [x] 2.8 Create `apps/admin/src/components/ordenes/__tests__/OrdenesTable.test.tsx` (8 tests)
+
+## Files Changed
+
+| File | Action | Notes |
+|------|--------|-------|
+| `apps/admin/src/components/ordenes/OrdenStatusBadge.tsx` | Created | Status → Badge variant + Spanish label |
+| `apps/admin/src/components/ordenes/OrdenesTable.tsx` | Created | Shadcn Table, skeleton rows, two empty states, OrdenStatusBadge, Link to /ordenes/:id |
+| `apps/admin/src/components/ordenes/OrdenFormSheet.tsx` | Created | RHF+Zod, client_type radio, useFieldArray items, building_id gating for key items, createOrden RPC call |
+| `apps/admin/src/routes/ordenes/OrdenesPage.tsx` | Created | Search input (debounced 300ms), status pills, OrdenesTable, OrdenFormSheet |
+| `apps/admin/src/routes/ordenes/OrdenDetailPage.tsx` | Created | Placeholder stub for PR#3 |
+| `apps/admin/src/main.tsx` | Modified | Added /ordenes and /ordenes/:ordenId routes inside ProtectedRoute+App |
+| `apps/admin/src/components/ordenes/__tests__/OrdenFormSheet.test.tsx` | Created | 12 tests |
+| `apps/admin/src/components/ordenes/__tests__/OrdenesTable.test.tsx` | Created | 8 tests |
+
+## Work Unit Evidence
+
+| Evidence | Result |
+|---|---|
+| Focused test command | `pnpm --filter admin test` → **22 test files, 150 tests, 0 failures** (was 129, added 21 new) |
+| Pipeline gate: typecheck | PASS — 0 errors |
+| Pipeline gate: lint | PASS — 4 pre-existing shadcn warnings, 0 errors |
+| Pipeline gate: build | PASS — clean |
+
+## Deviations from Design
+
+1. **Radix Select in jsdom**: Tests for OrdenFormSheet cannot click open Radix Select dropdowns due to `hasPointerCapture` not being implemented in jsdom. Submit-with-payload tests use particular client type + non-key item type (no Select interaction needed) and the hidden native Radix Select for item_type change. Structural combobox presence/absence tests are fully covered.
+2. **Sidebar already had Ordenes NavSection**: Task 2.5 was already complete from a prior partial run; no changes required to Sidebar.tsx.
+3. **toast import removed from OrdenFormSheet**: The component imported `toast` directly from sonner but only used `toastMutationError`. Removed the direct import to keep lint clean.
