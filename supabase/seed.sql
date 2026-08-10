@@ -100,7 +100,7 @@ insert into public.rfid_keys
   -- Torre Callao 101: dos activas + una perdida.
   ('RFID-TC-101-001', 'cccccccc-cccc-cccc-cccc-ccccccccccc1', 'active', 'Titular: Perez, Juan.',            now() - interval '90 days'),
   ('RFID-TC-101-002', 'cccccccc-cccc-cccc-cccc-ccccccccccc1', 'active', 'Titular: Perez, Ana (esposa).',    now() - interval '90 days'),
-  ('RFID-TC-101-003', 'cccccccc-cccc-cccc-cccc-ccccccccccc1', 'lost',   'Reportada perdida el 2026-04-12.', now() - interval '120 days'),
+  ('RFID-TC-101-003', 'cccccccc-cccc-cccc-cccc-ccccccccccc1', 'disabled', 'Reportada perdida el 2026-04-12.', now() - interval '120 days'),
 
   -- Torre Callao 102: una activa + una desactivada.
   ('RFID-TC-102-001', 'cccccccc-cccc-cccc-cccc-ccccccccccc2', 'active',   null,                        now() - interval '30 days'),
@@ -122,7 +122,7 @@ insert into public.rfid_keys
   -- Torre Callao — unidad administrativa (00).
   ('RFID-TC-ADM-001', 'cccccccc-cccc-cccc-cccc-ccccccccccc0', 'active', 'Para: Portero titular.',      now() - interval '365 days'),
   ('RFID-TC-ADM-002', 'cccccccc-cccc-cccc-cccc-ccccccccccc0', 'active', 'Para: Personal de limpieza.', now() - interval '365 days'),
-  ('RFID-TC-ADM-003', 'cccccccc-cccc-cccc-cccc-ccccccccccc0', 'lost',   'Perdida en operativo mantenimiento.', now() - interval '200 days'),
+  ('RFID-TC-ADM-003', 'cccccccc-cccc-cccc-cccc-ccccccccccc0', 'disabled', 'Perdida en operativo mantenimiento.', now() - interval '200 days'),
 
   -- Complejo Barracas — unidad administrativa (00).
   ('RFID-CB-ADM-001', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee0', 'active',   'Para: Administrador general.', now() - interval '150 days'),
