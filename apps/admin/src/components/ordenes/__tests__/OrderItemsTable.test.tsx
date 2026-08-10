@@ -47,6 +47,16 @@ vi.mock('@/hooks/mapMutationError', () => ({
   toastMutationError: vi.fn(),
 }));
 
+const mockRecordPickup = vi.fn();
+
+vi.mock('@/hooks/useMutateKey', () => ({
+  useMutateKey: () => ({
+    createKey: { mutateAsync: vi.fn(), isPending: false },
+    changeStatus: { mutateAsync: vi.fn(), isPending: false },
+    recordPickup: { mutateAsync: mockRecordPickup, isPending: false },
+  }),
+}));
+
 import { OrderItemsTable } from '../OrderItemsTable';
 
 function makeWrapper() {
@@ -108,6 +118,24 @@ const pendingNonKeyItem: OrderItemRow = {
   building_id: null,
   produced_key_id: null,
   rfid_keys: null,
+};
+
+const pickedUpKeyItem: OrderItemRow = {
+  id: 'item-5',
+  order_id: 'order-1',
+  item_type: 'key',
+  quantity: 1,
+  description: 'Llave ya retirada',
+  status: 'configured',
+  building_id: 'bld-1',
+  produced_key_id: 'key-id-2',
+  rfid_keys: {
+    picked_up_at: '2026-08-10T00:00:00Z',
+    picked_up_by_name: 'Juan',
+    picked_up_by_surname: 'García',
+    picked_up_by_dni: '30111222',
+    delivered_by_staff_id: null,
+  },
 };
 
 describe('OrderItemsTable', () => {
@@ -245,5 +273,80 @@ describe('OrderItemsTable', () => {
 
     expect(screen.getByText('Llave')).toBeInTheDocument();
     expect(screen.getByText('Mantenimiento')).toBeInTheDocument();
+  });
+
+  it('renders "Registrar retiro" for configured keys without pickup when canRegisterPickup', () => {
+    render(
+      <OrderItemsTable
+        items={[configuredKeyItem]}
+        orderId="order-1"
+        canRegisterPickup
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(
+      screen.getByRole('button', { name: /registrar retiro/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('hides "Registrar retiro" when canRegisterPickup is false', () => {
+    render(
+      <OrderItemsTable items={[configuredKeyItem]} orderId="order-1" />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /registrar retiro/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides "Registrar retiro" for keys already picked up', () => {
+    render(
+      <OrderItemsTable
+        items={[pickedUpKeyItem]}
+        orderId="order-1"
+        canRegisterPickup
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /registrar retiro/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides "Registrar retiro" for non-key configured items', () => {
+    render(
+      <OrderItemsTable
+        items={[{ ...pendingNonKeyItem, status: 'configured' }]}
+        orderId="order-1"
+        canRegisterPickup
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /registrar retiro/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens PickupKeyDialog prefilled when "Registrar retiro" is clicked', async () => {
+    const user = userEvent.setup();
+    render(
+      <OrderItemsTable
+        items={[configuredKeyItem]}
+        orderId="order-1"
+        canRegisterPickup
+        pickupPerson={{ full_name: 'García Juan', dni: '30111222' }}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    await user.click(screen.getByRole('button', { name: /registrar retiro/i }));
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByLabelText(/nombre/i)).toHaveValue('García');
+    expect(screen.getByLabelText(/dni/i)).toHaveValue('30111222');
   });
 });

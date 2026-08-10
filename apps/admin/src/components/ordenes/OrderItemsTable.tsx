@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useMutateOrderItem } from '@/hooks/useMutateOrderItem';
 import { ConfigureKeyItemSheet } from './ConfigureKeyItemSheet';
+import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
 import type { OrderItemRow } from '@/hooks/useOrden';
 
 const ITEM_TYPE_LABELS: Record<string, string> = {
@@ -42,10 +43,24 @@ const ITEM_STATUS_VARIANTS: Record<
 interface OrderItemsTableProps {
   items: OrderItemRow[];
   orderId: string;
+  /**
+   * Pickup registration is allowed (particular order in ready_for_pickup).
+   * When true, configured key rows without a picked_up_at timestamp show the
+   * "Registrar retiro" action, which opens PickupKeyDialog.
+   */
+  canRegisterPickup?: boolean;
+  /** Authorized pickup person — prefills the pickup registration dialog. */
+  pickupPerson?: PickupPersonPrefill | null;
 }
 
-export function OrderItemsTable({ items, orderId }: OrderItemsTableProps) {
+export function OrderItemsTable({
+  items,
+  orderId,
+  canRegisterPickup = false,
+  pickupPerson,
+}: OrderItemsTableProps) {
   const [configureItem, setConfigureItem] = useState<OrderItemRow | null>(null);
+  const [pickupItem, setPickupItem] = useState<OrderItemRow | null>(null);
   const { cancelOrderItem } = useMutateOrderItem();
 
   const handleCancel = (item: OrderItemRow) => {
@@ -76,6 +91,11 @@ export function OrderItemsTable({ items, orderId }: OrderItemsTableProps) {
               items.map((item) => {
                 const isPending = item.status === 'pending';
                 const isKeyPending = item.item_type === 'key' && isPending;
+                const canPickup =
+                  canRegisterPickup &&
+                  item.item_type === 'key' &&
+                  item.produced_key_id != null &&
+                  !item.rfid_keys?.picked_up_at;
 
                 return (
                   <TableRow key={item.id}>
@@ -115,6 +135,15 @@ export function OrderItemsTable({ items, orderId }: OrderItemsTableProps) {
                             Cancelar ítem
                           </Button>
                         )}
+                        {canPickup && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPickupItem(item)}
+                          >
+                            Registrar retiro
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -133,6 +162,18 @@ export function OrderItemsTable({ items, orderId }: OrderItemsTableProps) {
           }}
           item={configureItem}
           orderId={orderId}
+        />
+      )}
+
+      {pickupItem && (
+        <PickupKeyDialog
+          open={pickupItem !== null}
+          onOpenChange={(v) => {
+            if (!v) setPickupItem(null);
+          }}
+          item={pickupItem}
+          orderId={orderId}
+          pickupPerson={pickupPerson}
         />
       )}
     </>

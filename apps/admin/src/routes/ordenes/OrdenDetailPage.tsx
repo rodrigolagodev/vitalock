@@ -1,9 +1,13 @@
 import { Link, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 import { useOrden } from '@/hooks/useOrden';
 import { useMutateOrden } from '@/hooks/useMutateOrden';
+import type { ParticularRow } from '@/hooks/useParticulares';
 import { OrdenStatusBadge } from '@/components/ordenes/OrdenStatusBadge';
 import { OrderItemsTable } from '@/components/ordenes/OrderItemsTable';
+import { PickupSection } from '@/components/ordenes/PickupSection';
 
 const TERMINAL_STATUSES = new Set(['completed', 'cancelled']);
 
@@ -11,6 +15,39 @@ export default function OrdenDetailPage() {
   const { ordenId } = useParams<{ ordenId: string }>();
   const { data: orden, isLoading, isError } = useOrden(ordenId);
   const { advanceOrdenStatus, cancelOrden } = useMutateOrden();
+
+  // Resolve the authorized pickup person for the pickup-registration dialog
+  // prefill: the buyer embed covers the default case; an explicit non-buyer
+  // pickup person needs one lookup (same key PickupSection uses, deduped).
+  const buyer = orden?.particulares ?? null;
+  const pickupParticularId = orden?.pickup_particular_id ?? null;
+  const needsPickupResolution = Boolean(
+    orden?.client_type === 'particular' &&
+      pickupParticularId &&
+      buyer &&
+      pickupParticularId !== buyer.id,
+  );
+
+  const { data: pickupPerson } = useQuery({
+    queryKey: ['admin', 'particulares', 'one', pickupParticularId ?? ''],
+    enabled: needsPickupResolution,
+    queryFn: async (): Promise<ParticularRow> => {
+      const { data, error } = await supabase
+        .from('particulares')
+        .select('id, unit_id, dni, full_name, phone, email')
+        .eq('id', pickupParticularId as string)
+        .single();
+      if (error) throw error;
+      return data as ParticularRow;
+    },
+  });
+
+  const pickupPersonPrefill =
+    buyer && (pickupParticularId == null || pickupParticularId === buyer.id)
+      ? { full_name: buyer.full_name, dni: buyer.dni }
+      : pickupPerson
+        ? { full_name: pickupPerson.full_name, dni: pickupPerson.dni }
+        : null;
 
   if (!ordenId) {
     return (
@@ -50,6 +87,7 @@ export default function OrdenDetailPage() {
   const isTerminal = TERMINAL_STATUSES.has(orden.status);
   const isDraft = orden.status === 'draft';
   const isReadyForPickup = orden.status === 'ready_for_pickup';
+  const isParticular = orden.client_type === 'particular';
 
   const clientLabel =
     orden.client_type === 'administration'
@@ -162,10 +200,18 @@ export default function OrdenDetailPage() {
         </div>
       </div>
 
+      {/* Pickup person (particular orders only, non-terminal) */}
+      {isParticular && !isTerminal && <PickupSection orden={orden} />}
+
       {/* Items table */}
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Ítems</h2>
-        <OrderItemsTable items={orden.order_items} orderId={orden.id} />
+        <OrderItemsTable
+          items={orden.order_items}
+          orderId={orden.id}
+          canRegisterPickup={isParticular && isReadyForPickup}
+          pickupPerson={pickupPersonPrefill}
+        />
       </div>
     </div>
   );
