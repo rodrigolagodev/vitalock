@@ -54,17 +54,9 @@ export default function AdministrationDetailPage() {
     );
   }
 
-  // Cast to AdministrationRow for the edit sheet (compatible superset)
-  const administrationForEdit: AdministrationRow = {
-    id: administration.id,
-    company_name: administration.company_name,
-    tax_id: administration.tax_id,
-    address: administration.address,
-    status: administration.status,
-    email: null,
-    phone: null,
-    notes: null,
-  };
+  // Pass through all fields from useAdministration to the edit sheet;
+  // its shape is a superset-compatible AdministrationRow.
+  const administrationForEdit: AdministrationRow = administration;
 
   return (
     <div className="flex flex-col gap-6 p-6">
