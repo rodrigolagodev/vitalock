@@ -16,3 +16,18 @@ export const decommissionImpactKey = (equipmentId: string) =>
 export const ordensKey = (status?: string, search?: string) =>
   ['admin', 'ordenes', status ?? 'all', search ?? ''] as const;
 export const ordenKey = (id: string) => ['admin', 'orden', id] as const;
+export const tareasKey = (
+  search?: string,
+  staffId?: string,
+  buildingId?: string,
+  status?: string,
+) =>
+  [
+    'admin',
+    'tareas',
+    search ?? '',
+    staffId ?? 'all',
+    buildingId ?? 'all',
+    status ?? 'all',
+  ] as const;
+export const staffKey = () => ['admin', 'staff'] as const;

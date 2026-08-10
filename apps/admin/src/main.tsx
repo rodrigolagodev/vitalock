@@ -15,6 +15,7 @@ import AdministrationDetailPage from './routes/administraciones/AdministrationDe
 import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
 import OrdenesPage from './routes/ordenes/OrdenesPage';
 import OrdenDetailPage from './routes/ordenes/OrdenDetailPage';
+import TareasPage from './routes/tareas/TareasPage';
 import './styles/globals.css';
 
 const env = loadClientEnv(import.meta.env); // fail-fast at boot
@@ -42,6 +43,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
                 <Route path="ordenes" element={<OrdenesPage />} />
                 <Route path="ordenes/:ordenId" element={<OrdenDetailPage />} />
+                <Route path="tareas" element={<TareasPage />} />
               </Route>
             </Route>
           </Routes>

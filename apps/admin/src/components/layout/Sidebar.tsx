@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, ClipboardList, Menu, X } from 'lucide-react';
+import { Building2, ClipboardList, ListTodo, Menu, X } from 'lucide-react';
 import { cn } from '@vitalock/ui';
 import { Button } from '@/components/ui/button';
 import { NavSection } from './NavSection';
@@ -22,7 +22,9 @@ export function Sidebar({ className }: SidebarProps) {
       </NavSection>
       <NavSection label="Personal" disabled />
       <NavSection label="Ventas" disabled />
-      <NavSection label="Tickets" disabled />
+      <NavSection label="Tareas" icon={<ListTodo className="h-4 w-4" />}>
+        <NavItem label="Tareas" to="/tareas" />
+      </NavSection>
     </nav>
   );
 
