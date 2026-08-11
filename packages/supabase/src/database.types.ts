@@ -483,6 +483,7 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          status: string
           unit_id: string
           updated_at: string
         }
@@ -493,6 +494,7 @@ export type Database = {
           full_name: string
           id?: string
           phone?: string | null
+          status?: string
           unit_id: string
           updated_at?: string
         }
@@ -503,6 +505,7 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          status?: string
           unit_id?: string
           updated_at?: string
         }
@@ -759,6 +762,28 @@ export type Database = {
         Args: { p_items: Json[]; p_order: Json }
         Returns: string
       }
+      create_product_with_initial_stock: {
+        Args: {
+          p_actor_staff_id?: string
+          p_category: string
+          p_cost_price?: number
+          p_name: string
+          p_note?: string
+          p_quantity?: number
+        }
+        Returns: string
+      }
+      create_stock_movement: {
+        Args: {
+          p_actor_staff_id?: string
+          p_note?: string
+          p_product_id: string
+          p_quantity: number
+          p_type: string
+          p_unit_cost?: number
+        }
+        Returns: string
+      }
       gen_order_number: { Args: never; Returns: string }
       recompute_order_status: {
         Args: { p_order_id: string }
@@ -773,6 +798,16 @@ export type Database = {
           p_picked_up_by_surname: string
         }
         Returns: undefined
+      }
+      resolve_equipment_installation: {
+        Args: {
+          p_actor_staff_id?: string
+          p_note?: string
+          p_serial: string
+          p_ticket_id: string
+          p_unit_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
