@@ -14,7 +14,7 @@ export interface CreateOrderInput {
   particular_phone?: string | null;
   particular_email?: string | null;
   notes?: string | null;
-  status?: 'draft' | 'in_preparation';
+  status?: 'draft';
 }
 
 export interface CreateOrderItemInput {
@@ -33,7 +33,7 @@ export interface CreateOrderItemInput {
   pickup_particular_id?: string | null;
   /**
    * Inventory SKU consumed by this line. Required for key/equipment items so
-   * that the AFTER INSERT trigger creates a stock reservation.
+   * that the confirm_order RPC creates a stock reservation.
    */
   product_id?: string | null;
 }
@@ -47,8 +47,16 @@ export interface CancelOrdenInput {
   id: string;
 }
 
-export interface AdvanceOrdenStatusInput {
+export interface ConfirmOrdenInput {
   id: string;
+}
+
+export interface UpdateDraftOrdenInput {
+  id: string;
+  /** Optimistic concurrency token — must match orders.updated_at at the DB level. */
+  expectedUpdatedAt: string;
+  order: Partial<CreateOrderInput>;
+  items: (CreateOrderItemInput & { id?: string })[];
 }
 
 export interface SetPickupPersonInput {
@@ -95,18 +103,36 @@ export function useMutateOrden() {
     onError: toastMutationError,
   });
 
-  const advanceOrdenStatus = useMutation({
-    mutationFn: async ({ id }: AdvanceOrdenStatusInput) => {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'in_preparation' })
-        .eq('id', id);
+  const confirmOrden = useMutation({
+    mutationFn: async ({ id }: ConfirmOrdenInput) => {
+      const { error } = await supabase.rpc('confirm_order', { p_order_id: id });
       if (error) throw error;
     },
     onSuccess: (_data, vars) => {
       void queryClient.invalidateQueries({ queryKey: ordensKey() });
       void queryClient.invalidateQueries({ queryKey: ordenKey(vars.id) });
-      toast.success('Preparación iniciada.');
+      toast.success('Orden confirmada.');
+    },
+    onError: toastMutationError,
+  });
+
+  const updateDraftOrden = useMutation({
+    mutationFn: async ({ id, order, items, expectedUpdatedAt }: UpdateDraftOrdenInput) => {
+      const { data, error } = await supabase.rpc('update_draft_order_with_items', {
+        p_order_id: id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        p_patch: order as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        p_items: items as any,
+        p_expected_updated_at: expectedUpdatedAt,
+      });
+      if (error) throw error;
+      return data as string; // new updated_at timestamp
+    },
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ordensKey() });
+      void queryClient.invalidateQueries({ queryKey: ordenKey(vars.id) });
+      toast.success('Cambios guardados.');
     },
     onError: toastMutationError,
   });
@@ -146,7 +172,8 @@ export function useMutateOrden() {
   return {
     createOrden,
     cancelOrden,
-    advanceOrdenStatus,
+    confirmOrden,
+    updateDraftOrden,
     setPickupPerson,
     markOrderInvoiced,
   };

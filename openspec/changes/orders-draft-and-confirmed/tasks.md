@@ -64,22 +64,22 @@ Chain strategy: pending
 
 > Depends on Phase 1 (types derived from DB enum). Can proceed in parallel with Phase 3 if DB migration is applied locally.
 
-- [ ] T-10 **RED** — Add failing test in `apps/admin/src/hooks/__tests__/useMutateOrden.test.ts`: `confirmOrden` calls `supabase.rpc('confirm_order', { p_order_id: id })` and invalidates `ordensKey()` + `ordenKey(id)` on success.
+- [x] T-10 **RED** — Add failing test in `apps/admin/src/hooks/__tests__/useMutateOrden.test.ts`: `confirmOrden` calls `supabase.rpc('confirm_order', { p_order_id: id })` and invalidates `ordensKey()` + `ordenKey(id)` on success.
   _Implements: ordenes-admin/Confirm Order RPC (hook contract)_
 
-- [ ] T-11 **RED** — Add failing test in `apps/admin/src/hooks/__tests__/useMutateOrden.test.ts`: `updateDraftOrden` calls `supabase.rpc('update_draft_order_with_items', { p_order_id, p_patch, p_items, p_expected_updated_at })` and invalidates both query keys on success.
+- [x] T-11 **RED** — Add failing test in `apps/admin/src/hooks/__tests__/useMutateOrden.test.ts`: `updateDraftOrden` calls `supabase.rpc('update_draft_order_with_items', { p_order_id, p_patch, p_items, p_expected_updated_at })` and invalidates both query keys on success.
   _Implements: ordenes-admin/Draft Order Editability (hook contract)_
 
-- [ ] T-12 **RED** — Add failing test confirming `advanceOrdenStatus` is NOT exported from `useMutateOrden` (import-level assertion).
+- [x] T-12 **RED** — Add failing test confirming `advanceOrdenStatus` is NOT exported from `useMutateOrden` (import-level assertion).
   _Implements: design/file changes for useMutateOrden_
 
-- [ ] T-13 **Modify** `apps/admin/src/hooks/useOrdens.ts` — remove `'in_preparation'` from `OrderStatus` union, add `'confirmed'`.
+- [x] T-13 **Modify** `apps/admin/src/hooks/useOrdens.ts` — remove `'in_preparation'` from `OrderStatus` union, add `'confirmed'`.
   _Implements: ordenes-admin/Order Status State Machine (type safety)_
 
-- [ ] T-14 **Modify** `apps/admin/src/hooks/useMutateOrden.ts` — remove `AdvanceOrdenStatusInput` interface and `advanceOrdenStatus` mutation; remove `'in_preparation'` from `CreateOrderInput.status` union; add `ConfirmOrdenInput` interface and `confirmOrden` mutation calling `supabase.rpc('confirm_order', { p_order_id: id })`; add `UpdateDraftOrdenInput` interface and `updateDraftOrden` mutation calling `supabase.rpc('update_draft_order_with_items', {...})`.
+- [x] T-14 **Modify** `apps/admin/src/hooks/useMutateOrden.ts` — remove `AdvanceOrdenStatusInput` interface and `advanceOrdenStatus` mutation; remove `'in_preparation'` from `CreateOrderInput.status` union; add `ConfirmOrdenInput` interface and `confirmOrden` mutation calling `supabase.rpc('confirm_order', { p_order_id: id })`; add `UpdateDraftOrdenInput` interface and `updateDraftOrden` mutation calling `supabase.rpc('update_draft_order_with_items', {...})`.
   _Implements: ordenes-admin/Confirm Order RPC; ordenes-admin/Draft Order Editability_
 
-- [ ] T-15 **GREEN** — Run `pnpm --filter @vitalock/admin test -- useMutateOrden`; all T-10, T-11, T-12 tests pass.
+- [x] T-15 **GREEN** — Run `pnpm --filter @vitalock/admin test -- useMutateOrden`; all T-10, T-11, T-12 tests pass.
 
 ---
 

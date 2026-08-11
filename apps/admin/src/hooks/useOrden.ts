@@ -44,9 +44,9 @@ export type OrderType = 'keys' | 'technical';
 
 export type OrderStatus =
   | 'draft'
-  | 'in_preparation'
-  | 'ready_for_pickup'
+  | 'confirmed'
   | 'in_progress'
+  | 'ready_for_pickup'
   | 'completed'
   | 'invoiced'
   | 'cancelled';
