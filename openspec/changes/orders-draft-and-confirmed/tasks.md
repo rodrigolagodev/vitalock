@@ -113,19 +113,19 @@ Chain strategy: pending
 
 > Depends on Phase 2 (hook mutations) and Phase 3 (route registered).
 
-- [ ] T-23 **RED** — Extend `apps/admin/src/routes/ordenes/__tests__/OrdenDetailPage.test.tsx` (create file if absent) — failing tests: (a) draft status shows "Confirmar orden", "Editar", "Cancelar orden" buttons and hides "Iniciar preparación"; (b) confirmed status shows only "Cancelar orden"; (c) "Confirmar orden" click calls `confirmOrden.mutate`.
+- [x] T-23 **RED** — Extend `apps/admin/src/routes/ordenes/__tests__/OrdenDetailPage.test.tsx` (create file if absent) — failing tests: (a) draft status shows "Confirmar orden", "Editar", "Cancelar orden" buttons and hides "Iniciar preparación"; (b) confirmed status shows only "Cancelar orden"; (c) "Confirmar orden" click calls `confirmOrden.mutate`.
   _Implements: ordenes-admin/OrdenDetailPage Action Visibility_
 
-- [ ] T-24 **Modify** `apps/admin/src/routes/ordenes/OrdenDetailPage.tsx` — replace `advanceOrdenStatus` with `confirmOrden` and `updateDraftOrden` from `useMutateOrden`; render `[Editar]` (link to `/ordenes/:id/editar`) and `[Confirmar orden]` only when `status === 'draft'`; remove "Iniciar preparación" button entirely; keep cancel/invoice actions.
+- [x] T-24 **Modify** `apps/admin/src/routes/ordenes/OrdenDetailPage.tsx` — replace `advanceOrdenStatus` with `confirmOrden` and `updateDraftOrden` from `useMutateOrden`; render `[Editar]` (link to `/ordenes/:id/editar`) and `[Confirmar orden]` only when `status === 'draft'`; remove "Iniciar preparación" button entirely; keep cancel/invoice actions.
   _Implements: ordenes-admin/OrdenDetailPage Action Visibility_
 
-- [ ] T-25 **RED** — Add failing test in `apps/admin/src/components/ordenes/__tests__/OrdenesTable.test.tsx` — `status: 'confirmed'` row renders badge label "Confirmada"; `status: 'in_preparation'` is no longer a valid fixture (update existing fixture to `'draft'`).
+- [x] T-25 **RED** — Add failing test in `apps/admin/src/components/ordenes/__tests__/OrdenesTable.test.tsx` — `status: 'confirmed'` row renders badge label "Confirmada"; `status: 'in_preparation'` is no longer a valid fixture (update existing fixture to `'draft'`).
   _Implements: ordenes-admin/Order List with Filters; ordenes-admin/OrderStatus type_
 
-- [ ] T-26 **Modify** `apps/admin/src/components/ordenes/OrdenStatusBadge.tsx` — replace `in_preparation: 'En preparación'` with `confirmed: 'Confirmada'` in `STATUS_LABELS`; replace `in_preparation` entry in `STATUS_VARIANTS` with `confirmed: 'default'`.
+- [x] T-26 **Modify** `apps/admin/src/components/ordenes/OrdenStatusBadge.tsx` — replace `in_preparation: 'En preparación'` with `confirmed: 'Confirmada'` in `STATUS_LABELS`; replace `in_preparation` entry in `STATUS_VARIANTS` with `confirmed: 'default'`.
   _Implements: ordenes-admin/OrdenDetailPage Action Visibility (badge update)_
 
-- [ ] T-27 **GREEN** — Run `pnpm --filter @vitalock/admin test -- OrdenDetail OrdenesTable OrdenStatusBadge`; T-23 and T-25 tests pass.
+- [x] T-27 **GREEN** — Run `pnpm --filter @vitalock/admin test -- OrdenDetail OrdenesTable OrdenStatusBadge`; T-23 and T-25 tests pass.
 
 ---
 

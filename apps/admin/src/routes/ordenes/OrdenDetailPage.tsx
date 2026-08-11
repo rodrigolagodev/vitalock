@@ -36,7 +36,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function OrdenDetailPage() {
   const { ordenId } = useParams<{ ordenId: string }>();
   const { data: orden, isLoading, isError } = useOrden(ordenId);
-  const { advanceOrdenStatus, cancelOrden, markOrderInvoiced } = useMutateOrden();
+  const { confirmOrden, cancelOrden, markOrderInvoiced } = useMutateOrden();
   const { data: orderTareas = [] } = useOrderTareas(ordenId);
 
   if (!ordenId) {
@@ -91,8 +91,8 @@ export default function OrdenDetailPage() {
       ? `DNI: ${orden.particular_dni}`
       : null;
 
-  const handleAdvance = () => {
-    advanceOrdenStatus.mutate({ id: orden.id });
+  const handleConfirm = () => {
+    confirmOrden.mutate({ id: orden.id });
   };
 
   const handleCancel = () => {
@@ -169,12 +169,18 @@ export default function OrdenDetailPage() {
 
         {/* Action buttons */}
         <div className="flex items-center gap-2 flex-wrap">
-          {isKeysOrder && isDraft && (
+          {isDraft && (
+            <Button asChild variant="outline">
+              <Link to={`/ordenes/${orden.id}/editar`}>Editar</Link>
+            </Button>
+          )}
+
+          {isDraft && (
             <Button
-              onClick={handleAdvance}
-              disabled={advanceOrdenStatus.isPending}
+              onClick={handleConfirm}
+              disabled={confirmOrden.isPending}
             >
-              {advanceOrdenStatus.isPending ? 'Iniciando...' : 'Iniciar preparación'}
+              {confirmOrden.isPending ? 'Confirmando...' : 'Confirmar orden'}
             </Button>
           )}
 

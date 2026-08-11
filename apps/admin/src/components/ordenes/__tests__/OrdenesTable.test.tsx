@@ -44,7 +44,7 @@ const sampleOrdenes: OrdenRow[] = [
     administration_id: null,
     administrations: null,
     particular_full_name: 'Juan Pérez',
-    status: 'in_preparation',
+    status: 'confirmed',
     created_at: '2026-08-09T08:00:00Z',
     order_items: [{ id: 'item-3' }],
   },
@@ -92,7 +92,7 @@ describe('OrdenesTable', () => {
     );
 
     expect(screen.getByText('Borrador')).toBeInTheDocument();
-    expect(screen.getByText('En preparación')).toBeInTheDocument();
+    expect(screen.getByText('Confirmada')).toBeInTheDocument();
   });
 
   it('renders order_number as a link to /ordenes/:id', () => {

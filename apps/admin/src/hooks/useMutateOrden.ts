@@ -105,7 +105,8 @@ export function useMutateOrden() {
 
   const confirmOrden = useMutation({
     mutationFn: async ({ id }: ConfirmOrdenInput) => {
-      const { error } = await supabase.rpc('confirm_order', { p_order_id: id });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.rpc as any)('confirm_order', { p_order_id: id });
       if (error) throw error;
     },
     onSuccess: (_data, vars) => {
@@ -118,7 +119,8 @@ export function useMutateOrden() {
 
   const updateDraftOrden = useMutation({
     mutationFn: async ({ id, order, items, expectedUpdatedAt }: UpdateDraftOrdenInput) => {
-      const { data, error } = await supabase.rpc('update_draft_order_with_items', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('update_draft_order_with_items', {
         p_order_id: id,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         p_patch: order as any,

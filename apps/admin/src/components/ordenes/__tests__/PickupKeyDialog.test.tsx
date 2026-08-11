@@ -48,6 +48,8 @@ const configuredKeyItem: OrderItemRow = {
   building_id: 'b-1',
   produced_key_id: 'k-1',
   unit_id: null,
+  unit_price: null,
+  product_id: null,
   pickup_particular_id: null,
   pickup_particulares: null,
   rfid_keys: {

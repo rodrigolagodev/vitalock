@@ -44,7 +44,7 @@ const ITEM_STATUS_VARIANTS: Record<
 interface OrderItemsTableProps {
   items: OrderItemRow[];
   orderId: string;
-  /** Current order status — gates the "Configurar" action to in_preparation. */
+  /** Current order status — gates the "Configurar" action to in_progress. */
   orderStatus: OrdenDetailRow['status'];
   /**
    * Pickup registration is allowed (particular order in ready_for_pickup).
@@ -100,12 +100,12 @@ export function OrderItemsTable({
               items.map((item) => {
                 const isPending = item.status === 'pending';
                 // Configure is only offered while the order is actively being
-                // prepared — hidden in draft (not started yet) and in every
-                // later status (already configured or beyond).
+                // prepared — hidden in draft/confirmed (not started yet) and in
+                // every later status (already configured or beyond).
                 const canConfigure =
                   item.item_type === 'key' &&
                   isPending &&
-                  orderStatus === 'in_preparation';
+                  orderStatus === 'in_progress';
                 const canPickup =
                   canRegisterPickup &&
                   item.item_type === 'key' &&

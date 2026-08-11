@@ -12,7 +12,7 @@ import type { OrderType } from '@/hooks/useOrdens';
 type StatusFilter =
   | 'all'
   | 'draft'
-  | 'in_preparation'
+  | 'confirmed'
   | 'ready_for_pickup'
   | 'in_progress'
   | 'completed'
@@ -24,7 +24,7 @@ type TypeFilter = 'all' | OrderType;
 const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'draft', label: 'Borrador' },
-  { value: 'in_preparation', label: 'En preparación' },
+  { value: 'confirmed', label: 'Confirmada' },
   { value: 'ready_for_pickup', label: 'Listo para retirar' },
   { value: 'in_progress', label: 'En proceso' },
   { value: 'completed', label: 'Completado' },

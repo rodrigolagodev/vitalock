@@ -69,6 +69,8 @@ const sampleItem: OrderItemRow = {
   building_id: 'bld-1',
   produced_key_id: null,
   unit_id: null,
+  unit_price: null,
+  product_id: null,
   pickup_particular_id: null,
   pickup_particulares: null,
   rfid_keys: null,

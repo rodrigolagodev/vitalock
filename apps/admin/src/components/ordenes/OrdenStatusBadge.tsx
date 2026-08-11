@@ -3,7 +3,7 @@ import type { OrderStatus } from '@/hooks/useOrdens';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   draft: 'Borrador',
-  in_preparation: 'En preparación',
+  confirmed: 'Confirmada',
   ready_for_pickup: 'Listo para retirar',
   in_progress: 'En proceso',
   completed: 'Completado',
@@ -16,7 +16,7 @@ const STATUS_VARIANTS: Record<
   'default' | 'secondary' | 'outline' | 'destructive'
 > = {
   draft: 'secondary',
-  in_preparation: 'default',
+  confirmed: 'default',
   ready_for_pickup: 'default',
   in_progress: 'default',
   completed: 'secondary',
