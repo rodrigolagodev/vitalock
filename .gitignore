@@ -12,6 +12,9 @@ build/
 coverage/
 .vitest/
 
+# local index
+.codegraph/
+
 # turbo
 .turbo/
 
