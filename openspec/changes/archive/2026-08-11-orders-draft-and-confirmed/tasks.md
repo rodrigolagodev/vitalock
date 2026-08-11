@@ -131,14 +131,20 @@ Chain strategy: pending
 
 ## Phase 5: Verification
 
-- [ ] T-28 **Run** `pnpm --filter @vitalock/admin test` — all tests green; no regression in `useMutateOrden`, `useOrdens`, `OrdenesTable`, and new suites.
+- [x] T-28 **Run** `pnpm --filter @vitalock/admin test` — all tests green; no regression in `useMutateOrden`, `useOrdens`, `OrdenesTable`, and new suites.
+  _Evidence: verify-report 294/294 tests PASS; T-27 final GREEN run_
 
-- [ ] T-29 **Run** `pnpm --filter @vitalock/admin exec tsc --noEmit` — zero TypeScript errors; `OrderStatus` and `CreateOrderInput.status` unions are consistent everywhere.
+- [x] T-29 **Run** `pnpm --filter @vitalock/admin exec tsc --noEmit` — zero TypeScript errors; `OrderStatus` and `CreateOrderInput.status` unions are consistent everywhere.
+  _Evidence: verify-report typecheck 0 errors_
 
-- [ ] T-30 **Run** `pnpm --filter @vitalock/admin exec eslint src` — zero lint errors.
+- [x] T-30 **Run** `pnpm --filter @vitalock/admin exec eslint src` — zero lint errors.
+  _Evidence: verify-report lint 7 warnings (all pre-existing), 0 errors_
 
-- [ ] T-31 **Manual smoke** — Apply migration to local Supabase (`supabase db reset`); run `supabase/tests-sql/` assertions; confirm no `in_preparation` rows, trigger absent, `confirm_order` callable.
+- [x] T-31 **Manual smoke** — Apply migration to local Supabase (`supabase db reset`); run `supabase/tests-sql/` assertions; confirm no `in_preparation` rows, trigger absent, `confirm_order` callable.
+  _Evidence: verify-report DB smoke tests 11/11 PASS_
 
 - [ ] T-32 **Manual smoke** — Create draft order in admin UI → verify no tickets/reservations in DB → navigate to `/ordenes/:id/editar` → change items → save → verify header/items updated → click "Confirmar orden" → verify status=confirmed, tickets and reserva rows created.
+  _Manual UI smoke — deferred to real user session_
 
 - [ ] T-33 **Manual smoke** — Open a confirmed order detail page → verify "Editar" and "Confirmar orden" are absent → verify "Cancelar orden" is visible and triggers `cancel_order_releases_reservations`.
+  _Manual UI smoke — deferred to real user session_
