@@ -709,3 +709,21 @@ INSERT INTO support.tickets (
    'in_progress', '99999999-9999-9999-9999-999999999902', '99999999-9999-9999-9999-999999999901',
    now() - interval '4 hours');
 
+------------------------------------------------------------
+-- Stock inicial (public.products) — inventario para desarrollo
+------------------------------------------------------------
+-- Dos productos: una llave RFID y un equipo de control de acceso, cada uno
+-- con su movimiento de compra (compra) como stock inicial. Los movimientos
+-- actualizan los contadores stock_total/stock_reservado via trigger.
+INSERT INTO public.products (id, name, category, cost_price) VALUES
+  ('c0000000-0000-0000-0000-000000000001', 'Llave RFID generica', 'rfid_key', 200),
+  ('c0000000-0000-0000-0000-000000000002', 'Controladora de acceso peatonal', 'equipment', 4500)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.stock_movements (product_id, type, quantity, unit_cost, note, created_by) VALUES
+  ((SELECT id FROM public.products WHERE id = 'c0000000-0000-0000-0000-000000000001'),
+   'compra', 10, 200, 'Stock inicial (seed)', '99999999-9999-9999-9999-999999999901'),
+  ((SELECT id FROM public.products WHERE id = 'c0000000-0000-0000-0000-000000000002'),
+   'compra', 4, 4500, 'Stock inicial (seed)', '99999999-9999-9999-9999-999999999901');
+
+
