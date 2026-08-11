@@ -2,14 +2,26 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ordensKey } from '@/lib/queryKeys';
 
+export type OrderType = 'keys' | 'technical';
+
+export type OrderStatus =
+  | 'draft'
+  | 'in_preparation'
+  | 'ready_for_pickup'
+  | 'in_progress'
+  | 'completed'
+  | 'invoiced'
+  | 'cancelled';
+
 export interface OrdenRow {
   id: string;
   order_number: string;
+  order_type: OrderType;
   client_type: 'administration' | 'particular';
   administration_id: string | null;
   administrations: { company_name: string } | null;
   particular_full_name: string | null;
-  status: 'draft' | 'in_preparation' | 'ready_for_pickup' | 'completed' | 'cancelled';
+  status: OrderStatus;
   created_at: string;
   order_items: { id: string }[];
 }
@@ -17,19 +29,21 @@ export interface OrdenRow {
 export interface UseOrdenFilters {
   search?: string;
   status?: string;
+  orderType?: OrderType | 'all';
 }
 
-export function useOrdens({ search, status }: UseOrdenFilters = {}) {
+export function useOrdens({ search, status, orderType }: UseOrdenFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
-    queryKey: ordensKey(status, trimmed),
+    queryKey: ordensKey(status, trimmed, orderType),
     queryFn: async (): Promise<OrdenRow[]> => {
       let query = supabase
         .from('orders')
         .select(`
           id,
           order_number,
+          order_type,
           client_type,
           administration_id,
           administrations ( company_name ),
@@ -42,6 +56,10 @@ export function useOrdens({ search, status }: UseOrdenFilters = {}) {
       // Server-side status filter.
       if (status && status !== 'all') {
         query = query.eq('status', status);
+      }
+
+      if (orderType && orderType !== 'all') {
+        query = query.eq('order_type', orderType);
       }
 
       // Server-side text search on order_number and particular_full_name.

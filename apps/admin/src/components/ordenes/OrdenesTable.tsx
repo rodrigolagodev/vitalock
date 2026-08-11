@@ -7,8 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { OrdenStatusBadge } from './OrdenStatusBadge';
-import type { OrdenRow } from '@/hooks/useOrdens';
+import type { OrdenRow, OrderType } from '@/hooks/useOrdens';
+
+const ORDER_TYPE_LABELS: Record<OrderType, string> = {
+  keys: 'Llaves',
+  technical: 'Servicio técnico',
+};
 
 interface OrdenesTableProps {
   ordenes: OrdenRow[];
@@ -20,6 +26,7 @@ function SkeletonRow() {
   return (
     <TableRow>
       <TableCell><div className="h-4 w-28 animate-pulse rounded-md bg-muted" /></TableCell>
+      <TableCell><div className="h-4 w-16 animate-pulse rounded-md bg-muted" /></TableCell>
       <TableCell><div className="h-4 w-40 animate-pulse rounded-md bg-muted" /></TableCell>
       <TableCell><div className="h-4 w-12 animate-pulse rounded-md bg-muted" /></TableCell>
       <TableCell><div className="h-5 w-28 animate-pulse rounded-md bg-muted" /></TableCell>
@@ -54,6 +61,7 @@ export function OrdenesTable({
         <TableHeader>
           <TableRow>
             <TableHead>N.º de orden</TableHead>
+            <TableHead>Tipo</TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead>Ítems</TableHead>
             <TableHead>Estado</TableHead>
@@ -111,6 +119,11 @@ export function OrdenesTable({
               >
                 {orden.order_number}
               </Link>
+            </TableCell>
+            <TableCell>
+              <Badge variant="outline">
+                {ORDER_TYPE_LABELS[orden.order_type]}
+              </Badge>
             </TableCell>
             <TableCell className="text-muted-foreground">
               {clientLabel(orden)}

@@ -50,9 +50,38 @@ vi.mock('@/hooks/useUnits', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useProducts', () => ({
+  useProducts: () => ({
+    data: [
+      {
+        id: 'prod-key-1',
+        name: 'Llave RFID',
+        category: 'rfid_key',
+        stock_total: 10,
+        stock_reservado: 0,
+        stock_disponible: 10,
+        cost_price: null,
+        created_at: '2026-01-01',
+        updated_at: '2026-01-01',
+      },
+    ],
+    isLoading: false,
+  }),
+}));
+
 vi.mock('@/hooks/useMutateParticular', () => ({
   useMutateParticular: () => ({
     createParticular: { mutateAsync: vi.fn(), isPending: false },
+    updateParticular: { mutateAsync: vi.fn(), isPending: false },
+    deactivateParticular: { mutateAsync: vi.fn(), isPending: false },
+  }),
+}));
+
+vi.mock('@/hooks/useMutateUnit', () => ({
+  useMutateUnit: () => ({
+    createUnit: { mutateAsync: vi.fn(), isPending: false },
+    updateUnit: { mutateAsync: vi.fn(), isPending: false },
+    deactivateUnit: { mutateAsync: vi.fn(), isPending: false },
   }),
 }));
 
@@ -85,17 +114,22 @@ const buyer = {
 };
 
 async function addEquipmentItem(user: ReturnType<typeof userEvent.setup>) {
+  // Switch to technical order — equipment items only exist in that flow.
+  await user.click(screen.getByDisplayValue('technical'));
+
   await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
-  // Change the item type to 'equipment' via the hidden native select Radix
-  // renders (avoids the building_id requirement for key items).
+  // The default item_type for technical orders is 'installation'; nothing
+  // else to do — building_id is set via the hidden native select below.
+
+  // Set building_id via the hidden native select rendered by Radix.
   const hiddenSelects = document.querySelectorAll('select[aria-hidden="true"]');
   for (const sel of Array.from(hiddenSelects)) {
     const s = sel as HTMLSelectElement;
-    if (Array.from(s.options).some((o) => o.value === 'equipment')) {
+    if (Array.from(s.options).some((o) => o.value === 'b-1')) {
       await act(async () => {
-        fireEvent.change(s, { target: { value: 'equipment' } });
+        fireEvent.change(s, { target: { value: 'b-1' } });
       });
-      return;
+      break;
     }
   }
 }

@@ -37,6 +37,14 @@ vi.mock('@/hooks/mapMutationError', () => ({
   toastMutationError: vi.fn(),
 }));
 
+vi.mock('@/hooks/useMutateUnit', () => ({
+  useMutateUnit: () => ({
+    createUnit: { mutateAsync: vi.fn(), isPending: false },
+    updateUnit: { mutateAsync: vi.fn(), isPending: false },
+    deactivateUnit: { mutateAsync: vi.fn(), isPending: false },
+  }),
+}));
+
 import { ParticularFormSheet } from '../ParticularFormSheet';
 import type { ParticularRow } from '@/hooks/useParticulares';
 
@@ -96,9 +104,10 @@ describe('ParticularFormSheet', () => {
     await waitFor(() => {
       expect(screen.getByText('El nombre es obligatorio')).toBeInTheDocument();
       expect(screen.getByText('El DNI es obligatorio')).toBeInTheDocument();
-      expect(screen.getByText('El edificio es obligatorio')).toBeInTheDocument();
-      expect(screen.getByText('La unidad es obligatoria')).toBeInTheDocument();
     });
+    // Building and unit are now optional in this sheet.
+    expect(screen.queryByText('El edificio es obligatorio')).not.toBeInTheDocument();
+    expect(screen.queryByText('La unidad es obligatoria')).not.toBeInTheDocument();
     expect(mockCreateParticular).not.toHaveBeenCalled();
     expect(mockUpdateParticular).not.toHaveBeenCalled();
   });

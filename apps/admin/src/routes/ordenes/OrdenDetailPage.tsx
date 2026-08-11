@@ -1,53 +1,43 @@
 import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
 import { useOrden } from '@/hooks/useOrden';
 import { useMutateOrden } from '@/hooks/useMutateOrden';
-import type { ParticularRow } from '@/hooks/useParticulares';
+import { useOrderTareas } from '@/hooks/useOrderTareas';
 import { OrdenStatusBadge } from '@/components/ordenes/OrdenStatusBadge';
 import { OrderItemsTable } from '@/components/ordenes/OrderItemsTable';
-import { PickupSection } from '@/components/ordenes/PickupSection';
 
-const TERMINAL_STATUSES = new Set(['completed', 'cancelled']);
+const TERMINAL_STATUSES = new Set(['completed', 'invoiced', 'cancelled']);
+
+const TAREA_STATUS_LABELS: Record<string, string> = {
+  open: 'Abierta',
+  in_progress: 'En proceso',
+  resolved: 'Resuelta',
+  cancelled: 'Cancelada',
+};
+
+const TAREA_STATUS_VARIANTS: Record<
+  string,
+  'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+  open: 'secondary',
+  in_progress: 'default',
+  resolved: 'secondary',
+  cancelled: 'destructive',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  maintenance: 'Mantenimiento',
+  installation: 'Instalación',
+  key_configuration: 'Configuración de llave',
+  equipment_installation: 'Instalación de equipo',
+};
 
 export default function OrdenDetailPage() {
   const { ordenId } = useParams<{ ordenId: string }>();
   const { data: orden, isLoading, isError } = useOrden(ordenId);
-  const { advanceOrdenStatus, cancelOrden } = useMutateOrden();
-
-  // Resolve the authorized pickup person for the pickup-registration dialog
-  // prefill: the buyer embed covers the default case; an explicit non-buyer
-  // pickup person needs one lookup (same key PickupSection uses, deduped).
-  const buyer = orden?.particulares ?? null;
-  const pickupParticularId = orden?.pickup_particular_id ?? null;
-  const needsPickupResolution = Boolean(
-    orden?.client_type === 'particular' &&
-      pickupParticularId &&
-      buyer &&
-      pickupParticularId !== buyer.id,
-  );
-
-  const { data: pickupPerson } = useQuery({
-    queryKey: ['admin', 'particulares', 'one', pickupParticularId ?? ''],
-    enabled: needsPickupResolution,
-    queryFn: async (): Promise<ParticularRow> => {
-      const { data, error } = await supabase
-        .from('particulares')
-        .select('id, unit_id, dni, full_name, phone, email')
-        .eq('id', pickupParticularId as string)
-        .single();
-      if (error) throw error;
-      return data as ParticularRow;
-    },
-  });
-
-  const pickupPersonPrefill =
-    buyer && (pickupParticularId == null || pickupParticularId === buyer.id)
-      ? { full_name: buyer.full_name, dni: buyer.dni }
-      : pickupPerson
-        ? { full_name: pickupPerson.full_name, dni: pickupPerson.dni }
-        : null;
+  const { advanceOrdenStatus, cancelOrden, markOrderInvoiced } = useMutateOrden();
+  const { data: orderTareas = [] } = useOrderTareas(ordenId);
 
   if (!ordenId) {
     return (
@@ -87,7 +77,9 @@ export default function OrdenDetailPage() {
   const isTerminal = TERMINAL_STATUSES.has(orden.status);
   const isDraft = orden.status === 'draft';
   const isReadyForPickup = orden.status === 'ready_for_pickup';
+  const isCompleted = orden.status === 'completed';
   const isParticular = orden.client_type === 'particular';
+  const isKeysOrder = orden.order_type === 'keys';
 
   const clientLabel =
     orden.client_type === 'administration'
@@ -105,6 +97,10 @@ export default function OrdenDetailPage() {
 
   const handleCancel = () => {
     cancelOrden.mutate({ id: orden.id });
+  };
+
+  const handleMarkInvoiced = () => {
+    markOrderInvoiced.mutate({ id: orden.id });
   };
 
   return (
@@ -173,7 +169,7 @@ export default function OrdenDetailPage() {
 
         {/* Action buttons */}
         <div className="flex items-center gap-2 flex-wrap">
-          {isDraft && (
+          {isKeysOrder && isDraft && (
             <Button
               onClick={handleAdvance}
               disabled={advanceOrdenStatus.isPending}
@@ -182,9 +178,18 @@ export default function OrdenDetailPage() {
             </Button>
           )}
 
-          {isReadyForPickup && (
+          {isKeysOrder && isReadyForPickup && (
             <Button variant="default" disabled title="Próximamente">
               Retirada completada
+            </Button>
+          )}
+
+          {isCompleted && (
+            <Button
+              onClick={handleMarkInvoiced}
+              disabled={markOrderInvoiced.isPending}
+            >
+              {markOrderInvoiced.isPending ? 'Marcando...' : 'Marcar facturada'}
             </Button>
           )}
 
@@ -200,19 +205,99 @@ export default function OrdenDetailPage() {
         </div>
       </div>
 
-      {/* Pickup person (particular orders only, non-terminal) */}
-      {isParticular && !isTerminal && <PickupSection orden={orden} />}
+      {isKeysOrder ? (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">Ítems</h2>
+          <OrderItemsTable
+            items={orden.order_items}
+            orderId={orden.id}
+            orderStatus={orden.status}
+            canRegisterPickup={isParticular && isReadyForPickup}
+            buyer={orden.particulares}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Technical items: minimal table (no key-specific actions). */}
+          <div className="flex flex-col gap-3">
+            <h2 className="text-lg font-semibold">Ítems</h2>
+            <div className="overflow-hidden rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Tipo</th>
+                    <th className="px-3 py-2 text-left">Descripción</th>
+                    <th className="px-3 py-2 text-right">Cantidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orden.order_items.map((it) => (
+                    <tr key={it.id} className="border-t">
+                      <td className="px-3 py-2 capitalize">
+                        {CATEGORY_LABELS[it.item_type] ?? it.item_type}
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {it.description ?? '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right">{it.quantity}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      {/* Items table */}
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Ítems</h2>
-        <OrderItemsTable
-          items={orden.order_items}
-          orderId={orden.id}
-          canRegisterPickup={isParticular && isReadyForPickup}
-          pickupPerson={pickupPersonPrefill}
-        />
-      </div>
+          {/* Linked tickets/tareas */}
+          <div className="flex flex-col gap-3">
+            <h2 className="text-lg font-semibold">Tareas</h2>
+            {orderTareas.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No hay tareas generadas para esta orden.
+              </p>
+            ) : (
+              <div className="overflow-hidden rounded-md border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left">N.º</th>
+                      <th className="px-3 py-2 text-left">Categoría</th>
+                      <th className="px-3 py-2 text-left">Descripción</th>
+                      <th className="px-3 py-2 text-left">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderTareas.map((t) => (
+                      <tr key={t.id} className="border-t">
+                        <td className="px-3 py-2 font-medium">
+                          <Link
+                            to={`/tareas/${t.id}`}
+                            className="hover:underline"
+                          >
+                            {t.ticket_number}
+                          </Link>
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {CATEGORY_LABELS[t.category] ?? t.category}
+                        </td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          {t.description}
+                        </td>
+                        <td className="px-3 py-2">
+                          <Badge
+                            variant={TAREA_STATUS_VARIANTS[t.status] ?? 'secondary'}
+                          >
+                            {TAREA_STATUS_LABELS[t.status] ?? t.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

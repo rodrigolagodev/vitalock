@@ -339,10 +339,13 @@ export type Database = {
           id: string
           item_type: string
           order_id: string
+          pickup_particular_id: string | null
           produced_key_id: string | null
           product_id: string | null
           quantity: number
           status: string
+          unit_id: string | null
+          unit_price: number | null
           updated_at: string
         }
         Insert: {
@@ -352,10 +355,13 @@ export type Database = {
           id?: string
           item_type: string
           order_id: string
+          pickup_particular_id?: string | null
           produced_key_id?: string | null
           product_id?: string | null
           quantity: number
           status?: string
+          unit_id?: string | null
+          unit_price?: number | null
           updated_at?: string
         }
         Update: {
@@ -365,10 +371,13 @@ export type Database = {
           id?: string
           item_type?: string
           order_id?: string
+          pickup_particular_id?: string | null
           produced_key_id?: string | null
           product_id?: string | null
           quantity?: number
           status?: string
+          unit_id?: string | null
+          unit_price?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -387,6 +396,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "order_items_pickup_particular_id_fkey"
+            columns: ["pickup_particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "order_items_produced_key_id_fkey"
             columns: ["produced_key_id"]
             isOneToOne: false
@@ -400,6 +416,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "order_items_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
         ]
       }
       orders: {
@@ -410,6 +433,7 @@ export type Database = {
           id: string
           notes: string | null
           order_number: string
+          order_type: string
           particular_dni: string | null
           particular_email: string | null
           particular_full_name: string | null
@@ -426,6 +450,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string
+          order_type?: string
           particular_dni?: string | null
           particular_email?: string | null
           particular_full_name?: string | null
@@ -442,6 +467,7 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string
+          order_type?: string
           particular_dni?: string | null
           particular_email?: string | null
           particular_full_name?: string | null
@@ -484,7 +510,7 @@ export type Database = {
           id: string
           phone: string | null
           status: string
-          unit_id: string
+          unit_id: string | null
           updated_at: string
         }
         Insert: {
@@ -495,7 +521,7 @@ export type Database = {
           id?: string
           phone?: string | null
           status?: string
-          unit_id: string
+          unit_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -506,7 +532,7 @@ export type Database = {
           id?: string
           phone?: string | null
           status?: string
-          unit_id?: string
+          unit_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1490,6 +1516,7 @@ export type Database = {
           notes: string | null
           opened_at: string
           opened_by_staff_id: string | null
+          order_item_id: string | null
           related_bill_id: string | null
           related_key_request_id: string | null
           resolution_notes: string | null
@@ -1513,6 +1540,7 @@ export type Database = {
           notes?: string | null
           opened_at?: string
           opened_by_staff_id?: string | null
+          order_item_id?: string | null
           related_bill_id?: string | null
           related_key_request_id?: string | null
           resolution_notes?: string | null
@@ -1536,6 +1564,7 @@ export type Database = {
           notes?: string | null
           opened_at?: string
           opened_by_staff_id?: string | null
+          order_item_id?: string | null
           related_bill_id?: string | null
           related_key_request_id?: string | null
           resolution_notes?: string | null

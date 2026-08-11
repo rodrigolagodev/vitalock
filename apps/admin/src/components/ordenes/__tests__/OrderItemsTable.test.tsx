@@ -57,6 +57,10 @@ vi.mock('@/hooks/useMutateKey', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useOrderKeyDetails', () => ({
+  useOrderKeyDetails: () => ({ data: null, isLoading: false, isError: false }),
+}));
+
 import { OrderItemsTable } from '../OrderItemsTable';
 
 function makeWrapper() {
@@ -81,6 +85,9 @@ const pendingKeyItem: OrderItemRow = {
   status: 'pending',
   building_id: 'bld-1',
   produced_key_id: null,
+  unit_id: null,
+  pickup_particular_id: null,
+  pickup_particulares: null,
   rfid_keys: null,
 };
 
@@ -93,6 +100,9 @@ const configuredKeyItem: OrderItemRow = {
   status: 'configured',
   building_id: 'bld-1',
   produced_key_id: 'key-id-1',
+  unit_id: null,
+  pickup_particular_id: null,
+  pickup_particulares: null,
   rfid_keys: null,
 };
 
@@ -105,6 +115,9 @@ const cancelledItem: OrderItemRow = {
   status: 'cancelled',
   building_id: null,
   produced_key_id: null,
+  unit_id: null,
+  pickup_particular_id: null,
+  pickup_particulares: null,
   rfid_keys: null,
 };
 
@@ -117,6 +130,9 @@ const pendingNonKeyItem: OrderItemRow = {
   status: 'pending',
   building_id: null,
   produced_key_id: null,
+  unit_id: null,
+  pickup_particular_id: null,
+  pickup_particulares: null,
   rfid_keys: null,
 };
 
@@ -129,6 +145,9 @@ const pickedUpKeyItem: OrderItemRow = {
   status: 'configured',
   building_id: 'bld-1',
   produced_key_id: 'key-id-2',
+  unit_id: null,
+  pickup_particular_id: null,
+  pickup_particulares: null,
   rfid_keys: {
     picked_up_at: '2026-08-10T00:00:00Z',
     picked_up_by_name: 'Juan',
@@ -148,6 +167,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[pendingKeyItem, configuredKeyItem, cancelledItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -162,6 +182,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[configuredKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -174,6 +195,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[cancelledItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -186,6 +208,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[pendingKeyItem, pendingNonKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -199,6 +222,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[configuredKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -212,6 +236,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[cancelledItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -226,6 +251,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[pendingNonKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -244,6 +270,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[pendingKeyItem, configuredKeyItem, cancelledItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -255,7 +282,8 @@ describe('OrderItemsTable', () => {
 
   it('shows empty state when items array is empty', () => {
     render(
-      <OrderItemsTable items={[]} orderId="order-1" />,
+      <OrderItemsTable items={[]} orderId="order-1"
+        orderStatus="in_preparation" />,
       { wrapper: makeWrapper() },
     );
 
@@ -267,6 +295,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[pendingKeyItem, pendingNonKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
       />,
       { wrapper: makeWrapper() },
     );
@@ -280,6 +309,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[configuredKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
         canRegisterPickup
       />,
       { wrapper: makeWrapper() },
@@ -292,7 +322,8 @@ describe('OrderItemsTable', () => {
 
   it('hides "Registrar retiro" when canRegisterPickup is false', () => {
     render(
-      <OrderItemsTable items={[configuredKeyItem]} orderId="order-1" />,
+      <OrderItemsTable items={[configuredKeyItem]} orderId="order-1"
+        orderStatus="in_preparation" />,
       { wrapper: makeWrapper() },
     );
 
@@ -306,6 +337,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[pickedUpKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
         canRegisterPickup
       />,
       { wrapper: makeWrapper() },
@@ -321,6 +353,7 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[{ ...pendingNonKeyItem, status: 'configured' }]}
         orderId="order-1"
+        orderStatus="in_preparation"
         canRegisterPickup
       />,
       { wrapper: makeWrapper() },
@@ -337,8 +370,16 @@ describe('OrderItemsTable', () => {
       <OrderItemsTable
         items={[configuredKeyItem]}
         orderId="order-1"
+        orderStatus="in_preparation"
         canRegisterPickup
-        pickupPerson={{ full_name: 'García Juan', dni: '30111222' }}
+        buyer={{
+          id: 'p-1',
+          unit_id: 'u-1',
+          full_name: 'García Juan',
+          dni: '30111222',
+          phone: null,
+          email: null,
+        }}
       />,
       { wrapper: makeWrapper() },
     );

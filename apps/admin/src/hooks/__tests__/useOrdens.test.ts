@@ -63,7 +63,7 @@ describe('useOrdens', () => {
     expect(result.current.isLoading).toBe(true);
 
     const key = ordensKey();
-    expect(key).toEqual(['admin', 'ordenes', 'all', '']);
+    expect(key).toEqual(['admin', 'ordenes', 'all', '', 'all']);
   });
 
   it('returns data on success (no filters)', async () => {

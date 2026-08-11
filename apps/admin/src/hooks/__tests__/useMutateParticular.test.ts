@@ -95,7 +95,9 @@ describe('useMutateParticular', () => {
         phone: '555-1234',
         email: 'juan@example.com',
       });
-      expect(mockSelect).toHaveBeenCalledWith();
+      // select() is now called with the unit-embed columns so the returned row
+      // matches useParticulares' shape (unit_building_id, etc.).
+      expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('units'));
       expect(mockSingle).toHaveBeenCalledWith();
     });
 
@@ -194,7 +196,9 @@ describe('useMutateParticular', () => {
       expect(updateCall).not.toHaveProperty('id');
       expect(updateCall).toHaveProperty('full_name', 'García Juan Actualizado');
       expect(mockEq).toHaveBeenCalledWith('id', 'p-1');
-      expect(mockSelect).toHaveBeenCalledWith();
+      // select() is now called with the unit-embed columns so the returned row
+      // matches useParticulares' shape (unit_building_id, etc.).
+      expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('units'));
       expect(mockSingle).toHaveBeenCalledWith();
     });
 

@@ -148,7 +148,7 @@ describe('useMutateKey', () => {
       queryKey: ['admin', 'orden', 'order-1'],
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ['admin', 'ordenes', 'all', ''],
+      queryKey: ['admin', 'ordenes', 'all', '', 'all'],
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: ['admin', 'keys', 'b-1'],

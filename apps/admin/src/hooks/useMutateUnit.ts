@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { unitsKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
+import type { UnitRow } from './useUnits';
 
 export interface CreateUnitInput {
   building_id: string;
@@ -40,7 +41,14 @@ export function useMutateUnit(buildingId: string) {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Prime the cache synchronously so consumers (e.g. a <Select> that binds
+      // the new unit id immediately after creation) can render the new option
+      // before the invalidation refetch lands.
+      const created = data as UnitRow;
+      queryClient.setQueryData<UnitRow[]>(unitsKey(buildingId), (prev = []) =>
+        [...prev, created].sort((a, b) => a.number.localeCompare(b.number)),
+      );
       queryClient.invalidateQueries({ queryKey: unitsKey(buildingId) });
       toast.success('Unidad creada correctamente.');
     },

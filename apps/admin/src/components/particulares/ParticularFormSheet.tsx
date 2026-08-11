@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { QuickUnitCreateDialog } from '@/components/ordenes/QuickUnitCreateDialog';
 import { useMutateParticular } from '@/hooks/useMutateParticular';
 import { useBuildings } from '@/hooks/useBuildings';
 import { useUnits } from '@/hooks/useUnits';
@@ -36,8 +37,8 @@ const schema = z.object({
     .email('Email inválido')
     .optional()
     .or(z.literal('')),
-  building_id: z.string().min(1, 'El edificio es obligatorio'),
-  unit_id: z.string().min(1, 'La unidad es obligatoria'),
+  building_id: z.string().optional(),
+  unit_id: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -46,6 +47,8 @@ interface ParticularFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   particular?: ParticularRow | null;
+  /** Emits the updated/created row so the parent can refresh its local state. */
+  onSaved?: (particular: ParticularRow) => void;
 }
 
 /**
@@ -58,10 +61,12 @@ export function ParticularFormSheet({
   open,
   onOpenChange,
   particular,
+  onSaved,
 }: ParticularFormSheetProps) {
   const isEdit = Boolean(particular);
   const { createParticular, updateParticular } = useMutateParticular();
   const { data: buildings = [] } = useBuildings();
+  const [quickUnitOpen, setQuickUnitOpen] = useState(false);
 
   const {
     register,
@@ -83,7 +88,7 @@ export function ParticularFormSheet({
     },
   });
 
-  const buildingId = watch('building_id');
+  const buildingId = watch('building_id') ?? '';
   const { data: units = [] } = useUnits(buildingId);
 
   useEffect(() => {
@@ -101,24 +106,25 @@ export function ParticularFormSheet({
 
   const onSubmit = async (values: FormValues) => {
     try {
-      if (isEdit && particular) {
-        await updateParticular.mutateAsync({
-          id: particular.id,
-          unit_id: values.unit_id,
-          dni: values.dni.trim(),
-          full_name: values.full_name.trim(),
-          phone: values.phone?.trim() || null,
-          email: values.email?.trim() || null,
-        });
-      } else {
-        await createParticular.mutateAsync({
-          unit_id: values.unit_id,
-          dni: values.dni.trim(),
-          full_name: values.full_name.trim(),
-          phone: values.phone?.trim() || null,
-          email: values.email?.trim() || null,
-        });
-      }
+      const unitId = values.unit_id?.trim() ? values.unit_id : null;
+      const saved =
+        isEdit && particular
+          ? await updateParticular.mutateAsync({
+              id: particular.id,
+              unit_id: unitId ?? undefined,
+              dni: values.dni.trim(),
+              full_name: values.full_name.trim(),
+              phone: values.phone?.trim() || null,
+              email: values.email?.trim() || null,
+            })
+          : await createParticular.mutateAsync({
+              unit_id: unitId,
+              dni: values.dni.trim(),
+              full_name: values.full_name.trim(),
+              phone: values.phone?.trim() || null,
+              email: values.email?.trim() || null,
+            });
+      onSaved?.(saved as ParticularRow);
       onOpenChange(false);
     } catch (err) {
       toastMutationError(err as Error);
@@ -128,6 +134,7 @@ export function ParticularFormSheet({
   const isPending = createParticular.isPending || updateParticular.isPending;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-md">
         <SheetHeader className="p-6 pb-4">
@@ -187,7 +194,7 @@ export function ParticularFormSheet({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="particular-building">Edificio *</Label>
+            <Label htmlFor="particular-building">Edificio</Label>
             <Controller
               control={control}
               name="building_id"
@@ -221,33 +228,49 @@ export function ParticularFormSheet({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="particular-unit">Unidad *</Label>
-            <Controller
-              control={control}
-              name="unit_id"
-              render={({ field }) => (
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={!buildingId}
-                >
-                  <SelectTrigger id="particular-unit">
-                    <SelectValue
-                      placeholder={
-                        buildingId ? 'Seleccioná una unidad' : 'Elegí primero un edificio'
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map((unit) => (
-                      <SelectItem key={unit.id} value={unit.id}>
-                        {unit.number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <Label htmlFor="particular-unit">Unidad</Label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Controller
+                  control={control}
+                  name="unit_id"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={!buildingId}
+                    >
+                      <SelectTrigger id="particular-unit">
+                        <SelectValue
+                          placeholder={
+                            buildingId
+                              ? 'Seleccioná una unidad'
+                              : 'Elegí primero un edificio'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {units.map((unit) => (
+                          <SelectItem key={unit.id} value={unit.id}>
+                            {unit.number}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setQuickUnitOpen(true)}
+                disabled={!buildingId}
+                className="shrink-0"
+              >
+                Nueva
+              </Button>
+            </div>
             {errors.unit_id && (
               <p className="text-sm text-destructive">{errors.unit_id.message}</p>
             )}
@@ -269,5 +292,15 @@ export function ParticularFormSheet({
         </form>
       </SheetContent>
     </Sheet>
+
+    {buildingId && (
+      <QuickUnitCreateDialog
+        open={quickUnitOpen}
+        onOpenChange={setQuickUnitOpen}
+        buildingId={buildingId}
+        onCreated={(unitId) => setValue('unit_id', unitId, { shouldValidate: true })}
+      />
+    )}
+    </>
   );
 }

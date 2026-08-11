@@ -1,13 +1,13 @@
 import { Badge } from '@/components/ui/badge';
-import type { OrdenRow } from '@/hooks/useOrdens';
-
-type OrderStatus = OrdenRow['status'];
+import type { OrderStatus } from '@/hooks/useOrdens';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   draft: 'Borrador',
   in_preparation: 'En preparación',
   ready_for_pickup: 'Listo para retirar',
+  in_progress: 'En proceso',
   completed: 'Completado',
+  invoiced: 'Facturado',
   cancelled: 'Cancelado',
 };
 
@@ -18,7 +18,9 @@ const STATUS_VARIANTS: Record<
   draft: 'secondary',
   in_preparation: 'default',
   ready_for_pickup: 'default',
+  in_progress: 'default',
   completed: 'secondary',
+  invoiced: 'secondary',
   cancelled: 'destructive',
 };
 

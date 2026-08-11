@@ -31,7 +31,10 @@ const schema = z
     z.object({
       mode: z.literal('existing'),
       product_id: z.string().min(1, 'Seleccioná un producto'),
-      unit_cost: z.number().positive('El costo unitario debe ser mayor a 0'),
+      // 0 = no actualizar el precio de costo actual del producto.
+      unit_cost: z
+        .number({ invalid_type_error: 'Ingresá un número' })
+        .min(0, 'El costo unitario no puede ser negativo'),
       quantity: z.number().positive('La cantidad debe ser mayor a 0'),
       note: z.string().optional(),
     }),
@@ -45,20 +48,11 @@ const schema = z
     }),
   ])
   .superRefine((data, ctx) => {
-    // Manual compra movements are positive quantities into stock.
     if (!Number.isFinite(data.quantity) || data.quantity <= 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'La cantidad debe ser mayor a 0',
         path: ['quantity'],
-      });
-    }
-    // compra movements must record the per-unit cost.
-    if (!Number.isFinite(data.unit_cost) || data.unit_cost <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'El costo unitario debe ser mayor a 0',
-        path: ['unit_cost'],
       });
     }
   });
@@ -88,7 +82,7 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
     defaultValues: {
       mode: 'existing',
       product_id: '',
-      unit_cost: undefined,
+      unit_cost: 0,
       quantity: 1,
       note: '',
     },
@@ -105,7 +99,7 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
     reset({
       mode: 'existing',
       product_id: '',
-      unit_cost: undefined,
+      unit_cost: 0,
       quantity: 1,
       note: '',
     });
@@ -115,7 +109,15 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
   useEffect(() => {
     // Reset product selection when switching to "new" mode and vice-versa so
     // no stale product id leaks into a creation payload.
-    if (mode === 'new') setValue('product_id', '');
+    if (mode === 'new') {
+      setValue('product_id', '');
+      // Alta de producto: el costo es obligatorio y positivo, así que
+      // arrancamos el campo vacío para que el usuario tenga que tipearlo.
+      setValue('unit_cost', undefined as unknown as number);
+    } else {
+      // Producto existente: 0 = "no actualizar el precio de costo actual".
+      setValue('unit_cost', 0);
+    }
   }, [mode, setValue]);
 
   const onSubmit = async (values: FormValues) => {
@@ -126,7 +128,8 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
           productId: values.product_id,
           movementType: 'compra' as MovementType,
           quantity: values.quantity,
-          unitCost: values.unit_cost,
+          // 0 → null: no registrar costo ni tocar products.cost_price.
+          unitCost: values.unit_cost > 0 ? values.unit_cost : null,
           note: values.note?.trim() || null,
           actor_staff_id: staff?.id ?? null,
         });
@@ -222,9 +225,9 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
               )}
             </div>
 
-            {/* ---- Unit cost (compra movements must record it) ---- */}
+            {/* ---- Unit cost (0 = mantener el precio de costo actual) ---- */}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="product-unit-cost">Costo unitario *</Label>
+              <Label htmlFor="product-unit-cost">Costo unitario</Label>
               <Controller
                 control={control}
                 name="unit_cost"
@@ -232,18 +235,21 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
                   <Input
                     id="product-unit-cost"
                     type="number"
-                    min="0.01"
+                    min="0"
                     step="0.01"
                     placeholder="0.00"
-                    value={field.value ?? ''}
+                    value={field.value ?? 0}
                     onChange={(e) =>
                       field.onChange(
-                        e.target.value === '' ? '' : Number(e.target.value),
+                        e.target.value === '' ? 0 : Number(e.target.value),
                       )
                     }
                   />
                 )}
               />
+              <p className="text-xs text-muted-foreground">
+                Dejalo en 0 para no actualizar el precio de costo actual del producto.
+              </p>
               {(
                 errors as Record<string, { message?: string } | undefined>
               ).unit_cost && (
@@ -263,7 +269,7 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
               errors={errors}
             />
 
-            {/* ---- Unit cost (compra movements must record it) ---- */}
+            {/* ---- Unit cost (obligatorio al dar de alta el producto) ---- */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="product-unit-cost">Costo unitario *</Label>
               <Controller

@@ -68,6 +68,9 @@ const sampleItem: OrderItemRow = {
   status: 'pending',
   building_id: 'bld-1',
   produced_key_id: null,
+  unit_id: null,
+  pickup_particular_id: null,
+  pickup_particulares: null,
   rfid_keys: null,
 };
 
@@ -188,6 +191,9 @@ describe('ConfigureKeyItemSheet', () => {
         break;
       }
     }
+
+    // Equipment is required — pick at least one before submitting.
+    await user.click(screen.getByRole('checkbox'));
 
     await user.click(screen.getByRole('button', { name: /guardar/i }));
 
@@ -312,6 +318,9 @@ describe('ConfigureKeyItemSheet', () => {
         break;
       }
     }
+
+    // Equipment is required — pick at least one before submitting.
+    await user.click(screen.getByRole('checkbox'));
 
     await user.click(screen.getByRole('button', { name: /guardar/i }));
 

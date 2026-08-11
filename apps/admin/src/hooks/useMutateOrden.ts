@@ -5,6 +5,7 @@ import { ordensKey, ordenKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
 
 export interface CreateOrderInput {
+  order_type: 'keys' | 'technical';
   client_type: 'administration' | 'particular';
   administration_id?: string | null;
   particular_id?: string | null;
@@ -22,6 +23,14 @@ export interface CreateOrderItemInput {
   description?: string | null;
   building_id?: string | null;
   equipment_id?: string | null;
+  unit_price?: number | null;
+  unit_id?: string | null;
+  pickup_particular_id?: string | null;
+  /**
+   * Inventory SKU consumed by this line. Required for key/equipment items so
+   * that the AFTER INSERT trigger creates a stock reservation.
+   */
+  product_id?: string | null;
 }
 
 export interface CreateOrdenInput {
@@ -113,5 +122,27 @@ export function useMutateOrden() {
     onError: toastMutationError,
   });
 
-  return { createOrden, cancelOrden, advanceOrdenStatus, setPickupPerson };
+  const markOrderInvoiced = useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'invoiced' })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: ordensKey() });
+      void queryClient.invalidateQueries({ queryKey: ordenKey(vars.id) });
+      toast.success('Orden marcada como facturada.');
+    },
+    onError: toastMutationError,
+  });
+
+  return {
+    createOrden,
+    cancelOrden,
+    advanceOrdenStatus,
+    setPickupPerson,
+    markOrderInvoiced,
+  };
 }

@@ -5,7 +5,7 @@ import { particularesKey, particularKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
 
 export interface CreateParticularInput {
-  unit_id: string;
+  unit_id?: string | null;
   dni: string;
   full_name: string;
   phone?: string | null;
@@ -23,6 +23,36 @@ export interface UpdateParticularInput {
 
 export interface DeactivateParticularInput {
   id: string;
+}
+
+// Same shape useParticulares returns — needed so callers that bind the row
+// (e.g. the order form) can prefill from the unit embed without a second fetch.
+const PARTICULAR_SELECT_WITH_UNIT =
+  'id, unit_id, dni, full_name, phone, email, ' +
+  'units!particulares_unit_id_fkey(number, building_id, buildings!units_building_id_fkey(name))';
+
+type ParticularRowWithUnit = {
+  id: string;
+  unit_id: string | null;
+  dni: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  units?: {
+    number: string | null;
+    building_id: string | null;
+    buildings: { name: string | null } | null;
+  } | null;
+};
+
+function flattenParticular(row: ParticularRowWithUnit) {
+  const { units, ...rest } = row;
+  return {
+    ...rest,
+    unit_number: units?.number ?? null,
+    building_name: units?.buildings?.name ?? null,
+    unit_building_id: units?.building_id ?? null,
+  };
 }
 
 /**
@@ -46,10 +76,10 @@ export function useMutateParticular() {
       const { data, error } = await supabase
         .from('particulares')
         .insert(input)
-        .select()
+        .select(PARTICULAR_SELECT_WITH_UNIT)
         .single();
       if (error) throw error;
-      return data;
+      return flattenParticular(data as unknown as ParticularRowWithUnit);
     },
     onSuccess: () => {
       invalidateParticulares();
@@ -65,10 +95,10 @@ export function useMutateParticular() {
         .from('particulares')
         .update(rest)
         .eq('id', id)
-        .select()
+        .select(PARTICULAR_SELECT_WITH_UNIT)
         .single();
       if (error) throw error;
-      return data;
+      return flattenParticular(data as unknown as ParticularRowWithUnit);
     },
     onSuccess: (_data, input) => {
       invalidateParticulares(input.id);

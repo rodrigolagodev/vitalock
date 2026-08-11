@@ -27,7 +27,8 @@ const sampleOrdenes: OrdenRow[] = [
   {
     id: 'ord-1',
     order_number: 'ORD-001',
-    client_type: 'administration',
+    order_type: 'keys' as const,
+  client_type: 'administration',
     administration_id: 'adm-1',
     administrations: { company_name: 'Admin García S.A.' },
     particular_full_name: null,
@@ -38,7 +39,8 @@ const sampleOrdenes: OrdenRow[] = [
   {
     id: 'ord-2',
     order_number: 'ORD-002',
-    client_type: 'particular',
+    order_type: 'keys' as const,
+  client_type: 'particular',
     administration_id: null,
     administrations: null,
     particular_full_name: 'Juan Pérez',

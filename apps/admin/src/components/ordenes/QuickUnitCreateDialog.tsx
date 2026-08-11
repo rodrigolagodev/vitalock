@@ -100,7 +100,15 @@ export function QuickUnitCreateDialog({
           <DialogTitle>Nueva unidad</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form
+          onSubmit={(e) => {
+            // Portals bubble React events up the virtual tree — stop the
+            // submit here so any enclosing parent form doesn't also submit.
+            e.stopPropagation();
+            void handleSubmit(onSubmit)(e);
+          }}
+          className="flex flex-col gap-4"
+        >
           {/* Number */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="quick-unit-number">Número *</Label>

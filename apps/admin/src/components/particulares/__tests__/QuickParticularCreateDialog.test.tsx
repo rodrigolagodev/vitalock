@@ -36,6 +36,14 @@ vi.mock('@/hooks/mapMutationError', () => ({
   toastMutationError: vi.fn(),
 }));
 
+vi.mock('@/hooks/useMutateUnit', () => ({
+  useMutateUnit: () => ({
+    createUnit: { mutateAsync: vi.fn(), isPending: false },
+    updateUnit: { mutateAsync: vi.fn(), isPending: false },
+    deactivateUnit: { mutateAsync: vi.fn(), isPending: false },
+  }),
+}));
+
 import { QuickParticularCreateDialog } from '../QuickParticularCreateDialog';
 
 function makeWrapper() {
@@ -81,10 +89,37 @@ describe('QuickParticularCreateDialog', () => {
     await waitFor(() => {
       expect(screen.getByText('El nombre es obligatorio')).toBeInTheDocument();
       expect(screen.getByText('El DNI es obligatorio')).toBeInTheDocument();
-      expect(screen.getByText('El edificio es obligatorio')).toBeInTheDocument();
-      expect(screen.getByText('La unidad es obligatoria')).toBeInTheDocument();
     });
+    // Building and unit are optional — a particular can be created without them.
+    expect(screen.queryByText('El edificio es obligatorio')).not.toBeInTheDocument();
+    expect(screen.queryByText('La unidad es obligatoria')).not.toBeInTheDocument();
     expect(mockCreateParticular).not.toHaveBeenCalled();
+  });
+
+  it('creates the particular without a unit when neither is selected', async () => {
+    const user = userEvent.setup();
+    const onCreated = vi.fn();
+    mockCreateParticular.mockResolvedValue({ ...createdRow, unit_id: null });
+
+    render(
+      <QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={onCreated} />,
+      { wrapper: makeWrapper() },
+    );
+
+    await user.type(screen.getByLabelText(/nombre completo/i), 'Juan García');
+    await user.type(screen.getByLabelText(/dni/i), '30111222');
+
+    await user.click(screen.getByRole('button', { name: /^crear$/i }));
+
+    await waitFor(() => {
+      expect(mockCreateParticular).toHaveBeenCalledWith({
+        unit_id: null,
+        dni: '30111222',
+        full_name: 'Juan García',
+        phone: null,
+        email: null,
+      });
+    });
   });
 
   it('creates the particular with the chosen unit and fires onCreated', async () => {

@@ -39,6 +39,7 @@ function makeWrapper() {
 import { useMutateOrden } from '../useMutateOrden';
 
 const sampleOrder = {
+  order_type: 'keys' as const,
   client_type: 'administration' as const,
   administration_id: 'adm-1',
 };
@@ -124,7 +125,8 @@ describe('useMutateOrden', () => {
     await act(async () => {
       await result.current.createOrden.mutateAsync({
         order: {
-          client_type: 'particular',
+          order_type: 'keys',
+        client_type: 'particular',
           particular_id: 'part-1',
           particular_full_name: 'García Juan',
         },
@@ -134,6 +136,7 @@ describe('useMutateOrden', () => {
 
     expect(mockRpc).toHaveBeenCalledWith('create_order_with_items', {
       p_order: expect.objectContaining({
+        order_type: 'keys',
         client_type: 'particular',
         particular_id: 'part-1',
         particular_full_name: 'García Juan',
@@ -280,7 +283,7 @@ describe('useMutateOrden', () => {
       queryKey: ['admin', 'orden', 'order-abc'],
     });
     expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ['admin', 'ordenes', 'all', ''],
+      queryKey: ['admin', 'ordenes', 'all', '', 'all'],
     });
   });
 

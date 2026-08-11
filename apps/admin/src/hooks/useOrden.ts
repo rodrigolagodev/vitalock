@@ -10,7 +10,17 @@ export interface OrderItemRow {
   description: string | null;
   status: 'pending' | 'configured' | 'in_progress' | 'completed' | 'cancelled';
   building_id: string | null;
+  /** Preselected unit at order creation (nullable — optional at create time). */
+  unit_id: string | null;
   produced_key_id: string | null;
+  /** Item-level authorized retirer id (particulares.id) — new pickup model. */
+  pickup_particular_id: string | null;
+  /** Item-level authorized retirer resolved via embed (display + prefill). */
+  pickup_particulares: {
+    id: string;
+    full_name: string;
+    dni: string;
+  } | null;
   /** Produced key pickup state (null when the item has no key yet). */
   rfid_keys: {
     picked_up_at: string | null;
@@ -30,9 +40,21 @@ export interface ParticularRef {
   email: string | null;
 }
 
+export type OrderType = 'keys' | 'technical';
+
+export type OrderStatus =
+  | 'draft'
+  | 'in_preparation'
+  | 'ready_for_pickup'
+  | 'in_progress'
+  | 'completed'
+  | 'invoiced'
+  | 'cancelled';
+
 export interface OrdenDetailRow {
   id: string;
   order_number: string;
+  order_type: OrderType;
   client_type: 'administration' | 'particular';
   administration_id: string | null;
   administrations: { company_name: string } | null;
@@ -43,7 +65,7 @@ export interface OrdenDetailRow {
   particular_dni: string | null;
   particular_phone: string | null;
   particular_email: string | null;
-  status: 'draft' | 'in_preparation' | 'ready_for_pickup' | 'completed' | 'cancelled';
+  status: OrderStatus;
   notes: string | null;
   created_at: string;
   order_items: OrderItemRow[];
@@ -61,6 +83,7 @@ export function useOrden(id: string | undefined) {
         .select(`
           id,
           order_number,
+          order_type,
           client_type,
           administration_id,
           administrations ( company_name ),
@@ -89,7 +112,14 @@ export function useOrden(id: string | undefined) {
             description,
             status,
             building_id,
+            unit_id,
             produced_key_id,
+            pickup_particular_id,
+            pickup_particulares:particulares!pickup_particular_id (
+              id,
+              full_name,
+              dni
+            ),
             rfid_keys!produced_key_id (
               picked_up_at,
               picked_up_by_name,
