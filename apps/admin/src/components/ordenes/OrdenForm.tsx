@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   useForm,
   useFieldArray,
@@ -10,17 +10,12 @@ import {
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ParticularSelector } from '../particulares/ParticularSelector';
-import { ParticularFormSheet } from '../particulares/ParticularFormSheet';
+import { ParticularSelector } from '@/components/particulares/ParticularSelector';
+import { ParticularFormSheet } from '@/components/particulares/ParticularFormSheet';
 import type { ParticularRow } from '@/hooks/useParticulares';
-import { QuickUnitCreateDialog } from './QuickUnitCreateDialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet';
+import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
+import { QuickUnitCreateDialog } from '@/components/ordenes/QuickUnitCreateDialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,12 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useMutateOrden } from '@/hooks/useMutateOrden';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
 import { useUnits } from '@/hooks/useUnits';
 import { useProducts } from '@/hooks/useProducts';
-import { toastMutationError } from '@/hooks/mapMutationError';
 
 // ---- Zod schema ----
 
@@ -99,7 +92,6 @@ const schema = baseSchema.superRefine((data, ctx) => {
     });
   }
   data.items.forEach((item, i) => {
-    // Consistency: order_type gates item_type.
     if (data.order_type === 'keys' && !KEYS_TYPES.has(item.item_type)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -116,19 +108,21 @@ const schema = baseSchema.superRefine((data, ctx) => {
       });
     }
 
+    // Uniform pricing policy: every item needs a positive price.
+    if (item.unit_price == null || item.unit_price <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El precio debe ser mayor a 0',
+        path: ['items', i, 'unit_price'],
+      });
+    }
+
     if (item.item_type === 'key') {
       if (!item.building_id) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'El edificio es obligatorio para ítems de tipo llave',
           path: ['items', i, 'building_id'],
-        });
-      }
-      if (item.unit_price == null || item.unit_price <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El precio debe ser mayor a 0',
-          path: ['items', i, 'unit_price'],
         });
       }
       if (!item.product_id) {
@@ -140,11 +134,7 @@ const schema = baseSchema.superRefine((data, ctx) => {
       }
     }
 
-    // Technical items: building is required so the ticket can be created.
-    if (
-      TECHNICAL_TYPES.has(item.item_type) &&
-      !item.building_id
-    ) {
+    if (TECHNICAL_TYPES.has(item.item_type) && !item.building_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'El edificio es obligatorio',
@@ -154,7 +144,7 @@ const schema = baseSchema.superRefine((data, ctx) => {
   });
 });
 
-type FormValues = z.infer<typeof schema>;
+export type OrdenFormValues = z.infer<typeof schema>;
 
 const ITEM_TYPE_LABELS: Record<string, string> = {
   key: 'Llave',
@@ -164,13 +154,40 @@ const ITEM_TYPE_LABELS: Record<string, string> = {
   equipment_replacement: 'Cambio de equipo',
 };
 
-interface OrdenFormSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+// ---- Default empty values ----
+
+const EMPTY_DEFAULTS: OrdenFormValues = {
+  order_type: 'keys',
+  client_type: 'administration',
+  administration_id: null,
+  particular_id: null,
+  particular_full_name: '',
+  particular_dni: '',
+  particular_phone: '',
+  particular_email: '',
+  notes: '',
+  items: [],
+};
+
+// ---- Props ----
+
+export interface OrdenFormProps {
+  mode: 'create' | 'edit';
+  /** Required when mode='edit'. Also accepted in create mode as initial values. */
+  initialValues?: OrdenFormValues;
+  onSubmit: (values: OrdenFormValues) => Promise<void>;
+  onCancel?: () => void;
+  isPending?: boolean;
 }
 
-export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
-  const { createOrden } = useMutateOrden();
+export function OrdenForm({
+  mode,
+  initialValues,
+  onSubmit,
+  onCancel,
+  isPending = false,
+}: OrdenFormProps) {
+  const defaultValues = initialValues ?? EMPTY_DEFAULTS;
   const { data: administrations = [] } = useAdministrations({ status: 'active' });
 
   const {
@@ -180,64 +197,59 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
     watch,
     reset,
     setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<OrdenFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      order_type: 'keys',
-      client_type: 'administration',
-      administration_id: null,
-      particular_id: null,
-      particular_full_name: '',
-      particular_dni: '',
-      particular_phone: '',
-      particular_email: '',
-      notes: '',
-      items: [],
-    },
+    defaultValues,
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
+  const { data: keyProducts = [] } = useProducts({ category: 'rfid_key' });
+  const defaultKeyProductId = keyProducts.length === 1 ? keyProducts[0]!.id : null;
+
+  const appendItem = () => {
+    append({
+      item_type: watch('order_type') === 'keys' ? 'key' : 'installation',
+      quantity: 1,
+      description: '',
+      building_id:
+        watch('client_type') === 'particular'
+          ? particular?.unit_building_id ?? null
+          : null,
+      unit_price: null,
+      unit_id:
+        watch('order_type') === 'keys' && watch('client_type') === 'particular'
+          ? particular?.unit_id ?? null
+          : null,
+      pickup_particular_id: null,
+      pickup_same_as_particular: false,
+      product_id: watch('order_type') === 'keys' ? defaultKeyProductId : null,
+    });
+    // Expand the newly appended item; previous ones collapse automatically.
+    setOpenItemIndex(fields.length);
+  };
+
+  // Resolve initial particular for pre-fill in edit mode.
   const [particular, setParticular] = useState<ParticularRow | null>(null);
   const [editParticularOpen, setEditParticularOpen] = useState(false);
-  // Per-item pickup particular rows (only for display in ParticularSelector).
   const [pickupParticulars, setPickupParticulars] = useState<
     Record<number, ParticularRow | null>
   >({});
+  // Only one item card is expanded at a time — collapsing the previous keeps
+  // the list scannable when there are many packs.
+  const [openItemIndex, setOpenItemIndex] = useState<number | null>(null);
 
   const clientType = watch('client_type');
   const administrationId = watch('administration_id');
   const items = watch('items');
+  const orderType = watch('order_type');
 
   const { data: buildings = [] } = useBuildings(
     clientType === 'administration' && administrationId
       ? { administrationId }
       : {},
   );
-  const { data: keyProducts = [] } = useProducts({ category: 'rfid_key' });
-  const defaultKeyProductId = keyProducts.length === 1 ? keyProducts[0]!.id : null;
-
-  const orderType = watch('order_type');
-
-  useEffect(() => {
-    if (open) {
-      reset({
-        order_type: 'keys',
-        client_type: 'administration',
-        administration_id: null,
-        particular_id: null,
-        particular_full_name: '',
-        particular_dni: '',
-        particular_phone: '',
-        particular_email: '',
-        notes: '',
-        items: [],
-      });
-      setParticular(null);
-      setPickupParticulars({});
-    }
-  }, [open, reset]);
 
   const handleParticularChange = (p: ParticularRow | null) => {
     setParticular(p);
@@ -247,7 +259,6 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
     setValue('particular_phone', p?.phone ?? '');
     setValue('particular_email', p?.email ?? '');
 
-    // Re-sync any item currently mirroring the client particular for pickup.
     items?.forEach((it, idx) => {
       if (it.pickup_same_as_particular) {
         setValue(`items.${idx}.pickup_particular_id`, p?.id ?? null);
@@ -256,133 +267,109 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
     });
   };
 
-  // After editing the selected particular in the side sheet, refresh the local
-  // snapshot so subsequent renders (item prefill, autofilled flat fields) see
-  // the fresh data without waiting for the user to reopen the combobox.
   const handleParticularSaved = (p: ParticularRow) => {
     if (particular && p.id === particular.id) {
       handleParticularChange(p);
     }
   };
 
-  const onSubmit = async (values: FormValues) => {
-    try {
-      await createOrden.mutateAsync({
-        order: {
-          order_type: values.order_type,
-          client_type: values.client_type,
-          administration_id: values.administration_id ?? null,
-          particular_id: values.particular_id ?? null,
-          particular_full_name: values.particular_full_name || null,
-          particular_dni: values.particular_dni || null,
-          particular_phone: values.particular_phone || null,
-          particular_email: values.particular_email || null,
-          notes: values.notes || null,
-          status: 'draft',
-        },
-        items: values.items.map((item) => ({
-          item_type: item.item_type,
-          quantity: item.quantity,
-          description: item.description || null,
-          building_id: item.building_id ?? null,
-          unit_price: item.item_type === 'key' ? (item.unit_price ?? null) : null,
-          unit_id: item.unit_id ?? null,
-          pickup_particular_id: item.pickup_particular_id ?? null,
-          product_id: item.product_id ?? null,
-        })),
-      });
-      onOpenChange(false);
-    } catch (err) {
-      toastMutationError(err as Error);
+  const handleCancel = () => {
+    if (
+      isDirty &&
+      !window.confirm('Vas a perder los cambios. ¿Salir igual?')
+    ) {
+      return;
     }
+    onCancel?.();
   };
 
-  const isPending = createOrden.isPending;
+  const isFormPending = isPending || isSubmitting;
+
+  const submitLabel = mode === 'edit' ? 'Guardar cambios' : 'Guardar orden';
 
   return (
     <>
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="p-6 pb-4">
-          <SheetTitle>Nueva orden</SheetTitle>
-        </SheetHeader>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col gap-8"
+        id="orden-form"
+      >
+        {/* ---- Section: Tipo de orden ---- */}
+        <section className="flex flex-col gap-3 rounded-md border p-5">
+          <h2 className="text-base font-semibold">Tipo de orden</h2>
+          <Controller
+            control={control}
+            name="order_type"
+            render={({ field }) => (
+              <div className="flex flex-wrap items-center gap-2">
+                {(
+                  [
+                    { value: 'keys', label: 'Llaves' },
+                    { value: 'technical', label: 'Servicio técnico' },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      field.onChange(opt.value);
+                      reset({
+                        ...watch(),
+                        order_type: opt.value,
+                        items: [],
+                      });
+                      setPickupParticulars({});
+                      setOpenItemIndex(null);
+                    }}
+                  >
+                    <Badge
+                      variant={field.value === opt.value ? 'default' : 'secondary'}
+                      className="cursor-pointer"
+                    >
+                      {opt.label}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            )}
+          />
+        </section>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-1 flex-col gap-6 px-6"
-        >
-          {/* ---- Order type ---- */}
+        {/* ---- Section: Cliente ---- */}
+        <section className="flex flex-col gap-4 rounded-md border p-5">
+          <h2 className="text-base font-semibold">Cliente</h2>
+
           <div className="flex flex-col gap-2">
-            <Label>Tipo de orden *</Label>
+            <Label>Tipo de cliente *</Label>
             <Controller
               control={control}
-              name="order_type"
+              name="client_type"
               render={({ field }) => (
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="keys"
-                      checked={field.value === 'keys'}
-                      onChange={() => {
-                        field.onChange('keys');
-                        // Type switch invalidates any items already added.
-                        reset({
-                          ...watch(),
-                          order_type: 'keys',
-                          items: [],
-                        });
-                        setPickupParticulars({});
-                      }}
-                    />
-                    <span className="text-sm">Llaves</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="technical"
-                      checked={field.value === 'technical'}
-                      onChange={() => {
-                        field.onChange('technical');
-                        reset({
-                          ...watch(),
-                          order_type: 'technical',
-                          items: [],
-                        });
-                        setPickupParticulars({});
-                      }}
-                    />
-                    <span className="text-sm">Servicio técnico</span>
-                  </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(
+                    [
+                      { value: 'administration', label: 'Administración' },
+                      { value: 'particular', label: 'Particular' },
+                    ] as const
+                  ).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => field.onChange(opt.value)}
+                    >
+                      <Badge
+                        variant={field.value === opt.value ? 'default' : 'secondary'}
+                        className="cursor-pointer"
+                      >
+                        {opt.label}
+                      </Badge>
+                    </button>
+                  ))}
                 </div>
               )}
             />
           </div>
 
-          {/* ---- Client type ---- */}
-          <div className="flex flex-col gap-2">
-            <Label>Tipo de cliente *</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="administration"
-                  {...register('client_type')}
-                />
-                <span className="text-sm">Administración</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="particular"
-                  {...register('client_type')}
-                />
-                <span className="text-sm">Particular</span>
-              </label>
-            </div>
-          </div>
-
-          {/* ---- Administration select ---- */}
           {clientType === 'administration' && (
             <div className="flex flex-col gap-2">
               <Label htmlFor="administration_id">Administración *</Label>
@@ -415,7 +402,6 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
             </div>
           )}
 
-          {/* ---- Particular selector ---- */}
           {clientType === 'particular' && (
             <div className="flex flex-col gap-2">
               <Label>Particular *</Label>
@@ -431,121 +417,129 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
               )}
             </div>
           )}
+        </section>
 
-          {/* ---- Items field array ---- */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <Label>Ítems *</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  append({
-                    // Default item_type per order_type so the initial row makes
-                    // sense; the user can still switch inside the technical set.
-                    item_type: orderType === 'keys' ? 'key' : 'installation',
-                    quantity: 1,
-                    description: '',
-                    building_id:
-                      clientType === 'particular'
-                        ? particular?.unit_building_id ?? null
-                        : null,
-                    unit_price: null,
-                    unit_id:
-                      orderType === 'keys' && clientType === 'particular'
-                        ? particular?.unit_id ?? null
-                        : null,
-                    pickup_particular_id: null,
-                    pickup_same_as_particular: false,
-                    product_id:
-                      orderType === 'keys' ? defaultKeyProductId : null,
-                  })
-                }
+        {/* ---- Section: Ítems ---- */}
+        <section className="flex flex-col gap-4 rounded-md border p-5">
+          <div>
+            <h2 className="text-base font-semibold">Ítems</h2>
+            <p className="text-xs text-muted-foreground">
+              {orderType === 'keys'
+                ? 'Cada ítem es un pack de llaves con un mismo autorizado a retirar.'
+                : 'Cada ítem genera una tarea del área técnica.'}
+            </p>
+          </div>
+
+          {errors.items && !Array.isArray(errors.items) && (
+            <p className="text-sm text-destructive">{errors.items.message}</p>
+          )}
+
+          {fields.map((field, index) => {
+            const itemType = items[index]?.item_type;
+            const isKey = itemType === 'key';
+            const buildingId = items[index]?.building_id ?? null;
+            const isOpen = openItemIndex === index;
+            const buildingName =
+              buildings.find((b) => b.id === buildingId)?.name ?? null;
+            const summaryBits: string[] = [];
+            if (items[index]?.item_type) {
+              summaryBits.push(
+                ITEM_TYPE_LABELS[items[index]!.item_type] ?? items[index]!.item_type,
+              );
+            }
+            summaryBits.push(`× ${items[index]?.quantity ?? 1}`);
+            if (buildingName) summaryBits.push(buildingName);
+            if (items[index]?.description)
+              summaryBits.push(items[index]!.description as string);
+
+            return (
+              <div
+                key={field.id}
+                className="flex flex-col gap-3 rounded-md border bg-muted/20"
               >
-                + Agregar ítem
-              </Button>
-            </div>
-
-            {errors.items && !Array.isArray(errors.items) && (
-              <p className="text-sm text-destructive">{errors.items.message}</p>
-            )}
-
-            {fields.map((field, index) => {
-              const itemType = items[index]?.item_type;
-              const isKey = itemType === 'key';
-              const buildingId = items[index]?.building_id ?? null;
-
-              return (
-                <div
-                  key={field.id}
-                  className="flex flex-col gap-2 rounded-md border p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">
+                {/* Collapsible header — click toggles the card. */}
+                <div className="flex items-center justify-between gap-2 p-3">
+                  <button
+                    type="button"
+                    onClick={() => setOpenItemIndex(isOpen ? null : index)}
+                    className="flex flex-1 items-center gap-3 text-left"
+                  >
+                    <span className="text-xs text-muted-foreground">
+                      {isOpen ? '▾' : '▸'}
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground shrink-0">
                       Ítem {index + 1}
                     </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        remove(index);
-                        setPickupParticulars((prev) => {
-                          const next = { ...prev };
-                          delete next[index];
-                          return next;
-                        });
-                      }}
-                      className="h-6 px-2 text-xs text-destructive hover:text-destructive"
-                    >
-                      Eliminar
-                    </Button>
-                  </div>
+                    {!isOpen && (
+                      <span className="truncate text-sm text-foreground">
+                        {summaryBits.join(' · ')}
+                      </span>
+                    )}
+                  </button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      remove(index);
+                      setPickupParticulars((prev) => {
+                        const next = { ...prev };
+                        delete next[index];
+                        return next;
+                      });
+                      if (openItemIndex === index) setOpenItemIndex(null);
+                    }}
+                    className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                  >
+                    Eliminar
+                  </Button>
+                </div>
 
-                  {/* Item type — filtered by order_type */}
-                  {orderType === 'keys' ? (
-                    // Keys orders only have one item_type; skip the picker.
-                    <input type="hidden" {...register(`items.${index}.item_type`)} />
-                  ) : (
-                    <div className="flex flex-col gap-1">
-                      <Label htmlFor={`items.${index}.item_type`}>Tipo</Label>
-                      <Controller
-                        control={control}
-                        name={`items.${index}.item_type`}
-                        render={({ field: f }) => (
-                          <Select value={f.value} onValueChange={f.onChange}>
-                            <SelectTrigger id={`items.${index}.item_type`}>
-                              <SelectValue placeholder="Tipo de ítem" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(
-                                [
-                                  'equipment',
-                                  'maintenance',
-                                  'installation',
-                                  'equipment_replacement',
-                                ] as const
-                              ).map((val) => (
-                                <SelectItem key={val} value={val}>
-                                  {ITEM_TYPE_LABELS[val]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.items?.[index]?.item_type && (
-                        <p className="text-xs text-destructive">
-                          {errors.items[index]?.item_type?.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Quantity */}
+                {isOpen && (
+                <div className="flex flex-col gap-3 border-t px-4 pt-3 pb-4">
+                {orderType === 'keys' ? (
+                  <input type="hidden" {...register(`items.${index}.item_type`)} />
+                ) : (
                   <div className="flex flex-col gap-1">
-                    <Label htmlFor={`items.${index}.quantity`}>Cantidad</Label>
+                    <Label htmlFor={`items.${index}.item_type`}>Tipo</Label>
+                    <Controller
+                      control={control}
+                      name={`items.${index}.item_type`}
+                      render={({ field: f }) => (
+                        <Select value={f.value} onValueChange={f.onChange}>
+                          <SelectTrigger id={`items.${index}.item_type`}>
+                            <SelectValue placeholder="Tipo de ítem" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(
+                              [
+                                'equipment',
+                                'maintenance',
+                                'installation',
+                                'equipment_replacement',
+                              ] as const
+                            ).map((val) => (
+                              <SelectItem key={val} value={val}>
+                                {ITEM_TYPE_LABELS[val]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.items?.[index]?.item_type && (
+                      <p className="text-xs text-destructive">
+                        {errors.items[index]?.item_type?.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor={`items.${index}.quantity`}>
+                      {isKey ? 'Cantidad de llaves del pack' : 'Cantidad'}
+                    </Label>
                     <Input
                       id={`items.${index}.quantity`}
                       type="number"
@@ -559,19 +553,21 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                     )}
                   </div>
 
-                  {/* Description */}
                   <div className="flex flex-col gap-1">
-                    <Label htmlFor={`items.${index}.description`}>Descripción</Label>
+                    <Label htmlFor={`items.${index}.description`}>
+                      Descripción
+                    </Label>
                     <Input
                       id={`items.${index}.description`}
                       placeholder="Descripción opcional"
                       {...register(`items.${index}.description`)}
                     />
                   </div>
+                </div>
 
-                  {isKey && (
-                    <>
-                      {/* Product (stock SKU) */}
+                {isKey && (
+                  <>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div className="flex flex-col gap-1">
                         <Label htmlFor={`items.${index}.product_id`}>
                           Modelo de llave (stock) *
@@ -604,7 +600,6 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                         )}
                       </div>
 
-                      {/* Unit price */}
                       <div className="flex flex-col gap-1">
                         <Label htmlFor={`items.${index}.unit_price`}>
                           Precio unitario *
@@ -623,8 +618,9 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                           </p>
                         )}
                       </div>
+                    </div>
 
-                      {/* Building */}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div className="flex flex-col gap-1">
                         <Label htmlFor={`items.${index}.building_id`}>
                           Edificio *
@@ -633,25 +629,16 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                           control={control}
                           name={`items.${index}.building_id`}
                           render={({ field: f }) => (
-                            <Select
-                              value={f.value ?? ''}
-                              onValueChange={(v) => {
-                                f.onChange(v || null);
-                                // Building change invalidates unit selection.
+                            <BuildingCombobox
+                              id={`items.${index}.building_id`}
+                              buildings={buildings}
+                              value={f.value}
+                              onChange={(v) => {
+                                f.onChange(v);
                                 setValue(`items.${index}.unit_id`, null);
                               }}
-                            >
-                              <SelectTrigger id={`items.${index}.building_id`}>
-                                <SelectValue placeholder="Seleccioná un edificio" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {buildings.map((b) => (
-                                  <SelectItem key={b.id} value={b.id}>
-                                    {b.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              placeholder="Buscar por nombre o dirección"
+                            />
                           )}
                         />
                         {errors.items?.[index]?.building_id && (
@@ -667,25 +654,45 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                         control={control}
                         setValue={setValue}
                       />
+                    </div>
 
-                      <KeyItemPickupField
-                        index={index}
-                        control={control}
-                        setValue={setValue}
-                        register={register}
-                        errors={errors}
-                        clientType={clientType}
-                        clientParticular={particular}
-                        selectedPickup={pickupParticulars[index] ?? null}
-                        onSelectedPickupChange={(p) =>
-                          setPickupParticulars((prev) => ({ ...prev, [index]: p }))
-                        }
+                    <KeyItemPickupField
+                      index={index}
+                      control={control}
+                      setValue={setValue}
+                      register={register}
+                      errors={errors}
+                      clientType={clientType}
+                      clientParticular={particular}
+                      selectedPickup={pickupParticulars[index] ?? null}
+                      onSelectedPickupChange={(p) =>
+                        setPickupParticulars((prev) => ({ ...prev, [index]: p }))
+                      }
+                    />
+                  </>
+                )}
+
+                {!isKey && (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                      <Label htmlFor={`items.${index}.unit_price`}>
+                        Precio unitario *
+                      </Label>
+                      <Input
+                        id={`items.${index}.unit_price`}
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        {...register(`items.${index}.unit_price`)}
                       />
-                    </>
-                  )}
+                      {errors.items?.[index]?.unit_price && (
+                        <p className="text-xs text-destructive">
+                          {errors.items[index]?.unit_price?.message}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Technical items: only building is required. */}
-                  {!isKey && (
                     <div className="flex flex-col gap-1">
                       <Label htmlFor={`items.${index}.building_id`}>
                         Edificio *
@@ -694,21 +701,13 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                         control={control}
                         name={`items.${index}.building_id`}
                         render={({ field: f }) => (
-                          <Select
-                            value={f.value ?? ''}
-                            onValueChange={(v) => f.onChange(v || null)}
-                          >
-                            <SelectTrigger id={`items.${index}.building_id`}>
-                              <SelectValue placeholder="Seleccioná un edificio" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {buildings.map((b) => (
-                                <SelectItem key={b.id} value={b.id}>
-                                  {b.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <BuildingCombobox
+                            id={`items.${index}.building_id`}
+                            buildings={buildings}
+                            value={f.value}
+                            onChange={(v) => f.onChange(v)}
+                            placeholder="Buscar por nombre o dirección"
+                          />
                         )}
                       />
                       {errors.items?.[index]?.building_id && (
@@ -717,46 +716,66 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                         </p>
                       )}
                     </div>
-                  )}
+                  </div>
+                )}
                 </div>
-              );
-            })}
-          </div>
+                )}
+              </div>
+            );
+          })}
 
-          {/* ---- Notes ---- */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notas</Label>
-            <Textarea
-              id="notes"
-              placeholder="Observaciones adicionales..."
-              rows={3}
-              {...register('notes')}
-            />
-          </div>
+          {/* Add-item row: always present, empty state or trailing action. */}
+          <button
+            type="button"
+            onClick={appendItem}
+            className="flex items-center justify-center gap-2 rounded-md border border-dashed px-3 py-6 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+          >
+            <span className="text-lg leading-none">+</span>
+            <span>Agregar ítem</span>
+          </button>
+        </section>
 
-          <SheetFooter className="mt-auto pt-4 pb-6">
+        {/* ---- Section: Notas ---- */}
+        <section className="flex flex-col gap-3 rounded-md border p-5">
+          <h2 className="text-base font-semibold">Notas</h2>
+          <Textarea
+            id="notes"
+            placeholder="Observaciones adicionales..."
+            rows={3}
+            {...register('notes')}
+          />
+        </section>
+      </form>
+
+      {/* Sticky action bar */}
+      <div className="sticky bottom-0 border-t bg-background/95 backdrop-blur">
+        <div className="max-w-3xl mx-auto flex justify-end gap-2 px-6 py-3">
+          {onCancel && (
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending || isSubmitting}
+              onClick={handleCancel}
+              disabled={isFormPending}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending || isSubmitting}>
-              {isPending || isSubmitting ? 'Guardando...' : 'Guardar'}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+          )}
+          <Button
+            type="submit"
+            form="orden-form"
+            disabled={isFormPending}
+          >
+            {isFormPending ? 'Guardando...' : submitLabel}
+          </Button>
+        </div>
+      </div>
 
-    <ParticularFormSheet
-      open={editParticularOpen}
-      onOpenChange={setEditParticularOpen}
-      particular={particular}
-      onSaved={handleParticularSaved}
-    />
+      <ParticularFormSheet
+        open={editParticularOpen}
+        onOpenChange={setEditParticularOpen}
+        particular={particular}
+        onSaved={handleParticularSaved}
+      />
     </>
   );
 }
@@ -768,8 +787,8 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
 interface KeyItemUnitFieldProps {
   index: number;
   buildingId: string | null;
-  control: Control<FormValues>;
-  setValue: UseFormSetValue<FormValues>;
+  control: Control<OrdenFormValues>;
+  setValue: UseFormSetValue<OrdenFormValues>;
 }
 
 function KeyItemUnitField({
@@ -803,7 +822,9 @@ function KeyItemUnitField({
                   <SelectTrigger id={`items.${index}.unit_id`}>
                     <SelectValue
                       placeholder={
-                        buildingId ? 'Seleccioná una unidad' : 'Elegí un edificio primero'
+                        buildingId
+                          ? 'Seleccioná una unidad'
+                          : 'Elegí un edificio primero'
                       }
                     />
                   </SelectTrigger>
@@ -846,10 +867,10 @@ function KeyItemUnitField({
 
 interface KeyItemPickupFieldProps {
   index: number;
-  control: Control<FormValues>;
-  setValue: UseFormSetValue<FormValues>;
-  register: UseFormRegister<FormValues>;
-  errors: FieldErrors<FormValues>;
+  control: Control<OrdenFormValues>;
+  setValue: UseFormSetValue<OrdenFormValues>;
+  register: UseFormRegister<OrdenFormValues>;
+  errors: FieldErrors<OrdenFormValues>;
   clientType: 'administration' | 'particular';
   clientParticular: ParticularRow | null;
   selectedPickup: ParticularRow | null;

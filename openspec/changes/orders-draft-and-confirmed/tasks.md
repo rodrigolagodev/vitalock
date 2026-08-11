@@ -87,25 +87,25 @@ Chain strategy: pending
 
 > Depends on Phase 2 (hook types). `OrdenNuevaPage` refactor and `OrdenEditarPage` are sequential within this phase.
 
-- [ ] T-16 **RED** — Create `apps/admin/src/components/ordenes/__tests__/OrdenForm.test.tsx` — failing tests: (a) renders in `edit` mode pre-populated with `initialValues`; (b) submit calls `onSubmit` with mapped payload; (c) item add/remove works; (d) submit blocked when order has no items (Zod validation).
+- [x] T-16 **RED** — Create `apps/admin/src/components/ordenes/__tests__/OrdenForm.test.tsx` — failing tests: (a) renders in `edit` mode pre-populated with `initialValues`; (b) submit calls `onSubmit` with mapped payload; (c) item add/remove works; (d) submit blocked when order has no items (Zod validation).
   _Implements: ordenes-admin/Draft Order Editability (form contract)_
 
-- [ ] T-17 **RED** — Create `apps/admin/src/routes/ordenes/__tests__/OrdenEditarPage.test.tsx` — failing tests: (a) non-draft order redirects to `/ordenes/:id` with a toast "Solo se pueden editar órdenes en borrador"; (b) draft order hydrates `OrdenForm` with existing values and calls `updateDraftOrden.mutateAsync` on submit.
+- [x] T-17 **RED** — Create `apps/admin/src/routes/ordenes/__tests__/OrdenEditarPage.test.tsx` — failing tests: (a) non-draft order redirects to `/ordenes/:id` with a toast "Solo se pueden editar órdenes en borrador"; (b) draft order hydrates `OrdenForm` with existing values and calls `updateDraftOrden.mutateAsync` on submit.
   _Implements: ordenes-admin/Draft Order Editability (edit page contract); design open question: redirect with toast_
 
-- [ ] T-18 **Create** `apps/admin/src/components/ordenes/OrdenForm.tsx` — extracted from `OrdenNuevaPage.tsx`; props: `mode: 'create' | 'edit'`, `initialValues?: OrdenFormValues`, `onSubmit: (values: OrdenFormValues) => Promise<void>`, `submitLabel: string`; owns Zod schema, `useForm`, `useFieldArray`, all item-card subfields, `KeyItemUnitField`, `KeyItemPickupField`.
+- [x] T-18 **Create** `apps/admin/src/components/ordenes/OrdenForm.tsx` — extracted from `OrdenNuevaPage.tsx`; props: `mode: 'create' | 'edit'`, `initialValues?: OrdenFormValues`, `onSubmit: (values: OrdenFormValues) => Promise<void>`, `submitLabel: string`; owns Zod schema, `useForm`, `useFieldArray`, all item-card subfields, `KeyItemUnitField`, `KeyItemPickupField`.
   _Implements: ordenes-admin/Draft Order Editability; design/UI form reuse_
 
-- [ ] T-19 **Modify** `apps/admin/src/routes/ordenes/OrdenNuevaPage.tsx` — reduce to thin wrapper: import `OrdenForm`, pass `mode="create"`, empty `initialValues`, `onSubmit` calls `createOrden.mutateAsync` then navigates to `/ordenes/:newId`.
+- [x] T-19 **Modify** `apps/admin/src/routes/ordenes/OrdenNuevaPage.tsx` — reduce to thin wrapper: import `OrdenForm`, pass `mode="create"`, empty `initialValues`, `onSubmit` calls `createOrden.mutateAsync` then navigates to `/ordenes/:newId`.
   _Implements: design/OrdenNuevaPage file change_
 
-- [ ] T-20 **Create** `apps/admin/src/routes/ordenes/OrdenEditarPage.tsx` — loads `useOrden(ordenId)`; if `status !== 'draft'` redirect to `/ordenes/:id` with `toast.warning('Solo se pueden editar órdenes en borrador.')`; else render `OrdenForm` with `mode="edit"`, hydrated `initialValues` (include `updated_at` for concurrency guard), `onSubmit` calls `updateDraftOrden.mutateAsync({ id, expectedUpdatedAt, order, items })` then navigates to `/ordenes/:id`.
+- [x] T-20 **Create** `apps/admin/src/routes/ordenes/OrdenEditarPage.tsx` — loads `useOrden(ordenId)`; if `status !== 'draft'` redirect to `/ordenes/:id` with `toast.warning('Solo se pueden editar órdenes en borrador.')`; else render `OrdenForm` with `mode="edit"`, hydrated `initialValues` (include `updated_at` for concurrency guard), `onSubmit` calls `updateDraftOrden.mutateAsync({ id, expectedUpdatedAt, order, items })` then navigates to `/ordenes/:id`.
   _Implements: ordenes-admin/Draft Order Editability; design open question: redirect with toast_
 
-- [ ] T-21 **Modify** `apps/admin/src/main.tsx` — register route `<Route path="ordenes/:ordenId/editar" element={<OrdenEditarPage />} />` in the authenticated layout.
+- [x] T-21 **Modify** `apps/admin/src/main.tsx` — register route `<Route path="ordenes/:ordenId/editar" element={<OrdenEditarPage />} />` in the authenticated layout.
   _Implements: design/main.tsx file change_
 
-- [ ] T-22 **GREEN** — Run `pnpm --filter @vitalock/admin test -- OrdenForm OrdenEditar OrdenNueva`; T-16 and T-17 tests pass.
+- [x] T-22 **GREEN** — Run `pnpm --filter @vitalock/admin test -- OrdenForm OrdenEditar OrdenNueva`; T-16 and T-17 tests pass.
 
 ---
 

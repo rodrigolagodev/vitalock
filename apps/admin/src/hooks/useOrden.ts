@@ -5,13 +5,17 @@ import { ordenKey } from '@/lib/queryKeys';
 export interface OrderItemRow {
   id: string;
   order_id: string;
-  item_type: 'key' | 'equipment' | 'maintenance' | 'installation';
+  item_type: 'key' | 'equipment' | 'maintenance' | 'installation' | 'equipment_replacement';
   quantity: number;
   description: string | null;
   status: 'pending' | 'configured' | 'in_progress' | 'completed' | 'cancelled';
   building_id: string | null;
   /** Preselected unit at order creation (nullable — optional at create time). */
   unit_id: string | null;
+  /** Per-item price captured at order creation — needed for draft edit hydration. */
+  unit_price: number | null;
+  /** Key product reference (rfid_key category) — needed for draft edit hydration. */
+  product_id: string | null;
   produced_key_id: string | null;
   /** Item-level authorized retirer id (particulares.id) — new pickup model. */
   pickup_particular_id: string | null;
@@ -68,6 +72,8 @@ export interface OrdenDetailRow {
   status: OrderStatus;
   notes: string | null;
   created_at: string;
+  /** Last modification timestamp — used for optimistic concurrency in draft edits. */
+  updated_at: string;
   order_items: OrderItemRow[];
 }
 
@@ -104,6 +110,7 @@ export function useOrden(id: string | undefined) {
           status,
           notes,
           created_at,
+          updated_at,
           order_items (
             id,
             order_id,
@@ -113,6 +120,8 @@ export function useOrden(id: string | undefined) {
             status,
             building_id,
             unit_id,
+            unit_price,
+            product_id,
             produced_key_id,
             pickup_particular_id,
             pickup_particulares:particulares!pickup_particular_id (

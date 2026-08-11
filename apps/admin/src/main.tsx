@@ -14,7 +14,9 @@ import AdministrationsPage from './routes/administraciones/AdministrationsPage';
 import AdministrationDetailPage from './routes/administraciones/AdministrationDetailPage';
 import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
 import OrdenesPage from './routes/ordenes/OrdenesPage';
+import OrdenNuevaPage from './routes/ordenes/OrdenNuevaPage';
 import OrdenDetailPage from './routes/ordenes/OrdenDetailPage';
+import OrdenEditarPage from './routes/ordenes/OrdenEditarPage';
 import TareasPage from './routes/tareas/TareasPage';
 import TareaDetailPage from './routes/tareas/TareaDetailPage';
 import PersonalPage from './routes/personal/PersonalPage';
@@ -47,7 +49,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="buildings" element={<Navigate to="/administraciones" replace />} />
                 <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
                 <Route path="ordenes" element={<OrdenesPage />} />
+                <Route path="ordenes/nueva" element={<OrdenNuevaPage />} />
                 <Route path="ordenes/:ordenId" element={<OrdenDetailPage />} />
+                <Route path="ordenes/:ordenId/editar" element={<OrdenEditarPage />} />
                 <Route path="tareas" element={<TareasPage />} />
                 <Route path="tareas/:tareaId" element={<TareaDetailPage />} />
                 <Route path="personal" element={<PersonalPage />} />

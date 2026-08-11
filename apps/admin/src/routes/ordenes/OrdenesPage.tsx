@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useOrdens } from '@/hooks/useOrdens';
 import { useDebounce } from '@/hooks/useDebounce';
 import { OrdenesTable } from '@/components/ordenes/OrdenesTable';
-import { OrdenFormSheet } from '@/components/ordenes/OrdenFormSheet';
 
 import type { OrderType } from '@/hooks/useOrdens';
 
@@ -42,7 +42,6 @@ export default function OrdenesPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [orderType, setOrderType] = useState<TypeFilter>('all');
-  const [createOpen, setCreateOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -69,7 +68,9 @@ export default function OrdenesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Ordenes</h1>
-        <Button onClick={() => setCreateOpen(true)}>Nueva orden</Button>
+        <Button asChild>
+          <Link to="/ordenes/nueva">Nueva orden</Link>
+        </Button>
       </div>
 
       <Input
@@ -121,11 +122,6 @@ export default function OrdenesPage() {
         ordenes={ordenes}
         isFetching={isFetching}
         hasFilters={hasFilters}
-      />
-
-      <OrdenFormSheet
-        open={createOpen}
-        onOpenChange={setCreateOpen}
       />
     </div>
   );
