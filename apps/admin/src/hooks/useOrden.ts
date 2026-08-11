@@ -66,7 +66,7 @@ export function useOrden(id: string | undefined) {
           administrations ( company_name ),
           particular_id,
           pickup_particular_id,
-          particulares (
+          particulares!particular_id (
             id,
             unit_id,
             dni,
@@ -90,7 +90,7 @@ export function useOrden(id: string | undefined) {
             status,
             building_id,
             produced_key_id,
-            rfid_keys (
+            rfid_keys!produced_key_id (
               picked_up_at,
               picked_up_by_name,
               picked_up_by_surname,

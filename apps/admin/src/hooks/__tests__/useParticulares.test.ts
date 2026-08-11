@@ -4,9 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import type { ReactNode } from 'react';
 
-// Chainable supabase mock: from → select → (or?) → order
+// Chainable supabase mock: from → select → (eq → or?) → order
 const mockOrder = vi.fn();
 const mockOr = vi.fn();
+const mockEq = vi.fn();
 const mockSelect = vi.fn();
 const mockFrom = vi.fn();
 
@@ -30,7 +31,7 @@ function makeWrapper() {
 
 import { useParticulares } from '../useParticulares';
 
-const fakeParticulares = [
+const rawParticulares = [
   {
     id: 'p-1',
     unit_id: 'u-1',
@@ -38,6 +39,25 @@ const fakeParticulares = [
     full_name: 'García Juan',
     phone: null,
     email: null,
+    units: {
+      number: '101',
+      building_id: 'b-1',
+      buildings: { name: 'Torre Norte' },
+    },
+  },
+];
+
+const mappedParticulares = [
+  {
+    id: 'p-1',
+    unit_id: 'u-1',
+    dni: '30111222',
+    full_name: 'García Juan',
+    phone: null,
+    email: null,
+    unit_number: '101',
+    building_name: 'Torre Norte',
+    unit_building_id: 'b-1',
   },
 ];
 
@@ -45,19 +65,25 @@ describe('useParticulares', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockOrder.mockResolvedValue({ data: fakeParticulares, error: null });
+    mockOrder.mockResolvedValue({ data: rawParticulares, error: null });
     mockOr.mockReturnValue({ order: mockOrder });
-    mockSelect.mockReturnValue({ or: mockOr, order: mockOrder });
+    mockEq.mockReturnValue({ or: mockOr, order: mockOrder });
+    mockSelect.mockReturnValue({ eq: mockEq, or: mockOr, order: mockOrder });
     mockFrom.mockReturnValue({ select: mockSelect });
   });
 
-  it('default call (no search) returns data without .or() filter', async () => {
+  it('default call returns data with the embed resolved and filters only active rows', async () => {
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useParticulares(), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.data).toEqual(fakeParticulares);
+    expect(result.current.data).toEqual(mappedParticulares);
+    expect(mockSelect).toHaveBeenCalledWith(
+      'id, unit_id, dni, full_name, phone, email, ' +
+        'units!particulares_unit_id_fkey(number, building_id, buildings!units_building_id_fkey(name))',
+    );
+    expect(mockEq).toHaveBeenCalledWith('status', 'active');
     expect(mockOr).not.toHaveBeenCalled();
   });
 
@@ -86,6 +112,32 @@ describe('useParticulares', () => {
     expect(mockOr).toHaveBeenCalledWith(
       'full_name.ilike.%30111222%,dni.ilike.%30111222%',
     );
+  });
+
+  it('maps rows without a unit embed to null display fields', async () => {
+    mockOrder.mockResolvedValueOnce({
+      data: [{ id: 'p-2', unit_id: 'u-9', dni: '30111222', full_name: 'Sin Unidad', phone: null, email: null }],
+      error: null,
+    });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useParticulares(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual([
+      {
+        id: 'p-2',
+        unit_id: 'u-9',
+        dni: '30111222',
+        full_name: 'Sin Unidad',
+        phone: null,
+        email: null,
+        unit_number: null,
+        building_name: null,
+        unit_building_id: null,
+      },
+    ]);
   });
 
   it('query key uses particularesKey shape with the debounced search', async () => {
