@@ -188,7 +188,8 @@ export default function StockDetailPage() {
                     : typeFilter.length === 1
                       ? MOVEMENT_LABELS[typeFilter[0]!]
                       : `Tipos (${typeFilter.length})`}
-                </Button>              </PopoverTrigger>
+                </Button>
+              </PopoverTrigger>
               <PopoverContent className="w-64" align="start">
                 <div className="flex items-center justify-between pb-2">
                   <span className="text-sm font-medium">Tipos de movimiento</span>

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Building2, ClipboardList, ListTodo, Menu, Package, Users, X } from 'lucide-react';
+import { Building2, ClipboardList, Home, ListTodo, Menu, Package, Users, X } from 'lucide-react';
 import { cn } from '@vitalock/ui';
 import { Button } from '@/components/ui/button';
-import { NavSection } from './NavSection';
 import { NavItem } from './NavItem';
 
 interface SidebarProps {
@@ -13,24 +12,13 @@ export function Sidebar({ className }: SidebarProps) {
   const [open, setOpen] = useState(false);
 
   const navContent = (
-    <nav className="flex flex-col gap-4 p-4">
-      <NavSection label="Infraestructura" icon={<Building2 className="h-4 w-4" />}>
-        <NavItem label="Administraciones" to="/administraciones" />
-        <NavItem label="Particulares" to="/particulares" />
-      </NavSection>
-      <NavSection label="Ordenes" icon={<ClipboardList className="h-4 w-4" />}>
-        <NavItem label="Ordenes" to="/ordenes" />
-      </NavSection>
-      <NavSection label="Personal" icon={<Users className="h-4 w-4" />}>
-        <NavItem label="Personal" to="/personal" />
-      </NavSection>
-      <NavSection label="Ventas" disabled />
-      <NavSection label="Tareas" icon={<ListTodo className="h-4 w-4" />}>
-        <NavItem label="Tareas" to="/tareas" />
-      </NavSection>
-      <NavSection label="Inventario" icon={<Package className="h-4 w-4" />}>
-        <NavItem label="Stock" to="/stock" />
-      </NavSection>
+    <nav className="flex flex-col gap-1 p-4">
+      <NavItem label="Administraciones" to="/administraciones" icon={<Building2 className="h-4 w-4" />} />
+      <NavItem label="Particulares" to="/particulares" icon={<Home className="h-4 w-4" />} />
+      <NavItem label="Ordenes" to="/ordenes" icon={<ClipboardList className="h-4 w-4" />} />
+      <NavItem label="Staff" to="/personal" icon={<Users className="h-4 w-4" />} />
+      <NavItem label="Tareas" to="/tareas" icon={<ListTodo className="h-4 w-4" />} />
+      <NavItem label="Stock" to="/stock" icon={<Package className="h-4 w-4" />} />
     </nav>
   );
 
