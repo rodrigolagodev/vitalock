@@ -1,0 +1,70 @@
+project: vitalock
+initialized: 2026-08-11
+persistence: openspec
+execution_mode: auto
+delivery_strategy: ask-on-risk
+review_budget_lines: 800
+
+context:
+  description: >
+    Monorepo for Vitalock — a property management platform.
+    Apps: admin (React/TS/Vite/TanStack Query/shadcn-ui) and installer (React).
+    Backend: Supabase (Postgres migrations + RPCs).
+    Package manager: pnpm workspaces + Turborepo.
+  stack:
+    - React 18 + TypeScript 5.6 + Vite (apps/admin, apps/installer)
+    - TanStack Query 5, react-hook-form 7, zod 3, shadcn/ui + Radix UI
+    - Supabase (Postgres, RLS, RPCs, realtime)
+    - pnpm 9 workspaces + Turborepo
+    - Vitest 2 + Testing Library + jsdom
+    - ESLint 9 + Prettier 3 + TypeScript strict
+  domains_implemented:
+    - auth-session
+    - admin-infra-crud (buildings, units, equipment)
+    - installer-worklist
+    - admin-administrations
+    - admin-ordenes (key/technical orders with per-item pickup)
+    - particulares
+    - stock-inventory
+
+strict_tdd: true
+
+testing:
+  runner: pnpm test
+  runner_workspace: pnpm --filter @vitalock/admin test
+  framework: vitest@2
+  environment: jsdom
+  coverage:
+    available: true
+    provider: v8
+    command: pnpm --filter @vitalock/admin exec vitest run --coverage
+  layers:
+    unit:
+      available: true
+      tool: vitest + @testing-library/react
+    integration:
+      available: true
+      tool: "@testing-library/react + @testing-library/user-event"
+    e2e:
+      available: false
+      tool: null
+  quality:
+    linter: pnpm lint (eslint 9)
+    type_checker: pnpm typecheck (tsc --noEmit)
+    formatter: pnpm format (prettier 3 + prettier-plugin-tailwindcss)
+
+phases:
+  proposal:
+    format: openspec/changes/{name}/proposal.md
+  spec:
+    format: openspec/changes/{name}/spec.md
+  design:
+    format: openspec/changes/{name}/design.md
+  tasks:
+    format: openspec/changes/{name}/tasks.md
+  apply:
+    format: openspec/changes/{name}/apply.md
+  verify:
+    format: openspec/changes/{name}/verify-report.md
+  archive:
+    destination: openspec/changes/archive/{date}-{name}/
