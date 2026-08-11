@@ -99,6 +99,17 @@ type FormValues = z.infer<typeof schema>;
 const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
   maintenance: 'Mantenimiento',
   installation: 'Instalación',
+  key_configuration: 'Configuración de llave',
+  key_installation: 'Instalación de llave',
+  equipment_installation: 'Instalación de equipo',
+};
+
+// System-created categories (key_configuration, key_installation,
+// equipment_installation) are only produced by order/workflow triggers, never
+// manually, so the create dropdown stays limited to the manual categories.
+const CREATE_CATEGORY_LABELS: Partial<Record<TareaRow['category'], string>> = {
+  maintenance: 'Mantenimiento',
+  installation: 'Instalación',
 };
 
 const STATUS_LABELS: Record<TareaRow['status'], string> = {
@@ -422,7 +433,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                      {Object.entries(CREATE_CATEGORY_LABELS).map(([val, label]) => (
                         <SelectItem key={val} value={val}>
                           {label}
                         </SelectItem>

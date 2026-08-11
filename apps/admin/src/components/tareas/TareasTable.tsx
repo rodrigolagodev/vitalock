@@ -34,6 +34,9 @@ function SkeletonRow() {
 const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
   maintenance: 'Mantenimiento',
   installation: 'Instalación',
+  key_configuration: 'Configuración de llave',
+  key_installation: 'Instalación de llave',
+  equipment_installation: 'Instalación de equipo',
 };
 
 function formatDate(dateStr: string): string {

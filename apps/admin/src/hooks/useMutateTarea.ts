@@ -6,7 +6,12 @@ import { toastMutationError } from './mapMutationError';
 export interface CreateTareaInput {
   administration_id: string;
   building_id: string;
-  category: 'maintenance' | 'installation';
+  category:
+    | 'maintenance'
+    | 'installation'
+    | 'key_configuration'
+    | 'key_installation'
+    | 'equipment_installation';
   description: string;
   unit_id?: string | null;
   equipment_id?: string | null;

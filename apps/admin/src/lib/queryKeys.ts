@@ -36,3 +36,8 @@ export const tareasKey = (
 export const staffKey = () => ['admin', 'staff'] as const;
 export const personalKey = (search?: string, role?: string) =>
   ['admin', 'personal', search ?? '', role ?? 'all'] as const;
+export const productsKey = (category?: string, search?: string) =>
+  ['admin', 'products', category ?? 'all', search ?? ''] as const;
+export const productKey = (id: string) => ['admin', 'product', id] as const;
+export const stockMovementsKey = (productId: string) =>
+  ['admin', 'stock-movements', productId] as const;

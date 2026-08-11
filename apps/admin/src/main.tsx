@@ -17,6 +17,9 @@ import OrdenesPage from './routes/ordenes/OrdenesPage';
 import OrdenDetailPage from './routes/ordenes/OrdenDetailPage';
 import TareasPage from './routes/tareas/TareasPage';
 import PersonalPage from './routes/personal/PersonalPage';
+import ParticularesPage from './routes/particulares/ParticularesPage';
+import StockPage from './routes/stock/StockPage';
+import StockDetailPage from './routes/stock/StockDetailPage';
 import './styles/globals.css';
 
 const env = loadClientEnv(import.meta.env); // fail-fast at boot
@@ -46,6 +49,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="ordenes/:ordenId" element={<OrdenDetailPage />} />
                 <Route path="tareas" element={<TareasPage />} />
                 <Route path="personal" element={<PersonalPage />} />
+                <Route path="particulares" element={<ParticularesPage />} />
+                <Route path="stock" element={<StockPage />} />
+                <Route path="stock/:productId" element={<StockDetailPage />} />
               </Route>
             </Route>
           </Routes>

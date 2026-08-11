@@ -86,6 +86,8 @@ export function toastMutationError(err: unknown): void {
           err.message.includes('does not match')
         ) {
           toast.error('El DNI de retiro no coincide con la persona autorizada para retirar.');
+        } else if (err.message.includes('products_reservado_le_total')) {
+          toast.error('Operación rechazada: dejaría el stock disponible en negativo.');
         } else {
           toast.error('Validación fallida. Revisá los datos.');
         }

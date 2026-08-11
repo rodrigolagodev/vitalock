@@ -5,7 +5,12 @@ import { tareasKey } from '@/lib/queryKeys';
 export interface TareaRow {
   id: string;
   ticket_number: string;
-  category: 'maintenance' | 'installation';
+  category:
+    | 'maintenance'
+    | 'installation'
+    | 'key_configuration'
+    | 'key_installation'
+    | 'equipment_installation';
   description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'cancelled';
   building_id: string;
