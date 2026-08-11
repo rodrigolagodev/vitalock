@@ -35,12 +35,16 @@ manually. The system MUST surface a friendly toast when a uniqueness collision
 
 ### Requirement: Client Type Selection
 
-The system MUST support two mutually exclusive client types: `administration` and
-`particular`. Client type is chosen via radio button in OrdenFormSheet. When
-`administration` is selected, the form MUST show an administration combobox
-(populated via `useAdministrations`). When `particular` is selected, the form
-MUST show inline fields: `particular_full_name` (required), `dni`, `phone`,
-`email`. The DB MUST enforce a CHECK that `administration_id` is non-null when
+The system MUST support two mutually exclusive client types: `administration`
+and `particular`. Client type is chosen via radio button in OrdenFormSheet.
+When `administration` is selected, the form MUST show an administration
+combobox (populated via `useAdministrations`). When `particular` is selected,
+the form MUST show a ParticularSelector (server-side search by name or DNI)
+plus a QuickParticularCreateDialog link for inline creation; the submitted
+order MUST carry `particular_id` (existing DNI match or inline-created row).
+The flat `particular_full_name/dni/phone/email` fields MUST be retained as an
+audit snapshot, auto-populated from the selected particular. The DB MUST
+enforce a CHECK that `administration_id` is non-null when
 `client_type='administration'` and `particular_full_name` is non-empty when
 `client_type='particular'`.
 
@@ -49,14 +53,28 @@ MUST show inline fields: `particular_full_name` (required), `dni`, `phone`,
 - GIVEN the OrdenFormSheet is open
 - WHEN the admin selects "Administración"
 - THEN the administration combobox appears
-- AND particular inline fields are hidden
+- AND particular fields are hidden
 
 #### Scenario: Admin selects particular client type
 
 - GIVEN the OrdenFormSheet is open
 - WHEN the admin selects "Particular"
-- THEN full_name, dni, phone, email fields appear
+- THEN the ParticularSelector and inline-create link appear
 - AND the administration combobox is hidden
+
+#### Scenario: Existing particular selected by search
+
+- GIVEN a particular exists with DNI 30111222
+- WHEN the admin searches, selects it, and submits
+- THEN the order is created with particular_id pointing to that particular
+- AND the flat particular_* snapshot is populated from the entity
+
+#### Scenario: Inline-created particular linked on submit
+
+- GIVEN no particular matches the order's buyer
+- WHEN the admin creates the particular inline and submits
+- THEN the new particular is linked as particular_id
+- AND order and items are created atomically
 
 #### Scenario: Administration client type requires administration_id
 
@@ -166,7 +184,10 @@ from terminal). Specific rules:
 - `draft → in_preparation`: manual button on OrdenDetailPage
 - `in_preparation → ready_for_pickup`: auto-transition via DB trigger when all
   non-cancelled key items reach `status='configured'`
-- `ready_for_pickup → completed`: allowed in DB; no UI this cycle
+- `ready_for_pickup → completed`: auto-transition evaluated at pickup
+  registration — when ALL non-cancelled key items have `picked_up_at` set, the
+  order becomes `completed`; evaluated in the pickup mutation logic (no
+  recompute trigger this cycle)
 - Any non-terminal → `cancelled`: manual "Cancelar orden" button
 
 #### Scenario: Manual start of preparation
@@ -188,6 +209,18 @@ from terminal). Specific rules:
 - GIVEN an order in 'in_preparation' with 1 configured key item and 1 cancelled key item
 - WHEN the trigger recomputes
 - THEN the order transitions to 'ready_for_pickup' (cancelled item not counted)
+
+#### Scenario: All keys picked up completes the order
+
+- GIVEN an order in 'ready_for_pickup' with 2 configured key items
+- WHEN the last pickup is registered (all items have picked_up_at)
+- THEN the order status becomes 'completed'
+
+#### Scenario: Some keys pending keeps the order ready
+
+- GIVEN an order in 'ready_for_pickup' with 2 key items
+- WHEN only 1 pickup is registered
+- THEN the order status stays 'ready_for_pickup'
 
 #### Scenario: Cancel order from any non-terminal state
 
@@ -225,12 +258,19 @@ The system MUST provide ConfigureKeyItemSheet for resolving a pending key item.
 The sheet MUST collect: `rfid_code` (required text), `unit_id` (required select
 from units belonging to the item's building, plus a QuickUnitCreateDialog link),
 and an optional multi-select of equipment in the same building for
-`key_authorizations`. On save the system MUST:
+`key_authorizations`. On save the system MUST atomically:
 1. INSERT an `rfid_keys` row with `order_item_id` = the order item id.
 2. INSERT `key_authorizations` for each selected equipment (if any).
 3. UPDATE `order_items.produced_key_id` and `status='configured'`.
+4. **If `order_items.product_id` is non-null**: emit an `egreso_grabacion` movement for that product and decrement `products.stock_total` (all within the same transaction as steps 1–3).
+5. **If a `key_configuration` ticket exists for this order_item**: mark it `resolved` automatically.
+6. **If `order_items.product_id` is null**: steps 1–3 execute normally; NO stock movement is emitted (backward compatible).
+
 The `rfid_keys.order_item_id` MUST be immutable once set (DB trigger enforced).
-SQLSTATE 23503 (FK violation) MUST map to a friendly toast.
+SQLSTATE 23503 (FK violation) MUST map to a friendly toast. The
+`ConfigureKeyItemSheet` UI MUST remain unchanged from the admin's perspective —
+stock movement is a transparent back-end side-effect.
+(Previously: on save the RPC only inserted rfid_keys, key_authorizations, and updated order_items; no stock movement was emitted; no ticket was resolved)
 
 #### Scenario: Admin configures a key item successfully
 
@@ -263,6 +303,29 @@ SQLSTATE 23503 (FK violation) MUST map to a friendly toast.
 - WHEN a second configure attempt tries to overwrite order_item_id
 - THEN the DB trigger blocks the update
 - AND an error toast is shown
+
+#### Scenario: Stock decremented atomically on configure (product_id present)
+
+- GIVEN a key order_item with product_id=P (P has stock_total=5, stock_reservado=1)
+- WHEN admin configures the key item successfully
+- THEN an `egreso_grabacion` movement is created for product P
+- AND `stock_total` decrements by the item quantity
+- AND `stock_reservado` decrements by the item quantity (reservation consumed)
+- AND the rfid_keys row and order_item update are committed in the same transaction
+
+#### Scenario: No stock movement emitted when product_id is null
+
+- GIVEN a key order_item with product_id=NULL
+- WHEN admin configures the key item
+- THEN rfid_keys and order_items are updated normally
+- AND no `stock_movements` row is created
+
+#### Scenario: key_configuration ticket auto-resolved on configure success
+
+- GIVEN a `key_configuration` ticket exists for the order_item being configured
+- WHEN the configure RPC succeeds
+- THEN the `key_configuration` ticket status is set to `resolved`
+- AND a `key_installation` ticket is created (per resolution chain rule)
 
 ---
 
@@ -305,9 +368,10 @@ constraint (`key_request_item_id IS NULL OR order_item_id IS NULL`).
 
 ### Requirement: Error Mapping
 
-`mapMutationError` MUST handle SQLSTATE 23505 (order_number uniqueness) and
-23503 (FK violation on order_item operations) with Spanish-language friendly
-toasts. Unrecognized codes fall back to a generic error toast.
+`mapMutationError` MUST handle SQLSTATE 23505 (order_number uniqueness OR
+duplicate particular DNI/unit) and 23503 (FK violation on order_item
+operations) with Spanish-language friendly toasts. Unrecognized codes fall
+back to a generic error toast.
 
 #### Scenario: 23505 mapped for order_number collision
 
@@ -315,8 +379,108 @@ toasts. Unrecognized codes fall back to a generic error toast.
 - WHEN mapMutationError processes the error
 - THEN a toast describes the order number conflict in Spanish
 
+#### Scenario: 23505 mapped for duplicate particular
+
+- GIVEN the DB returns SQLSTATE 23505 while saving a particular (DNI or unit)
+- WHEN mapMutationError processes the error
+- THEN a toast explains the duplicate DNI or unit in Spanish
+
 #### Scenario: 23503 mapped for FK violation
 
 - GIVEN the DB returns SQLSTATE 23503 during configure-key save
 - WHEN mapMutationError processes the error
 - THEN a toast describes the referential integrity issue in Spanish
+
+---
+
+### Requirement: Pickup Person Selection
+
+OrdenDetailPage MUST include a pickup section ("quién retira la llave") for
+orders with a particular client. The section MUST offer: (a) a
+ParticularSelector to pick an existing particular, (b) a
+QuickParticularCreateDialog link for inline creation, and (c) a checkbox
+"usar mismos datos de compra" that sets `pickup_particular_id =
+particular_id`. Orders without a particular (administration client) MUST NOT
+show the section this cycle.
+
+#### Scenario: Checkbox reuses buyer as pickup person
+
+- GIVEN a particular order with buyer particular P
+- WHEN the admin checks "usar mismos datos de compra"
+- THEN pickup_particular_id equals P
+- AND no separate pickup search is required
+
+#### Scenario: Explicit pickup person selected
+
+- GIVEN a particular order
+- WHEN the admin searches and selects a different particular Q as pickup person
+- THEN pickup_particular_id equals Q
+- AND the checkbox is unchecked
+
+#### Scenario: Pickup person created inline
+
+- GIVEN no suitable pickup particular exists
+- WHEN the admin creates one via the dialog
+- THEN the new particular is set as pickup_particular_id
+
+#### Scenario: Section hidden for administration orders
+
+- GIVEN an order with client_type 'administration'
+- WHEN OrdenDetailPage renders
+- THEN the pickup section is not shown
+
+---
+
+### Requirement: order_items.product_id Nullable FK
+
+The `order_items` table MUST gain a nullable FK column `product_id → public.products(id)`. The column MUST default to NULL. Existing rows without a stock product are valid (backward compatible). The `create_order_with_items` RPC MUST accept an optional `product_id` per item.
+
+#### Scenario: Order item created with product_id
+
+- GIVEN a product P exists in `public.products`
+- WHEN admin creates an order_item with item_type=`key`, product_id=P.id
+- THEN the row is persisted with product_id set
+- AND a stock reservation is triggered (see Reservation Lifecycle requirement)
+
+#### Scenario: Order item created without product_id (legacy/particular)
+
+- GIVEN no product_id is supplied for an order_item
+- WHEN the order is created
+- THEN the order_item row is persisted with product_id=NULL
+- AND no stock reservation is triggered
+
+---
+
+### Requirement: Reservation Lifecycle on Order Events
+
+The system MUST automatically manage stock reservations tied to order lifecycle events:
+
+1. **On order_item insert** (item_type `key`/`equipment` with non-null `product_id`): emit a `reserva` movement for the product.
+2. **On order cancel**: emit `liberacion_reserva` for every `reserva` movement with no paired definitive egreso (pending reservations only).
+3. Reservations MUST be idempotent: a duplicate trigger fire MUST NOT produce a second `reserva` (enforced by partial UNIQUE index).
+
+#### Scenario: Reservation emitted on key order_item insert
+
+- GIVEN product P has `stock_reservado = 0`
+- WHEN an order_item with item_type=`key`, product_id=P.id, quantity=2 is inserted
+- THEN a `reserva` movement of qty=2 is created for product P
+- AND `stock_reservado` becomes 2
+
+#### Scenario: particular order_item still triggers reservation
+
+- GIVEN an order with `administration_id = NULL` (particular) has an item with item_type=`key`, product_id=P.id
+- WHEN the item is inserted
+- THEN a `reserva` movement is created (particular orders are NOT exempt)
+
+#### Scenario: Order cancellation releases pending reservations
+
+- GIVEN order O has an order_item with a `reserva` movement and no paired egreso
+- WHEN order O status is set to `cancelled`
+- THEN a `liberacion_reserva` movement is created for each pending reserva
+- AND `stock_reservado` decrements accordingly
+
+#### Scenario: Egreso-consumed reservations are NOT re-released on cancel
+
+- GIVEN an order_item has a `reserva` and a paired `egreso_grabacion`
+- WHEN the parent order is cancelled
+- THEN no `liberacion_reserva` is emitted for that item (already consumed)
