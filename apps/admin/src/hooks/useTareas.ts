@@ -10,7 +10,8 @@ export interface TareaRow {
     | 'installation'
     | 'key_configuration'
     | 'key_installation'
-    | 'equipment_installation';
+    | 'equipment_installation'
+    | 'equipment_replacement';
   description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'cancelled';
   building_id: string;
@@ -19,6 +20,7 @@ export interface TareaRow {
     name: string;
     administration: { id: string; company_name: string } | null;
   } | null;
+  equipment_id: string | null;
   assigned_to_staff_id: string | null;
   assigned_to_name: string | null;
   opened_by_staff_id: string | null;

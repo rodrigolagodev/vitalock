@@ -1,0 +1,208 @@
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useTarea } from '@/hooks/useTarea';
+import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
+import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
+import { AssignEquipmentDialog } from '@/components/tareas/AssignEquipmentDialog';
+import type { TareaRow } from '@/hooks/useTareas';
+
+const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
+  maintenance: 'Mantenimiento',
+  installation: 'Instalación',
+  key_configuration: 'Configuración de llave',
+  key_installation: 'Instalación de llave',
+  equipment_installation: 'Instalación de equipo',
+  equipment_replacement: 'Cambio de equipo',
+};
+
+const CATEGORIES_REQUIRING_EQUIPMENT = new Set<TareaRow['category']>([
+  'maintenance',
+  'installation',
+  'equipment_installation',
+  'equipment_replacement',
+]);
+
+const ACCESS_TYPE_LABELS: Record<string, string> = {
+  principal: 'Principal',
+  servicio: 'Servicio',
+  cochera: 'Cochera',
+  puerta_2: 'Puerta 2',
+  puerta_3: 'Puerta 3',
+  puerta_4: 'Puerta 4',
+  otro: 'Otro',
+};
+
+const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'], string> = {
+  maintenance: 'Asignar equipo existente',
+  installation: 'Registrar equipo instalado',
+  key_configuration: '—',
+  key_installation: '—',
+  equipment_installation: 'Registrar equipo instalado',
+  equipment_replacement: 'Reemplazar equipo',
+};
+
+function fmt(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d.getTime())
+    ? '—'
+    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs uppercase text-muted-foreground">{label}</span>
+      <span className="text-sm">{value}</span>
+    </div>
+  );
+}
+
+export default function TareaDetailPage() {
+  const { tareaId } = useParams<{ tareaId: string }>();
+  const { data: tarea, isLoading, isError } = useTarea(tareaId);
+  const [editOpen, setEditOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
+
+  if (!tareaId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <p className="text-lg font-medium text-muted-foreground">
+          ID de tarea inválido.
+        </p>
+        <Link to="/tareas" className="mt-4 text-sm underline">
+          Volver a tareas
+        </Link>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
+        <div className="h-4 w-40 animate-pulse rounded-md bg-muted" />
+        <div className="h-64 animate-pulse rounded-md bg-muted" />
+      </div>
+    );
+  }
+
+  if (isError || tarea == null) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <p className="text-lg font-medium text-muted-foreground">
+          {isError ? 'Error al cargar la tarea.' : 'Tarea no encontrada.'}
+        </p>
+        <Link to="/tareas" className="mt-4 text-sm underline">
+          Volver a tareas
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6 p-6">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+        <Link to="/tareas" className="hover:text-foreground transition-colors">
+          Tareas
+        </Link>
+        <span>/</span>
+        <span className="text-foreground font-medium">{tarea.ticket_number}</span>
+      </div>
+
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{tarea.ticket_number}</h1>
+            <TareaStatusBadge status={tarea.status} />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {CATEGORY_LABELS[tarea.category] ?? tarea.category}
+          </p>
+        </div>
+
+        <Button onClick={() => setEditOpen(true)}>Editar</Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2">
+        <Row label="Descripción" value={tarea.description || '—'} />
+        <Row
+          label="Edificio"
+          value={
+            tarea.building
+              ? tarea.building.administration
+                ? `${tarea.building.name} — ${tarea.building.administration.company_name}`
+                : tarea.building.name
+              : '—'
+          }
+        />
+        <Row label="Asignado a" value={tarea.assigned_to_name ?? 'Sin asignar'} />
+        <Row label="Abierta por" value={tarea.opened_by_name ?? '—'} />
+        <Row label="Abierta" value={fmt(tarea.opened_at)} />
+        <Row label="Actualizada" value={fmt(tarea.updated_at)} />
+        {tarea.resolution_notes && (
+          <Row label="Notas de resolución" value={tarea.resolution_notes} />
+        )}
+        {tarea.cancellation_reason && (
+          <Row label="Motivo de cancelación" value={tarea.cancellation_reason} />
+        )}
+        {tarea.notes && <Row label="Notas" value={tarea.notes} />}
+      </div>
+
+      {CATEGORIES_REQUIRING_EQUIPMENT.has(tarea.category) && (
+        <div className="flex flex-col gap-3 rounded-md border p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Equipo</h2>
+            {tarea.building_id && tarea.status !== 'resolved' && tarea.status !== 'cancelled' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAssignOpen(true)}
+              >
+                {tarea.equipment
+                  ? 'Cambiar asignación'
+                  : ASSIGN_BUTTON_LABEL[tarea.category]}
+              </Button>
+            )}
+          </div>
+
+          {tarea.equipment ? (
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Row label="Serie" value={tarea.equipment.serial_number} />
+              <Row label="Modelo" value={tarea.equipment.model ?? '—'} />
+              <Row
+                label="Tipo de acceso"
+                value={
+                  ACCESS_TYPE_LABELS[tarea.equipment.access_type] ??
+                  tarea.equipment.access_type
+                }
+              />
+              <Row label="Estado" value={tarea.equipment.status} />
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.
+            </p>
+          )}
+        </div>
+      )}
+
+      <TareaFormSheet
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        tarea={tarea}
+      />
+
+      {tarea.building_id && (
+        <AssignEquipmentDialog
+          open={assignOpen}
+          onOpenChange={setAssignOpen}
+          ticketId={tarea.id}
+          buildingId={tarea.building_id}
+          category={tarea.category}
+        />
+      )}
+    </div>
+  );
+}

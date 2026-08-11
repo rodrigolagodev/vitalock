@@ -42,9 +42,10 @@ import { toastMutationError } from '@/hooks/mapMutationError';
 // ---- Zod schema ----
 
 const itemSchema = z.object({
-  item_type: z.enum(['key', 'equipment', 'maintenance', 'installation'], {
-    required_error: 'El tipo es obligatorio',
-  }),
+  item_type: z.enum(
+    ['key', 'equipment', 'maintenance', 'installation', 'equipment_replacement'],
+    { required_error: 'El tipo es obligatorio' },
+  ),
   quantity: z.coerce
     .number({ invalid_type_error: 'La cantidad debe ser un número' })
     .int()
@@ -75,7 +76,12 @@ const baseSchema = z.object({
 });
 
 const KEYS_TYPES = new Set(['key']);
-const TECHNICAL_TYPES = new Set(['equipment', 'maintenance', 'installation']);
+const TECHNICAL_TYPES = new Set([
+  'equipment',
+  'maintenance',
+  'installation',
+  'equipment_replacement',
+]);
 
 const schema = baseSchema.superRefine((data, ctx) => {
   if (data.client_type === 'administration' && !data.administration_id) {
@@ -155,6 +161,7 @@ const ITEM_TYPE_LABELS: Record<string, string> = {
   equipment: 'Equipo',
   maintenance: 'Mantenimiento',
   installation: 'Instalación',
+  equipment_replacement: 'Cambio de equipo',
 };
 
 interface OrdenFormSheetProps {
@@ -512,13 +519,18 @@ export function OrdenFormSheet({ open, onOpenChange }: OrdenFormSheetProps) {
                               <SelectValue placeholder="Tipo de ítem" />
                             </SelectTrigger>
                             <SelectContent>
-                              {(['equipment', 'maintenance', 'installation'] as const).map(
-                                (val) => (
-                                  <SelectItem key={val} value={val}>
-                                    {ITEM_TYPE_LABELS[val]}
-                                  </SelectItem>
-                                ),
-                              )}
+                              {(
+                                [
+                                  'equipment',
+                                  'maintenance',
+                                  'installation',
+                                  'equipment_replacement',
+                                ] as const
+                              ).map((val) => (
+                                <SelectItem key={val} value={val}>
+                                  {ITEM_TYPE_LABELS[val]}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         )}

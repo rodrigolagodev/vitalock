@@ -149,20 +149,20 @@ insert into operations.equipment
   (id, serial_number, model, building_id, description, access_type, status, installed_at, notes) values
   ('f0000000-0000-0000-0000-000000000001',
    'SN-TC-PEATONAL-01', 'ACX-500', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
-   'Controladora porton peatonal', 'peatonal', 'active', now() - interval '400 days', null),
+   'Controladora porton peatonal', 'principal', 'active', now() - interval '400 days', null),
   ('f0000000-0000-0000-0000-000000000002',
    'SN-TC-COCHERA-01',  'ACX-500', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
    'Controladora porton cochera',  'cochera',  'active', now() - interval '400 days', null),
   ('f0000000-0000-0000-0000-000000000003',
    'SN-TC-SERVICE-OLD', 'ACX-300', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
-   'Controladora entrada servicio (equipo original, quemado)', 'service', 'dead',
+   'Controladora entrada servicio (equipo original, quemado)', 'servicio', 'dead',
    now() - interval '500 days', 'Placa quemada por descarga electrica en 2026-05.');
 
 insert into operations.equipment
   (id, serial_number, model, building_id, description, access_type, status, installed_at, replaces_equipment_id) values
   ('f0000000-0000-0000-0000-000000000004',
    'SN-TC-SERVICE-02', 'ACX-500', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
-   'Controladora entrada servicio (reemplazo)', 'service', 'active',
+   'Controladora entrada servicio (reemplazo)', 'servicio', 'active',
    now() - interval '50 days', 'f0000000-0000-0000-0000-000000000003');
 
 -- Palermo Loft: equipo en mantenimiento.
@@ -170,7 +170,7 @@ insert into operations.equipment
   (id, serial_number, model, building_id, description, access_type, status, installed_at, notes) values
   ('f0000000-0000-0000-0000-000000000005',
    'SN-PL-PEATONAL-01', 'ACX-500', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2',
-   'Controladora unica peatonal', 'peatonal', 'maintenance', now() - interval '300 days',
+   'Controladora unica peatonal', 'principal', 'maintenance', now() - interval '300 days',
    'Retirado 2026-08-01 por falla intermitente del lector.');
 
 -- Complejo Barracas: dos controladoras activas.
@@ -178,10 +178,10 @@ insert into operations.equipment
   (id, serial_number, model, building_id, description, access_type, status, installed_at) values
   ('f0000000-0000-0000-0000-000000000006',
    'SN-CB-PEATONAL-01', 'ACX-500', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1',
-   'Controladora porton peatonal', 'peatonal', 'active', now() - interval '250 days'),
+   'Controladora porton peatonal', 'principal', 'active', now() - interval '250 days'),
   ('f0000000-0000-0000-0000-000000000007',
    'SN-CB-LOCALES-01',  'ACX-500', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1',
-   'Controladora ingreso locales', 'other', 'active', now() - interval '250 days');
+   'Controladora ingreso locales', 'otro', 'active', now() - interval '250 days');
 
 ------------------------------------------------------------
 -- operations.key_authorizations
@@ -550,8 +550,11 @@ insert into support.tickets (id, administration_id, building_id, unit_id, catego
    '99999999-9999-9999-9999-999999999902',   -- Bruno
    'd1d1d1d1-d1d1-d1d1-d1d1-d1d1d1d1d102'); -- bill de la instalacion
 
--- Movemos por el flujo: open -> in_progress -> resolved
+-- Movemos por el flujo: open -> in_progress -> resolved.
+-- El equipment_id se registra antes de resolver (requerido por trigger).
 update support.tickets set status = 'in_progress' where id = '11111111-2222-3333-4444-555555555503';
+update support.tickets set equipment_id = 'f0000000-0000-0000-0000-000000000006'
+ where id = '11111111-2222-3333-4444-555555555503';
 update support.tickets set status = 'resolved',
                           resolved_by_staff_id = '99999999-9999-9999-9999-999999999902',
                           resolution_notes = 'Instalacion completada. Ambas cerraduras probadas y funcionando.'

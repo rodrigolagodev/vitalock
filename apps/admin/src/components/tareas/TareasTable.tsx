@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -37,6 +38,7 @@ const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
   key_configuration: 'Configuración de llave',
   key_installation: 'Instalación de llave',
   equipment_installation: 'Instalación de equipo',
+  equipment_replacement: 'Cambio de equipo',
 };
 
 function formatDate(dateStr: string): string {
@@ -114,7 +116,12 @@ export function TareasTable({
         {rows.map((tarea) => (
           <TableRow key={tarea.id}>
             <TableCell>
-              <div className="font-medium">{tarea.ticket_number}</div>
+              <Link
+                to={`/tareas/${tarea.id}`}
+                className="font-medium hover:underline"
+              >
+                {tarea.ticket_number}
+              </Link>
               <p className="line-clamp-1 text-sm text-muted-foreground">
                 {tarea.description}
               </p>

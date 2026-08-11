@@ -16,6 +16,7 @@ import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
 import OrdenesPage from './routes/ordenes/OrdenesPage';
 import OrdenDetailPage from './routes/ordenes/OrdenDetailPage';
 import TareasPage from './routes/tareas/TareasPage';
+import TareaDetailPage from './routes/tareas/TareaDetailPage';
 import PersonalPage from './routes/personal/PersonalPage';
 import ParticularesPage from './routes/particulares/ParticularesPage';
 import StockPage from './routes/stock/StockPage';
@@ -48,6 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="ordenes" element={<OrdenesPage />} />
                 <Route path="ordenes/:ordenId" element={<OrdenDetailPage />} />
                 <Route path="tareas" element={<TareasPage />} />
+                <Route path="tareas/:tareaId" element={<TareaDetailPage />} />
                 <Route path="personal" element={<PersonalPage />} />
                 <Route path="particulares" element={<ParticularesPage />} />
                 <Route path="stock" element={<StockPage />} />

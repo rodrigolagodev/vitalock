@@ -18,7 +18,12 @@ export interface CreateOrderInput {
 }
 
 export interface CreateOrderItemInput {
-  item_type: 'key' | 'equipment' | 'maintenance' | 'installation';
+  item_type:
+    | 'key'
+    | 'equipment'
+    | 'maintenance'
+    | 'installation'
+    | 'equipment_replacement';
   quantity: number;
   description?: string | null;
   building_id?: string | null;

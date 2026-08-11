@@ -102,6 +102,7 @@ const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
   key_configuration: 'Configuración de llave',
   key_installation: 'Instalación de llave',
   equipment_installation: 'Instalación de equipo',
+  equipment_replacement: 'Cambio de equipo',
 };
 
 // System-created categories (key_configuration, key_installation,
