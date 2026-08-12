@@ -44,3 +44,6 @@ pnpm-debug.log*
 # supabase local artifacts (project files stay tracked)
 supabase/.branches/
 supabase/.temp/
+
+# local editor/agent tooling
+.claude/
