@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAuth } from './useAuth';
 import { AuthErrorCode } from './types';
@@ -9,6 +9,17 @@ import type { TypedSupabaseClient } from '@vitalock/supabase';
 // ---------------------------------------------------------------------------
 
 type AuthStateChangeCallback = (event: string, session: unknown) => void;
+
+/**
+ * A thenable that also exposes `.abortSignal()`, mirroring the postgrest-js
+ * builder shape: `single()` returns a builder you can call `.abortSignal()` on
+ * before awaiting. The real hook attaches `AbortSignal.timeout(...)`; the mock
+ * ignores it and resolves with the given result.
+ */
+function makeQueryResult(result: unknown) {
+  const thenable = Promise.resolve(result);
+  return Object.assign(thenable, { abortSignal: () => thenable });
+}
 
 interface MockSupabase {
   client: TypedSupabaseClient;
@@ -26,11 +37,14 @@ function createMockSupabase(
 
   const signInMock = vi.fn();
   const signOutMock = vi.fn().mockResolvedValue({ error: null });
-  const profileQueryMock = vi.fn().mockResolvedValue({ data: profileData, error: null });
+  const profileQueryMock = vi.fn().mockReturnValue(
+    makeQueryResult({ data: profileData, error: null, status: 200 }),
+  );
 
   const mockSelectChain = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    abortSignal: vi.fn().mockReturnThis(),
     single: profileQueryMock,
   };
 
@@ -81,6 +95,13 @@ function makeProfile(overrides: Record<string, unknown> = {}) {
 describe('useAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Avoid creating a real 15s timer from AbortSignal.timeout inside
+    // fetchProfile during tests; the mock builder ignores the signal.
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue({} as AbortSignal);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('1. happy path — admin login sets phase=authenticated with staff profile', async () => {
@@ -202,5 +223,50 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
     expect(result.current.staff).toBeNull();
     expect(result.current.session).toBeNull();
+  });
+
+  it('7. SIGNED_IN while authenticated updates the session without refetching the profile', async () => {
+    const session = makeSession();
+    const { client, triggerAuthEvent, profileQueryMock } = createMockSupabase(
+      makeProfile(),
+      session,
+    );
+
+    const { result } = renderHook(() => useAuth(client, 'admin'));
+    await waitFor(() => expect(result.current.phase).toBe('authenticated'));
+    expect(profileQueryMock).toHaveBeenCalledTimes(1);
+
+    // supabase-js re-emits SIGNED_IN on visibility-return; it must NOT
+    // re-enter fetching_profile nor re-fetch the profile.
+    const refreshedSession = { ...session, access_token: 'token-2' };
+    act(() => triggerAuthEvent('SIGNED_IN', refreshedSession));
+
+    await waitFor(() =>
+      expect(result.current.session?.access_token).toBe('token-2'),
+    );
+    expect(result.current.phase).toBe('authenticated');
+    expect(profileQueryMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('8. profile fetch network failure sets NETWORK_ERROR without signOut', async () => {
+    const session = makeSession();
+    const { client, signOutMock, profileQueryMock } = createMockSupabase(
+      makeProfile(),
+      session,
+    );
+    // postgrest-js surfaces fetch rejections (timeout/abort/network) as status 0.
+    profileQueryMock.mockReturnValue(
+      makeQueryResult({
+        data: null,
+        error: { message: 'AbortError: The operation was aborted' },
+        status: 0,
+      }),
+    );
+
+    const { result } = renderHook(() => useAuth(client, 'admin'));
+
+    await waitFor(() => expect(result.current.phase).toBe('error'));
+    expect(result.current.error?.code).toBe(AuthErrorCode.NETWORK_ERROR);
+    expect(signOutMock).not.toHaveBeenCalled();
   });
 });
