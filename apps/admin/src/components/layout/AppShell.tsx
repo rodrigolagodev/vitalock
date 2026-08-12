@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { useAuthContext } from '@/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from './Sidebar';
+import { ThemeToggle } from './ThemeToggle';
 
 export function AppShell() {
   const { staff, signOut } = useAuthContext();
@@ -17,6 +18,7 @@ export function AppShell() {
               {staff.full_name}
             </span>
           )}
+          <ThemeToggle />
           <Button variant="ghost" size="sm" onClick={() => void signOut()}>
             Salir
           </Button>
