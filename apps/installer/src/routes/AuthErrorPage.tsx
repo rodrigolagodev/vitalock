@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthErrorCode } from '@vitalock/shared';
+import { useAuthContext } from '../auth/AuthProvider';
 
 const ERROR_MESSAGES: Record<string, string> = {
   [AuthErrorCode.NO_STAFF_ROW]: 'Cuenta no provisionada. Contactar a soporte.',
@@ -15,8 +16,16 @@ const FALLBACK_MESSAGE = 'Ocurrió un error inesperado.';
 export default function AuthErrorPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { refresh } = useAuthContext();
   const reason = searchParams.get('reason') ?? '';
   const message = ERROR_MESSAGES[reason] ?? FALLBACK_MESSAGE;
+  // Network failures keep the session alive (no signOut), so offer a retry
+  // that re-fetches the profile instead of forcing a fresh login.
+  const isNetworkError = reason === AuthErrorCode.NETWORK_ERROR;
+
+  const handleRetry = () => {
+    void refresh().then(() => navigate('/', { replace: true }));
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
@@ -26,10 +35,10 @@ export default function AuthErrorPage() {
       </div>
       <button
         type="button"
-        onClick={() => navigate('/login')}
+        onClick={isNetworkError ? handleRetry : () => navigate('/login')}
         className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
       >
-        Volver al inicio
+        {isNetworkError ? 'Reintentar' : 'Volver al inicio'}
       </button>
     </div>
   );
