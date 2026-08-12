@@ -184,12 +184,6 @@ export default function OrdenDetailPage() {
             </Button>
           )}
 
-          {isKeysOrder && isReadyForPickup && (
-            <Button variant="default" disabled title="Próximamente">
-              Retirada completada
-            </Button>
-          )}
-
           {isCompleted && (
             <Button
               onClick={handleMarkInvoiced}
