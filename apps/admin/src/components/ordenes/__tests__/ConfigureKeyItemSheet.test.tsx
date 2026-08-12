@@ -38,6 +38,8 @@ vi.mock('@/hooks/useEquipment', () => ({
   useEquipment: () => ({
     data: [
       { id: 'eq-1', serial_number: 'SN-001', model: 'Equipo A', status: 'active', installed_at: '', building_id: 'bld-1' },
+      { id: 'eq-2', serial_number: 'SN-002', model: 'Equipo B', status: 'maintenance', installed_at: '', building_id: 'bld-1' },
+      { id: 'eq-3', serial_number: 'SN-003', model: 'Equipo C', status: 'dead', installed_at: '', building_id: 'bld-1' },
     ],
     isLoading: false,
   }),
@@ -106,6 +108,26 @@ describe('ConfigureKeyItemSheet', () => {
     );
 
     expect(screen.getByText('Configurar llave')).toBeInTheDocument();
+  });
+
+  it('shows only active equipment as assignable readers', () => {
+    render(
+      <ConfigureKeyItemSheet
+        open={true}
+        onOpenChange={vi.fn()}
+        item={sampleItem}
+        orderId="order-1"
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    // Active reader is offered as an option.
+    expect(screen.getByText('SN-001 — Equipo A')).toBeInTheDocument();
+    // Decommissioned and in-maintenance readers must not be assignable.
+    expect(screen.queryByText(/SN-002/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/SN-003/)).not.toBeInTheDocument();
+    // Exactly one checkbox: the active equipment.
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1);
   });
 
   it('blocks submit when rfid_code is empty', async () => {

@@ -57,6 +57,10 @@ export function ConfigureKeyItemSheet({
   const { data: units = [] } = useUnits(buildingId);
   const { data: equipment = [] } = useEquipment(buildingId);
 
+  // Only active readers can be assigned to a new key. Decommissioned
+  // (dead) or in-maintenance equipment must not appear as assignable.
+  const activeEquipment = equipment.filter((eq) => eq.status === 'active');
+
   const {
     register,
     handleSubmit,
@@ -197,13 +201,13 @@ export function ConfigureKeyItemSheet({
               </div>
             )}
 
-            {/* Equipment multi-select — required (at least one). */}
+            {/* Equipment multi-select — required (at least one active). */}
             <div className="flex flex-col gap-2">
               <Label>Equipos autorizados *</Label>
-              {equipment.length === 0 ? (
+              {activeEquipment.length === 0 ? (
                 <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
-                  No hay equipos disponibles en este edificio. Creá al menos uno antes
-                  de configurar la llave.
+                  No hay equipos activos disponibles en este edificio. Creá o activá al
+                  menos uno antes de configurar la llave.
                 </p>
               ) : (
                 <div className="flex flex-col gap-2 rounded-md border p-3 max-h-48 overflow-y-auto">
@@ -212,7 +216,7 @@ export function ConfigureKeyItemSheet({
                     name="equipment_ids"
                     render={({ field }) => (
                       <>
-                        {equipment.map((eq) => {
+                        {activeEquipment.map((eq) => {
                           const checked = field.value.includes(eq.id);
                           return (
                             <label
