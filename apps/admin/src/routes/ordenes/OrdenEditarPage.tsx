@@ -23,7 +23,7 @@ export default function OrdenEditarPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-24">
+      <div className="flex flex-col gap-6 pb-24">
         <div
           role="status"
           aria-label="Cargando orden"
@@ -39,7 +39,7 @@ export default function OrdenEditarPage() {
 
   if (isError || !orden) {
     return (
-      <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-24">
+      <div className="flex flex-col gap-6 pb-24">
         <p className="text-destructive">Error al cargar la orden.</p>
       </div>
     );
@@ -122,7 +122,7 @@ export default function OrdenEditarPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-24">
+    <div className="flex flex-col gap-6 pb-24">
       <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
         <Link to="/ordenes" className="hover:text-foreground transition-colors">
           Órdenes

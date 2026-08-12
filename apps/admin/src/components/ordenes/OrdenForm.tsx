@@ -749,7 +749,7 @@ export function OrdenForm({
 
       {/* Sticky action bar */}
       <div className="sticky bottom-0 border-t bg-background/95 backdrop-blur">
-        <div className="max-w-3xl mx-auto flex justify-end gap-2 px-6 py-3">
+        <div className="flex justify-end gap-2 px-6 py-3">
           {onCancel && (
             <Button
               type="button"
