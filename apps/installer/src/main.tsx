@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from 'next-themes';
 import { loadClientEnv } from '@vitalock/shared';
 import { createSupabaseClient } from '@vitalock/supabase';
 import { AuthProvider } from './auth/AuthProvider';
@@ -23,21 +24,23 @@ const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider supabase={supabase}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/error" element={<AuthErrorPage />} />
-            <Route element={<ProtectedRoute />}>
-              <Route element={<App />}>
-                <Route index element={<IndexRoute />} />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider supabase={supabase}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/error" element={<AuthErrorPage />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<App />}>
+                  <Route index element={<IndexRoute />} />
+                </Route>
               </Route>
-            </Route>
-          </Routes>
-          <Toaster richColors position="bottom-center" />
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+            </Routes>
+            <Toaster richColors position="bottom-center" />
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ThemeProvider>
   </React.StrictMode>,
 );
