@@ -83,41 +83,46 @@ Then   the pending comment is removed from the timeline
   And  a Sonner toast shows "Error de conexión. Intentá de nuevo."
 ```
 
-### R3 — Resolve Ticket (Pessimistic, Inline)
+### R3 — Resolve Ticket (Pessimistic, via RPC)
 
-A "Resolver" inline expand MUST appear within an expanded ticket card. Tapping
-it MUST reveal a `resolution_notes` textarea. The textarea MUST be required.
-On submit the mutation payload MUST include `{ status: 'resolved', resolution_notes,
-resolved_by_staff_id: staff.id }`. The mutation MUST be pessimistic. On DB
-success the ticket MUST disappear from the section and a Sonner toast MUST confirm.
+An installer resolves selected tickets through the "Marcar resueltos" selection
+toolbar. Resolution MUST go through the `public.resolve_ticket(ticket_id, note)`
+RPC — never through a direct `UPDATE status = 'resolved'`. The RPC runs the
+legal state-machine transition `open → in_progress → resolved` inside a single
+transaction (a direct `open → resolved` hop is rejected by
+`support.tickets_validate`), records `resolved_by_staff_id` from the JWT
+identity, `resolved_at`, and a non-empty `resolution_notes` (falling back to
+`Resuelta por <staff name>` when no note is provided). RLS scopes the RPC:
+installers may resolve only tickets assigned to them; admins may resolve any.
+On success the ticket MUST disappear from the section and a Sonner toast MUST
+confirm. The mutation MUST be pessimistic.
 
 #### SC-R3-1 — Happy path: resolve ticket
 
 ```
-Given  Bruno expands the "Resolver" inline section on a ticket card
-When   Bruno types "Reemplacé el cilindro" and submits
-Then   a spinner blocks further interaction
-  And  the payload includes { status: 'resolved', resolution_notes: 'Reemplacé el cilindro', resolved_by_staff_id: staff.id }
-  And  on DB confirm, the ticket disappears and a Sonner toast confirms resolution
+Given  Bruno selects one or more of his assigned open/in_progress tickets
+When   Bruno taps "Marcar resueltos"
+Then   the client calls public.resolve_ticket for each selected ticket
+  And  the RPC transitions the ticket through in_progress to resolved
+  And  on DB confirm, the tickets disappear and a Sonner toast confirms resolution
 ```
 
-#### SC-R3-2 — Empty resolution_notes blocked client-side
+#### SC-R3-2 — Direct open -> resolved UPDATE must not be used
 
 ```
-Given  the "Resolver" textarea is visible and empty
-When   Bruno submits the resolve form
-Then   client-side validation prevents the network request
-  And  the inline error "Escribí una nota de resolución." is shown
-  And  no mutation is sent
+Given  a ticket is in status 'open'
+When   a client tries a direct UPDATE support.tickets SET status = 'resolved'
+Then   the DB trigger rejects it (invalid tickets.status transition)
+  And  the ticket remains 'open' until resolved via public.resolve_ticket
 ```
 
-#### SC-R3-3 — resolved_by_staff_id always included
+#### SC-R3-3 — resolved_by_staff_id and resolution_notes always recorded
 
 ```
-Given  Bruno submits a resolve form with valid resolution_notes
-When   the mutation fires
-Then   the payload always includes resolved_by_staff_id equal to Bruno's staff.id
-  And  it is never null or undefined
+Given  Bruno resolves a ticket through public.resolve_ticket with no note
+When   the RPC runs
+Then   resolved_by_staff_id equals Bruno's staff.id (from the JWT, never client input)
+  And  resolution_notes is never null — it falls back to 'Resuelta por <name>'
 ```
 
 ### R4 — Error Handling for Ticket Actions

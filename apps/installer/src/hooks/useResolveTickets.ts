@@ -19,17 +19,18 @@ export function useResolveTickets() {
     mutationFn: async ({ ids, notes }: ResolvePayload) => {
       if (ids.length === 0) return;
 
-      const { error } = await supabase
-        .schema('support')
-        .from('tickets')
-        .update({
-          status: 'resolved',
-          resolved_by_staff_id: staffId,
-          resolved_at: new Date().toISOString(),
-          resolution_notes: notes ?? null,
-        })
-        .in('id', ids);
-      if (error) throw error;
+      // Resolution goes through public.resolve_ticket, which runs the legal
+      // state-machine transition open -> in_progress -> resolved inside one
+      // transaction. A direct UPDATE 'open' -> 'resolved' is rejected by
+      // support.tickets_validate and would leave the ticket stuck open.
+      // PostgREST rpc() resolves with { data, error }; surface any failure.
+      const results = await Promise.all(
+        ids.map((id) =>
+          supabase.rpc('resolve_ticket', { p_ticket_id: id, p_note: notes ?? undefined }),
+        ),
+      );
+      const firstError = results.find((r) => r.error);
+      if (firstError?.error) throw firstError.error;
     },
     onSuccess: (_data, { ids }) => {
       void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });

@@ -835,6 +835,14 @@ export type Database = {
         }
         Returns: string
       }
+      resolve_ticket: {
+        Args: {
+          p_actor_staff_id?: string
+          p_note?: string
+          p_ticket_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

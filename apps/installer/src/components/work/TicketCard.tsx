@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { useTicketComments } from '@/hooks/useTicketComments';
-import { useCancelTicket } from '@/hooks/useCancelTicket';
 import { TicketCommentsList } from './TicketCommentsList';
 import { AddCommentForm } from './AddCommentForm';
-import { RejectDialog } from './RejectDialog';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
 
 interface TicketCardProps {
@@ -29,16 +26,7 @@ const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> =
 
 export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
   const { data: comments = [] } = useTicketComments(expanded ? ticket.id : '');
-  const cancel = useCancelTicket();
-
-  const handleReject = (reason: string) => {
-    cancel.mutate(
-      { id: ticket.id, reason },
-      { onSuccess: () => setRejectOpen(false) },
-    );
-  };
 
   return (
     <>
@@ -48,7 +36,6 @@ export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {
             id={`ticket-${ticket.id}`}
             checked={selected}
             onCheckedChange={() => onToggle(ticket.id)}
-            disabled={cancel.isPending}
           />
           <button
             type="button"
@@ -77,28 +64,9 @@ export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {
             )}
             <TicketCommentsList comments={comments} />
             <AddCommentForm ticketId={ticket.id} />
-            <div className="flex justify-end">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setRejectOpen(true)}
-                disabled={cancel.isPending}
-              >
-                Rechazar ticket
-              </Button>
-            </div>
           </div>
         )}
       </div>
-
-      <RejectDialog
-        open={rejectOpen}
-        title="Rechazar ticket"
-        description={ticket.title}
-        isPending={cancel.isPending}
-        onCancel={() => setRejectOpen(false)}
-        onConfirm={handleReject}
-      />
     </>
   );
 }
