@@ -187,6 +187,32 @@ describe('OrderItemsTable', () => {
     expect(configurarButtons).toHaveLength(1);
   });
 
+  it('renders "Configurar" button for pending key items right after confirm (order in confirmed)', () => {
+    render(
+      <OrderItemsTable
+        items={[pendingKeyItem]}
+        orderId="order-1"
+        orderStatus="confirmed"
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(screen.getAllByRole('button', { name: /configurar/i })).toHaveLength(1);
+  });
+
+  it('does not render "Configurar" button for pending key items while the order is still draft', () => {
+    render(
+      <OrderItemsTable
+        items={[pendingKeyItem]}
+        orderId="order-1"
+        orderStatus="draft"
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(screen.queryByRole('button', { name: /configurar/i })).not.toBeInTheDocument();
+  });
+
   it('does not render "Configurar" button for configured key items', () => {
     render(
       <OrderItemsTable

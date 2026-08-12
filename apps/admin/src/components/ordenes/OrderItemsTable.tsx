@@ -99,13 +99,17 @@ export function OrderItemsTable({
             ) : (
               items.map((item) => {
                 const isPending = item.status === 'pending';
-                // Configure is only offered while the order is actively being
-                // prepared — hidden in draft/confirmed (not started yet) and in
-                // every later status (already configured or beyond).
+                // Configure is offered right after confirm (order in
+                // 'confirmed') and while actively being prepared
+                // ('in_progress'). The keys state machine promotes
+                // confirmed → in_progress as soon as the first key is
+                // configured, so gating on in_progress alone would deadlock.
+                // Hidden in draft (not confirmed yet) and in every later
+                // status (already configured or beyond).
                 const canConfigure =
                   item.item_type === 'key' &&
                   isPending &&
-                  orderStatus === 'in_progress';
+                  (orderStatus === 'confirmed' || orderStatus === 'in_progress');
                 const canPickup =
                   canRegisterPickup &&
                   item.item_type === 'key' &&
