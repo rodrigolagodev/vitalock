@@ -18,6 +18,7 @@ import { QuickUnitCreateDialog } from '@/components/ordenes/QuickUnitCreateDialo
 import { Badge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
+import { SectionHeading } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@vitalock/ui';
 import {
@@ -296,7 +297,7 @@ export function OrdenForm({
       >
         {/* ---- Section: Tipo de orden ---- */}
         <section className="flex flex-col gap-3 rounded-md border p-5">
-          <h2 className="text-base font-semibold">Tipo de orden</h2>
+          <SectionHeading title="Tipo de orden" />
           <Controller
             control={control}
             name="order_type"
@@ -337,7 +338,7 @@ export function OrdenForm({
 
         {/* ---- Section: Cliente ---- */}
         <section className="flex flex-col gap-4 rounded-md border p-5">
-          <h2 className="text-base font-semibold">Cliente</h2>
+          <SectionHeading title="Cliente" />
 
           <div className="flex flex-col gap-2">
             <Label>Tipo de cliente *</Label>
@@ -421,14 +422,14 @@ export function OrdenForm({
 
         {/* ---- Section: Ítems ---- */}
         <section className="flex flex-col gap-4 rounded-md border p-5">
-          <div>
-            <h2 className="text-base font-semibold">Ítems</h2>
-            <p className="text-xs text-muted-foreground">
-              {orderType === 'keys'
+          <SectionHeading
+            title="Ítems"
+            description={
+              orderType === 'keys'
                 ? 'Cada ítem es un pack de llaves con un mismo autorizado a retirar.'
-                : 'Cada ítem genera una tarea del área técnica.'}
-            </p>
-          </div>
+                : 'Cada ítem genera una tarea del área técnica.'
+            }
+          />
 
           {errors.items && !Array.isArray(errors.items) && (
             <p className="text-sm text-destructive">{errors.items.message}</p>
@@ -737,7 +738,7 @@ export function OrdenForm({
 
         {/* ---- Section: Notas ---- */}
         <section className="flex flex-col gap-3 rounded-md border p-5">
-          <h2 className="text-base font-semibold">Notas</h2>
+          <SectionHeading title="Notas" />
           <Textarea
             id="notes"
             placeholder="Observaciones adicionales..."
