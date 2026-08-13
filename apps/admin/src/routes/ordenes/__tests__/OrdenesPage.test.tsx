@@ -14,7 +14,7 @@ import OrdenesPage from '../OrdenesPage';
 function makeOrdenes(): OrdenRow[] {
   const base = {
     order_type: 'keys' as const,
-    client_type: 'particular',
+    client_type: 'particular' as const,
     administration_id: null,
     administrations: null,
     particular_full_name: 'Cliente',

@@ -78,9 +78,7 @@ describe('OrdenesTable pagination', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Página siguiente' }));
     expect(screen.getByText('21–25 de 25')).toBeInTheDocument();
 
-    rerender(<OrdenesTable ordenes={makeOrdenes(3)} isFetching={false} />, {
-      wrapper: makeWrapper(),
-    });
+    rerender(<OrdenesTable ordenes={makeOrdenes(3)} isFetching={false} />);
 
     expect(screen.getByText('1–3 de 3')).toBeInTheDocument();
     expect(screen.getByRole('combobox')).toHaveValue('10');
