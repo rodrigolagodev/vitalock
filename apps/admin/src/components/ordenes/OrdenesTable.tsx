@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Table,
@@ -7,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@vitalock/ui';
+import { Badge, DEFAULT_PAGE_SIZE, PaginationFooter, getPageSlice } from '@vitalock/ui';
 import { OrdenStatusBadge } from './OrdenStatusBadge';
 import type { OrdenRow, OrderType } from '@/hooks/useOrdens';
 
@@ -55,6 +56,15 @@ export function OrdenesTable({
   isFetching,
   hasFilters = false,
 }: OrdenesTableProps) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // New filtered dataset (search/status/type change) → back to page 1 at the default size.
+  useEffect(() => {
+    setPage(1);
+    setPageSize(DEFAULT_PAGE_SIZE);
+  }, [ordenes]);
+
   if (isFetching) {
     return (
       <Table>
@@ -99,47 +109,56 @@ export function OrdenesTable({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>N.º de orden</TableHead>
-          <TableHead>Cliente</TableHead>
-          <TableHead>Ítems</TableHead>
-          <TableHead>Estado</TableHead>
-          <TableHead>Fecha</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {ordenes.map((orden) => (
-          <TableRow key={orden.id}>
-            <TableCell className="font-medium">
-              <Link
-                to={`/ordenes/${orden.id}`}
-                className="hover:underline"
-              >
-                {orden.order_number}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Badge variant="outline">
-                {ORDER_TYPE_LABELS[orden.order_type]}
-              </Badge>
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {clientLabel(orden)}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {orden.order_items.length}
-            </TableCell>
-            <TableCell>
-              <OrdenStatusBadge status={orden.status} />
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {formatDate(orden.created_at)}
-            </TableCell>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>N.º de orden</TableHead>
+            <TableHead>Cliente</TableHead>
+            <TableHead>Ítems</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Fecha</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {getPageSlice(ordenes, page, pageSize).map((orden) => (
+            <TableRow key={orden.id}>
+              <TableCell className="font-medium">
+                <Link
+                  to={`/ordenes/${orden.id}`}
+                  className="hover:underline"
+                >
+                  {orden.order_number}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">
+                  {ORDER_TYPE_LABELS[orden.order_type]}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {clientLabel(orden)}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {orden.order_items.length}
+              </TableCell>
+              <TableCell>
+                <OrdenStatusBadge status={orden.status} />
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatDate(orden.created_at)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <PaginationFooter
+        total={ordenes.length}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+    </>
   );
 }

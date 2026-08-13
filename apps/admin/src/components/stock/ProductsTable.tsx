@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
+import { DEFAULT_PAGE_SIZE, PaginationFooter, getPageSlice } from '@vitalock/ui';
 import {
   Table,
   TableBody,
@@ -50,6 +52,14 @@ function SkeletonRow() {
 
 export function ProductsTable({ rows, isFetching, hasFilters = false }: ProductsTableProps) {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // New filtered dataset (search/category change) → back to page 1 at the default size.
+  useEffect(() => {
+    setPage(1);
+    setPageSize(DEFAULT_PAGE_SIZE);
+  }, [rows]);
 
   const goToDetail = (product: ProductRow) => navigate(`/stock/${product.id}`);
 
@@ -99,76 +109,85 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nombre</TableHead>
-          <TableHead>Categoría</TableHead>
-          <TableHead>Precio de costo</TableHead>
-          <TableHead>Stock total</TableHead>
-          <TableHead>Reservado</TableHead>
-          <TableHead>Disponible</TableHead>
-          <TableHead>Actualizado</TableHead>
-          <TableHead className="text-right">Acciones</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((product) => {
-          const lowStock = product.stock_disponible < 0;
-          return (
-            <TableRow
-              key={product.id}
-              role="button"
-              tabIndex={0}
-              className="cursor-pointer"
-              onClick={() => goToDetail(product)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  goToDetail(product);
-                }
-              }}
-            >
-              <TableCell className="font-medium">{product.name}</TableCell>
-              <TableCell>
-                <Badge variant="secondary">
-                  {CATEGORY_LABELS[product.category]}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatCost(product.cost_price)}
-              </TableCell>
-              <TableCell>{product.stock_total}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {product.stock_reservado}
-              </TableCell>
-              <TableCell
-                className={
-                  lowStock ? 'font-medium text-destructive' : 'font-medium'
-                }
-              >
-                {product.stock_disponible}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(product.updated_at)}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nombre</TableHead>
+            <TableHead>Categoría</TableHead>
+            <TableHead>Precio de costo</TableHead>
+            <TableHead>Stock total</TableHead>
+            <TableHead>Reservado</TableHead>
+            <TableHead>Disponible</TableHead>
+            <TableHead>Actualizado</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {getPageSlice(rows, page, pageSize).map((product) => {
+            const lowStock = product.stock_disponible < 0;
+            return (
+              <TableRow
+                key={product.id}
+                role="button"
+                tabIndex={0}
+                className="cursor-pointer"
+                onClick={() => goToDetail(product)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
                     goToDetail(product);
-                  }}
+                  }
+                }}
+              >
+                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">
+                    {CATEGORY_LABELS[product.category]}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatCost(product.cost_price)}
+                </TableCell>
+                <TableCell>{product.stock_total}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {product.stock_reservado}
+                </TableCell>
+                <TableCell
+                  className={
+                    lowStock ? 'font-medium text-destructive' : 'font-medium'
+                  }
                 >
-                  Ver
-                </Button>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+                  {product.stock_disponible}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDateTime(product.updated_at)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToDetail(product);
+                    }}
+                  >
+                    Ver
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      <PaginationFooter
+        total={rows.length}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+    </>
   );
 }

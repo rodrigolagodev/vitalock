@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Table,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
+import { DEFAULT_PAGE_SIZE, PaginationFooter, getPageSlice } from '@vitalock/ui';
 import { AdministrationFormSheet } from './AdministrationFormSheet';
 import { AdministrationStatusToggle } from './AdministrationStatusToggle';
 import type { AdministrationRow } from '@/hooks/useAdministrations';
@@ -37,6 +38,14 @@ export function AdministrationsTable({
   search = '',
 }: AdministrationsTableProps) {
   const [editingAdmin, setEditingAdmin] = useState<AdministrationRow | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // New filtered dataset (search change) → back to page 1 at the default size.
+  useEffect(() => {
+    setPage(1);
+    setPageSize(DEFAULT_PAGE_SIZE);
+  }, [administrations]);
 
   if (isFetching) {
     return (
@@ -91,7 +100,7 @@ export function AdministrationsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {administrations.map((admin) => (
+          {getPageSlice(administrations, page, pageSize).map((admin) => (
             <TableRow key={admin.id}>
               <TableCell className="font-medium">
                 <Link
@@ -127,6 +136,14 @@ export function AdministrationsTable({
           ))}
         </TableBody>
       </Table>
+
+      <PaginationFooter
+        total={administrations.length}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
 
       <AdministrationFormSheet
         open={Boolean(editingAdmin)}
