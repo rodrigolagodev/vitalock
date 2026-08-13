@@ -60,12 +60,12 @@ Threat matrix N/A (design); strict_tdd RED→GREEN per module.
 
 ## Slice D2 · Forms+logins · PR 5 · borderline ≤400
 
-- [ ] D2.1 `input.tsx`+admin `select.tsx` trigger `h-10`→`h-11`.
-- [ ] D2.2 RED SectionHeading test (h2 title/description/action).
-- [ ] D2.3 GREEN `patterns/SectionHeading.tsx` (h2 ~28px)+export.
-- [ ] D2.4 `OrdenForm.tsx`: section/h2 → SectionHeading.
-- [ ] D2.5 Both `LoginPage.tsx`: `<input>` → shared Input; submit → Button; copy unchanged.
-- [ ] D2.6 Pipeline green.
+- [x] D2.1 `input.tsx`+admin `select.tsx` trigger `h-10`→`h-11`.
+- [x] D2.2 RED SectionHeading test (h2 title/description/action).
+- [x] D2.3 GREEN `patterns/SectionHeading.tsx` (h2 ~28px)+export.
+- [x] D2.4 `OrdenForm.tsx`: section/h2 → SectionHeading.
+- [x] D2.5 Both `LoginPage.tsx`: `<input>` → shared Input; submit → Button; copy unchanged.
+- [x] D2.6 Pipeline green.
 
 ## Slice E · Installer · PR 6 · ≤400 ✓
 
