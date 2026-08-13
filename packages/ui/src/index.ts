@@ -34,3 +34,16 @@ export {
   type SearchInputProps,
 } from './components/patterns/SearchInput';
 export { Topbar, type TopbarProps } from './components/patterns/Topbar';
+export {
+  DEFAULT_PAGE_SIZE,
+  ROWS_PER_PAGE_OPTIONS,
+  getPageSlice,
+} from './components/patterns/pagination';
+export {
+  StatCard,
+  type StatCardProps,
+} from './components/patterns/StatCard';
+export {
+  PaginationFooter,
+  type PaginationFooterProps,
+} from './components/patterns/PaginationFooter';
