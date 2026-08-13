@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@vitalock/ui';
+import { Textarea } from '@vitalock/ui';
 import { useAddComment } from '@/hooks/useAddComment';
 
 interface AddCommentFormProps {

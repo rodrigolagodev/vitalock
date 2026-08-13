@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@vitalock/ui';
 import { Separator } from '@/components/ui/separator';
 import { AuthorizationsSection } from './AuthorizationsSection';
 import { TicketsSection } from './TicketsSection';

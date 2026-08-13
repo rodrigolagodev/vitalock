@@ -1,4 +1,4 @@
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@vitalock/ui';
 import { AuthorizationRow } from './AuthorizationRow';
 import type { WorklistAuthorization } from '@/hooks/useWorklist';
 

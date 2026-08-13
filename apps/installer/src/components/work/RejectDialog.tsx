@@ -6,9 +6,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+} from '@vitalock/ui';
+import { Textarea } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 
 interface RejectDialogProps {
   open: boolean;

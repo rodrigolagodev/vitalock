@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
+import { Badge } from '@vitalock/ui';
 import { useRejectAuthorization } from '@/hooks/useRejectAuthorization';
 import { RejectDialog } from './RejectDialog';
 import type { WorklistAuthorization } from '@/hooks/useWorklist';

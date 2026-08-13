@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@vitalock/ui';
 import { X } from 'lucide-react';
 
 interface SelectionToolbarProps {

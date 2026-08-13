@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@vitalock/ui';
+import { Checkbox } from '@vitalock/ui';
 import { Separator } from '@/components/ui/separator';
 import { useTicketComments } from '@/hooks/useTicketComments';
 import { TicketCommentsList } from './TicketCommentsList';

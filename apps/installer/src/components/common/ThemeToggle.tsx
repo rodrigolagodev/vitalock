@@ -1,6 +1,6 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@vitalock/ui';
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
