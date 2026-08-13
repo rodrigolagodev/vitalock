@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
+import { Badge } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProducts } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';

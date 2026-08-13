@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@vitalock/ui';
 import type { OrderStatus } from '@/hooks/useOrdens';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {

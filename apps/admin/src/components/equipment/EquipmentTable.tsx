@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import { EquipmentFormSheet } from './EquipmentFormSheet';
 import { ReplaceEquipmentDialog } from './ReplaceEquipmentDialog';

@@ -3,11 +3,11 @@ import { Link, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Input } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@vitalock/ui';
+import { Checkbox } from '@vitalock/ui';
 import {
   Popover,
   PopoverContent,

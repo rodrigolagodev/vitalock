@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@vitalock/ui';
+import { Badge } from '@vitalock/ui';
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@vitalock/ui';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
 import type { StaffRow } from '@/hooks/usePersonal';
 

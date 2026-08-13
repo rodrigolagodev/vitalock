@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@vitalock/ui';
 import { OrdenStatusBadge } from './OrdenStatusBadge';
 import type { OrdenRow, OrderType } from '@/hooks/useOrdens';
 

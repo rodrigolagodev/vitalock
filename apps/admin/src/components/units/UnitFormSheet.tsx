@@ -9,10 +9,10 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@vitalock/ui';
+import { Input } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@vitalock/ui';
 import { useMutateUnit } from '@/hooks/useMutateUnit';
 import type { UnitRow } from '@/hooks/useUnits';
 

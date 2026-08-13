@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { useOrden } from '@/hooks/useOrden';
 import { useMutateOrden } from '@/hooks/useMutateOrden';
 import { useOrderTareas } from '@/hooks/useOrderTareas';

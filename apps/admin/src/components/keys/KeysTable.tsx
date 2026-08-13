@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
 import { KeyDetailDialog } from './KeyDetailDialog';
 import type { KeyRow } from '@/hooks/useKeys';

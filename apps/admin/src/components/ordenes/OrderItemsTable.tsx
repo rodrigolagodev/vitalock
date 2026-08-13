@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@vitalock/ui';
+import { Badge } from '@vitalock/ui';
 import { useMutateOrderItem } from '@/hooks/useMutateOrderItem';
 import { ConfigureKeyItemSheet } from './ConfigureKeyItemSheet';
 import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';

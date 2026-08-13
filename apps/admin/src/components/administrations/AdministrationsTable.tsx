@@ -8,8 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { AdministrationFormSheet } from './AdministrationFormSheet';
 import { AdministrationStatusToggle } from './AdministrationStatusToggle';
 import type { AdministrationRow } from '@/hooks/useAdministrations';

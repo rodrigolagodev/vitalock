@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
+import { Input } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
 import { useReplaceEquipment } from '@/hooks/useReplaceEquipment';
 import type { EquipmentRow } from '@/hooks/useEquipment';

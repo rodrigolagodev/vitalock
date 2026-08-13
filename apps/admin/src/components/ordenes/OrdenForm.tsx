@@ -15,11 +15,11 @@ import { ParticularFormSheet } from '@/components/particulares/ParticularFormShe
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
 import { QuickUnitCreateDialog } from '@/components/ordenes/QuickUnitCreateDialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
+import { Input } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@vitalock/ui';
 import {
   Select,
   SelectContent,

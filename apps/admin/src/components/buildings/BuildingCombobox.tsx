@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Input } from '@vitalock/ui';
 import type { BuildingRow } from '@/hooks/useBuildings';
 
 interface BuildingComboboxProps {

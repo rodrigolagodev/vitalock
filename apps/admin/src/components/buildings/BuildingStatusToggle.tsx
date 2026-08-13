@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@vitalock/ui';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from '@vitalock/ui';
 import { useUnits } from '@/hooks/useUnits';
 import { useEquipment } from '@/hooks/useEquipment';
 import { useMutateBuilding } from '@/hooks/useMutateBuilding';

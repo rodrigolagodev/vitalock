@@ -1,6 +1,6 @@
 import { Controller } from 'react-hook-form';
 import type { Control, FieldErrors, FieldPath, FieldValues } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
+import { Input } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
 import {
   Select,

@@ -4,8 +4,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+} from '@vitalock/ui';
+import { Badge } from '@vitalock/ui';
 import { useOrderKeyDetails } from '@/hooks/useOrderKeyDetails';
 import type { OrderItemRow } from '@/hooks/useOrden';
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Building2, ClipboardList, Home, ListTodo, Menu, Package, Users, X } from 'lucide-react';
 import { cn } from '@vitalock/ui';
-import { Button } from '@/components/ui/button';
+import { Button } from '@vitalock/ui';
 import { NavItem } from './NavItem';
 
 interface SidebarProps {

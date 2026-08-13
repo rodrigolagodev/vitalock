@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useAuthContext } from '@/auth/AuthProvider';
-import { Button } from '@/components/ui/button';
+import { Button } from '@vitalock/ui';
 import { Sidebar } from './Sidebar';
 import { ThemeToggle } from './ThemeToggle';
 

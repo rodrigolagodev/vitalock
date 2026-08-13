@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@vitalock/ui';
+import { Badge } from '@vitalock/ui';
 import {
   Table,
   TableBody,

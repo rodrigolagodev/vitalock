@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@vitalock/ui';
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@vitalock/ui';
 import { useMutateParticular } from '@/hooks/useMutateParticular';
 import type { ParticularRow } from '@/hooks/useParticulares';
 

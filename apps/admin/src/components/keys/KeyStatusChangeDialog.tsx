@@ -6,10 +6,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+} from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@vitalock/ui';
 import { useMutateKey } from '@/hooks/useMutateKey';
 import { useAuthContext } from '@/auth/AuthProvider';
 import type { KeyRow } from '@/hooks/useKeys';

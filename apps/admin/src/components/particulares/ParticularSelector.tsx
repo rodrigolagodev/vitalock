@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Input } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { useParticulares } from '@/hooks/useParticulares';
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { QuickParticularCreateDialog } from './QuickParticularCreateDialog';

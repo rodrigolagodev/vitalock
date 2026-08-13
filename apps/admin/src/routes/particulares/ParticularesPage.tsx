@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Input } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useParticulares } from '@/hooks/useParticulares';
 import { useDebounce } from '@/hooks/useDebounce';

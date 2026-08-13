@@ -9,10 +9,10 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+} from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@vitalock/ui';
 import { useDecommissionImpact } from '@/hooks/useDecommissionImpact';
 import type { UpdateStatusInput } from '@/hooks/useMutateEquipment';
 

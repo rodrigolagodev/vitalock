@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@vitalock/ui';
+import { Button } from '@vitalock/ui';
+import { Input } from '@vitalock/ui';
 import { useAdministration } from '@/hooks/useAdministration';
 import { useBuildings } from '@/hooks/useBuildings';
 import { BuildingsTable } from '@/components/buildings/BuildingsTable';
