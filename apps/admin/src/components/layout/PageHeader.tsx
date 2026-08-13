@@ -19,7 +19,7 @@ export function PageHeader({ title, subtitle, breadcrumbs, children }: PageHeade
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground"
         >
           {breadcrumbs.map((crumb, index) => (
             <span key={index} className="flex items-center gap-1.5">
@@ -37,7 +37,7 @@ export function PageHeader({ title, subtitle, breadcrumbs, children }: PageHeade
       )}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">{title}</h1>
+          <h1 className="text-[40px] font-semibold leading-[1.05]">{title}</h1>
           {subtitle != null && (
             <p className="text-sm text-muted-foreground">{subtitle}</p>
           )}

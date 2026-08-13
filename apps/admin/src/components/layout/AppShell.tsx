@@ -1,29 +1,31 @@
 import { Outlet } from 'react-router-dom';
+import { Button, Topbar } from '@vitalock/ui';
 import { useAuthContext } from '@/auth/AuthProvider';
-import { Button } from '@vitalock/ui';
 import { Sidebar } from './Sidebar';
 import { ThemeToggle } from './ThemeToggle';
 
 export function AppShell() {
   const { staff, signOut } = useAuthContext();
 
+  const initials = staff?.full_name
+    ? staff.full_name
+        .split(/\s+/)
+        .map((part) => part[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : '';
+
   return (
     <div className="flex h-screen flex-col">
-      {/* Header */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4">
-        <span className="text-sm font-semibold">Vitalock Admin</span>
-        <div className="flex items-center gap-3">
-          {staff && (
-            <span className="hidden text-sm text-muted-foreground md:block">
-              {staff.full_name}
-            </span>
-          )}
-          <ThemeToggle />
-          <Button variant="ghost" size="sm" onClick={() => void signOut()}>
-            Salir
-          </Button>
-        </div>
-      </header>
+      {/* Topbar: search + bell + avatar + divider; slot carries theme + sign-out */}
+      <Topbar avatar={initials}>
+        <ThemeToggle />
+        <Button variant="ghost" size="sm" onClick={() => void signOut()}>
+          Salir
+        </Button>
+      </Topbar>
 
       {/* Body */}
       <div className="flex min-h-0 flex-1">
