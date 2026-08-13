@@ -51,12 +51,12 @@ Threat matrix N/A (design); strict_tdd RED→GREEN per module.
 
 ## Slice D1 · Tables · PR 4 · >400 ✗
 
-- [ ] D1.1 RED: `getPageSlice`/constants (10; [10,20,50]); StatCard empty→"—"; PaginationFooter "1-10 of 25", prev/next disabled, callbacks fire.
-- [ ] D1.2 GREEN `patterns/{pagination.ts,StatCard,PaginationFooter}.tsx` (native select+ChevronDown; `aspect-[350/176] max-w-[350px]` chip)+index export.
-- [ ] D1.3 `apps/admin/src/lib/statThresholds.ts`+test: `LOW_STOCK_THRESHOLD=5`, `ACTIVE_STATUS='active'`.
-- [ ] D1.4 `table.tsx` (TableHead `text-xs uppercase`; rows `h-[71px]`)+3 tables client-side pagination (page state, reset on filter).
-- [ ] D1.5 Pages add StatCards from loaded rows: Administraciones Total/Activas; Ordenes Total/En proceso/Listo para retirar; Stock Total/Stock bajo.
-- [ ] D1.6 Pipeline green.
+- [x] D1.1 RED: `getPageSlice`/constants (10; [10,20,50]); StatCard empty→"—"; PaginationFooter "1-10 of 25", prev/next disabled, callbacks fire.
+- [x] D1.2 GREEN `patterns/{pagination.ts,StatCard,PaginationFooter}.tsx` (native select+ChevronDown; `aspect-[350/176] max-w-[350px]` chip)+index export.
+- [x] D1.3 `apps/admin/src/lib/statThresholds.ts`+test: `LOW_STOCK_THRESHOLD=5`, `ACTIVE_STATUS='active'`.
+- [x] D1.4 `table.tsx` (TableHead `text-xs uppercase`; rows `h-[71px]`)+3 tables client-side pagination (page state, reset on filter).
+- [x] D1.5 Pages add StatCards from loaded rows: Administraciones Total/Activas; Ordenes Total/En proceso/Listo para retirar; Stock Total/Stock bajo.
+- [x] D1.6 Pipeline green.
 
 ## Slice D2 · Forms+logins · PR 5 · borderline ≤400
 
