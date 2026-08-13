@@ -33,6 +33,10 @@ export {
   SearchInput,
   type SearchInputProps,
 } from './components/patterns/SearchInput';
+export {
+  SectionHeading,
+  type SectionHeadingProps,
+} from './components/patterns/SectionHeading';
 export { Topbar, type TopbarProps } from './components/patterns/Topbar';
 export {
   DEFAULT_PAGE_SIZE,
