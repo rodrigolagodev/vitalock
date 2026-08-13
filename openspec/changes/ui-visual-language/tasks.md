@@ -1,5 +1,7 @@
 # Tasks: UI Visual Language
 
+> **Delivery note (2026-08-13)**: User chose **direct-to-main delivery** ("mergear todo a master") — no GitHub repo/remote exists, so the chained-PR plan collapses to direct work-unit commits on `main`. Slice A merged via fast-forward (`2fda751..1cdf8fa`). PR columns below are reference only; each slice lands on `main` directly.
+
 ## Review Workload Forecast
 
 Estimated changed lines: ~2,000–3,050 (6 slices).
@@ -32,12 +34,12 @@ Threat matrix N/A (design); strict_tdd RED→GREEN per module.
 
 ## Slice B · Primitives · PR 2 · >400 ✗ · >800 → 2a(deps+components)/2b(rewiring+deletes)
 
-- [ ] B1 Deps (D3 ratified): react, react-dom, radix {checkbox,dialog,switch,slot}, cva, lucide-react; `pnpm install` dedupes.
-- [ ] B2 RED `primitives.test.tsx`: button/switch/checkbox/dialog/input/textarea/badge roles from `@vitalock/ui`.
-- [ ] B3 GREEN 7 primitives (D4 canonical; `cn`=`../lib/utils`; `"use client"` verbatim)+`index.ts` re-export.
-- [ ] B4 Rewire ~40 imports `@/components/ui/X` → `@vitalock/ui`; grep clean.
-- [ ] B5 Delete per-app copies (admin 7, installer 6); installer keeps card/collapsible/separator/skeleton/sonner.
-- [ ] B6 Pipeline green; ThemeToggle.test.tsx+role/text/href suites pass; `tareas/*` untouched.
+- [x] B1 Deps (D3 ratified): react, react-dom, radix {checkbox,dialog,switch,slot}, cva, lucide-react; `pnpm install` dedupes.
+- [x] B2 RED `primitives.test.tsx`: button/switch/checkbox/dialog/input/textarea/badge roles from `@vitalock/ui`.
+- [x] B3 GREEN 7 primitives (D4 canonical; `cn`=`../lib/utils`; `"use client"` verbatim)+`index.ts` re-export.
+- [x] B4 Rewire ~40 imports `@/components/ui/X` → `@vitalock/ui`; grep clean (54 files; only off-limits WIP tareas files remain on local aliases).
+- [x] B5 Delete per-app copies (admin 7, installer 6); installer keeps card/collapsible/separator/skeleton/sonner; admin keeps 5 re-export shims for WIP.
+- [x] B6 Pipeline green; ThemeToggle.test.tsx+role/text/href suites pass; `tareas/*` untouched.
 
 ## Slice C · Admin shell · PR 3 · >400 ✗
 
