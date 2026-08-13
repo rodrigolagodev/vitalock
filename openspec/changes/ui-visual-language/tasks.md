@@ -43,11 +43,11 @@ Threat matrix N/A (design); strict_tdd RED→GREEN per module.
 
 ## Slice C · Admin shell · PR 3 · >400 ✗
 
-- [ ] C1 RED: SidebarGroup label/children; SearchInput placeholder, no query/nav; Topbar bell(`Notificaciones`)+avatar+divider+children.
-- [ ] C2 GREEN `patterns/{SidebarGroup,SearchInput,Topbar}.tsx` (router-free; `lg`=h-12 w-[372px]).
-- [ ] C3 `Sidebar.tsx`+`NavItem.tsx` badge: brand header; 5 groups (D5; `/personal`,`/stock` live; "Personal" wins); Ordenes badge `useOrdens({status:'in_progress'})`, hidden when 0.
-- [ ] C4 `AppShell.tsx`→Topbar (slot=ThemeToggle+Salir); `PageHeader.tsx` breadcrumb `text-sm`+title `text-[40px]`, keep `aria-label="Breadcrumb"`+`h1`.
-- [ ] C5 Pipeline green; PageHeader/ThemeToggle tests pass.
+- [x] C1 RED: SidebarGroup label/children; SearchInput placeholder, no query/nav; Topbar bell(`Notificaciones`)+avatar+divider+children.
+- [x] C2 GREEN `patterns/{SidebarGroup,SearchInput,Topbar}.tsx` (router-free; `lg`=h-12 w-[372px]).
+- [x] C3 `Sidebar.tsx`+`NavItem.tsx` badge: brand header; 5 groups (D5; `/personal`,`/stock` live; "Personal" wins); Ordenes badge `useOrdens({status:'in_progress'})`, hidden when 0.
+- [x] C4 `AppShell.tsx`→Topbar (slot=ThemeToggle+Salir); `PageHeader.tsx` breadcrumb `text-sm`+title `text-[40px]`, keep `aria-label="Breadcrumb"`+`h1`.
+- [x] C5 Pipeline green; PageHeader/ThemeToggle tests pass.
 
 ## Slice D1 · Tables · PR 4 · >400 ✗
 
