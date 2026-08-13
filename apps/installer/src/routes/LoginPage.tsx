@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Navigate } from 'react-router-dom';
+import { Button, Input } from '@vitalock/ui';
 import { useAuthContext } from '../auth/AuthProvider';
 
 const schema = z.object({
@@ -42,12 +43,11 @@ export default function LoginPage() {
             <label htmlFor="email" className="text-sm font-medium">
               Email
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               autoComplete="email"
               {...register('email')}
-              className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
             {errors.email && (
               <p className="text-destructive text-xs">{errors.email.message}</p>
@@ -58,12 +58,11 @@ export default function LoginPage() {
             <label htmlFor="password" className="text-sm font-medium">
               Contraseña
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               autoComplete="current-password"
               {...register('password')}
-              className="w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
             {errors.password && (
               <p className="text-destructive text-xs">{errors.password.message}</p>
@@ -76,13 +75,13 @@ export default function LoginPage() {
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={isPending}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="w-full"
           >
             {isPending ? 'Ingresando...' : 'Ingresar'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
