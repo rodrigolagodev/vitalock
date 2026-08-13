@@ -1,12 +1,15 @@
 import { useState } from 'react';
+import { Package, TriangleAlert } from 'lucide-react';
 import { Input } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
+import { StatCard } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProducts } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ProductsTable } from '@/components/stock/ProductsTable';
 import { CargarProductoSheet } from '@/components/stock/CargarProductoSheet';
+import { LOW_STOCK_THRESHOLD } from '@/lib/statThresholds';
 import type { ProductCategory } from '@/types/stock';
 
 type CategoryFilter = 'all' | ProductCategory;
@@ -53,6 +56,23 @@ export default function StockPage() {
       >
         <Button onClick={() => setCreateOpen(true)}>Cargar producto</Button>
       </PageHeader>
+
+      <div className="grid gap-4 sm:grid-cols-2" data-testid="stat-cards">
+        <StatCard
+          label="Total productos"
+          value={String(products.length)}
+          icon={<Package />}
+        />
+        <StatCard
+          label="Stock bajo"
+          value={String(
+            products.filter(
+              (product) => product.stock_disponible <= LOW_STOCK_THRESHOLD,
+            ).length,
+          )}
+          icon={<TriangleAlert />}
+        />
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Input

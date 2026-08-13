@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ClipboardList, Clock, PackageCheck } from 'lucide-react';
 import { Input } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
+import { StatCard } from '@vitalock/ui';
 import { useOrdens } from '@/hooks/useOrdens';
 import { useDebounce } from '@/hooks/useDebounce';
 import { OrdenesTable } from '@/components/ordenes/OrdenesTable';
@@ -71,6 +73,29 @@ export default function OrdenesPage() {
         <Button asChild>
           <Link to="/ordenes/nueva">Nueva orden</Link>
         </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stat-cards">
+        <StatCard
+          label="Total órdenes"
+          value={String(ordenes.length)}
+          icon={<ClipboardList />}
+        />
+        <StatCard
+          label="En proceso"
+          value={String(
+            ordenes.filter((orden) => orden.status === 'in_progress').length,
+          )}
+          icon={<Clock />}
+        />
+        <StatCard
+          label="Listo para retirar"
+          value={String(
+            ordenes.filter((orden) => orden.status === 'ready_for_pickup')
+              .length,
+          )}
+          icon={<PackageCheck />}
+        />
       </div>
 
       <Input

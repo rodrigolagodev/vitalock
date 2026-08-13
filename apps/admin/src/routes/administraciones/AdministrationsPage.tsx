@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { Building2, CircleCheck } from 'lucide-react';
 import { Input } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
+import { StatCard } from '@vitalock/ui';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useDebounce } from '@/hooks/useDebounce';
 import { AdministrationsTable } from '@/components/administrations/AdministrationsTable';
 import { AdministrationFormSheet } from '@/components/administrations/AdministrationFormSheet';
+import { ACTIVE_STATUS } from '@/lib/statThresholds';
 import { PageHeader } from '@/components/layout/PageHeader';
 
 export default function AdministrationsPage() {
@@ -35,6 +38,23 @@ export default function AdministrationsPage() {
       >
         <Button onClick={() => setCreateOpen(true)}>Nueva administración</Button>
       </PageHeader>
+
+      <div className="grid gap-4 sm:grid-cols-2" data-testid="stat-cards">
+        <StatCard
+          label="Total administraciones"
+          value={String(administrations.length)}
+          icon={<Building2 />}
+        />
+        <StatCard
+          label="Activas"
+          value={String(
+            administrations.filter(
+              (administration) => administration.status === ACTIVE_STATUS,
+            ).length,
+          )}
+          icon={<CircleCheck />}
+        />
+      </div>
 
       <Input
         placeholder="Buscar por razón social o CUIT/CUIL..."
