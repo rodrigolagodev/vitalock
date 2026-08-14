@@ -65,25 +65,27 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
 
   if (isFetching) {
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Categoría</TableHead>
-            <TableHead>Precio de costo</TableHead>
-            <TableHead>Stock total</TableHead>
-            <TableHead>Reservado</TableHead>
-            <TableHead>Disponible</TableHead>
-            <TableHead>Actualizado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </TableBody>
-      </Table>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Categoría</TableHead>
+              <TableHead>Precio de costo</TableHead>
+              <TableHead>Stock total</TableHead>
+              <TableHead>Reservado</TableHead>
+              <TableHead>Disponible</TableHead>
+              <TableHead>Actualizado</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </TableBody>
+        </Table>
+      </div>
     );
   }
 
@@ -109,7 +111,7 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
   }
 
   return (
-    <>
+    <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -188,6 +190,6 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
       />
-    </>
+    </div>
   );
 }

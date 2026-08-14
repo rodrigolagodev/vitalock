@@ -49,21 +49,23 @@ export function AdministrationsTable({
 
   if (isFetching) {
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Razón social</TableHead>
-            <TableHead>CUIT/CUIL</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </TableBody>
-      </Table>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Razón social</TableHead>
+              <TableHead>CUIT/CUIL</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </TableBody>
+        </Table>
+      </div>
     );
   }
 
@@ -89,7 +91,7 @@ export function AdministrationsTable({
   }
 
   return (
-    <>
+    <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -152,6 +154,6 @@ export function AdministrationsTable({
         }}
         administration={editingAdmin}
       />
-    </>
+    </div>
   );
 }

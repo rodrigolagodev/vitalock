@@ -67,23 +67,25 @@ export function OrdenesTable({
 
   if (isFetching) {
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>N.º de orden</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Ítems</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Fecha</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </TableBody>
-      </Table>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>N.º de orden</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Ítems</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Fecha</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </TableBody>
+        </Table>
+      </div>
     );
   }
 
@@ -109,7 +111,7 @@ export function OrdenesTable({
   }
 
   return (
-    <>
+    <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -159,6 +161,6 @@ export function OrdenesTable({
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
       />
-    </>
+    </div>
   );
 }

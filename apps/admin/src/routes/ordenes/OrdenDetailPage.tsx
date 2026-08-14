@@ -221,7 +221,7 @@ export default function OrdenDetailPage() {
           {/* Technical items: minimal table (no key-specific actions). */}
           <div className="flex flex-col gap-3">
             <h2 className="text-lg font-semibold">Ítems</h2>
-            <div className="overflow-hidden rounded-md border">
+            <div className="overflow-hidden rounded-[12px] border bg-card">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                   <tr>
@@ -255,7 +255,7 @@ export default function OrdenDetailPage() {
                 No hay tareas generadas para esta orden.
               </p>
             ) : (
-              <div className="overflow-hidden rounded-md border">
+              <div className="overflow-hidden rounded-[12px] border bg-card">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                     <tr>

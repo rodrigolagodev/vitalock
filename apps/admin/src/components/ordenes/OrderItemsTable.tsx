@@ -77,7 +77,7 @@ export function OrderItemsTable({
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="overflow-hidden rounded-[12px] border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
