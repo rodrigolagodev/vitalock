@@ -16,14 +16,11 @@ const TAREA_STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelada',
 };
 
-const TAREA_STATUS_VARIANTS: Record<
-  string,
-  'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-  open: 'secondary',
-  in_progress: 'default',
-  resolved: 'secondary',
-  cancelled: 'destructive',
+const TAREA_STATUS_STYLES: Record<string, string> = {
+  open: 'border-transparent bg-[#f1f5f9] text-[#475569]',
+  in_progress: 'border-transparent bg-[#fef3c7] text-[#92400e]',
+  resolved: 'border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]',
+  cancelled: 'border-transparent bg-[#fee2e2] text-[#b91c1c]',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -283,9 +280,7 @@ export default function OrdenDetailPage() {
                           {t.description}
                         </td>
                         <td className="px-3 py-2">
-                          <Badge
-                            variant={TAREA_STATUS_VARIANTS[t.status] ?? 'secondary'}
-                          >
+                          <Badge className={`text-[16px] ${TAREA_STATUS_STYLES[t.status] ?? TAREA_STATUS_STYLES.open}`}>
                             {TAREA_STATUS_LABELS[t.status] ?? t.status}
                           </Badge>
                         </td>

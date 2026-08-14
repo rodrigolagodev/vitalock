@@ -117,7 +117,11 @@ export function AdministrationsTable({
               </TableCell>
               <TableCell>
                 <Badge
-                  variant={admin.status === 'active' ? 'default' : 'secondary'}
+                  className={
+                    admin.status === 'active'
+                      ? 'text-[16px] border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]'
+                      : 'text-[16px] border-transparent bg-[#f1f5f9] text-[#475569]'
+                  }
                 >
                   {admin.status === 'active' ? 'Activa' : 'Inactiva'}
                 </Badge>

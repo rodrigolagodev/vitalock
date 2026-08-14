@@ -30,15 +30,12 @@ const ITEM_STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelado',
 };
 
-const ITEM_STATUS_VARIANTS: Record<
-  string,
-  'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-  pending: 'secondary',
-  configured: 'default',
-  in_progress: 'default',
-  completed: 'secondary',
-  cancelled: 'destructive',
+const ITEM_STATUS_STYLES: Record<string, string> = {
+  pending: 'border-transparent bg-[#f1f5f9] text-[#475569]',
+  configured: 'border-transparent bg-[#e0e7ff] text-[#4338ca]',
+  in_progress: 'border-transparent bg-[#fef3c7] text-[#92400e]',
+  completed: 'border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]',
+  cancelled: 'border-transparent bg-[#fee2e2] text-[#b91c1c]',
 };
 
 interface OrderItemsTableProps {
@@ -134,7 +131,7 @@ export function OrderItemsTable({
                     </TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
                     <TableCell>
-                      <Badge variant={ITEM_STATUS_VARIANTS[item.status] ?? 'secondary'}>
+                      <Badge className={`text-[16px] ${ITEM_STATUS_STYLES[item.status] ?? ITEM_STATUS_STYLES.pending}`}>
                         {ITEM_STATUS_LABELS[item.status] ?? item.status}
                       </Badge>
                     </TableCell>

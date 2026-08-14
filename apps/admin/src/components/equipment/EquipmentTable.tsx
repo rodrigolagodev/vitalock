@@ -19,10 +19,10 @@ const STATUS_LABELS: Record<string, string> = {
   dead: 'Dado de baja',
 };
 
-const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive'> = {
-  active: 'default',
-  maintenance: 'secondary',
-  dead: 'destructive',
+const STATUS_STYLES: Record<string, string> = {
+  active: 'border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]',
+  maintenance: 'border-transparent bg-[#fef3c7] text-[#92400e]',
+  dead: 'border-transparent bg-[#fee2e2] text-[#b91c1c]',
 };
 
 interface EquipmentTableProps {
@@ -63,7 +63,7 @@ export function EquipmentTable({ buildingId, equipment }: EquipmentTableProps) {
               <TableCell className="font-medium">{item.model ?? '—'}</TableCell>
               <TableCell className="font-mono text-sm">{item.serial_number}</TableCell>
               <TableCell>
-                <Badge variant={STATUS_VARIANTS[item.status] ?? 'secondary'}>
+                <Badge className={`text-[16px] ${STATUS_STYLES[item.status] ?? STATUS_STYLES.active}`}>
                   {STATUS_LABELS[item.status] ?? item.status}
                 </Badge>
               </TableCell>
