@@ -2,7 +2,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// Design D2: #4B2AD1 = hsl(251.9 66.5% 49.2%) drives primary/ring/accent.
+// Light-first palette measured from Figma (dWGVfiKpzUoD7l2K4yqG7D): primary #5d5fef,
+// nav active #7364ff, content background #f5f5fa. Dark is an opt-out adaptation of
+// the same accent family (D12) — NOT the previous violet #4B2AD1 system.
 // Canonical invocation is `pnpm --filter @vitalock/ui test` (cwd = packages/ui).
 const globalsPath = resolve(process.cwd(), 'globals.css');
 
@@ -21,30 +23,29 @@ describe('shared design tokens (globals.css)', () => {
   const root = extractBlock(css, ':root');
   const dark = extractBlock(css, '.dark');
 
-  it('uses the violet accent #4B2AD1 as --primary in light and dark', () => {
-    expect(getVar(root, 'primary')).toBe('251.9 66.5% 49.2%');
-    expect(getVar(dark, 'primary')).toBe('251.9 66.5% 49.2%');
+  it('uses the light-first primary #5d5fef in light and dark', () => {
+    expect(getVar(root, 'primary')).toBe('239.2 82% 65.1%');
+    expect(getVar(dark, 'primary')).toBe('239.2 82% 65.1%');
   });
 
-  it('drives --ring and --accent from the violet accent in both palettes', () => {
-    expect(getVar(root, 'ring')).toBe('251.9 66.5% 49.2%');
-    expect(getVar(root, 'accent')).toBe('252 60% 95%');
-    // Dark focus ring lifted to 65% lightness for visibility (D2).
-    expect(getVar(dark, 'ring')).toBe('251.9 70% 65%');
-    expect(getVar(dark, 'accent')).toBe('252 35% 22%');
+  it('drives --ring and --accent from the light-first accent family', () => {
+    expect(getVar(root, 'ring')).toBe('239.2 82% 65.1%');
+    expect(getVar(root, 'accent')).toBe('245.8 100% 69.6%');
+    expect(getVar(dark, 'ring')).toBe('239.2 82% 65.1%');
+    expect(getVar(dark, 'accent')).toBe('245.8 100% 69.6%');
   });
 
-  it('fills the .dark block with the adapted violet palette', () => {
+  it('uses the content background #f5f5fa in light and fills the .dark block', () => {
+    expect(getVar(root, 'background')).toBe('240 33.3% 97.1%');
     expect(/--[a-z-]+\s*:/.test(dark)).toBe(true);
     expect(getVar(dark, 'background')).toBe('224 40% 6%');
-    expect(getVar(dark, 'foreground')).toBe('224 20% 95%');
   });
 
   it('defines --popover/--popover-foreground and --card/--card-foreground', () => {
     expect(getVar(root, 'popover')).toBe('0 0% 100%');
     expect(getVar(root, 'popover-foreground')).toBe('224 50% 8%');
     expect(getVar(root, 'card')).toBe('0 0% 100%');
-    expect(getVar(root, 'card-foreground')).toBe('224 50% 8%');
+    expect(getVar(root, 'card-foreground')).toBe('217.2 32.6% 17.5%');
     expect(getVar(dark, 'popover')).toBe('224 35% 10%');
     expect(getVar(dark, 'card')).toBe('224 40% 6%');
   });
