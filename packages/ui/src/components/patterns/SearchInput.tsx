@@ -23,7 +23,12 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         <Input
           ref={ref}
           type="search"
-          className={cn('pl-9', size === 'lg' && 'h-12 w-[372px]', className)}
+          className={cn(
+            'pl-9',
+            size === 'lg' &&
+              'h-12 w-[372px] rounded-[8px] bg-[#f5f5fa] placeholder:text-[18px] placeholder:text-[#cacedc]',
+            className,
+          )}
           {...props}
         />
       </div>

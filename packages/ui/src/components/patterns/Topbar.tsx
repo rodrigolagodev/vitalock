@@ -19,7 +19,7 @@ export function Topbar({ avatar, children, className }: TopbarProps) {
   return (
     <header
       className={cn(
-        'flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background px-6',
+        'flex h-[100px] shrink-0 items-center justify-between gap-4 border-b bg-white px-6',
         className,
       )}
     >
@@ -28,7 +28,7 @@ export function Topbar({ avatar, children, className }: TopbarProps) {
         <button
           type="button"
           aria-label="Notificaciones"
-          className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f1f5f9] text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           <Bell className="h-5 w-5" />
         </button>
@@ -36,14 +36,14 @@ export function Topbar({ avatar, children, className }: TopbarProps) {
 
       <div className="flex items-center gap-3">
         {avatar && (
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f1f5f9] text-[18px] font-medium text-[#40444d]">
             {avatar}
           </span>
         )}
         <div
           data-testid="topbar-divider"
           aria-hidden="true"
-          className="h-6 w-px bg-border"
+          className="h-[52px] w-px bg-[#e2e8f0]"
         />
         {children}
       </div>

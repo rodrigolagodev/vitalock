@@ -19,20 +19,23 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen flex-col">
-      {/* Topbar: search + bell + avatar + divider; slot carries theme + sign-out */}
-      <Topbar avatar={initials}>
-        <ThemeToggle />
-        <Button variant="ghost" size="sm" onClick={() => void signOut()}>
-          Salir
-        </Button>
-      </Topbar>
-
-      {/* Body */}
+      {/* Body: fixed sidebar + content column with its own topbar */}
       <div className="flex min-h-0 flex-1">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
-        </main>
+        <div className="flex min-h-0 flex-1 flex-col">
+          {/* Topbar scoped to content: search + bell + avatar + divider; slot carries theme + sign-out */}
+          <Topbar avatar={initials}>
+            <ThemeToggle />
+            <Button variant="ghost" size="sm" onClick={() => void signOut()}>
+              Salir
+            </Button>
+          </Topbar>
+
+          {/* Content surface */}
+          <main className="flex-1 overflow-y-auto bg-[#f5f5fa] p-6">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );
