@@ -18,7 +18,7 @@ export function NavItem({ label, to, icon, badge }: NavItemProps) {
       to={to}
       className={({ isActive }) =>
         cn(
-          'flex w-[242px] items-center gap-2 rounded-[4px] px-12 py-12 text-[18px] font-medium text-[#3b424a] transition-colors hover:bg-accent hover:text-accent-foreground',
+          'flex w-[242px] items-center gap-2 rounded-[4px] px-2 py-2 text-[18px] font-medium text-[#3b424a] transition-colors hover:bg-accent hover:text-accent-foreground',
           isActive &&
             'rounded-[9px] bg-[#7364ff] text-white hover:bg-[#7364ff] hover:text-white',
         )
