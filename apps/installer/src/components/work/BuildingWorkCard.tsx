@@ -33,8 +33,8 @@ export function BuildingWorkCard({
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="flex flex-col gap-1">
-            <CardTitle className="text-lg">{building.name}</CardTitle>
-            <Badge variant="secondary" className="w-fit text-xs">
+            <CardTitle className="text-xl">{building.name}</CardTitle>
+            <Badge variant="secondary" className="w-fit">
               {administration.company_name}
             </Badge>
           </div>
