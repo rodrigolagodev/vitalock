@@ -1,72 +1,9 @@
 # Delta for Admin Shell
 
+**Change**: ui-visual-language
+**Date**: 2026-08-13
+
 ## MODIFIED Requirements
-
-### Requirement: Root Route Redirect
-
-The admin app root (`/`) MUST redirect to `/administraciones` immediately without rendering any content at the root path. The old `/buildings` top-level route MUST also redirect to `/administraciones`.
-(Previously: root redirected to `/buildings`; no `/buildings` redirect existed)
-
-#### Scenario: Root redirect on load
-
-- GIVEN a user navigates to the admin app root `/`
-- WHEN the route resolves
-- THEN the browser is redirected to `/administraciones`
-- AND no blank or placeholder page is displayed
-
-#### Scenario: /buildings redirects to /administraciones
-
-- GIVEN a user navigates to `/buildings`
-- WHEN the route resolves
-- THEN the browser is redirected to `/administraciones`
-- AND no buildings list page is rendered
-
----
-
-### Requirement: Route Tree
-
-The admin app MUST support the following route structure:
-
-| Path | Page |
-|---|---|
-| `/` | Redirect to `/administraciones` |
-| `/administraciones` | Administrations list + create sheet |
-| `/administraciones/:adminId` | Administration detail: info + nested buildings + create building CTA |
-| `/buildings` | Redirect to `/administraciones` |
-| `/buildings/:buildingId` | Building detail with Unidades and Equipos tabs (breadcrumb links to admin) |
-| `/ordenes` | OrdenesPage — list + filters + "Nueva orden" |
-| `/ordenes/:ordenId` | OrdenDetailPage — header + items table + preparation |
-
-(Previously: routes were `/` → `/buildings`, `/buildings`, `/buildings/:buildingId`; no administration routes existed; no `/ordenes` or `/ordenes/:ordenId` routes existed)
-
-#### Scenario: Deep link to building detail still works
-
-- GIVEN a user navigates directly to `/buildings/123`
-- WHEN the route resolves
-- THEN BuildingDetailPage renders with the sidebar visible
-- AND the Unidades tab is the default active tab
-- AND a breadcrumb linking to the parent administration is visible
-
-#### Scenario: Deep link to administration detail
-
-- GIVEN a user navigates directly to `/administraciones/456`
-- WHEN the route resolves
-- THEN AdministrationDetailPage renders with the sidebar visible
-- AND the nested buildings list scoped to that administration is shown
-
-#### Scenario: Deep link to ordenes list
-
-- GIVEN a user navigates directly to `/ordenes`
-- WHEN the route resolves
-- THEN OrdenesPage renders with the sidebar visible
-
-#### Scenario: Deep link to order detail
-
-- GIVEN a user navigates directly to `/ordenes/789`
-- WHEN the route resolves
-- THEN OrdenDetailPage renders for the given order id with the sidebar visible
-
----
 
 ### Requirement: Persistent Sidebar Layout
 
@@ -108,7 +45,7 @@ The admin app MUST render a persistent sidebar on every authenticated route. The
 - THEN a section label renders above its items
 - AND badge pills render on items that carry counts
 
----
+## ADDED Requirements
 
 ### Requirement: Topbar Layout
 
@@ -126,8 +63,6 @@ Every authenticated admin route MUST render a topbar above the page content cont
 - WHEN a user inspects its controls
 - THEN the dark-mode Switch and the sign-out action are present and functional
 
----
-
 ### Requirement: PageHeader Sizing
 
 PageHeader MUST render breadcrumbs and the page title at the reference scale: title `text-[32px] font-bold leading-[40px]` in `#1e293b` (D9 — corrected from the earlier 40px diagnosis) and breadcrumb `text-[14px]` in `#4d515a` with chevron-right separators between segments. The breadcrumb nav (`aria-label="Breadcrumb"`) and the `h1` heading MUST be preserved.
@@ -144,25 +79,3 @@ PageHeader MUST render breadcrumbs and the page title at the reference scale: ti
 - WHEN PageHeader renders
 - THEN the `aria-label="Breadcrumb"` nav and `h1` roles are unchanged
 - AND existing PageHeader tests pass
-
----
-
-### Requirement: Query Keys for Ordenes
-
-`queryKeys.ts` MUST export `ordensKey` (list discriminator) and `ordenKey`
-(single-item discriminator) following the existing `['admin', 'entity', ...]`
-pattern. All ordenes hooks MUST use these keys for cache invalidation.
-
-#### Scenario: List query key invalidates on mutation
-
-- GIVEN an order is created or cancelled
-- WHEN the mutation succeeds
-- THEN the cache entry keyed by `ordensKey` is invalidated
-- AND OrdenesPage refetches automatically
-
-#### Scenario: Detail query key invalidates on item mutation
-
-- GIVEN a key item is configured
-- WHEN the mutation succeeds
-- THEN the cache entry keyed by `ordenKey(ordenId)` is invalidated
-- AND OrdenDetailPage refetches automatically
