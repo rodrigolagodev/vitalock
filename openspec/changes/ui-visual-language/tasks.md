@@ -69,7 +69,7 @@ Threat matrix N/A (design); strict_tdd RED→GREEN per module.
 
 ## Slice E · Installer · PR 6 · ≤400 ✓
 
-- [ ] E1 `App.tsx` header wordmark on tokens.
-- [ ] E2 `card.tsx` `rounded-xl border-border shadow-sm`+`BuildingWorkCard.tsx` polish.
-- [ ] E3 `ThemeToggle.tsx` Switch from `@vitalock/ui`.
-- [ ] E4 Pipeline green; `tareas/*` untouched.
+- [x] E1 `App.tsx` header wordmark on tokens.
+- [x] E2 `card.tsx` `rounded-xl border-border shadow-sm`+`BuildingWorkCard.tsx` polish.
+- [x] E3 `ThemeToggle.tsx` Switch from `@vitalock/ui`.
+- [x] E4 Pipeline green; `tareas/*` untouched.
