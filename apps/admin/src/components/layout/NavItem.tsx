@@ -18,17 +18,16 @@ export function NavItem({ label, to, icon, badge }: NavItemProps) {
       to={to}
       className={({ isActive }) =>
         cn(
-          'flex h-12 items-center gap-2 rounded-md px-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-          isActive
-            ? 'bg-accent font-medium text-accent-foreground'
-            : 'text-muted-foreground',
+          'flex w-[242px] items-center gap-2 rounded-[4px] px-12 py-12 text-[18px] font-medium text-[#3b424a] transition-colors hover:bg-accent hover:text-accent-foreground',
+          isActive &&
+            'rounded-[9px] bg-[#7364ff] text-white hover:bg-[#7364ff] hover:text-white',
         )
       }
     >
       {icon}
       <span>{label}</span>
       {showBadge && (
-        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+        <span className="ml-auto rounded-[20px] bg-[#10b981] px-2 py-0.5 text-[14px] font-semibold text-white">
           {badge}
         </span>
       )}

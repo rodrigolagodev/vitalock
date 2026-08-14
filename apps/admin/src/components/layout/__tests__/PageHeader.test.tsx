@@ -42,7 +42,7 @@ describe('PageHeader', () => {
   });
 
   it('renders separators between breadcrumb items but not after the last one', () => {
-    render(
+    const { container } = render(
       <PageHeader
         title="Edificio"
         breadcrumbs={[
@@ -61,7 +61,8 @@ describe('PageHeader', () => {
       'href',
       '/administraciones/1',
     );
-    expect(screen.getAllByText('/')).toHaveLength(1);
+    // ChevronRight separator icon between the two crumbs (never after the last one).
+    expect(container.querySelectorAll('svg')).toHaveLength(1);
   });
 
   it('renders a crumb without a link as plain text', () => {
