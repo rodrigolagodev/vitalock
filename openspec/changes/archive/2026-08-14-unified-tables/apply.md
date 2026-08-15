@@ -24,7 +24,7 @@
 
 ### W3 · OrderItemsTable migration
 - [x] T-07 RED: rewrite `OrderItemsTable.test.tsx` action queries → `getByRole('button', { name: /configurar/i })` etc.; gating predicates 1:1
-- [x] T-08 GREEN: migrate `OrderItemsTable.tsx` to DataTable (17 tests pass)
+- [x] T-08 GREEN: migrate `OrderItemsTable.tsx` to DataTable (18 tests pass)
 
 ### W4 · Toggle tables
 - [x] T-09 RED: toggle test suites — icon-only Power, aria-label `Desactivar {nombre}`, null for inactive rows
@@ -60,10 +60,10 @@
 | WU | Commit | Changed files | Focused gate result | Runtime harness | Rollback boundary |
 |----|--------|---------------|---------------------|-----------------|-------------------|
 | W1 | `3c19cc2 refactor(ui): promote table primitives to @vitalock/ui behind admin shim` | 4 | `pnpm typecheck` PASS; admin suite PASS (existing suites through shim) | `pnpm dev` admin — all tables render via shim | Revert W1 commit → old imports resolve |
-| W2 | `7390c67 feat(ui): add config-driven DataTable pattern and tests` | 6 | ui suite 68/68 (17 new DataTable tests) | N/A — pattern unit; runtime proven in W3+ | Revert W2 commit |
-| W3 | `72cf4bb refactor(admin): migrate OrderItemsTable to DataTable with aria-label actions` | 2 | admin 321 tests / 51 files PASS (17 OrderItemsTable tests) | `pnpm dev`; /ordenes/:id key-item actions gating | Revert W3 commit |
+| W2 | `7390c67 feat(ui): add config-driven DataTable pattern and tests` | 5 | ui suite 68/68 (19 new DataTable tests) | N/A — pattern unit; runtime proven in W3+ | Revert W2 commit |
+| W3 | `72cf4bb refactor(admin): migrate OrderItemsTable to DataTable with aria-label actions` | 2 | admin 321 tests / 51 files PASS (18 OrderItemsTable tests) | `pnpm dev`; /ordenes/:id key-item actions gating | Revert W3 commit |
 | W4 | `a339668 refactor(admin): migrate Buildings/Administrations tables and status toggles` | 6 | RED 10 failed \| 2 passed; toggles 12/12; BuildingsTable 4/4; admin 321/51 PASS | `pnpm dev`; /buildings, /administraciones toggles | Revert W4 commit |
-| W5 | `e2fe803 refactor(admin): migrate list tables to DataTable` | 9 | admin 336 tests / 53 files PASS (OrdenesTable 8+4 regression UNCHANGED; StockPage audit) | `pnpm dev`; /ordenes /stock /personal /tareas /particulares | Revert W5 commit |
+| W5 | `e2fe803 refactor(admin): migrate list tables to DataTable` | 7 | admin 336 tests / 53 files PASS (OrdenesTable 8+4 regression UNCHANGED; StockPage audit) | `pnpm dev`; /ordenes /stock /personal /tareas /particulares | Revert W5 commit |
 | W6 | `1d6a4ca refactor(admin): migrate nested tables to DataTable` | 9 | RED 8 failed \| 9 passed; admin 360 tests / 57 files PASS (+4 files, +24 tests); typecheck PASS; lint 0 err / 8 warn | `pnpm dev`; /buildings/:id, /stock/:id nested tables | Revert W6 commit |
 | W7 | `cafd625 refactor(admin): extract OrdenDetailPage inline tables into DataTable components` | 7 | RED 1 failed \| 6 passed; admin 374 tests / 59 files PASS (+2 files, +14 tests); typecheck PASS | `pnpm dev`; /ordenes/:id three paginated tables | Revert W7 commit |
 | W8 | `chore(admin): final pipeline gate and docs note` | docs + gates | typecheck PASS; lint 0 errors / 8 pre-existing warnings; ui 68/7 PASS; admin 374/59 PASS; greps clean | `pnpm dev` full surface spot-check | Revert W8 commit |
@@ -78,7 +78,7 @@
 | T-04 | `packages/ui/.../__tests__/DataTable.test.tsx` | N/A (new) | ✅ Written (suite fails) | ✅ ui 68/68 | ✅ 10+ cases (modes/skeleton/empty/pagination/reset) | ✅ Clean |
 | T-05 | same | N/A (new) | ➖ (RED from T-04) | ✅ ui suite passes | ✅ via T-04 cases | ✅ Clean |
 | T-06 | — (export) | N/A | ➖ structural | ✅ typecheck PASS | ➖ skipped: structural | ✅ Clean |
-| T-07 | `OrderItemsTable.test.tsx` | ✅ 17/17 | ✅ Written (fails on missing icons) | ✅ 17/17 | ✅ gating predicates 1:1 per item | ✅ Clean |
+| T-07 | `OrderItemsTable.test.tsx` | ✅ 18/18 | ✅ Written (fails on missing icons) | ✅ 18/18 | ✅ gating predicates 1:1 per item | ✅ Clean |
 | T-08 | same | ✅ baseline | ➖ (RED from T-07) | ✅ admin 321/51 | ✅ via T-07 cases | ✅ Clean |
 | T-09 | `BuildingStatusToggle.test.tsx` + `AdministrationStatusToggle.test.tsx` | ✅ baseline | ✅ Written (10 failed \| 2 passed) | ✅ 12/12 | ✅ active vs inactive rows | ✅ Clean |
 | T-10 | `BuildingsTable.test.tsx` | ✅ 4/4 | ➖ regression gate | ✅ 4/4 | ✅ via existing cases | ✅ Clean |
@@ -89,10 +89,10 @@
 | T-15 | `StaffTable.test.tsx` (new) | N/A (new) | ✅ Written | ✅ rows/edit aria-label/deactivate/pagination | ✅ 4+ cases | ✅ Clean |
 | T-16 | `TareasTable.test.tsx` (new) | N/A (new) | ✅ Written | ✅ incl. fixed `Editar a {nombre}` aria-label | ✅ 4+ cases | ✅ Clean |
 | T-17 | `ParticularTable.test.tsx` (7) | ✅ 7/7 | ➖ regression gate | ✅ 7/7 | ✅ via existing cases | ✅ Clean |
-| T-18 | `KeysTable.test.tsx` (new) | N/A (new) | ✅ Written (RED batch: 8 failed \| 9 passed across W6 files) | ✅ 6/6 | ✅ dialog open + Power label by state | ✅ Clean |
+| T-18 | `KeysTable.test.tsx` (new) | N/A (new) | ✅ Written (RED batch: 8 failed \| 9 passed across W6 files) | ✅ 7/7 | ✅ dialog open + Power label by state | ✅ Clean |
 | T-19 | `UnitsTable.test.tsx` (new) | N/A (new) | ✅ Written (in RED batch) | ✅ 6/6 | ✅ skeleton/empty/pagination/edit/deactivate | ✅ Clean |
 | T-20 | `EquipmentTable.test.tsx` (new) | N/A (new) | ✅ Written (in RED batch) | ✅ 6/6 | ✅ skeleton/empty/pagination/edit/replace | ✅ Clean |
-| T-21 | `StockMovementsTable.test.tsx` (new) | N/A (new) | ✅ Written (in RED batch) | ✅ 6/6 | ✅ skeleton/empty/pagination | ✅ Clean |
+| T-21 | `StockMovementsTable.test.tsx` (new) | N/A (new) | ✅ Written (in RED batch) | ✅ 5/5 | ✅ skeleton/empty/pagination | ✅ Clean |
 | T-22 | `routes/ordenes/__tests__/OrdenDetailPage.test.tsx` | ✅ 6/6 | ✅ Written (1 failed \| 6 passed — technical composition) | ✅ 7/7 after T-25 | ✅ keys vs technical branch | ✅ Clean |
 | T-23 | `TechnicalItemsTable.test.tsx` (new) | N/A (new) | ✅ Written (collect fails — module missing) | ✅ 6/6 | ✅ label map + raw fallback + first-cell text + skeleton + empty + pagination | ✅ Clean (test refined: pagination nav buttons are legitimate) |
 | T-24 | `OrderTareasTable.test.tsx` (new) | N/A (new) | ✅ Written (collect fails — module missing) | ✅ 6/6 | ✅ link href + label map + status badge + skeleton + empty + pagination | ✅ Clean |
@@ -102,7 +102,7 @@
 
 ### Test Summary
 
-- **Total tests written/added**: 57 (17 DataTable ui + 6 StaffTable + ~6 TareasTable + 24 W6 nested + 12 W7 tables + 2 W7 composition)
+- **Total tests written/added**: 59 (19 DataTable ui + 6 StaffTable + ~6 TareasTable + 24 W6 nested + 12 W7 tables + 2 W7 composition)
 - **Total suites passing**: ui 68/68 (7 files); admin 374/374 (59 files)
 - **Layers used**: Unit (component render tests), Integration (user-event interactions, MemoryRouter navigation)
 - **Approval/regression tests** (refactoring): OrdenesTable 8+4, BuildingsTable 4, ParticularTable 7, StockPage 1, toggle suites, OrderItemsTable 17
@@ -113,7 +113,7 @@
 | WU | Focused test command + exact result | Runtime harness | Rollback boundary |
 |----|-------------------------------------|-----------------|-------------------|
 | W1 | `pnpm typecheck && pnpm --filter @vitalock/admin test` → PASS | `pnpm dev` admin; all tables render via shim | Revert W1 → old imports resolve |
-| W2 | `pnpm --filter @vitalock/ui test` → 68 passed (17 new) | N/A — pattern unit; runtime proven in W3+ | Revert W2 |
+| W2 | `pnpm --filter @vitalock/ui test` → 68 passed (19 new) | N/A — pattern unit; runtime proven in W3+ | Revert W2 |
 | W3 | `pnpm --filter @vitalock/admin test` → 321/51 PASS | `pnpm dev`; /ordenes/:id key-item action gating | Revert W3 |
 | W4 | `pnpm --filter @vitalock/admin test` → 321/51 PASS (RED 10f/2p) | `pnpm dev`; /buildings /administraciones toggles | Revert W4 |
 | W5 | `pnpm --filter @vitalock/admin test` → 336/53 PASS | `pnpm dev`; /ordenes /stock /personal /tareas /particulares | Revert W5 |

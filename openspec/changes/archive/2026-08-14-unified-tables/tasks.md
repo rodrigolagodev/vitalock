@@ -48,20 +48,20 @@ Chain strategy: size-exception
 
 ## W1 · Primitives promotion + shim (~140)
 
-- [ ] T-01 Promote table primitives (Table/TableBody/TableCell/TableHead/TableHeader/TableRow, row `h-[71px]`) into `packages/ui/src/components/table.tsx`; `cn` → `../lib/utils`; export from `packages/ui/src/index.ts` · Files: `packages/ui/src/components/table.tsx`, `packages/ui/src/index.ts` · Verify: `pnpm --filter @vitalock/ui test` + `pnpm typecheck` · ~130
-- [ ] T-02 Rewrite `apps/admin/src/components/ui/table.tsx` as re-export shim of `@vitalock/ui` (precedent `@/components/ui/button`) · Verify: `pnpm --filter @vitalock/admin test` existing suites + `pnpm typecheck` · ~10
+- [x] T-01 Promote table primitives (Table/TableBody/TableCell/TableHead/TableHeader/TableRow, row `h-[71px]`) into `packages/ui/src/components/table.tsx`; `cn` → `../lib/utils`; export from `packages/ui/src/index.ts` · Files: `packages/ui/src/components/table.tsx`, `packages/ui/src/index.ts` · Verify: `pnpm --filter @vitalock/ui test` + `pnpm typecheck` · ~130
+- [x] T-02 Rewrite `apps/admin/src/components/ui/table.tsx` as re-export shim of `@vitalock/ui` (precedent `@/components/ui/button`) · Verify: `pnpm --filter @vitalock/admin test` existing suites + `pnpm typecheck` · ~10
 
 ## W2 · DataTable<T> + suite (~470)
 
-- [ ] T-03 Add `react-router-dom ^6.27.0` to `packages/ui/package.json` (D2; archive-D3 precedent) · Verify: `pnpm install`, `pnpm typecheck` · ~1
-- [ ] T-04 RED: write `packages/ui/src/components/patterns/__tests__/DataTable.test.tsx` (MemoryRouter): skeleton 3 pulse rows + no links; empty plain vs filtered exact strings; first-cell `<Link>` href / `<button>` (Keys mode) / emphasized text; icon actions render aria-labels, actions column hidden when none, `show`/`disabled`/`loading` (disabled + pulse), keyboard focus; pagination slice + footer "1–N de N" + page-reset on `rows` change; `renderActions` escape hatch · Verify: `pnpm --filter @vitalock/ui test` fails · ~260
-- [ ] T-05 GREEN: implement `packages/ui/src/components/patterns/DataTable.tsx` per design contract: wrapper `overflow-hidden rounded-[12px] border bg-card`; internal page/pageSize + reset effect on `[rows]`; `getPageSlice` + `PaginationFooter`; ghost `size="icon"` actions; `loading` → disabled + `animate-pulse`; `actionsHeaderLabel` default "Acciones" · Verify: ui suite passes · ~200
-- [ ] T-06 Export `DataTable` + types from `packages/ui/src/index.ts` · Verify: `pnpm typecheck` · ~5
+- [x] T-03 Add `react-router-dom ^6.27.0` to `packages/ui/package.json` (D2; archive-D3 precedent) · Verify: `pnpm install`, `pnpm typecheck` · ~1
+- [x] T-04 RED: write `packages/ui/src/components/patterns/__tests__/DataTable.test.tsx` (MemoryRouter): skeleton 3 pulse rows + no links; empty plain vs filtered exact strings; first-cell `<Link>` href / `<button>` (Keys mode) / emphasized text; icon actions render aria-labels, actions column hidden when none, `show`/`disabled`/`loading` (disabled + pulse), keyboard focus; pagination slice + footer "1–N de N" + page-reset on `rows` change; `renderActions` escape hatch · Verify: `pnpm --filter @vitalock/ui test` fails · ~260
+- [x] T-05 GREEN: implement `packages/ui/src/components/patterns/DataTable.tsx` per design contract: wrapper `overflow-hidden rounded-[12px] border bg-card`; internal page/pageSize + reset effect on `[rows]`; `getPageSlice` + `PaginationFooter`; ghost `size="icon"` actions; `loading` → disabled + `animate-pulse`; `actionsHeaderLabel` default "Acciones" · Verify: ui suite passes · ~200
+- [x] T-06 Export `DataTable` + types from `packages/ui/src/index.ts` · Verify: `pnpm typecheck` · ~5
 
 ## W3 · OrderItemsTable migration (~230)
 
-- [ ] T-07 RED: rewrite `OrderItemsTable.test.tsx` action queries → `getByRole('button', { name: /configurar/i })` etc. (17 tests; aria-label verb prefixes keep `/cancelar ítem/i`, `/registrar retiro/i` matching); gating maps 1:1 to predicates: Configurar = key + pending + confirmed/in_progress, Cancelar = pending (`disabled` while pending), Ver detalles = `produced_key_id`, Registrar retiro = `canRegisterPickup` · Verify: admin test fails on missing icons · ~120
-- [ ] T-08 GREEN: migrate `OrderItemsTable.tsx` to DataTable: first cell Tipo text; actions Settings2/Eye/Ban/PackageCheck with Spanish labels; inline colSpan empty row → dashed box; skeleton + pagination added · Verify: `pnpm --filter @vitalock/admin test` (17 pass) · ~110
+- [x] T-07 RED: rewrite `OrderItemsTable.test.tsx` action queries → `getByRole('button', { name: /configurar/i })` etc. (18 tests; aria-label verb prefixes keep `/cancelar ítem/i`, `/registrar retiro/i` matching); gating maps 1:1 to predicates: Configurar = key + pending + confirmed/in_progress, Cancelar = pending (`disabled` while pending), Ver detalles = `produced_key_id`, Registrar retiro = `canRegisterPickup` · Verify: admin test fails on missing icons · ~120
+- [x] T-08 GREEN: migrate `OrderItemsTable.tsx` to DataTable: first cell Tipo text; actions Settings2/Eye/Ban/PackageCheck with Spanish labels; inline colSpan empty row → dashed box; skeleton + pagination added · Verify: `pnpm --filter @vitalock/admin test` (18 pass) · ~110
 
 ## W4 · Toggle tables (~210)
 
@@ -99,7 +99,7 @@ Chain strategy: size-exception
 
 ## Test Churn Notes
 
-- **OrderItemsTable**: 17 tests (correction: not 19); name-based queries survive icon conversion via verb-prefix aria-labels; gating predicates 1:1.
+- **OrderItemsTable**: 18 tests (correction: not 19); name-based queries survive icon conversion via verb-prefix aria-labels; gating predicates 1:1.
 - **StockPage.test.tsx** (1 test): ProductsTable row-click removal risk — audit and switch to first-column link.
 - **Toggle triggers**: name becomes `Desactivar {nombre}`; confirm-button lookup stays unique.
 - **Untouched suites** (regression gates): OrdenesTable (8), OrdenesTablePagination (4).
