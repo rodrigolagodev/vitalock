@@ -21,9 +21,19 @@ vi.mock('@/hooks/useOrderTareas', () => ({
   useOrderTareas: () => ({ data: [], isLoading: false }),
 }));
 
-// Mock OrderItemsTable to avoid pulling in the full component tree with supabase deps
+// Mock the three table components as markers so the composition tests assert
+// which tables the page renders without pulling in their component trees
+// (OrderItemsTable carries supabase deps; the two new tables have their own suites).
 vi.mock('@/components/ordenes/OrderItemsTable', () => ({
-  OrderItemsTable: () => null,
+  OrderItemsTable: () => <div data-testid="table-order-items" />,
+}));
+
+vi.mock('@/components/ordenes/TechnicalItemsTable', () => ({
+  TechnicalItemsTable: () => <div data-testid="table-technical-items" />,
+}));
+
+vi.mock('@/components/ordenes/OrderTareasTable', () => ({
+  OrderTareasTable: () => <div data-testid="table-order-tareas" />,
 }));
 
 // Mock useMutateOrden — all mutate fns captured as module-level vi.fn()
@@ -175,5 +185,41 @@ describe('OrdenDetailPage — action bar', () => {
 
     expect(screen.getByRole('button', { name: /marcar facturada/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /cancelar orden/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('OrdenDetailPage — three-table composition', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // T-22a: keys orders compose only OrderItemsTable; the technical tables stay out
+  it('composes OrderItemsTable for keys orders (no technical tables)', () => {
+    mockUseOrden.mockReturnValue({
+      data: { ...baseOrden, order_type: 'keys' },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<OrdenDetailPage />, { wrapper: makeWrapper() });
+
+    expect(screen.getByTestId('table-order-items')).toBeInTheDocument();
+    expect(screen.queryByTestId('table-technical-items')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('table-order-tareas')).not.toBeInTheDocument();
+  });
+
+  // T-22b: technical orders compose TechnicalItemsTable + OrderTareasTable, no OrderItemsTable
+  it('composes TechnicalItemsTable and OrderTareasTable for technical orders', () => {
+    mockUseOrden.mockReturnValue({
+      data: { ...baseOrden, order_type: 'technical' },
+      isLoading: false,
+      isError: false,
+    });
+
+    render(<OrdenDetailPage />, { wrapper: makeWrapper() });
+
+    expect(screen.getByTestId('table-technical-items')).toBeInTheDocument();
+    expect(screen.getByTestId('table-order-tareas')).toBeInTheDocument();
+    expect(screen.queryByTestId('table-order-items')).not.toBeInTheDocument();
   });
 });

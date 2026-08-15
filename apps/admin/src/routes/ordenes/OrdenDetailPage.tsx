@@ -5,30 +5,16 @@ import { useMutateOrden } from '@/hooks/useMutateOrden';
 import { useOrderTareas } from '@/hooks/useOrderTareas';
 import { OrdenStatusBadge } from '@/components/ordenes/OrdenStatusBadge';
 import { OrderItemsTable } from '@/components/ordenes/OrderItemsTable';
-import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { TechnicalItemsTable } from '@/components/ordenes/TechnicalItemsTable';
+import { OrderTareasTable } from '@/components/ordenes/OrderTareasTable';
 
 const TERMINAL_STATUSES = new Set(['completed', 'invoiced', 'cancelled']);
-
-const CATEGORY_LABELS: Record<string, string> = {
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  key_configuration: 'Configuración de llave',
-  equipment_installation: 'Instalación de equipo',
-};
 
 export default function OrdenDetailPage() {
   const { ordenId } = useParams<{ ordenId: string }>();
   const { data: orden, isLoading, isError } = useOrden(ordenId);
   const { confirmOrden, cancelOrden, markOrderInvoiced } = useMutateOrden();
-  const { data: orderTareas = [] } = useOrderTareas(ordenId);
+  const { data: orderTareas = [], isLoading: tareasLoading } = useOrderTareas(ordenId);
 
   if (!ordenId) {
     return (
@@ -210,79 +196,16 @@ export default function OrdenDetailPage() {
         </div>
       ) : (
         <>
-          {/* Technical items: minimal table (no key-specific actions). */}
+          {/* Technical items: minimal read-only table (no key-specific actions). */}
           <div className="flex flex-col gap-3">
             <h2 className="text-lg font-semibold">Ítems</h2>
-            <div className="overflow-hidden rounded-[12px] border bg-card">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Descripción</TableHead>
-                    <TableHead className="text-right">Cantidad</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orden.order_items.map((it) => (
-                    <TableRow key={it.id}>
-                      <TableCell className="capitalize">
-                        {CATEGORY_LABELS[it.item_type] ?? it.item_type}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {it.description ?? '—'}
-                      </TableCell>
-                      <TableCell className="text-right">{it.quantity}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <TechnicalItemsTable items={orden.order_items} isFetching={isLoading} />
           </div>
 
           {/* Linked tickets/tareas */}
           <div className="flex flex-col gap-3">
             <h2 className="text-lg font-semibold">Tareas</h2>
-            {orderTareas.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No hay tareas generadas para esta orden.
-              </p>
-            ) : (
-              <div className="overflow-hidden rounded-[12px] border bg-card">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>N.º</TableHead>
-                      <TableHead>Categoría</TableHead>
-                      <TableHead>Descripción</TableHead>
-                      <TableHead>Estado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orderTareas.map((t) => (
-                      <TableRow key={t.id}>
-                        <TableCell className="font-medium">
-                          <Link
-                            to={`/tareas/${t.id}`}
-                            className="hover:underline"
-                          >
-                            {t.ticket_number}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {CATEGORY_LABELS[t.category] ?? t.category}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {t.description}
-                        </TableCell>
-                        <TableCell>
-                          <TareaStatusBadge status={t.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+            <OrderTareasTable tareas={orderTareas} isFetching={tareasLoading} />
           </div>
         </>
       )}
