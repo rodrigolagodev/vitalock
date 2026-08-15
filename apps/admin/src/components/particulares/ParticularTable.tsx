@@ -1,16 +1,9 @@
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
-import { PencilLine } from 'lucide-react';
-import { Button } from '@vitalock/ui';
+import { Trash2, PencilLine } from 'lucide-react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
+  DataTable,
+  Button,
+  type DataTableAction,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -35,19 +28,6 @@ interface ParticularTableProps {
   onEdit?: (particular: ParticularRow) => void;
 }
 
-function SkeletonRow() {
-  return (
-    <TableRow>
-      <TableCell><div className="h-4 w-32 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-28 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-28 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-40 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-40 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-16 animate-pulse rounded-md bg-muted" /></TableCell>
-    </TableRow>
-  );
-}
-
 export function ParticularTable({
   rows,
   isFetching,
@@ -67,110 +47,55 @@ export function ParticularTable({
     }
   };
 
-  if (isFetching) {
-    return (
-      <div className="overflow-hidden rounded-[12px] border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>DNI</TableHead>
-            <TableHead>Teléfono</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Unidad</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </TableBody>
-      </Table>
-      </div>
-    );
+  const actions: DataTableAction<ParticularRow>[] = [];
+  if (onEdit) {
+    actions.push({
+      icon: PencilLine,
+      label: (particular) => `Editar a ${particular.full_name}`,
+      onClick: (particular) => onEdit(particular),
+    });
   }
-
-  if (rows.length === 0 && !hasFilters) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">No hay particulares registrados.</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Usá el botón "Nuevo particular".
-        </p>
-      </div>
-    );
-  }
-
-  if (rows.length === 0 && hasFilters) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No se encontraron particulares con los filtros aplicados.
-        </p>
-      </div>
-    );
-  }
+  actions.push({
+    icon: Trash2,
+    label: (particular) => `Dar de baja a ${particular.full_name}`,
+    onClick: (particular) => setDeactivating(particular),
+    className: 'text-destructive hover:text-destructive',
+  });
 
   return (
     <>
-      <div className="overflow-hidden rounded-[12px] border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>DNI</TableHead>
-            <TableHead>Teléfono</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Unidad</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((particular) => (
-            <TableRow key={particular.id}>
-              <TableCell className="font-medium">{particular.full_name}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {particular.dni}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {particular.phone ?? '—'}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {particular.email ?? '—'}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatUnit(particular)}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                  {onEdit && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label={`Editar a ${particular.full_name}`}
-                      onClick={() => onEdit(particular)}
-                    >
-                      <PencilLine className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Dar de baja a ${particular.full_name}`}
-                    onClick={() => setDeactivating(particular)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      </div>
+      <DataTable<ParticularRow>
+        rows={rows}
+        isFetching={isFetching}
+        columns={[
+          { header: 'Nombre', cell: (particular) => particular.full_name },
+          {
+            header: 'DNI',
+            cell: (particular) => particular.dni,
+            className: 'text-muted-foreground',
+          },
+          {
+            header: 'Teléfono',
+            cell: (particular) => particular.phone ?? '—',
+            className: 'text-muted-foreground',
+          },
+          {
+            header: 'Email',
+            cell: (particular) => particular.email ?? '—',
+            className: 'text-muted-foreground',
+          },
+          {
+            header: 'Unidad',
+            cell: (particular) => formatUnit(particular),
+            className: 'text-muted-foreground',
+          },
+        ]}
+        rowKey={(particular) => particular.id}
+        actions={actions}
+        emptyMessage="No hay particulares registrados."
+        filteredEmptyMessage="No se encontraron particulares con los filtros aplicados."
+        hasFilters={hasFilters}
+      />
 
       <Dialog
         open={deactivating !== null}

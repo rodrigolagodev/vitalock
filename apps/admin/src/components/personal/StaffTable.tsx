@@ -1,16 +1,10 @@
 import { useState } from 'react';
 import { Trash2, PencilLine } from 'lucide-react';
-import { Button } from '@vitalock/ui';
-import { Badge } from '@vitalock/ui';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
+  DataTable,
+  Badge,
+  Button,
+  type DataTableAction,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,18 +27,6 @@ interface StaffTableProps {
   onEdit?: (staff: StaffRow) => void;
 }
 
-function SkeletonRow() {
-  return (
-    <TableRow>
-      <TableCell><div className="h-4 w-32 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-40 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-28 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-5 w-20 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-16 animate-pulse rounded-md bg-muted" /></TableCell>
-    </TableRow>
-  );
-}
-
 export function StaffTable({
   rows,
   isFetching,
@@ -64,104 +46,51 @@ export function StaffTable({
     }
   };
 
-  if (isFetching) {
-    return (
-      <div className="overflow-hidden rounded-[12px] border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Teléfono</TableHead>
-            <TableHead>Rol</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </TableBody>
-      </Table>
-      </div>
-    );
+  const actions: DataTableAction<StaffRow>[] = [];
+  if (onEdit) {
+    actions.push({
+      icon: PencilLine,
+      label: (staff) => `Editar a ${staff.full_name}`,
+      onClick: (staff) => onEdit(staff),
+    });
   }
-
-  if (rows.length === 0 && !hasFilters) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">No hay personal registrado.</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Usá el botón "Nuevo personal".
-        </p>
-      </div>
-    );
-  }
-
-  if (rows.length === 0 && hasFilters) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No se encontró personal con los filtros aplicados.
-        </p>
-      </div>
-    );
-  }
+  actions.push({
+    icon: Trash2,
+    label: (staff) => `Dar de baja a ${staff.full_name}`,
+    onClick: (staff) => setDeactivating(staff),
+    className: 'text-destructive hover:text-destructive',
+  });
 
   return (
     <>
-      <div className="overflow-hidden rounded-[12px] border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Teléfono</TableHead>
-            <TableHead>Rol</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((staff) => (
-            <TableRow key={staff.id}>
-              <TableCell className="font-medium">{staff.full_name}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {staff.email ?? '—'}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {staff.phone ?? '—'}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary">{ROLE_LABELS[staff.role]}</Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-1">
-                  {onEdit && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEdit(staff)}
-                    >
-                      <PencilLine className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Dar de baja a ${staff.full_name}`}
-                    onClick={() => setDeactivating(staff)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      </div>
+      <DataTable<StaffRow>
+        rows={rows}
+        isFetching={isFetching}
+        columns={[
+          { header: 'Nombre', cell: (staff) => staff.full_name },
+          {
+            header: 'Email',
+            cell: (staff) => staff.email ?? '—',
+            className: 'text-muted-foreground',
+          },
+          {
+            header: 'Teléfono',
+            cell: (staff) => staff.phone ?? '—',
+            className: 'text-muted-foreground',
+          },
+          {
+            header: 'Rol',
+            cell: (staff) => (
+              <Badge variant="secondary">{ROLE_LABELS[staff.role]}</Badge>
+            ),
+          },
+        ]}
+        rowKey={(staff) => staff.id}
+        actions={actions}
+        emptyMessage="No hay personal registrado."
+        filteredEmptyMessage="No se encontró personal con los filtros aplicados."
+        hasFilters={hasFilters}
+      />
 
       <Dialog
         open={deactivating !== null}
