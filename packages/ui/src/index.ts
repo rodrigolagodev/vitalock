@@ -1,5 +1,15 @@
 export { cn } from './lib/utils';
 export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from './components/table';
+export {
   Badge,
   badgeVariants,
   type BadgeProps,
