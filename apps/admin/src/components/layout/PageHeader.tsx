@@ -40,7 +40,7 @@ export function PageHeader({ title, subtitle, breadcrumbs, children }: PageHeade
       )}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[32px] font-bold leading-[40px] text-[#1e293b]">{title}</h1>
+          <h1 className="text-2xl font-semibold text-[#1e293b]">{title}</h1>
           {subtitle != null && (
             <p className="text-sm text-muted-foreground">{subtitle}</p>
           )}

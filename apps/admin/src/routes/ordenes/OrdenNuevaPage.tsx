@@ -55,7 +55,7 @@ export default function OrdenNuevaPage() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">Nueva orden</h1>
+        <h1 className="text-2xl font-semibold">Nueva orden</h1>
         <p className="text-sm text-muted-foreground">
           Configurá el tipo, el cliente y los ítems de la orden.
         </p>

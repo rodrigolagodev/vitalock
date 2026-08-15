@@ -139,7 +139,7 @@ export default function OrdenEditarPage() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">Editar orden</h1>
+        <h1 className="text-2xl font-semibold">Editar orden</h1>
         <p className="text-sm text-muted-foreground">
           Modificá el tipo, el cliente o los ítems del borrador.
         </p>

@@ -10,7 +10,6 @@ export interface CreateTareaInput {
     | 'maintenance'
     | 'installation'
     | 'key_configuration'
-    | 'key_installation'
     | 'equipment_installation';
   description: string;
   unit_id?: string | null;

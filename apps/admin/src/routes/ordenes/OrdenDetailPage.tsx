@@ -1,27 +1,21 @@
 import { Link, useParams } from 'react-router-dom';
-import { Badge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { useOrden } from '@/hooks/useOrden';
 import { useMutateOrden } from '@/hooks/useMutateOrden';
 import { useOrderTareas } from '@/hooks/useOrderTareas';
 import { OrdenStatusBadge } from '@/components/ordenes/OrdenStatusBadge';
 import { OrderItemsTable } from '@/components/ordenes/OrderItemsTable';
+import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 const TERMINAL_STATUSES = new Set(['completed', 'invoiced', 'cancelled']);
-
-const TAREA_STATUS_LABELS: Record<string, string> = {
-  open: 'Abierta',
-  in_progress: 'En proceso',
-  resolved: 'Resuelta',
-  cancelled: 'Cancelada',
-};
-
-const TAREA_STATUS_STYLES: Record<string, string> = {
-  open: 'border-transparent bg-[#f1f5f9] text-[#475569]',
-  in_progress: 'border-transparent bg-[#fef3c7] text-[#92400e]',
-  resolved: 'border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]',
-  cancelled: 'border-transparent bg-[#fee2e2] text-[#b91c1c]',
-};
 
 const CATEGORY_LABELS: Record<string, string> = {
   maintenance: 'Mantenimiento',
@@ -115,7 +109,7 @@ export default function OrdenDetailPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{orden.order_number}</h1>
+            <h1 className="text-2xl font-semibold">{orden.order_number}</h1>
             <OrdenStatusBadge status={orden.status} />
           </div>
 
@@ -219,28 +213,28 @@ export default function OrdenDetailPage() {
           <div className="flex flex-col gap-3">
             <h2 className="text-lg font-semibold">Ítems</h2>
             <div className="overflow-hidden rounded-[12px] border bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Tipo</th>
-                    <th className="px-3 py-2 text-left">Descripción</th>
-                    <th className="px-3 py-2 text-right">Cantidad</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead className="text-right">Cantidad</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {orden.order_items.map((it) => (
-                    <tr key={it.id} className="border-t">
-                      <td className="px-3 py-2 capitalize">
+                    <TableRow key={it.id}>
+                      <TableCell className="capitalize">
                         {CATEGORY_LABELS[it.item_type] ?? it.item_type}
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
                         {it.description ?? '—'}
-                      </td>
-                      <td className="px-3 py-2 text-right">{it.quantity}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="text-right">{it.quantity}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
 
@@ -253,41 +247,39 @@ export default function OrdenDetailPage() {
               </p>
             ) : (
               <div className="overflow-hidden rounded-[12px] border bg-card">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 text-left">N.º</th>
-                      <th className="px-3 py-2 text-left">Categoría</th>
-                      <th className="px-3 py-2 text-left">Descripción</th>
-                      <th className="px-3 py-2 text-left">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>N.º</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Estado</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {orderTareas.map((t) => (
-                      <tr key={t.id} className="border-t">
-                        <td className="px-3 py-2 font-medium">
+                      <TableRow key={t.id}>
+                        <TableCell className="font-medium">
                           <Link
                             to={`/tareas/${t.id}`}
                             className="hover:underline"
                           >
                             {t.ticket_number}
                           </Link>
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
                           {CATEGORY_LABELS[t.category] ?? t.category}
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
                           {t.description}
-                        </td>
-                        <td className="px-3 py-2">
-                          <Badge className={`text-[16px] ${TAREA_STATUS_STYLES[t.status] ?? TAREA_STATUS_STYLES.open}`}>
-                            {TAREA_STATUS_LABELS[t.status] ?? t.status}
-                          </Badge>
-                        </td>
-                      </tr>
+                        </TableCell>
+                        <TableCell>
+                          <TareaStatusBadge status={t.status} />
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </div>

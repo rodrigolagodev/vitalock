@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
+import { PencilLine } from 'lucide-react';
 import { Button } from '@vitalock/ui';
 import {
   Table,
@@ -68,6 +69,7 @@ export function ParticularTable({
 
   if (isFetching) {
     return (
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -85,6 +87,7 @@ export function ParticularTable({
           <SkeletonRow />
         </TableBody>
       </Table>
+      </div>
     );
   }
 
@@ -111,6 +114,7 @@ export function ParticularTable({
 
   return (
     <>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -143,11 +147,12 @@ export function ParticularTable({
                   {onEdit && (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="sm"
+                      variant="outline"
+                      size="icon"
+                      aria-label={`Editar a ${particular.full_name}`}
                       onClick={() => onEdit(particular)}
                     >
-                      Editar
+                      <PencilLine className="h-4 w-4" />
                     </Button>
                   )}
                   <Button
@@ -165,6 +170,7 @@ export function ParticularTable({
           ))}
         </TableBody>
       </Table>
+      </div>
 
       <Dialog
         open={deactivating !== null}

@@ -96,18 +96,20 @@ type FormValues = z.infer<typeof schema>;
 
 // ---- Labels ----
 
-const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
+const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string> = {
   maintenance: 'Mantenimiento',
   installation: 'Instalación',
   key_configuration: 'Configuración de llave',
-  key_installation: 'Instalación de llave',
+  key_installation: 'Instalación de llave', // Retained for display of cancelled historical tickets.
   equipment_installation: 'Instalación de equipo',
   equipment_replacement: 'Cambio de equipo',
 };
 
-// System-created categories (key_configuration, key_installation,
-// equipment_installation) are only produced by order/workflow triggers, never
-// manually, so the create dropdown stays limited to the manual categories.
+// System-created categories (key_configuration, equipment_installation) are
+// only produced by order/workflow triggers, never manually, so the create
+// dropdown stays limited to the manual categories.
+// key_installation is no longer a supported category (retired by
+// unify-work-tracking-model); historical cancelled rows remain visible.
 const CREATE_CATEGORY_LABELS: Partial<Record<TareaRow['category'], string>> = {
   maintenance: 'Mantenimiento',
   installation: 'Instalación',

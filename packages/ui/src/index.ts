@@ -5,6 +5,11 @@ export {
   type BadgeProps,
 } from './components/badge';
 export {
+  StatusBadge,
+  type StatusBadgeProps,
+  type StatusTone,
+} from './components/StatusBadge';
+export {
   Button,
   buttonVariants,
   type ButtonProps,

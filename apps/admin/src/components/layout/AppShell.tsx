@@ -20,7 +20,7 @@ export function AppShell() {
   return (
     <div className="flex h-screen flex-col">
       {/* Body: fixed sidebar + content column with its own topbar */}
-      <div className="flex min-h-0 flex-1">
+      <div className="flex w-full min-h-0 flex-1">
         <Sidebar />
         <div className="flex min-h-0 flex-1 flex-col">
           {/* Topbar scoped to content: search + bell + avatar + divider; slot carries theme + sign-out */}
@@ -32,7 +32,7 @@ export function AppShell() {
           </Topbar>
 
           {/* Content surface */}
-          <main className="flex-1 overflow-y-auto bg-[#f5f5fa] p-6">
+          <main className="flex-1 bg-[#f7f7fb] p-6">
             <Outlet />
           </main>
         </div>

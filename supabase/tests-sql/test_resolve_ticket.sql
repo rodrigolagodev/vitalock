@@ -39,14 +39,15 @@ begin
   values ('Test Installer ResolveTicket', 'installer')
   returning id into v_staff_id;
 
-  -- key_installation requires no equipment on resolve, so it is the right
-  -- category for the installer flow.
+  -- key_configuration requires no equipment on resolve and is used here because
+  -- key_installation is no longer a supported category (retired by
+  -- unify-work-tracking-model migration 20260812000060).
   insert into support.tickets (
     administration_id, building_id, category, description, status,
     assigned_to_staff_id
   ) values (
-    v_admin_id, v_building_id, 'key_installation',
-    'Instalar llave en lector', 'open', v_staff_id
+    v_admin_id, v_building_id, 'key_configuration',
+    'Configurar llave en lector', 'open', v_staff_id
   )
   returning id into v_ticket_id;
 
@@ -97,8 +98,8 @@ begin
     administration_id, building_id, category, description, status,
     assigned_to_staff_id
   ) values (
-    v_admin_id, v_building_id, 'key_installation',
-    'Instalar llave (ya en progreso)', 'in_progress', v_staff_id
+    v_admin_id, v_building_id, 'key_configuration',
+    'Configurar llave (ya en progreso)', 'in_progress', v_staff_id
   )
   returning id into v_ticket_id;
 
@@ -144,8 +145,8 @@ begin
     administration_id, building_id, category, description, status,
     assigned_to_staff_id
   ) values (
-    v_admin_id, v_building_id, 'key_installation',
-    'Instalar llave (ya resuelta)', 'open', v_staff_id
+    v_admin_id, v_building_id, 'key_configuration',
+    'Configurar llave (ya resuelta)', 'open', v_staff_id
   )
   returning id into v_ticket_id;
 
@@ -195,8 +196,8 @@ begin
     administration_id, building_id, category, description, status,
     assigned_to_staff_id
   ) values (
-    v_admin_id, v_building_id, 'key_installation',
-    'Instalar llave (hop directo)', 'open', v_staff_id
+    v_admin_id, v_building_id, 'key_configuration',
+    'Configurar llave (hop directo)', 'open', v_staff_id
   )
   returning id into v_ticket_id;
 

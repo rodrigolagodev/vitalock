@@ -1,0 +1,25 @@
+-- ============================================================
+-- FIX: drop stale public.resolve_ticket(uuid, text) overload
+-- ============================================================
+-- Bug: two overloads of public.resolve_ticket coexisted in the DB:
+--   * public.resolve_ticket(uuid, text)              (stale)
+--   * public.resolve_ticket(uuid, text, uuid)        (current — 000058)
+-- The installer client calls the RPC by named parameters
+-- ({ p_ticket_id, p_note }) which matches BOTH overloads (the 3-arg
+-- version has defaults for p_note and p_actor_staff_id), so PostgREST
+-- returns PGRST203 "Could not choose the best candidate function" and
+-- the mutation fails before any UPDATE runs — tickets stayed 'open' and
+-- the admin kept seeing tasks the installer thought they had resolved.
+--
+-- The 2-arg overload has no supported caller: the SQL smoke test in
+-- supabase/tests-sql/test_resolve_ticket.sql passes 3 positional
+-- arguments (so it resolves to the 3-arg overload), and the installer
+-- client passes named params only. Dropping the 2-arg version restores
+-- unambiguous name-based resolution.
+--
+-- ROLLBACK INSTRUCTIONS: none needed — the 3-arg overload is a strict
+-- superset. If ever required, recreate the 2-arg body as a thin wrapper
+-- that delegates to the 3-arg version.
+-- ============================================================
+
+drop function if exists public.resolve_ticket(uuid, text);

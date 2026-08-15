@@ -72,6 +72,7 @@ export function StockMovementsTable({
 }: StockMovementsTableProps) {
   if (isFetching) {
     return (
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -90,6 +91,7 @@ export function StockMovementsTable({
           <SkeletonRow />
         </TableBody>
       </Table>
+      </div>
     );
   }
 
@@ -114,6 +116,7 @@ export function StockMovementsTable({
   }
 
   return (
+    <div className="overflow-hidden rounded-[12px] border bg-card">
     <Table>
       <TableHeader>
         <TableRow>
@@ -158,5 +161,6 @@ export function StockMovementsTable({
         ))}
       </TableBody>
     </Table>
+    </div>
   );
 }

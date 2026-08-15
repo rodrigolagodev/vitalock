@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@vitalock/ui';
+import { StatusBadge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { DEFAULT_PAGE_SIZE, PaginationFooter, getPageSlice } from '@vitalock/ui';
 import { AdministrationFormSheet } from './AdministrationFormSheet';
@@ -116,15 +116,11 @@ export function AdministrationsTable({
                 {admin.tax_id ?? '—'}
               </TableCell>
               <TableCell>
-                <Badge
-                  className={
-                    admin.status === 'active'
-                      ? 'text-[16px] border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]'
-                      : 'text-[16px] border-transparent bg-[#f1f5f9] text-[#475569]'
-                  }
+                <StatusBadge
+                  tone={admin.status === 'active' ? 'success' : 'neutral'}
                 >
                   {admin.status === 'active' ? 'Activa' : 'Inactiva'}
-                </Badge>
+                </StatusBadge>
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-2">

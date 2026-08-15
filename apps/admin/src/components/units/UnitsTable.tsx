@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { StatusBadge } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { UnitFormSheet } from './UnitFormSheet';
@@ -35,6 +36,7 @@ export function UnitsTable({ buildingId, units }: UnitsTableProps) {
 
   return (
     <>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -49,11 +51,11 @@ export function UnitsTable({ buildingId, units }: UnitsTableProps) {
             <TableRow key={unit.id}>
               <TableCell className="font-medium">{unit.number}</TableCell>
               <TableCell>
-                <Badge
-                  variant={unit.status === 'active' ? 'default' : 'secondary'}
+                <StatusBadge
+                  tone={unit.status === 'active' ? 'success' : 'neutral'}
                 >
                   {unit.status === 'active' ? 'Activa' : 'Inactiva'}
-                </Badge>
+                </StatusBadge>
               </TableCell>
               <TableCell>
                 {unit.is_administrative ? (
@@ -89,6 +91,7 @@ export function UnitsTable({ buildingId, units }: UnitsTableProps) {
           ))}
         </TableBody>
       </Table>
+      </div>
 
       <UnitFormSheet
         open={Boolean(editingUnit)}

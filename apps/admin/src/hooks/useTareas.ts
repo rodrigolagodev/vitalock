@@ -9,7 +9,6 @@ export interface TareaRow {
     | 'maintenance'
     | 'installation'
     | 'key_configuration'
-    | 'key_installation'
     | 'equipment_installation'
     | 'equipment_replacement';
   description: string;

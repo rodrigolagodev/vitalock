@@ -8,7 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@vitalock/ui';
-import { Badge } from '@vitalock/ui';
+import { StatusBadge, type StatusTone } from '@vitalock/ui';
 import { useMutateOrderItem } from '@/hooks/useMutateOrderItem';
 import { ConfigureKeyItemSheet } from './ConfigureKeyItemSheet';
 import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
@@ -30,12 +30,12 @@ const ITEM_STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelado',
 };
 
-const ITEM_STATUS_STYLES: Record<string, string> = {
-  pending: 'border-transparent bg-[#f1f5f9] text-[#475569]',
-  configured: 'border-transparent bg-[#e0e7ff] text-[#4338ca]',
-  in_progress: 'border-transparent bg-[#fef3c7] text-[#92400e]',
-  completed: 'border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]',
-  cancelled: 'border-transparent bg-[#fee2e2] text-[#b91c1c]',
+const ITEM_STATUS_TONES: Record<string, StatusTone> = {
+  pending: 'neutral',
+  configured: 'brand',
+  in_progress: 'warning',
+  completed: 'success',
+  cancelled: 'danger',
 };
 
 interface OrderItemsTableProps {
@@ -131,9 +131,9 @@ export function OrderItemsTable({
                     </TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
                     <TableCell>
-                      <Badge className={`text-[16px] ${ITEM_STATUS_STYLES[item.status] ?? ITEM_STATUS_STYLES.pending}`}>
+                      <StatusBadge tone={ITEM_STATUS_TONES[item.status] ?? 'neutral'}>
                         {ITEM_STATUS_LABELS[item.status] ?? item.status}
-                      </Badge>
+                      </StatusBadge>
                     </TableCell>
                     <TableCell className="text-sm">
                       {item.item_type === 'key' && authorized ? (

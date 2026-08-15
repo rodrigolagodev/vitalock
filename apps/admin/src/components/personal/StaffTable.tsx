@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, PencilLine } from 'lucide-react';
 import { Button } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import {
@@ -66,6 +66,7 @@ export function StaffTable({
 
   if (isFetching) {
     return (
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -82,6 +83,7 @@ export function StaffTable({
           <SkeletonRow />
         </TableBody>
       </Table>
+      </div>
     );
   }
 
@@ -108,6 +110,7 @@ export function StaffTable({
 
   return (
     <>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -136,11 +139,11 @@ export function StaffTable({
                   {onEdit && (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="sm"
+                      variant="outline"
+                      size="icon"
                       onClick={() => onEdit(staff)}
                     >
-                      Editar
+                      <PencilLine className="h-4 w-4" />
                     </Button>
                   )}
                   <Button
@@ -158,6 +161,7 @@ export function StaffTable({
           ))}
         </TableBody>
       </Table>
+      </div>
 
       <Dialog
         open={deactivating !== null}

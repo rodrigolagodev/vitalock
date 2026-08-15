@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@vitalock/ui';
+import { StatusBadge, type StatusTone } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import { EquipmentFormSheet } from './EquipmentFormSheet';
@@ -19,10 +19,10 @@ const STATUS_LABELS: Record<string, string> = {
   dead: 'Dado de baja',
 };
 
-const STATUS_STYLES: Record<string, string> = {
-  active: 'border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]',
-  maintenance: 'border-transparent bg-[#fef3c7] text-[#92400e]',
-  dead: 'border-transparent bg-[#fee2e2] text-[#b91c1c]',
+const STATUS_TONES: Record<string, StatusTone> = {
+  active: 'success',
+  maintenance: 'warning',
+  dead: 'danger',
 };
 
 interface EquipmentTableProps {
@@ -47,6 +47,7 @@ export function EquipmentTable({ buildingId, equipment }: EquipmentTableProps) {
 
   return (
     <>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -63,9 +64,9 @@ export function EquipmentTable({ buildingId, equipment }: EquipmentTableProps) {
               <TableCell className="font-medium">{item.model ?? '—'}</TableCell>
               <TableCell className="font-mono text-sm">{item.serial_number}</TableCell>
               <TableCell>
-                <Badge className={`text-[16px] ${STATUS_STYLES[item.status] ?? STATUS_STYLES.active}`}>
+                <StatusBadge tone={STATUS_TONES[item.status] ?? 'neutral'}>
                   {STATUS_LABELS[item.status] ?? item.status}
-                </Badge>
+                </StatusBadge>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {item.installed_at
@@ -96,6 +97,7 @@ export function EquipmentTable({ buildingId, equipment }: EquipmentTableProps) {
           ))}
         </TableBody>
       </Table>
+      </div>
 
       <EquipmentFormSheet
         open={Boolean(editingEquipment)}

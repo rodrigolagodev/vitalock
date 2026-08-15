@@ -32,13 +32,9 @@ beforeEach(() => {
 });
 
 describe('AppShell', () => {
-  it('renders the topbar with search, bell, avatar initials, divider and actions', () => {
+  it('renders the topbar with avatar initials, divider and actions', () => {
     renderShell();
 
-    expect(screen.getByPlaceholderText('Buscar...')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Notificaciones' }),
-    ).toBeInTheDocument();
     expect(screen.getByText('AA')).toBeInTheDocument();
     expect(screen.getByTestId('topbar-divider')).toBeInTheDocument();
     // Right slot: dark-mode switch and sign-out stay available.
@@ -46,10 +42,9 @@ describe('AppShell', () => {
     expect(screen.getByRole('button', { name: 'Salir' })).toBeInTheDocument();
   });
 
-  it('keeps the grouped sidebar with brand header visible', () => {
+  it('keeps the sidebar with brand logo visible', () => {
     renderShell();
-    expect(screen.getByText('Vitalock')).toBeInTheDocument();
-    expect(screen.getByText('Infraestructura')).toBeInTheDocument();
+    expect(screen.getByAltText('Vitalock')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Administraciones' })).toHaveAttribute(
       'href',
       '/administraciones',

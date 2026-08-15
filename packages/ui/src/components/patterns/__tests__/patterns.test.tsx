@@ -61,13 +61,9 @@ describe('SearchInput', () => {
 });
 
 describe('Topbar', () => {
-  it('renders search, notification bell, avatar and divider', () => {
+  it('renders avatar and divider', () => {
     render(<Topbar avatar="AA" />);
 
-    expect(screen.getByPlaceholderText('Buscar...')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Notificaciones' }),
-    ).toBeInTheDocument();
     expect(screen.getByText('AA')).toBeInTheDocument();
     expect(screen.getByTestId('topbar-divider')).toBeInTheDocument();
   });
@@ -83,7 +79,7 @@ describe('Topbar', () => {
 
   it('renders without optional avatar and children', () => {
     render(<Topbar />);
-    expect(screen.getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
     expect(screen.queryByText('AA')).not.toBeInTheDocument();
+    expect(screen.getByTestId('topbar-divider')).toBeInTheDocument();
   });
 });

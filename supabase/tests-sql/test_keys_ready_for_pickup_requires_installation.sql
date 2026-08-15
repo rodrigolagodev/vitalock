@@ -2,6 +2,17 @@
 -- DB smoke test: keys order lifecycle — ready_for_pickup requires
 -- installation done
 -- ============================================================
+--
+-- SUPERSEDED by migration 20260812000060 (unify-work-tracking-model):
+-- scenarios (a) and (e) below assert the OLD ticket-gated readiness
+-- model and will FAIL against any DB that has 000060 applied — they
+-- resolve the `key_installation` ticket and expect promotion, but that
+-- ticket category no longer participates in readiness (readiness now
+-- derives from `operations.key_authorizations`). Kept as historical
+-- documentation of the pre-refactor model. Live coverage of the new
+-- model lives in `supabase/tests-sql/test_unify_work_tracking.sql`.
+-- ============================================================
+--
 -- Implements: ordenes-admin/Order Status State Machine (installation
 -- gated ready_for_pickup, migration 20260811000057)
 --

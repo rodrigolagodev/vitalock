@@ -67,17 +67,17 @@ export function OrdenesTable({
 
   if (isFetching) {
     return (
-      <div className="overflow-hidden rounded-[12px] border bg-card">
+      <div className="overflow-hidden max-w-12 rounded-[12px] border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>N.º de orden</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Ítems</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
-            </TableRow>
+          <TableRow>
+            <TableHead>N.º de orden</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Cliente</TableHead>
+            <TableHead>Ítems</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Fecha</TableHead>
+          </TableRow>
           </TableHeader>
           <TableBody>
             <SkeletonRow />
@@ -116,6 +116,7 @@ export function OrdenesTable({
         <TableHeader>
           <TableRow>
             <TableHead>N.º de orden</TableHead>
+            <TableHead>Tipo</TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead>Ítems</TableHead>
             <TableHead>Estado</TableHead>

@@ -3,7 +3,6 @@ import {
   Building2,
   ClipboardList,
   Home,
-  KeyRound,
   ListTodo,
   Menu,
   Package,
@@ -12,7 +11,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
-import { SidebarGroup } from '@vitalock/ui';
 import { NavItem } from './NavItem';
 import { useOrdens } from '@/hooks/useOrdens';
 
@@ -28,40 +26,31 @@ export function Sidebar({ className }: SidebarProps) {
     <nav className="flex flex-col gap-1 p-4">
       {/* Brand header (logo + wordmark) */}
       <div className="mb-2 flex items-center gap-2.5 px-3 py-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <KeyRound className="h-4 w-4" />
-        </span>
-        <span className="text-base font-semibold">Vitalock</span>
+        <img
+          src="/Vitalock_logo_vector_black.svg"
+          alt="Vitalock"
+          className="h-10 w-auto"
+        />
       </div>
 
-      <SidebarGroup label="Infraestructura">
-        <NavItem
-          label="Administraciones"
-          to="/administraciones"
-          icon={<Building2 className="h-4 w-4" />}
-        />
-        <NavItem label="Particulares" to="/particulares" icon={<Home className="h-4 w-4" />} />
-      </SidebarGroup>
+      <NavItem
+        label="Administraciones"
+        to="/administraciones"
+        icon={<Building2 className="h-4 w-4" />}
+      />
+      <NavItem label="Particulares" to="/particulares" icon={<Home className="h-4 w-4" />} />
 
-      <SidebarGroup label="Ordenes">
-        <NavItem
-          label="Ordenes"
-          to="/ordenes"
-          icon={<ClipboardList className="h-4 w-4" />}
-          badge={inProgressOrdens?.length}
-        />
-        <NavItem label="Tareas" to="/tareas" icon={<ListTodo className="h-4 w-4" />} />
-      </SidebarGroup>
+      <NavItem
+        label="Ordenes"
+        to="/ordenes"
+        icon={<ClipboardList className="h-4 w-4" />}
+        badge={inProgressOrdens?.length}
+      />
+      <NavItem label="Tareas" to="/tareas" icon={<ListTodo className="h-4 w-4" />} />
 
-      <SidebarGroup label="Personal">
-        <NavItem label="Personal" to="/personal" icon={<Users className="h-4 w-4" />} />
-      </SidebarGroup>
+      <NavItem label="Personal" to="/personal" icon={<Users className="h-4 w-4" />} />
 
-      <SidebarGroup label="Ventas">
-        <NavItem label="Stock" to="/stock" icon={<Package className="h-4 w-4" />} />
-      </SidebarGroup>
-
-      <SidebarGroup label="Tickets" />
+      <NavItem label="Stock" to="/stock" icon={<Package className="h-4 w-4" />} />
     </nav>
   );
 
@@ -70,7 +59,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'hidden w-[322px] shrink-0 flex-col border-r bg-background md:flex',
+          'hidden w-[240px] shrink-0 flex-col border-r bg-white md:flex',
           className,
         )}
       >
@@ -97,7 +86,7 @@ export function Sidebar({ className }: SidebarProps) {
             className="absolute inset-0 cursor-default bg-black/40"
             onClick={() => setOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 flex w-[322px] flex-col border-r bg-background shadow-xl">
+          <aside className="absolute inset-y-0 left-0 flex w-[280px] flex-col border-r bg-white shadow-xl">
             <div className="flex items-center justify-end p-4">
               <Button
                 variant="ghost"

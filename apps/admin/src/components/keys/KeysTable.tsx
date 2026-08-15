@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { StatusBadge } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
@@ -49,6 +50,7 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
 
   if (isFetching) {
     return (
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -66,6 +68,7 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
           <SkeletonRow />
         </TableBody>
       </Table>
+      </div>
     );
   }
 
@@ -82,6 +85,7 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
 
   return (
     <>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -119,9 +123,11 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant={k.status === 'active' ? 'default' : 'secondary'}>
+                <StatusBadge
+                  tone={k.status === 'active' ? 'success' : 'danger'}
+                >
                   {STATUS_LABEL[k.status]}
-                </Badge>
+                </StatusBadge>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {fmtDate(k.activated_at)}
@@ -144,6 +150,7 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
           ))}
         </TableBody>
       </Table>
+      </div>
 
       <KeyStatusChangeDialog
         open={Boolean(changingStatusFor)}

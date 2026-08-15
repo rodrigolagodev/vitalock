@@ -7,11 +7,11 @@ import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
 import { AssignEquipmentDialog } from '@/components/tareas/AssignEquipmentDialog';
 import type { TareaRow } from '@/hooks/useTareas';
 
-const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
+const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string> = {
   maintenance: 'Mantenimiento',
   installation: 'Instalación',
   key_configuration: 'Configuración de llave',
-  key_installation: 'Instalación de llave',
+  key_installation: 'Instalación de llave', // Retained for display of cancelled historical tickets.
   equipment_installation: 'Instalación de equipo',
   equipment_replacement: 'Cambio de equipo',
 };
@@ -33,11 +33,11 @@ const ACCESS_TYPE_LABELS: Record<string, string> = {
   otro: 'Otro',
 };
 
-const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'], string> = {
+const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'] | 'key_installation', string> = {
   maintenance: 'Asignar equipo existente',
   installation: 'Registrar equipo instalado',
   key_configuration: '—',
-  key_installation: '—',
+  key_installation: '—', // Retained for display of cancelled historical tickets.
   equipment_installation: 'Registrar equipo instalado',
   equipment_replacement: 'Reemplazar equipo',
 };
@@ -102,7 +102,7 @@ export default function TareaDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
         <Link to="/tareas" className="hover:text-foreground transition-colors">
           Tareas
@@ -114,7 +114,7 @@ export default function TareaDetailPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{tarea.ticket_number}</h1>
+            <h1 className="text-2xl font-semibold">{tarea.ticket_number}</h1>
             <TareaStatusBadge status={tarea.status} />
           </div>
           <p className="text-sm text-muted-foreground">

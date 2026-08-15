@@ -24,15 +24,15 @@ export function PaginationFooter({
   const canGoNext = page < pageCount;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-end gap-4 border-t px-4 py-3">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>Filas por página:</span>
         <div className="relative">
           <select
             aria-label="Filas por página"
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="h-9 appearance-none rounded-md border bg-background pl-3 pr-8 text-sm"
+            className="h-9 appearance-none rounded-md border bg-white pl-3 pr-8 text-xs"
           >
             {ROWS_PER_PAGE_OPTIONS.map((size) => (
               <option key={size} value={size}>

@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@vitalock/ui';
+import { StatusBadge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { BuildingFormSheet } from './BuildingFormSheet';
 import { BuildingStatusToggle } from './BuildingStatusToggle';
@@ -38,6 +38,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
 
   if (isFetching) {
     return (
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -55,6 +56,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
           <SkeletonRow />
         </TableBody>
       </Table>
+      </div>
     );
   }
 
@@ -71,6 +73,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
 
   return (
     <>
+      <div className="overflow-hidden rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -97,11 +100,11 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
                 {building.address ?? '—'}
               </TableCell>
               <TableCell>
-                <Badge
-                  variant={building.status === 'active' ? 'default' : 'secondary'}
+                <StatusBadge
+                  tone={building.status === 'active' ? 'success' : 'neutral'}
                 >
                   {building.status === 'active' ? 'Activo' : 'Inactivo'}
-                </Badge>
+                </StatusBadge>
               </TableCell>
               <TableCell className="text-center">{building.key_count}</TableCell>
               <TableCell className="text-center">{building.equipment_count}</TableCell>
@@ -121,6 +124,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
           ))}
         </TableBody>
       </Table>
+      </div>
 
       <BuildingFormSheet
         open={Boolean(editingBuilding)}

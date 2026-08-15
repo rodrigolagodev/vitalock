@@ -187,12 +187,13 @@ transitions are legal (no skip, no reverse from terminal). Specific rules:
 
 - `draft → confirmed`: admin clicks "Confirmar orden" on OrdenDetailPage (keys and technical order types).
 - `confirmed → in_progress`: auto-transition via `recompute_order_status` when work begins — for keys orders: first key item reaches `configured`; for technical orders: first ticket enters `in_progress`.
-- `in_progress → ready_for_pickup`: auto-transition when all non-cancelled key items reach `status='configured'` AND no non-cancelled key item has an unresolved `key_installation` ticket (a pending installation keeps the order in `in_progress`); technical orders skip this state.
+- `in_progress → ready_for_pickup`: auto-transition when ALL of the following hold for a keys order: (a) every non-cancelled key `order_item` has `produced_key_id` IS NOT NULL, AND (b) every `key_authorizations` row whose `rfid_key_id` belongs to those items has `sync_state IN ('installed', 'cancelled')`. `sync_state = 'pending_install'` blocks readiness. `sync_state = 'pending_removal'` does NOT block. Key items with `produced_key_id IS NULL` are unresolved and keep the order in `in_progress`. Technical orders skip this state.
+- `ready_for_pickup → in_progress` (demotion): if an order is `ready_for_pickup` and any `key_authorizations` row for its keys transitions to `pending_install`, `recompute_order_status` MUST demote the order back to `in_progress`.
 - `ready_for_pickup → completed`: auto-transition when all non-cancelled key items have `picked_up_at` set.
 - `completed → invoiced`: manual admin action (unchanged).
 - Any non-terminal → `cancelled`: manual "Cancelar orden" button.
 
-(Previously: `draft → in_preparation → ready_for_pickup → completed`; transition from draft was "Iniciar preparación"; `in_preparation` was a valid enum value; `confirmed` and `in_progress` states did not exist in this shape; `ready_for_pickup` used to be reached with only `configured` keys, ignoring pending key installation tasks)
+(Previously: `draft → in_preparation → ready_for_pickup → completed`; transition from draft was "Iniciar preparación"; `in_preparation` was a valid enum value; `confirmed` and `in_progress` states did not exist in this shape; `ready_for_pickup` used to be reached with only `configured` keys, ignoring pending key installation tasks; there was no demotion rule tied to authorization state; ready_for_pickup gate read `key_installation` tickets, not `key_authorizations.sync_state`)
 
 #### Scenario: Confirm order transitions draft to confirmed
 
@@ -213,41 +214,50 @@ transitions are legal (no skip, no reverse from terminal). Specific rules:
 - WHEN the first assigned ticket transitions to status `in_progress`
 - THEN `recompute_order_status` transitions the order to `in_progress`
 
-#### Scenario: Auto-transition to ready_for_pickup
+#### Scenario: Unconfigured key item (produced_key_id NULL) blocks ready_for_pickup
 
-- GIVEN a keys order in `in_progress` with 2 key items both non-cancelled
-- AND both key items are `configured`
-- AND every `key_installation` ticket of those items is resolved or cancelled
-- WHEN `recompute_order_status` runs (e.g. on the last install task resolution)
+- GIVEN a keys order in `in_progress` with 2 key items
+- AND item A has `produced_key_id` set; item B has `produced_key_id IS NULL`
+- WHEN `recompute_order_status` runs
+- THEN the order stays `in_progress` (NULL produced_key_id is unresolved)
+
+#### Scenario: All keys configured, all authorizations installed — order promotes
+
+- GIVEN a keys order in `in_progress`
+- AND every non-cancelled key item has `produced_key_id` set
+- AND every `key_authorizations` row for those keys has `sync_state = 'installed'`
+- WHEN `recompute_order_status` runs (e.g. on the last authorization update)
 - THEN the order status becomes `ready_for_pickup`
-- AND no manual admin action is required
 
-#### Scenario: Pending installation blocks ready_for_pickup
+#### Scenario: pending_install authorization blocks ready_for_pickup
 
-- GIVEN a keys order in `in_progress` whose non-cancelled key items are all `configured`
-- AND at least one of those items has a `key_installation` ticket that is not resolved or cancelled
+- GIVEN a keys order in `in_progress`
+- AND every non-cancelled key item has `produced_key_id` set
+- AND at least one `key_authorizations` row has `sync_state = 'pending_install'`
 - WHEN `recompute_order_status` runs
-- THEN the order stays `in_progress` (it does NOT reach `ready_for_pickup`)
+- THEN the order stays `in_progress`
 
-#### Scenario: Resolving the install task promotes to ready_for_pickup
+#### Scenario: pending_removal authorization does NOT block ready_for_pickup
 
-- GIVEN a keys order in `in_progress` whose configured keys have a pending `key_installation` ticket
-- WHEN the installer resolves that ticket (or it is cancelled)
-- THEN `recompute_order_status` transitions the order to `ready_for_pickup`
-
-#### Scenario: recompute demotes a wrongly-ready order
-
-- GIVEN a keys order in `ready_for_pickup`
-- AND a non-cancelled key item still has an unresolved `key_installation` ticket
+- GIVEN a keys order in `in_progress`
+- AND every non-cancelled key item has `produced_key_id` set
+- AND one `key_authorizations` row has `sync_state = 'pending_removal'`
+- AND all other authorizations have `sync_state IN ('installed', 'cancelled')`
 - WHEN `recompute_order_status` runs
-- THEN the order transitions back to `in_progress` (cancelled items and their stale tickets are excluded)
+- THEN the order promotes to `ready_for_pickup` (pending_removal is not a blocker)
+
+#### Scenario: ready_for_pickup demotes to in_progress when authorization flips to pending_install
+
+- GIVEN an order with status `ready_for_pickup`
+- WHEN an existing `key_authorizations` row for one of its keys transitions to `sync_state = 'pending_install'`
+- THEN `recompute_order_status` sets the order status back to `in_progress`
 
 #### Scenario: Cancelled item excluded from auto-transition check
 
 - GIVEN an order in `in_progress` with 1 configured key item and 1 cancelled key item
-- AND the configured item's `key_installation` ticket is resolved or cancelled
-- WHEN the trigger recomputes
-- THEN the order transitions to `ready_for_pickup` (cancelled item excluded even with its stale open install ticket)
+- AND the configured item's authorizations all have `sync_state = 'installed'`
+- WHEN `recompute_order_status` runs
+- THEN the order transitions to `ready_for_pickup` (cancelled item and its authorizations are excluded)
 
 #### Scenario: All keys picked up completes the order
 

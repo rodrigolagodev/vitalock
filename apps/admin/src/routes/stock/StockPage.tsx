@@ -57,7 +57,7 @@ export default function StockPage() {
         <Button onClick={() => setCreateOpen(true)}>Cargar producto</Button>
       </PageHeader>
 
-      <div className="grid gap-4 sm:grid-cols-2" data-testid="stat-cards">
+      <div className="flex max-w-full gap-4" data-testid="stat-cards">
         <StatCard
           label="Total productos"
           value={String(products.length)}

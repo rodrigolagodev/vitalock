@@ -165,19 +165,6 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
                 <TableCell className="text-muted-foreground">
                   {formatDateTime(product.updated_at)}
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      goToDetail(product);
-                    }}
-                  >
-                    Ver
-                  </Button>
-                </TableCell>
               </TableRow>
             );
           })}
