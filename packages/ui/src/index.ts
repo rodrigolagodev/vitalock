@@ -66,3 +66,9 @@ export {
   PaginationFooter,
   type PaginationFooterProps,
 } from './components/patterns/PaginationFooter';
+export {
+  DataTable,
+  type DataTableProps,
+  type DataTableColumn,
+  type DataTableAction,
+} from './components/patterns/DataTable';
