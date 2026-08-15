@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Power } from 'lucide-react';
 import { Button } from '@vitalock/ui';
 import {
   Dialog,
@@ -43,12 +44,13 @@ export function AdministrationStatusToggle({
   return (
     <>
       <Button
-        variant="outline"
-        size="sm"
+        variant="ghost"
+        size="icon"
+        aria-label={`Desactivar ${administration.company_name}`}
         onClick={handleClick}
         disabled={deactivateAdministration.isPending}
       >
-        Desactivar
+        <Power className="h-4 w-4" />
       </Button>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

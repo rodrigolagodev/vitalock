@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Power } from 'lucide-react';
 import { Button } from '@vitalock/ui';
 import {
   Dialog,
@@ -44,12 +45,13 @@ export function BuildingStatusToggle({ building }: BuildingStatusToggleProps) {
   return (
     <>
       <Button
-        variant="outline"
-        size="sm"
+        variant="ghost"
+        size="icon"
+        aria-label={`Desactivar ${building.name}`}
         onClick={handleClick}
         disabled={deactivateBuilding.isPending}
       >
-        Desactivar
+        <Power className="h-4 w-4" />
       </Button>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
