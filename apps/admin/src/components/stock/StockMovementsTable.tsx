@@ -1,11 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { DataTable } from '@vitalock/ui';
 import type { MovementType, StockMovementRow } from '@/types/stock';
 
 interface StockMovementsTableProps {
@@ -51,116 +44,62 @@ function formatReference(row: StockMovementRow): string {
   return '—';
 }
 
-function SkeletonRow() {
-  return (
-    <TableRow>
-      <TableCell><div className="h-4 w-32 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-32 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-16 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-28 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-24 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-40 animate-pulse rounded-md bg-muted" /></TableCell>
-      <TableCell><div className="h-4 w-32 animate-pulse rounded-md bg-muted" /></TableCell>
-    </TableRow>
-  );
-}
-
 export function StockMovementsTable({
   rows,
   isFetching,
   hasFilters = false,
 }: StockMovementsTableProps) {
-  if (isFetching) {
-    return (
-      <div className="overflow-hidden rounded-[12px] border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Fecha</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Cantidad</TableHead>
-            <TableHead>Costo unitario</TableHead>
-            <TableHead>Personal</TableHead>
-            <TableHead>Referencia</TableHead>
-            <TableHead>Notas</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </TableBody>
-      </Table>
-      </div>
-    );
-  }
-
-  if (rows.length === 0 && !hasFilters) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No hay movimientos de stock para este producto.
-        </p>
-      </div>
-    );
-  }
-
-  if (rows.length === 0 && hasFilters) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No se encontraron movimientos con los filtros aplicados.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-hidden rounded-[12px] border bg-card">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Fecha</TableHead>
-          <TableHead>Tipo</TableHead>
-          <TableHead>Cantidad</TableHead>
-          <TableHead>Costo unitario</TableHead>
-          <TableHead>Personal</TableHead>
-          <TableHead>Referencia</TableHead>
-          <TableHead>Notas</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((movement) => (
-          <TableRow key={movement.id}>
-            <TableCell className="text-muted-foreground">
-              {formatDateTime(movement.created_at)}
-            </TableCell>
-            <TableCell>{MOVEMENT_LABELS[movement.type]}</TableCell>
-            <TableCell
+    <DataTable<StockMovementRow>
+      rows={rows}
+      isFetching={isFetching}
+      rowKey={(m) => m.id}
+      emptyMessage="No hay movimientos de stock para este producto."
+      filteredEmptyMessage="No se encontraron movimientos con los filtros aplicados."
+      hasFilters={hasFilters}
+      columns={[
+        {
+          header: 'Fecha',
+          cell: (m) => (
+            <span className="text-muted-foreground">{formatDateTime(m.created_at)}</span>
+          ),
+        },
+        { header: 'Tipo', cell: (m) => MOVEMENT_LABELS[m.type] },
+        {
+          header: 'Cantidad',
+          cell: (m) => (
+            <span
               className={
-                movement.quantity > 0
+                m.quantity > 0
                   ? 'font-medium text-emerald-600'
                   : 'font-medium text-destructive'
               }
             >
-              {formatQuantity(movement.quantity)}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {formatCost(movement.unit_cost)}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {movement.staff_name ?? '—'}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {formatReference(movement)}
-            </TableCell>
-            <TableCell className="max-w-xs truncate text-muted-foreground">
-              {movement.note ?? '—'}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-    </div>
+              {formatQuantity(m.quantity)}
+            </span>
+          ),
+        },
+        {
+          header: 'Costo unitario',
+          className: 'text-muted-foreground',
+          cell: (m) => formatCost(m.unit_cost),
+        },
+        {
+          header: 'Personal',
+          className: 'text-muted-foreground',
+          cell: (m) => m.staff_name ?? '—',
+        },
+        {
+          header: 'Referencia',
+          className: 'text-muted-foreground',
+          cell: (m) => formatReference(m),
+        },
+        {
+          header: 'Notas',
+          className: 'max-w-xs truncate text-muted-foreground',
+          cell: (m) => m.note ?? '—',
+        },
+      ]}
+    />
   );
 }

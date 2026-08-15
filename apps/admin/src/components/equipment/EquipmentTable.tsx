@@ -1,14 +1,7 @@
 import { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { PencilLine, RefreshCw } from 'lucide-react';
 import { StatusBadge, type StatusTone } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { DataTable, type DataTableAction } from '@vitalock/ui';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import { EquipmentFormSheet } from './EquipmentFormSheet';
 import { ReplaceEquipmentDialog } from './ReplaceEquipmentDialog';
@@ -28,76 +21,63 @@ const STATUS_TONES: Record<string, StatusTone> = {
 interface EquipmentTableProps {
   buildingId: string;
   equipment: EquipmentRow[];
+  isFetching?: boolean;
 }
 
-export function EquipmentTable({ buildingId, equipment }: EquipmentTableProps) {
+export function EquipmentTable({
+  buildingId,
+  equipment,
+  isFetching = false,
+}: EquipmentTableProps) {
   const [editingEquipment, setEditingEquipment] = useState<EquipmentRow | null>(null);
   const [replacingEquipment, setReplacingEquipment] = useState<EquipmentRow | null>(null);
 
-  if (equipment.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-md border border-dashed py-12 text-center">
-        <p className="text-sm text-muted-foreground">No hay equipos registrados.</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Usá el botón "Nuevo equipo" para agregar el primero.
-        </p>
-      </div>
-    );
-  }
+  const actions: DataTableAction<EquipmentRow>[] = [
+    {
+      icon: PencilLine,
+      label: (i) => `Editar a ${i.model ?? i.serial_number}`,
+      onClick: (i) => setEditingEquipment(i),
+    },
+    {
+      icon: RefreshCw,
+      label: (i) => `Reemplazar ${i.model ?? i.serial_number}`,
+      show: (i) => i.status !== 'dead',
+      onClick: (i) => setReplacingEquipment(i),
+    },
+  ];
 
   return (
     <>
-      <div className="overflow-hidden rounded-[12px] border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Modelo</TableHead>
-            <TableHead>Número de serie</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Instalado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {equipment.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">{item.model ?? '—'}</TableCell>
-              <TableCell className="font-mono text-sm">{item.serial_number}</TableCell>
-              <TableCell>
-                <StatusBadge tone={STATUS_TONES[item.status] ?? 'neutral'}>
-                  {STATUS_LABELS[item.status] ?? item.status}
-                </StatusBadge>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {item.installed_at
-                  ? new Date(item.installed_at).toLocaleDateString('es-AR')
-                  : '—'}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingEquipment(item)}
-                  >
-                    Editar
-                  </Button>
-                  {item.status !== 'dead' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setReplacingEquipment(item)}
-                    >
-                      Reemplazar
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      </div>
+      <DataTable<EquipmentRow>
+        rows={equipment}
+        isFetching={isFetching}
+        rowKey={(i) => i.id}
+        emptyMessage="No hay equipos registrados."
+        actions={actions}
+        columns={[
+          { header: 'Modelo', cell: (i) => i.model ?? '—' },
+          {
+            header: 'Número de serie',
+            cell: (i) => <span className="font-mono text-sm">{i.serial_number}</span>,
+          },
+          {
+            header: 'Estado',
+            cell: (i) => (
+              <StatusBadge tone={STATUS_TONES[i.status] ?? 'neutral'}>
+                {STATUS_LABELS[i.status] ?? i.status}
+              </StatusBadge>
+            ),
+          },
+          {
+            header: 'Instalado',
+            className: 'text-sm text-muted-foreground',
+            cell: (i) =>
+              i.installed_at
+                ? new Date(i.installed_at).toLocaleDateString('es-AR')
+                : '—',
+          },
+        ]}
+      />
 
       <EquipmentFormSheet
         open={Boolean(editingEquipment)}

@@ -23,7 +23,7 @@ export default function BuildingDetailPage() {
   const { data: administration, isLoading: adminLoading } = useAdministration(
     building?.administration_id ?? '',
   );
-  const { data: equipment = [] } = useEquipment(buildingId ?? '');
+  const { data: equipment = [], isFetching: equipmentFetching } = useEquipment(buildingId ?? '');
   const { data: keys = [], isFetching: keysFetching } = useKeys(buildingId);
 
   const handleTabChange = (value: string) => {
@@ -132,7 +132,11 @@ export default function BuildingDetailPage() {
             onChange={(e) => setEquiposSearch(e.target.value)}
             className="max-w-sm"
           />
-          <EquipmentTable buildingId={buildingId} equipment={filteredEquipment} />
+          <EquipmentTable
+            buildingId={buildingId}
+            equipment={filteredEquipment}
+            isFetching={equipmentFetching}
+          />
         </TabsContent>
       </Tabs>
     </div>
