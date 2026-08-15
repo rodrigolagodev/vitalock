@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
@@ -338,6 +338,23 @@ describe('OrderItemsTable', () => {
 
     expect(screen.getByText('Llave')).toBeInTheDocument();
     expect(screen.getByText('Mantenimiento')).toBeInTheDocument();
+  });
+
+  it('renders actions as icon-only buttons with Spanish aria-labels and no visible text', () => {
+    render(
+      <OrderItemsTable
+        items={[pendingKeyItem, pendingNonKeyItem]}
+        orderId="order-1"
+        orderStatus="confirmed"
+        canRegisterPickup
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    const configurar = screen.getByRole('button', { name: /configurar/i });
+    expect(within(configurar).queryByText(/configurar/i)).not.toBeInTheDocument();
+    const cancelar = screen.getAllByRole('button', { name: /cancelar ítem/i })[0]!;
+    expect(within(cancelar).queryByText(/cancelar ítem/i)).not.toBeInTheDocument();
   });
 
   it('renders "Registrar retiro" for configured keys without pickup when canRegisterPickup', () => {

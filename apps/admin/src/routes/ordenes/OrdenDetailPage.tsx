@@ -205,6 +205,7 @@ export default function OrdenDetailPage() {
             orderStatus={orden.status}
             canRegisterPickup={isParticular && isReadyForPickup}
             buyer={orden.particulares}
+            isFetching={isLoading}
           />
         </div>
       ) : (
