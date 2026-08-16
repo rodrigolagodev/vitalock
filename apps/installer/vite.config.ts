@@ -3,7 +3,10 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
+const basePath = process.env.VITE_BASE_PATH ?? '/';
+
 export default defineConfig({
+  base: basePath,
   test: {
     environment: 'jsdom',
     globals: true,
@@ -24,17 +27,17 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: basePath,
+        scope: basePath,
         icons: [
           {
-            src: '/icon-192.svg',
+            src: `${basePath}icon-192.svg`,
             sizes: '192x192',
             type: 'image/svg+xml',
             purpose: 'any maskable',
           },
           {
-            src: '/icon-512.svg',
+            src: `${basePath}icon-512.svg`,
             sizes: '512x512',
             type: 'image/svg+xml',
             purpose: 'any maskable',
