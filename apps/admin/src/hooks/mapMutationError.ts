@@ -1,40 +1,5 @@
 import { toast } from 'sonner';
-
-interface PostgrestError {
-  code: string;
-  message: string;
-  details?: string | null;
-  hint?: string | null;
-}
-
-function isPostgrestError(err: unknown): err is PostgrestError {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    typeof (err as Record<string, unknown>).code === 'string'
-  );
-}
-
-function isNetworkError(err: unknown): boolean {
-  if (err instanceof TypeError) return true;
-  if (err instanceof DOMException && err.name === 'AbortError') return true;
-  if (
-    typeof err === 'object' &&
-    err !== null &&
-    'message' in err &&
-    typeof (err as Record<string, unknown>).message === 'string'
-  ) {
-    const msg = (err as { message: string }).message.toLowerCase();
-    return (
-      msg.includes('network') ||
-      msg.includes('timeout') ||
-      msg.includes('fetch') ||
-      msg.includes('failed to fetch')
-    );
-  }
-  return false;
-}
+import { isNetworkError, isPostgrestError } from '@vitalock/shared';
 
 /**
  * Maps a mutation error to the correct Spanish Sonner toast.
