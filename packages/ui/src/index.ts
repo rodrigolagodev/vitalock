@@ -24,6 +24,10 @@ export {
   buttonVariants,
   type ButtonProps,
 } from './components/button';
+export {
+  IconButton,
+  type IconButtonProps,
+} from './components/icon-button';
 export { Checkbox } from './components/checkbox';
 export {
   Dialog,

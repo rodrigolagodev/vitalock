@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Power } from 'lucide-react';
-import { Button } from '@vitalock/ui';
+import { IconButton, Button } from '@vitalock/ui';
 import {
   Dialog,
   DialogContent,
@@ -43,15 +43,13 @@ export function AdministrationStatusToggle({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={`Desactivar ${administration.company_name}`}
+      <IconButton
+        icon={Power}
+        label={`Desactivar ${administration.company_name}`}
+        iconClassName="text-destructive hover:text-destructive"
         onClick={handleClick}
-        disabled={deactivateAdministration.isPending}
-      >
-        <Power className="h-4 w-4" />
-      </Button>
+        loading={deactivateAdministration.isPending}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
-import { Button } from '../button';
+import { IconButton } from '../icon-button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../table';
 import { DEFAULT_PAGE_SIZE, getPageSlice } from './pagination';
 import { PaginationFooter } from './PaginationFooter';
@@ -114,22 +114,18 @@ export function DataTable<T>({
           const label = typeof action.label === 'function' ? action.label(row) : action.label;
           const isDisabled = action.disabled?.(row) ?? false;
           const isLoading = action.loading?.(row) ?? false;
-          const Icon = action.icon;
           const className =
             typeof action.className === 'function' ? action.className(row) : action.className;
           return (
-            <Button
+            <IconButton
               key={index}
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={label}
+              icon={action.icon}
+              label={label}
               disabled={isDisabled || isLoading}
+              loading={isLoading}
               onClick={() => action.onClick(row)}
               className={className}
-            >
-              <Icon className={cn('h-4 w-4', isLoading && 'animate-pulse')} />
-            </Button>
+            />
           );
         })}
       </div>
