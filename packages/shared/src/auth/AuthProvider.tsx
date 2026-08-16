@@ -1,18 +1,19 @@
 import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { useAuth } from '@vitalock/shared';
-import type { UseAuthReturn } from '@vitalock/shared';
 import type { TypedSupabaseClient } from '@vitalock/supabase';
+import { useAuth } from './useAuth';
+import type { StaffRole, UseAuthReturn } from './types';
 
 interface AuthProviderProps {
   supabase: TypedSupabaseClient;
+  expectedRole: StaffRole;
   children: ReactNode;
 }
 
 export const AuthContext = createContext<UseAuthReturn | null>(null);
 
-export function AuthProvider({ supabase, children }: AuthProviderProps) {
-  const auth = useAuth(supabase, 'installer');
+export function AuthProvider({ supabase, expectedRole, children }: AuthProviderProps) {
+  const auth = useAuth(supabase, expectedRole);
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 

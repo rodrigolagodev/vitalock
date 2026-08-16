@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { useAuthContext } from '@/auth/AuthProvider';
+import { useAuthContext } from '@vitalock/shared';
 import { assignedTicketsKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
 

@@ -10,7 +10,7 @@ const { useAuthContextMock, useOrdensMock } = vi.hoisted(() => ({
   useOrdensMock: vi.fn(),
 }));
 
-vi.mock('@/auth/AuthProvider', () => ({ useAuthContext: useAuthContextMock }));
+vi.mock('@vitalock/shared', () => ({ useAuthContext: useAuthContextMock }));
 vi.mock('@/hooks/useOrdens', () => ({ useOrdens: useOrdensMock }));
 
 function renderShell() {

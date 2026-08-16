@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthContext } from '@/auth/AuthProvider';
+import { useAuthContext } from '@vitalock/shared';
 import { ticketCommentsKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
 import type { TicketComment } from './useTicketComments';

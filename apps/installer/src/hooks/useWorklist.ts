@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
-import { useAuthContext } from '@/auth/AuthProvider';
+import { useAuthContext } from '@vitalock/shared';
 import { worklistKey } from '@/lib/queryKeys';
 
 // ---------------------------------------------------------------------------

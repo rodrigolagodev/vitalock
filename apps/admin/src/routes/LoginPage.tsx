@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Navigate } from 'react-router-dom';
 import { Button, Input } from '@vitalock/ui';
-import { useAuthContext } from '../auth/AuthProvider';
+import { useAuthContext } from '@vitalock/shared';
 
 const schema = z.object({
   email: z.string().email('Email inválido'),

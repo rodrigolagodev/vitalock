@@ -6,12 +6,10 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import { loadClientEnv } from '@vitalock/shared';
 import { createSupabaseClient } from '@vitalock/supabase';
-import { AuthProvider } from './auth/AuthProvider';
-import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AuthProvider, ProtectedRoute, AuthErrorPage } from '@vitalock/shared';
 import App from './App';
 import IndexRoute from './routes/index';
 import LoginPage from './routes/LoginPage';
-import AuthErrorPage from './routes/AuthErrorPage';
 import './styles/globals.css';
 
 const env = loadClientEnv(import.meta.env); // fail-fast at boot
@@ -27,7 +25,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <AuthProvider supabase={supabase}>
+          <AuthProvider supabase={supabase} expectedRole="installer">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/error" element={<AuthErrorPage />} />

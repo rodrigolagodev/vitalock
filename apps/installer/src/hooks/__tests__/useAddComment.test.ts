@@ -7,7 +7,7 @@ import React from 'react';
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const mockStaffId = 'staff-bruno-001';
-vi.mock('@/auth/AuthProvider', () => ({
+vi.mock('@vitalock/shared', () => ({
   useAuthContext: () => ({
     staff: { id: mockStaffId, full_name: 'Bruno Installer', role: 'installer', status: 'active' },
   }),

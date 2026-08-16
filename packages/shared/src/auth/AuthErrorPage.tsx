@@ -1,6 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AuthErrorCode } from '@vitalock/shared';
-import { useAuthContext } from '../auth/AuthProvider';
+import { AuthErrorCode } from './types';
+import { useAuthContext } from './AuthProvider';
 
 const ERROR_MESSAGES: Record<string, string> = {
   [AuthErrorCode.NO_STAFF_ROW]: 'Cuenta no provisionada. Contactar a soporte.',
@@ -13,7 +13,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 const FALLBACK_MESSAGE = 'Ocurrió un error inesperado.';
 
-export default function AuthErrorPage() {
+export function AuthErrorPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { refresh } = useAuthContext();

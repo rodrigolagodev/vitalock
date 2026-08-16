@@ -16,7 +16,7 @@ vi.mock('@/hooks/useMutateKey', () => ({
   }),
 }));
 
-vi.mock('@/auth/AuthProvider', () => ({
+vi.mock('@vitalock/shared', () => ({
   useAuthContext: () => ({ staff: [] }),
 }));
 

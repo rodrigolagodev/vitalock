@@ -11,7 +11,7 @@ import { Button } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@vitalock/ui';
 import { useMutateKey } from '@/hooks/useMutateKey';
-import { useAuthContext } from '@/auth/AuthProvider';
+import { useAuthContext } from '@vitalock/shared';
 import type { KeyRow } from '@/hooks/useKeys';
 
 interface KeyStatusChangeDialogProps {

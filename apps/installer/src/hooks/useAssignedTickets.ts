@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthContext } from '@/auth/AuthProvider';
+import { useAuthContext } from '@vitalock/shared';
 import { assignedTicketsKey } from '@/lib/queryKeys';
 
 // ---------------------------------------------------------------------------

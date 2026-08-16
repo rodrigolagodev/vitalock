@@ -22,7 +22,7 @@ import {
 import { ProductFormFields } from './ProductFormFields';
 import { useProducts } from '@/hooks/useProducts';
 import { useMutateStockMovement } from '@/hooks/useMutateStockMovement';
-import { useAuthContext } from '@/auth/AuthProvider';
+import { useAuthContext } from '@vitalock/shared';
 import { toastMutationError } from '@/hooks/mapMutationError';
 import type { MovementType } from '@/types/stock';
 

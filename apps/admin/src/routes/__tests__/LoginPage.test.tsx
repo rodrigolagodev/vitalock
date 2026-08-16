@@ -5,7 +5,7 @@ import LoginPage from '../LoginPage';
 
 const mockSignIn = vi.fn();
 
-vi.mock('@/auth/AuthProvider', () => ({
+vi.mock('@vitalock/shared', () => ({
   useAuthContext: () => ({
     signIn: mockSignIn,
     phase: 'idle',

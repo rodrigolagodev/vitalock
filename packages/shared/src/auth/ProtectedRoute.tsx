@@ -24,6 +24,5 @@ export function ProtectedRoute() {
     return <Navigate to={`/error?reason=${error.code}`} replace />;
   }
 
-  // phase === 'authenticated'
   return <Outlet />;
 }
