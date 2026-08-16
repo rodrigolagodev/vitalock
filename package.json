@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:types": "bash scripts/gen-types.sh",
+    "test:sql": "bash scripts/test-sql.sh",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {
