@@ -32,7 +32,7 @@ export function PaginationFooter({
             aria-label="Filas por página"
             value={pageSize}
             onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="h-9 appearance-none rounded-md border bg-white pl-3 pr-8 text-xs"
+            className="h-9 appearance-none rounded-md border bg-background pl-3 pr-8 text-xs"
           >
             {ROWS_PER_PAGE_OPTIONS.map((size) => (
               <option key={size} value={size}>

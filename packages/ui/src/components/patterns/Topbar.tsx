@@ -17,20 +17,20 @@ export function Topbar({ avatar, children, className }: TopbarProps) {
   return (
     <header
       className={cn(
-        'flex h-[60px] shrink-0 items-center justify-end gap-4 border-b bg-white px-6',
+        'flex h-[60px] shrink-0 items-center justify-end gap-4 border-b bg-background px-6',
         className,
       )}
     >
       <div className="flex items-center gap-3">
         {avatar && (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f1f5f9] text-[14px] font-medium text-[#40444d]">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-[14px] font-medium text-muted-foreground">
             {avatar}
           </span>
         )}
         <div
           data-testid="topbar-divider"
           aria-hidden="true"
-          className="h-[32px] w-px bg-[#e2e8f0]"
+          className="h-[32px] w-px bg-border"
         />
         {children}
       </div>

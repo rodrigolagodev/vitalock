@@ -296,7 +296,7 @@ export function OrdenForm({
         id="orden-form"
       >
         {/* ---- Section: Tipo de orden ---- */}
-        <section className="flex flex-col gap-3 rounded-md border p-5">
+        <section className="flex flex-col gap-3 rounded-md border p-5 bg-card">
           <SectionHeading title="Tipo de orden" />
           <Controller
             control={control}
@@ -337,7 +337,7 @@ export function OrdenForm({
         </section>
 
         {/* ---- Section: Cliente ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5">
+        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
           <SectionHeading title="Cliente" />
 
           <div className="flex flex-col gap-2">
@@ -421,7 +421,7 @@ export function OrdenForm({
         </section>
 
         {/* ---- Section: Ítems ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5">
+        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
           <SectionHeading
             title="Ítems"
             description={
@@ -737,7 +737,7 @@ export function OrdenForm({
         </section>
 
         {/* ---- Section: Notas ---- */}
-        <section className="flex flex-col gap-3 rounded-md border p-5">
+        <section className="flex flex-col gap-3 rounded-md border p-5 bg-card">
           <SectionHeading title="Notas" />
           <Textarea
             id="notes"

@@ -32,7 +32,7 @@ export function AppShell() {
           </Topbar>
 
           {/* Content surface */}
-          <main className="flex-1 bg-[#f7f7fb] p-6">
+          <main className="flex-1 bg-content p-6">
             <Outlet />
           </main>
         </div>

@@ -23,12 +23,12 @@ export type StatusTone =
   | "danger"
 
 const STATUS_TONE_CLASSES: Record<StatusTone, string> = {
-  neutral: "border-transparent bg-[#f1f5f9] text-[#475569]",
-  info: "border-transparent bg-[#dbeafe] text-[#1d4ed8]",
-  brand: "border-transparent bg-[#e0e7ff] text-[#4338ca]",
-  warning: "border-transparent bg-[#fef3c7] text-[#92400e]",
-  success: "border-transparent bg-[rgba(209,250,229,0.5)] text-[#059691]",
-  danger: "border-transparent bg-[#fee2e2] text-[#b91c1c]",
+  neutral: "border-transparent bg-muted text-muted-foreground",
+  info: "border-transparent bg-info/10 text-info",
+  brand: "border-transparent bg-brand-500/10 text-brand-600 dark:text-brand-300",
+  warning: "border-transparent bg-warning/10 text-warning",
+  success: "border-transparent bg-success/10 text-success",
+  danger: "border-transparent bg-destructive/10 text-destructive",
 }
 
 export interface StatusBadgeProps extends Omit<BadgeProps, "variant"> {
