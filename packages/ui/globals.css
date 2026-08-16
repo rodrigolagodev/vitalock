@@ -2,50 +2,113 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Vitalock design tokens — shadcn-style HSL system (light-first).
+ *
+ * Conventions:
+ * - Every color is a space-separated HSL triplet consumed as `hsl(var(--x))`.
+ *   NEVER store hex here: `hsl(#hex)` is invalid CSS and the rule is dropped.
+ * - Neutral surfaces: background / foreground / card / popover / secondary /
+ *   muted / border / input / ring.
+ * - Brand: `primary` is an alias of `brand-500` (240 79% 65% / #5e5eee) and
+ *   `ring` follows it. Use the `brand-*` scale for accents that need depth.
+ * - Semantics: destructive / info / success / warning (+ `-foreground` pairs).
+ *   Soft badges use `bg-<tone>/10 text-<tone>`; solid controls use
+ *   `bg-<tone> text-<tone>-foreground`.
+ * - Dark is an opt-out adaptation of the SAME families — never a different
+ *   hue system. Light is the default; `.dark` overrides what must shift.
+ */
+
 @layer base {
   :root {
+    /* Surfaces */
     --background: 240 33.3% 97.1%;
     --foreground: 217.2 32.6% 17.5%;
+    --content: 240 33.3% 97.1%;
     --card: 0 0% 100%;
     --card-foreground: 217.2 32.6% 17.5%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 50% 8%;
-    --primary: 239.2 82% 65.1%;
-    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 98%;
     --secondary-foreground: 221.5 7.8% 32.7%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.3 11% 69.6%;
-    --accent: 245.8 100% 69.6%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 216.9 16% 84.1%;
-    --ring: 239.2 82% 65.1%;
     --radius: 0.625rem;
+
+    /* Brand (light) */
+    --primary: 240 79% 65%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 240 79% 65%;
+    --accent: 245.8 100% 69.6%;
+    --accent-foreground: 0 0% 100%;
+    --brand-50: 228 100% 96.9%;
+    --brand-100: 228 100% 93.9%;
+    --brand-200: 231 92% 89%;
+    --brand-300: 232 90% 81.6%;
+    --brand-400: 235 86% 73.7%;
+    --brand-500: 240 79% 65%;
+    --brand-600: 245 74% 59%;
+    --brand-700: 244 56% 50.4%;
+    --brand-800: 240 53% 41.2%;
+    --brand-900: 242 45% 34.5%;
+    --brand-950: 243 41% 20.4%;
+
+    /* Semantics (light) */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
   }
 
   .dark {
-    --background: 224 40% 6%;
+    /* Surfaces */
+    --background: 232 17.5% 17.5%;
     --foreground: 224 20% 95%;
+    --content: 233 30% 11.2%;
     --card: 224 40% 6%;
     --card-foreground: 224 20% 95%;
     --popover: 224 35% 10%;
     --popover-foreground: 224 20% 95%;
-    --primary: 239.2 82% 65.1%;
-    --primary-foreground: 0 0% 100%;
     --secondary: 224 30% 14%;
     --secondary-foreground: 224 20% 95%;
     --muted: 224 30% 14%;
     --muted-foreground: 224 12% 68%;
-    --accent: 245.8 100% 69.6%;
-    --accent-foreground: 252 60% 90%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
     --border: 224 30% 14%;
     --input: 224 30% 14%;
-    --ring: 239.2 82% 65.1%;
     --radius: 0.625rem;
+
+    /* Brand (dark) */
+    --primary: 240 79% 65%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 240 79% 65%;
+    --accent: 245.8 100% 69.6%;
+    --accent-foreground: 252 60% 90%;
+    --brand-50: 228 100% 96.9%;
+    --brand-100: 228 100% 93.9%;
+    --brand-200: 231 92% 89%;
+    --brand-300: 232 90% 81.6%;
+    --brand-400: 235 86% 73.7%;
+    --brand-500: 240 79% 65%;
+    --brand-600: 245 74% 59%;
+    --brand-700: 244 56% 50.4%;
+    --brand-800: 240 53% 41.2%;
+    --brand-900: 242 45% 34.5%;
+    --brand-950: 243 41% 20.4%;
+
+    /* Semantics (dark) */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --info: 213 94% 68%;
+    --info-foreground: 217 91% 12%;
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 100%;
+    --warning: 48 96% 53%;
+    --warning-foreground: 0 0% 100%;
   }
 }
