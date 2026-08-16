@@ -19,6 +19,16 @@ const statusOrder: Record<AssignedTicket['status'], number> = {
   open: 1,
 };
 
+/**
+ * Ticket categories that must be resolved by the admin through category-specific
+ * atomic RPCs. These tickets are displayed as read-only "Pendiente de admin"
+ * cards and are excluded from the installer's batch-resolve toolbar.
+ */
+const EXCLUDED_FOR_BATCH: readonly string[] = [
+  'equipment_installation',
+  'equipment_replacement',
+];
+
 export function TicketsSection({ tickets }: TicketsSectionProps) {
   const [open, setOpen] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -34,9 +44,23 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
     [tickets],
   );
 
+  // Tickets the installer can batch-resolve (stock-neutral categories).
+  const selectable = useMemo(
+    () => sorted.filter((t) => !EXCLUDED_FOR_BATCH.includes(t.category)),
+    [sorted],
+  );
+
+  // Tickets that only the admin can complete (equipment_installation / equipment_replacement).
+  const pendingAdmin = useMemo(
+    () => sorted.filter((t) => EXCLUDED_FOR_BATCH.includes(t.category)),
+    [sorted],
+  );
+
   if (tickets.length === 0) return null;
 
   const handleToggle = (id: string) => {
+    // Only selectable tickets can be toggled; pendingAdmin tickets are never
+    // included in selectedIds.
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -61,7 +85,7 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="flex flex-col gap-2 pb-2">
-            {sorted.map((ticket) => (
+            {selectable.map((ticket) => (
               <TicketCard
                 key={ticket.id}
                 ticket={ticket}
@@ -69,6 +93,24 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
                 onToggle={handleToggle}
               />
             ))}
+
+            {pendingAdmin.length > 0 && (
+              <div className="flex flex-col gap-2 mt-1">
+                {pendingAdmin.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate">{ticket.title}</span>
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+                        Pendiente de admin
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CollapsibleContent>
       </Collapsible>

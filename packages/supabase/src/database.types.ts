@@ -828,10 +828,22 @@ export type Database = {
       resolve_equipment_installation: {
         Args: {
           p_actor_staff_id?: string
-          p_note?: string
+          p_note?: string | null
           p_serial: string
           p_ticket_id: string
-          p_unit_id: string
+          p_unit_id?: string | null
+        }
+        Returns: string
+      }
+      resolve_equipment_replacement: {
+        Args: {
+          p_ticket_id: string
+          p_old_equipment_id: string
+          p_new_serial: string
+          p_new_model: string
+          p_new_description?: string | null
+          p_note?: string | null
+          p_actor_staff_id?: string
         }
         Returns: string
       }

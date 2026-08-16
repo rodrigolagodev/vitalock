@@ -23,6 +23,8 @@ import {
 import { useEquipment } from '@/hooks/useEquipment';
 import { useProducts } from '@/hooks/useProducts';
 import { useMutateTicketEquipment } from '@/hooks/useMutateTicketEquipment';
+import { useResolveEquipmentInstallation } from '@/hooks/useResolveEquipmentInstallation';
+import { useResolveEquipmentReplacement } from '@/hooks/useResolveEquipmentReplacement';
 import type { TareaRow } from '@/hooks/useTareas';
 
 type Mode = 'select' | 'create' | 'replace';
@@ -92,11 +94,10 @@ export function AssignEquipmentDialog({
   const mode = modeForCategory(category);
   const { data: equipment = [] } = useEquipment(buildingId);
   const { data: equipmentProducts = [] } = useProducts({ category: 'equipment' });
-  const {
-    assignExistingEquipment,
-    createAndAssignEquipment,
-    replaceEquipmentInTicket,
-  } = useMutateTicketEquipment(buildingId);
+  const { assignExistingEquipment, createAndAssignEquipment } =
+    useMutateTicketEquipment(buildingId);
+  const resolveEquipmentInstallation = useResolveEquipmentInstallation(buildingId);
+  const resolveEquipmentReplacement = useResolveEquipmentReplacement(buildingId);
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -152,14 +153,25 @@ export function AssignEquipmentDialog({
   const onCreateSubmit = async (values: CreateValues) => {
     setSubmitting(true);
     try {
-      await createAndAssignEquipment.mutateAsync({
-        ticketId,
-        buildingId,
-        serial_number: values.serial_number.trim(),
-        model: values.model.trim(),
-        access_type: values.access_type,
-        description: values.description?.trim() || null,
-      });
+      if (category === 'equipment_installation') {
+        // equipment_installation: atomic RPC resolves ticket + emits stock movements.
+        await resolveEquipmentInstallation.mutateAsync({
+          ticketId,
+          serial: values.serial_number.trim(),
+          note: null,
+        });
+      } else {
+        // installation has no product_id → generic resolve path (two-step flow unchanged).
+        // The admin must call resolve_ticket separately after this step.
+        await createAndAssignEquipment.mutateAsync({
+          ticketId,
+          buildingId,
+          serial_number: values.serial_number.trim(),
+          model: values.model.trim(),
+          access_type: values.access_type,
+          description: values.description?.trim() || null,
+        });
+      }
       handleClose();
     } finally {
       setSubmitting(false);
@@ -169,13 +181,14 @@ export function AssignEquipmentDialog({
   const onReplaceSubmit = async (values: ReplaceValues) => {
     setSubmitting(true);
     try {
-      await replaceEquipmentInTicket.mutateAsync({
+      // equipment_replacement: atomic RPC resolves ticket + emits stock movements.
+      await resolveEquipmentReplacement.mutateAsync({
         ticketId,
-        buildingId,
-        old_equipment_id: values.old_equipment_id,
-        new_serial_number: values.new_serial_number.trim(),
-        new_model: values.new_model.trim(),
-        new_description: values.new_description?.trim() || '',
+        oldEquipmentId: values.old_equipment_id,
+        newSerial: values.new_serial_number.trim(),
+        newModel: values.new_model.trim(),
+        newDescription: values.new_description?.trim() || null,
+        note: null,
       });
       handleClose();
     } finally {
@@ -287,68 +300,72 @@ export function AssignEquipmentDialog({
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="new-model">Modelo *</Label>
-              <Controller
-                control={createForm.control}
-                name="model"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="new-model">
-                      <SelectValue placeholder="Seleccioná un modelo (stock)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {equipmentProducts.map((p) => (
-                        <SelectItem key={p.id} value={p.name}>
-                          {p.name} — disponible: {p.stock_disponible}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {createForm.formState.errors.model && (
-                <p className="text-sm text-destructive">
-                  {createForm.formState.errors.model.message}
-                </p>
-              )}
-              {equipmentProducts.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  No hay productos categoría "equipo" en el stock. Cargá uno antes.
-                </p>
-              )}
-            </div>
+            {category !== 'equipment_installation' && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="new-model">Modelo *</Label>
+                  <Controller
+                    control={createForm.control}
+                    name="model"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="new-model">
+                          <SelectValue placeholder="Seleccioná un modelo (stock)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {equipmentProducts.map((p) => (
+                            <SelectItem key={p.id} value={p.name}>
+                              {p.name} — disponible: {p.stock_disponible}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {createForm.formState.errors.model && (
+                    <p className="text-sm text-destructive">
+                      {createForm.formState.errors.model.message}
+                    </p>
+                  )}
+                  {equipmentProducts.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      No hay productos categoría "equipo" en el stock. Cargá uno antes.
+                    </p>
+                  )}
+                </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="new-access-type">Tipo de acceso *</Label>
-              <Controller
-                control={createForm.control}
-                name="access_type"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="new-access-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ACCESS_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="new-access-type">Tipo de acceso *</Label>
+                  <Controller
+                    control={createForm.control}
+                    name="access_type"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="new-access-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ACCESS_TYPE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="new-description">Descripción</Label>
-              <Input
-                id="new-description"
-                placeholder="Ubicación / detalle"
-                {...createForm.register('description')}
-              />
-            </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="new-description">Descripción</Label>
+                  <Input
+                    id="new-description"
+                    placeholder="Ubicación / detalle"
+                    {...createForm.register('description')}
+                  />
+                </div>
+              </>
+            )}
 
             <DialogFooter>
               <Button

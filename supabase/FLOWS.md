@@ -1261,7 +1261,36 @@ Postcondiciones / Errores posibles / Implicancias UI**.
 - **Steps**: similar a 11.15 pero sin auto-transición de equipo (no hay equipo aún — lo va a crear el instalador cuando termine)
 - **Post-instalación**: el equipo nuevo se crea via `INSERT INTO operations.equipment(...)` linkeado en el `notes` del ticket resuelto
 
-### 11.18 Consultas típicas (queries de dashboard)
+### 11.18 Atomic resolution of equipment_installation and equipment_replacement tickets
+
+These two ticket categories require the **admin** (not the installer) to complete them. The installer app displays them as read-only "Pendiente de admin" cards and excludes them from the batch-resolve toolbar.
+
+**equipment_installation** (category guard: `equipment_installation` only):
+
+- Admin opens `AssignEquipmentDialog` from `TareaDetailPage`, enters the new serial number.
+- Client calls `public.resolve_equipment_installation(p_ticket_id, p_serial, p_unit_id, p_note)`.
+- The RPC atomically:
+  1. Creates the `operations.equipment` row (status=`active`).
+  2. If the originating `order_item` has `product_id IS NOT NULL`: emits `egreso_instalacion` (-qty) + `liberacion_reserva` (+qty) stamped with the same `ticket_id`, `order_item_id`, and `product_id`.
+  3. Resolves the ticket via the two-step state machine (`open → in_progress → resolved`).
+- No separate `resolve_ticket` call is needed — the RPC closes the ticket.
+
+**equipment_replacement** (category guard: `equipment_replacement` only):
+
+- Admin opens `AssignEquipmentDialog`, selects the old equipment and enters new serial + model.
+- Client calls `public.resolve_equipment_replacement(p_ticket_id, p_old_equipment_id, p_new_serial, p_new_model, ...)`.
+- The RPC atomically:
+  1. Calls `operations.replace_equipment` to swap the physical device and migrate `key_authorizations`.
+  2. If the originating `order_item` has `product_id IS NOT NULL`: emits `egreso_reemplazo` (-qty) + `liberacion_reserva` (+qty).
+  3. Updates `support.tickets.equipment_id` to the new equipment UUID.
+  4. Resolves the ticket via the two-step state machine.
+- Old equipment status becomes `dead`; new equipment is `active`.
+
+**Stock closure invariant**: for every resolved `equipment_installation` or `equipment_replacement` ticket with a `reserva` movement where `product_id IS NOT NULL`, the ledger MUST contain a matching definitive egress (`egreso_instalacion` or `egreso_reemplazo`) plus a `liberacion_reserva` with the same `ticket_id`. The backfill DO block in migration `20260812000061` retroactively closes this gap for historical tickets.
+
+**Installer exclusion**: `TicketsSection` derives two arrays from the ticket list — `selectable` (stock-neutral: `maintenance`, `installation`) and `pendingAdmin` (equipment categories). Only `selectable` tickets appear in the batch-resolve toolbar. `pendingAdmin` tickets are rendered as non-interactive read-only cards.
+
+### 11.19 Consultas típicas (queries de dashboard)
 
 Ejemplos de queries útiles para dashboards y reportes:
 

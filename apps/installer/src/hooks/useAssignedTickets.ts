@@ -13,6 +13,7 @@ export interface AssignedTicket {
   title: string;
   description: string | null;
   status: 'open' | 'in_progress';
+  category: 'maintenance' | 'installation' | 'equipment_installation' | 'equipment_replacement' | string;
   opened_at: string;
   building: {
     id: string;
@@ -36,6 +37,7 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       id,
       description,
       status,
+      category,
       opened_at,
       building_id
     `)
@@ -48,6 +50,7 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     id: string;
     description: string;
     status: string;
+    category: string;
     opened_at: string;
     building_id: string | null;
   }[];
@@ -97,6 +100,7 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       title: r.description,
       description: r.description,
       status: r.status as 'open' | 'in_progress',
+      category: r.category,
       opened_at: r.opened_at,
       building: buildingInfo
         ? {

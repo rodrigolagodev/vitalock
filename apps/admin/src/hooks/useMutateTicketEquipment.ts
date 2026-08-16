@@ -18,24 +18,21 @@ export interface CreateAndAssignEquipmentInput {
   access_type: string;
 }
 
-export interface ReplaceEquipmentInTicketInput {
-  ticketId: string;
-  buildingId: string;
-  old_equipment_id: string;
-  new_serial_number: string;
-  new_model: string;
-  new_description?: string;
-}
-
 /**
  * Ticket ↔ equipment assignment for technical tickets.
  *   - assignExistingEquipment:  maintenance → link an equipment already
  *     living in the building to the ticket.
- *   - createAndAssignEquipment: installation / equipment_installation →
- *     create the equipment row and link it to the ticket in one flow.
- *   - replaceEquipmentInTicket: equipment_replacement → run the
- *     operations.replace_equipment RPC and link the newly-created device
- *     to the ticket.
+ *   - createAndAssignEquipment: installation → create the equipment row
+ *     and link it to the ticket. This path is retained for the generic
+ *     'installation' category which has no product_id and therefore
+ *     cannot use the atomic RPCs (resolve_equipment_installation is
+ *     category-guarded to 'equipment_installation' only). The two-step
+ *     flow (create + separate resolve_ticket call) remains correct here.
+ *
+ * NOTE: replaceEquipmentInTicket was retired. equipment_replacement tickets
+ * now resolve atomically through useResolveEquipmentReplacement, which calls
+ * public.resolve_equipment_replacement and closes the stock ledger in one
+ * transaction.
  */
 export function useMutateTicketEquipment(buildingId: string | null | undefined) {
   const queryClient = useQueryClient();
@@ -96,38 +93,8 @@ export function useMutateTicketEquipment(buildingId: string | null | undefined) 
     onError: toastMutationError,
   });
 
-  const replaceEquipmentInTicket = useMutation({
-    mutationFn: async (input: ReplaceEquipmentInTicketInput) => {
-      const { data: newId, error: rpcErr } = await supabase
-        .schema('operations')
-        .rpc('replace_equipment', {
-          p_old_equipment_id: input.old_equipment_id,
-          p_new_serial_number: input.new_serial_number,
-          p_new_model: input.new_model,
-          p_new_description: input.new_description ?? '',
-        });
-      if (rpcErr) throw rpcErr;
-      if (!newId) throw new Error('replace_equipment: RPC returned no id');
-
-      const { error: linkErr } = await supabase
-        .schema('support')
-        .from('tickets')
-        .update({ equipment_id: newId as string })
-        .eq('id', input.ticketId);
-      if (linkErr) throw linkErr;
-
-      return newId as string;
-    },
-    onSuccess: (_data, vars) => {
-      invalidate(vars.ticketId);
-      toast.success('Equipo reemplazado y asignado a la tarea.');
-    },
-    onError: toastMutationError,
-  });
-
   return {
     assignExistingEquipment,
     createAndAssignEquipment,
-    replaceEquipmentInTicket,
   };
 }
