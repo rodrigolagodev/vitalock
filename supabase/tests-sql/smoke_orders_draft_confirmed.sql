@@ -1,84 +1,19 @@
 -- ============================================================
--- Smoke assertions: orders-draft-and-confirmed migration
+-- Regression: orders-draft-and-confirmed schema shape
 -- ============================================================
--- Run via:  psql -f supabase/tests-sql/smoke_orders_draft_confirmed.sql
+-- Verifies that the state introduced by migration 20260811000055
+-- (`orders_draft_and_confirmed`) remains consistent: the status
+-- domain includes `confirmed` and excludes `in_preparation`, the
+-- old auto-tarea trigger is gone, and the RPCs the app depends
+-- on (`confirm_order`, `update_draft_order_with_items`) exist.
 --
--- This file has TWO sections:
---   A) Pre-migration assertions  — run BEFORE applying migration 000055
---   B) Post-migration assertions — run AFTER applying migration 000055
---
--- Each assertion uses a DO $$ BEGIN ASSERT ... END $$ block.
--- A failure raises an exception and exits psql with a non-zero code.
+-- Historical note: an earlier PRE section asserted the inverse
+-- state (before the migration ran). It was removed once the
+-- migration became permanent; the post-migration assertions
+-- below are the durable regression surface.
 -- ============================================================
 
--- ============================================================
--- SECTION A: Pre-migration invariants
--- ============================================================
--- Run these before `supabase db push` or `supabase migration up`.
--- They verify the state that the migration assumes going in.
-
--- A-1: 'confirmed' must NOT be a valid status value before migration.
---      Attempting to INSERT an order with status='confirmed' must fail
---      the CHECK constraint.
-do $$
-begin
-  assert (
-    not exists (
-      select 1
-        from information_schema.check_constraints
-       where constraint_schema = 'public'
-         and constraint_name = 'orders_status_check'
-         and check_clause ilike '%confirmed%'
-    )
-  ), 'PRE-A-1 FAIL: orders_status_check already includes "confirmed" — migration may have been applied already';
-end $$;
-
--- A-2: Trigger order_items_create_tarea_trigger must still exist.
-do $$
-begin
-  assert exists (
-    select 1
-      from information_schema.triggers
-     where trigger_schema = 'public'
-       and event_object_table = 'order_items'
-       and trigger_name = 'order_items_create_tarea_trigger'
-  ), 'PRE-A-2 FAIL: trigger order_items_create_tarea_trigger does not exist — check migration history';
-end $$;
-
--- A-3: Function order_items_create_tarea must still exist.
-do $$
-begin
-  assert exists (
-    select 1
-      from pg_proc p
-      join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public'
-       and p.proname = 'order_items_create_tarea'
-  ), 'PRE-A-3 FAIL: function public.order_items_create_tarea does not exist';
-end $$;
-
--- A-4: confirm_order RPC must NOT exist yet.
-do $$
-begin
-  assert not exists (
-    select 1
-      from pg_proc p
-      join pg_namespace n on n.oid = p.pronamespace
-     where n.nspname = 'public'
-       and p.proname = 'confirm_order'
-  ), 'PRE-A-4 FAIL: function public.confirm_order already exists — migration may have been applied';
-end $$;
-
--- ============================================================
--- SECTION B: Post-migration assertions
--- ============================================================
--- Run these after applying migration 000055.
--- Uncomment the section below and run it against the migrated DB.
-
-/*
-
--- B-1: 'in_preparation' must no longer be a valid status value.
---      Verify that inserting an order with status='in_preparation' fails.
+-- B-1: `in_preparation` must not appear in the orders status domain.
 do $$
 begin
   assert (
@@ -89,10 +24,11 @@ begin
          and constraint_name = 'orders_status_check'
          and check_clause ilike '%in_preparation%'
     )
-  ), 'POST-B-1 FAIL: orders_status_check still includes "in_preparation"';
+  ), 'B-1 FAIL: orders_status_check still includes "in_preparation"';
+  raise notice 'PASS B-1: in_preparation is not in orders_status_check';
 end $$;
 
--- B-2: 'confirmed' must be a valid status value.
+-- B-2: `confirmed` must be a valid orders status.
 do $$
 begin
   assert exists (
@@ -101,10 +37,13 @@ begin
      where constraint_schema = 'public'
        and constraint_name = 'orders_status_check'
        and check_clause ilike '%confirmed%'
-  ), 'POST-B-2 FAIL: orders_status_check does not include "confirmed"';
+  ), 'B-2 FAIL: orders_status_check does not include "confirmed"';
+  raise notice 'PASS B-2: confirmed is in orders_status_check';
 end $$;
 
--- B-3: Trigger order_items_create_tarea_trigger must NOT exist.
+-- B-3: The legacy auto-tarea trigger must not exist. Ticket creation
+-- is now the responsibility of confirm_order (draft inserts are
+-- side-effect free).
 do $$
 begin
   assert not exists (
@@ -113,10 +52,11 @@ begin
      where trigger_schema = 'public'
        and event_object_table = 'order_items'
        and trigger_name = 'order_items_create_tarea_trigger'
-  ), 'POST-B-3 FAIL: trigger order_items_create_tarea_trigger still exists';
+  ), 'B-3 FAIL: legacy trigger order_items_create_tarea_trigger still exists';
+  raise notice 'PASS B-3: legacy auto-tarea trigger is absent';
 end $$;
 
--- B-4: confirm_order function must exist.
+-- B-4: confirm_order RPC must exist.
 do $$
 begin
   assert exists (
@@ -125,10 +65,11 @@ begin
       join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public'
        and p.proname = 'confirm_order'
-  ), 'POST-B-4 FAIL: function public.confirm_order does not exist';
+  ), 'B-4 FAIL: function public.confirm_order does not exist';
+  raise notice 'PASS B-4: confirm_order RPC exists';
 end $$;
 
--- B-5: update_draft_order_with_items function must exist.
+-- B-5: update_draft_order_with_items RPC must exist.
 do $$
 begin
   assert exists (
@@ -137,21 +78,15 @@ begin
       join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public'
        and p.proname = 'update_draft_order_with_items'
-  ), 'POST-B-5 FAIL: function public.update_draft_order_with_items does not exist';
+  ), 'B-5 FAIL: function public.update_draft_order_with_items does not exist';
+  raise notice 'PASS B-5: update_draft_order_with_items RPC exists';
 end $$;
 
--- B-6: No 'in_preparation' rows must remain in orders.
+-- B-6: No rows in orders may remain with the retired `in_preparation` status.
+-- (The backfill inside migration 000055 rewrote historical rows.)
 do $$
 begin
   assert (select count(*) from public.orders where status = 'in_preparation') = 0,
-    'POST-B-6 FAIL: in_preparation rows still exist after backfill migration';
+    'B-6 FAIL: in_preparation rows still exist after backfill migration';
+  raise notice 'PASS B-6: no in_preparation rows remain';
 end $$;
-
--- B-7: No 'draft' rows must remain in orders (all deleted by backfill).
-do $$
-begin
-  assert (select count(*) from public.orders where status = 'draft') = 0,
-    'POST-B-7 FAIL: draft rows still exist after backfill migration';
-end $$;
-
-*/
