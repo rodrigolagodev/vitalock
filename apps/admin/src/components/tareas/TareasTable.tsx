@@ -56,6 +56,7 @@ export function TareasTable({
               {tarea.description}
             </p>
           ),
+          hideBelow: 'lg',
         },
         {
           header: 'Edificio',
@@ -69,16 +70,19 @@ export function TareasTable({
               )}
             </div>
           ),
+          hideBelow: 'md',
         },
         {
           header: 'Asignado a',
           cell: (tarea) => tarea.assigned_to_name ?? 'Sin asignar',
           className: 'text-muted-foreground',
+          hideBelow: 'md',
         },
         {
           header: 'Categoría',
           cell: (tarea) => CATEGORY_LABELS[tarea.category],
           className: 'text-muted-foreground',
+          hideBelow: 'sm',
         },
         {
           header: 'Estado',
@@ -88,6 +92,7 @@ export function TareasTable({
           header: 'Abierta',
           cell: (tarea) => formatDate(tarea.opened_at),
           className: 'text-muted-foreground',
+          hideBelow: 'lg',
         },
       ]}
       rowKey={(tarea) => tarea.id}

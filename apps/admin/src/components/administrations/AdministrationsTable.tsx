@@ -30,6 +30,7 @@ export function AdministrationsTable({
             cell: (admin) => (
               <span className="text-muted-foreground">{admin.tax_id ?? '—'}</span>
             ),
+            hideBelow: 'md',
           },
           {
             header: 'Estado',

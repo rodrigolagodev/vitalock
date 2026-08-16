@@ -49,11 +49,13 @@ export function OrdenesTable({
           header: 'Cliente',
           cell: (orden) => clientLabel(orden),
           className: 'text-muted-foreground',
+          hideBelow: 'md',
         },
         {
           header: 'Ítems',
           cell: (orden) => orden.order_items.length,
           className: 'text-muted-foreground',
+          hideBelow: 'lg',
         },
         {
           header: 'Estado',
@@ -63,6 +65,7 @@ export function OrdenesTable({
           header: 'Fecha',
           cell: (orden) => formatDate(orden.created_at),
           className: 'text-muted-foreground',
+          hideBelow: 'md',
         },
       ]}
       rowKey={(orden) => orden.id}
