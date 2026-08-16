@@ -79,7 +79,7 @@
     --secondary-foreground: 224 20% 95%;
     --muted: 224 30% 14%;
     --muted-foreground: 224 12% 68%;
-    --border: 224 30% 14%;
+    --border: 243 41% 20.4%; /* brand-900 — probando borde visible en dark */
     --input: 224 30% 14%;
     --radius: 0.625rem;
 

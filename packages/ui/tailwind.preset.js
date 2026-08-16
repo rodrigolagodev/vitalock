@@ -11,8 +11,7 @@ export default {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         content: 'hsl(var(--content))',
-        
-        popover: {
+                popover: {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
         },
@@ -70,6 +69,9 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+      },
+      borderColor: {
+        DEFAULT: 'hsl(var(--border))',
       },
     },
   },

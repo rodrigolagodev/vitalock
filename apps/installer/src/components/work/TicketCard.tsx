@@ -30,7 +30,7 @@ export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {
 
   return (
     <>
-      <div className="flex flex-col overflow-hidden rounded-md border bg-background">
+      <div className="flex flex-col overflow-hidden rounded-md border bg-card">
         <div className="flex items-center gap-2 px-3 py-2">
           <Checkbox
             id={`ticket-${ticket.id}`}

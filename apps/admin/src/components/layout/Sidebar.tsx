@@ -59,7 +59,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'hidden w-[240px] shrink-0 flex-col border-r bg-background md:flex',
+          'hidden w-[240px] shrink-0 flex-col border-r bg-card md:flex',
           className,
         )}
       >
@@ -86,7 +86,7 @@ export function Sidebar({ className }: SidebarProps) {
             className="absolute inset-0 cursor-default bg-black/40"
             onClick={() => setOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 flex w-[280px] flex-col border-r bg-background shadow-xl">
+          <aside className="absolute inset-y-0 left-0 flex w-[280px] flex-col border-r bg-card shadow-xl">
             <div className="flex items-center justify-end p-4">
               <Button
                 variant="ghost"

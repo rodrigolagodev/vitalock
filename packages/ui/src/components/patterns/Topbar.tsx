@@ -17,7 +17,7 @@ export function Topbar({ avatar, children, className }: TopbarProps) {
   return (
     <header
       className={cn(
-        'flex h-[60px] shrink-0 items-center justify-end gap-4 border-b bg-background px-6',
+        'flex h-[60px] shrink-0 items-center justify-end gap-4 border-b bg-card px-6',
         className,
       )}
     >

@@ -28,7 +28,7 @@ export function AuthorizationRow({ authorization, selected, onToggle }: Authoriz
 
   return (
     <>
-      <div className="flex items-center gap-3 rounded-md border bg-background p-3">
+      <div className="flex items-center gap-3 rounded-md border bg-card p-3">
         <Checkbox
           id={`auth-${authorization.id}`}
           checked={selected}
