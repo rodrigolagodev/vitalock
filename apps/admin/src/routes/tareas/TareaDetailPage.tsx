@@ -125,7 +125,7 @@ export default function TareaDetailPage() {
         <Button onClick={() => setEditOpen(true)}>Editar</Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 rounded-md border bg-card p-4 md:grid-cols-2">
         <Row label="Descripción" value={tarea.description || '—'} />
         <Row
           label="Edificio"
@@ -151,7 +151,7 @@ export default function TareaDetailPage() {
       </div>
 
       {CATEGORIES_REQUIRING_EQUIPMENT.has(tarea.category) && (
-        <div className="flex flex-col gap-3 rounded-md border p-4">
+        <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Equipo</h2>
             {tarea.building_id && tarea.status !== 'resolved' && tarea.status !== 'cancelled' && (

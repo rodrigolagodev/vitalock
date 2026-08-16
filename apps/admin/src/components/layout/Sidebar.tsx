@@ -29,7 +29,13 @@ export function Sidebar({ className }: SidebarProps) {
         <img
           src="/Vitalock_logo_vector_black.svg"
           alt="Vitalock"
-          className="h-10 w-auto"
+          className="block h-8 w-auto dark:hidden"
+        />
+        <img
+          src="/Vitalock_logo_vector_white.svg"
+          alt=""
+          aria-hidden="true"
+          className="hidden h-8 w-auto dark:block"
         />
       </div>
 
