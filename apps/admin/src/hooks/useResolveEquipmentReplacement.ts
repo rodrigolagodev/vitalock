@@ -1,17 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import {
+  resolveEquipmentReplacement,
+  type ResolveEquipmentReplacementInput,
+} from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
 import { equipmentKey, tareasKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
-
-export interface ResolveEquipmentReplacementInput {
-  ticketId: string;
-  oldEquipmentId: string;
-  newSerial: string;
-  newModel: string;
-  newDescription?: string | null;
-  note?: string | null;
-}
 
 /**
  * Atomically resolves an equipment_replacement ticket.
@@ -35,18 +30,8 @@ export function useResolveEquipmentReplacement(buildingId: string | null | undef
   };
 
   return useMutation({
-    mutationFn: async (input: ResolveEquipmentReplacementInput) => {
-      const { data, error } = await supabase.rpc('resolve_equipment_replacement', {
-        p_ticket_id: input.ticketId,
-        p_old_equipment_id: input.oldEquipmentId,
-        p_new_serial: input.newSerial,
-        p_new_model: input.newModel,
-        p_new_description: input.newDescription ?? null,
-        p_note: input.note ?? null,
-      });
-      if (error) throw error;
-      return data as string;
-    },
+    mutationFn: (input: ResolveEquipmentReplacementInput) =>
+      resolveEquipmentReplacement(supabase, input),
     onSuccess: (_data, vars) => {
       invalidate(vars.ticketId);
       toast.success('Equipo reemplazado y tarea resuelta.');

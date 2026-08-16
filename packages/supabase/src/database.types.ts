@@ -784,6 +784,7 @@ export type Database = {
         }
         Returns: string
       }
+      confirm_order: { Args: { p_order_id: string }; Returns: undefined }
       create_order_with_items: {
         Args: { p_items: Json[]; p_order: Json }
         Returns: string
@@ -828,22 +829,22 @@ export type Database = {
       resolve_equipment_installation: {
         Args: {
           p_actor_staff_id?: string
-          p_note?: string | null
+          p_note?: string
           p_serial: string
           p_ticket_id: string
-          p_unit_id?: string | null
+          p_unit_id: string
         }
         Returns: string
       }
       resolve_equipment_replacement: {
         Args: {
-          p_ticket_id: string
-          p_old_equipment_id: string
-          p_new_serial: string
-          p_new_model: string
-          p_new_description?: string | null
-          p_note?: string | null
           p_actor_staff_id?: string
+          p_new_description?: string
+          p_new_model: string
+          p_new_serial: string
+          p_note?: string
+          p_old_equipment_id: string
+          p_ticket_id: string
         }
         Returns: string
       }
@@ -852,6 +853,15 @@ export type Database = {
           p_actor_staff_id?: string
           p_note?: string
           p_ticket_id: string
+        }
+        Returns: string
+      }
+      update_draft_order_with_items: {
+        Args: {
+          p_expected_updated_at: string
+          p_items: Json[]
+          p_order_id: string
+          p_patch: Json
         }
         Returns: string
       }
