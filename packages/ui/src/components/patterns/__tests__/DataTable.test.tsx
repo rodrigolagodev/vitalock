@@ -45,7 +45,7 @@ describe('DataTable', () => {
     renderTable();
 
     const table = screen.getByRole('table');
-    expect(table.closest('div')?.parentElement).toHaveClass('overflow-hidden');
+    expect(table.closest('div')?.parentElement).toHaveClass('overflow-x-auto');
     expect(screen.getByText('Nombre')).toBeInTheDocument();
     expect(screen.getByText('Estado')).toBeInTheDocument();
     expect(screen.getAllByRole('row')).toHaveLength(4); // header + 3 data rows

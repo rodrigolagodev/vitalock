@@ -75,4 +75,5 @@ export {
   type DataTableProps,
   type DataTableColumn,
   type DataTableAction,
+  type DataTableBreakpoint,
 } from './components/patterns/DataTable';

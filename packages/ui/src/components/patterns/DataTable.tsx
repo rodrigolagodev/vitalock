@@ -8,11 +8,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { DEFAULT_PAGE_SIZE, getPageSlice } from './pagination';
 import { PaginationFooter } from './PaginationFooter';
 
+/**
+ * Tailwind breakpoint at which a lower-priority column starts becoming
+ * visible. Below the breakpoint the column is `display: none`. Choose the
+ * smallest breakpoint at which the column is still valuable to the user.
+ */
+export type DataTableBreakpoint = 'sm' | 'md' | 'lg' | 'xl';
+
 export interface DataTableColumn<T> {
   header: string;
   cell: (row: T) => React.ReactNode;
   className?: string;
   headerClassName?: string;
+  /**
+   * If set, the column is hidden below the given Tailwind breakpoint
+   * (`hidden <bp>:table-cell`). Use for secondary information that can
+   * disappear on narrow screens without breaking the primary task.
+   */
+  hideBelow?: DataTableBreakpoint;
 }
 
 export interface DataTableAction<T> {
@@ -45,6 +58,18 @@ export interface DataTableProps<T> {
 }
 
 const SKELETON_ROWS = 3;
+
+// Static class lookup so Tailwind's JIT picks them up during scan.
+const HIDE_BELOW_CLASS: Record<DataTableBreakpoint, string> = {
+  sm: 'hidden sm:table-cell',
+  md: 'hidden md:table-cell',
+  lg: 'hidden lg:table-cell',
+  xl: 'hidden xl:table-cell',
+};
+
+function responsiveClass(hideBelow: DataTableBreakpoint | undefined): string | undefined {
+  return hideBelow ? HIDE_BELOW_CLASS[hideBelow] : undefined;
+}
 
 export function DataTable<T>({
   rows,
@@ -133,12 +158,18 @@ export function DataTable<T>({
   };
 
   return (
-    <div className="overflow-hidden rounded-[12px] border bg-card">
+    // overflow-x-auto keeps horizontal overflow scoped to the table card:
+    // wide tables scroll inside their rounded border instead of stretching
+    // the surrounding layout. Requires min-w-0 on the flex ancestor.
+    <div className="overflow-x-auto rounded-[12px] border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             {columns.map((column, index) => (
-              <TableHead key={index} className={column.headerClassName}>
+              <TableHead
+                key={index}
+                className={cn(responsiveClass(column.hideBelow), column.headerClassName)}
+              >
                 {column.header}
               </TableHead>
             ))}
@@ -149,11 +180,16 @@ export function DataTable<T>({
           {isFetching ? (
             Array.from({ length: SKELETON_ROWS }, (_, rowIndex) => (
               <TableRow key={rowIndex}>
-                {Array.from({ length: columnCount }, (_, cellIndex) => (
-                  <TableCell key={cellIndex}>
+                {columns.map((column, cellIndex) => (
+                  <TableCell key={cellIndex} className={responsiveClass(column.hideBelow)}>
                     <div className="h-4 w-24 animate-pulse rounded bg-muted" />
                   </TableCell>
                 ))}
+                {hasActions && (
+                  <TableCell className="text-right">
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-muted" />
+                  </TableCell>
+                )}
               </TableRow>
             ))
           ) : rows.length === 0 ? (
@@ -167,9 +203,14 @@ export function DataTable<T>({
           ) : (
             visibleRows.map((row) => (
               <TableRow key={rowKey(row)}>
-                <TableCell>{renderFirstCell(row)}</TableCell>
+                <TableCell className={responsiveClass(firstColumn?.hideBelow)}>
+                  {renderFirstCell(row)}
+                </TableCell>
                 {restColumns.map((column, index) => (
-                  <TableCell key={index} className={column.className}>
+                  <TableCell
+                    key={index}
+                    className={cn(responsiveClass(column.hideBelow), column.className)}
+                  >
                     {column.cell(row)}
                   </TableCell>
                 ))}

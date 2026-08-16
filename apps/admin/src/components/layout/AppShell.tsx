@@ -22,7 +22,7 @@ export function AppShell() {
       {/* Body: fixed sidebar + content column with its own topbar */}
       <div className="flex w-full min-h-0 flex-1">
         <Sidebar />
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {/* Topbar scoped to content: search + bell + avatar + divider; slot carries theme + sign-out */}
           <Topbar avatar={initials}>
             <ThemeToggle />
@@ -31,8 +31,9 @@ export function AppShell() {
             </Button>
           </Topbar>
 
-          {/* Content surface */}
-          <main className="flex-1 bg-content p-6">
+          {/* Content surface. min-w-0 lets wide children (tables, code) scroll
+              inside their own container instead of stretching the whole page. */}
+          <main className="min-w-0 flex-1 bg-content p-6">
             <Outlet />
           </main>
         </div>
