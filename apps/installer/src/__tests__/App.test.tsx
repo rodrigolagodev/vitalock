@@ -52,17 +52,22 @@ function getHeader(container: HTMLElement): HTMLElement {
 }
 
 describe('App header brand', () => {
-  it('renders the Vitalock wordmark in the header', () => {
+  it('renders the Vitalock wordmark in the header (via logo alt text)', () => {
     const { container } = renderApp();
     const header = getHeader(container);
-    expect(within(header).getByText('Vitalock')).toBeInTheDocument();
+    expect(within(header).getByAltText('Vitalock')).toBeInTheDocument();
   });
 
-  it('renders a brand logo mark (icon) in the header', () => {
+  it('renders both light and dark brand logo variants in the header', () => {
     const { container } = renderApp();
     const header = getHeader(container);
     const brand = header.firstElementChild as HTMLElement;
-    expect(brand.querySelector('svg')).not.toBeNull();
+    const imgs = brand.querySelectorAll('img');
+    expect(imgs.length).toBe(2);
+    // Light variant is visible by default; dark variant is aria-hidden.
+    expect(imgs[0]?.getAttribute('src')).toContain('black');
+    expect(imgs[1]?.getAttribute('src')).toContain('white');
+    expect(imgs[1]?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('keeps the theme toggle switch in the header', () => {

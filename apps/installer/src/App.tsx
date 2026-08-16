@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import { KeyRound } from 'lucide-react';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 
 export default function App() {
@@ -7,10 +6,17 @@ export default function App() {
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <KeyRound className="h-4 w-4" />
-          </span>
-          <span className="text-base font-semibold">Vitalock</span>
+          <img
+            src="/Vitalock_logo_vector_black.svg"
+            alt="Vitalock"
+            className="block h-8 w-auto dark:hidden"
+          />
+          <img
+            src="/Vitalock_logo_vector_white.svg"
+            alt=""
+            aria-hidden="true"
+            className="hidden h-8 w-auto dark:block"
+          />
         </div>
         <ThemeToggle />
       </header>
