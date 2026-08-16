@@ -155,7 +155,7 @@ The table primitives (Table, TableBody, TableCell, TableHead, TableHeader, Table
 
 ### Requirement: First-Column Rule
 
-Column 0 of every DataTable MUST be the row's primary entry point: (a) a native `<Link>` (`font-medium hover:underline`) when a detail route exists (ordenes, tareas, buildings, administraciones, stock); (b) a `<button>` styled identically when the primary action is a dialog (Keys → KeyDetailDialog; no `/llaves/:id` route exists); (c) emphasized plain text (`font-medium`) for entities with no navigation target (staff, particulares, units, equipment, movements). No table MUST render a whole-row click target or `role=button`; ProductsTable row-click MUST be removed and replaced by a first-column link.
+Column 0 of every DataTable MUST be the row's primary entry point: (a) a native `<Link>` (`font-medium text-foreground hover:underline`) when a detail route exists (ordenes, tareas, buildings, administraciones, stock); (b) a `<button>` styled identically when the primary action is a dialog (Keys → KeyDetailDialog; no `/llaves/:id` route exists); (c) emphasized plain text (`font-medium`) for entities with no navigation target (staff, particulares, equipment, movements). The first-cell link/button MUST use the foreground (text) color, not the primary color. No table MUST render a whole-row click target or `role=button`; ProductsTable row-click MUST be removed and replaced by a first-column link.
 
 #### Scenario: First-column link navigates to detail
 
@@ -207,7 +207,7 @@ Every DataTable instance MUST render the pagination footer (`paginated` defaults
 
 ### Requirement: Per-Table Render Contracts
 
-All 14 render sites MUST adopt DataTable with these contracts, and every one MUST be paginated:
+All 13 render sites MUST adopt DataTable with these contracts, and every one MUST be paginated:
 
 | Table | First cell | Actions (icons) |
 |---|---|---|
@@ -216,7 +216,6 @@ All 14 render sites MUST adopt DataTable with these contracts, and every one MUS
 | TareasTable | Link `/tareas/:id` | PencilLine |
 | OrdenesTable | Link `/ordenes/:id` | — |
 | ProductsTable | Link `/stock/:id` | — (dead "Acciones" column removed) |
-| UnitsTable | text | PencilLine, Power |
 | ParticularTable | text | PencilLine, Trash2 |
 | BuildingsTable | Link `/buildings/:id` | PencilLine + BuildingStatusToggle |
 | AdministrationsTable | Link `/administraciones/:id` | PencilLine + AdministrationStatusToggle |
@@ -248,10 +247,4 @@ First-column links MUST be native anchors reachable by keyboard; the Keys dialog
 
 ### Requirement: Consistency
 
-Every render site MUST use DataTable; no table MUST render custom wrapper markup outside the pattern. Skeleton and empty-state strings MUST be preserved verbatim where they exist (Ordenes, Staff, Particular, Buildings, Keys). Units, Equipment, OrderItems, and the OrdenDetailPage inline tables MUST gain the standard skeleton and dashed empty state for the first time (OrderItems' inline colSpan empty row is replaced by the dashed box).
-
-#### Scenario: UnitsTable gains skeleton and empty state
-
-- GIVEN UnitsTable with no rows or while loading
-- WHEN it renders
-- THEN it shows the standard dashed empty state or 3-row pulse skeleton
+Every render site MUST use DataTable; no table MUST render custom wrapper markup outside the pattern. Skeleton and empty-state strings MUST be preserved verbatim where they exist (Ordenes, Staff, Particular, Buildings, Keys). Equipment, OrderItems, and the OrdenDetailPage inline tables MUST gain the standard skeleton and dashed empty state for the first time (OrderItems' inline colSpan empty row is replaced by the dashed box).

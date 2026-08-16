@@ -83,7 +83,7 @@ export function DataTable<T>({
       return (
         <Link
           to={getRowHref(row)}
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-foreground hover:underline"
         >
           {content}
         </Link>
@@ -94,7 +94,7 @@ export function DataTable<T>({
         <button
           type="button"
           onClick={() => onFirstCellClick(row)}
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-foreground hover:underline"
         >
           {content}
         </button>
