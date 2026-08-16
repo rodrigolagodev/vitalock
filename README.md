@@ -60,6 +60,7 @@ Vitalock/
 | `pnpm typecheck` | TypeScript check across all workspaces |
 | `pnpm format` | Prettier format all files |
 | `pnpm gen:types` | Generate Supabase database types |
+| `pnpm test:sql` | Run every `supabase/tests-sql/*.sql` against the local stack (uses `DATABASE_URL` env, defaults to local) |
 
 ---
 
@@ -82,6 +83,29 @@ Set per-app in `.env.local` (Vite convention, gitignored). See `.env.example` fo
 
 - See `supabase/README.md` and `supabase/FLOWS.md` for schema and local dev workflows.
 - **Type generation**: with the local stack running (`cd supabase && supabase start`), run `pnpm gen:types` at root. This overwrites `packages/supabase/src/database.types.ts` and the file is committed.
+
+---
+
+## Design tokens
+
+Colors, radii, and semantic surface families live in `packages/ui/globals.css`
+and are exposed through the shared Tailwind preset. See
+[`packages/ui/DESIGN_TOKENS.md`](packages/ui/DESIGN_TOKENS.md) for the full
+map and the rules for adding or changing a token. **Never inline hex values
+in components — always compose the semantic classes.**
+
+---
+
+## PWA (installer only)
+
+`apps/installer` is a PWA built with `vite-plugin-pwa` (auto-update strategy,
+service worker, manifest, offline runtime cache for Supabase reads). The
+service worker is intentionally disabled in dev (`devOptions.enabled: false`
+in `apps/installer/vite.config.ts`) — validate offline behavior against a
+production build (`pnpm --filter installer build && pnpm --filter installer preview`).
+
+`apps/admin` is a plain SPA (no service worker) — the desktop workflow does
+not need offline support.
 
 ---
 

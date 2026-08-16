@@ -13,6 +13,11 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'error',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // no-floating-promises requires the type-aware parser; enabled per-project
+      // where a tsconfig with `project` is configured, not here globally, to
+      // keep this base config usable in non-TS-aware contexts.
     },
   },
 );
