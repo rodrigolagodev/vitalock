@@ -1,9 +1,20 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalDependencies": ["tsconfig.json", ".env"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "public/**",
+        "index.html",
+        "tsconfig.json",
+        "vite.config.ts",
+        "tailwind.config.*",
+        "postcss.config.*",
+        "package.json"
+      ],
       "outputs": ["dist/**", ".vite/**"],
       "env": ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"]
     },
@@ -13,13 +24,22 @@
     },
     "test": {
       "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "vitest.config.ts",
+        "vite.config.ts",
+        "tsconfig.json",
+        "package.json"
+      ],
       "outputs": ["coverage/**"]
     },
     "lint": {
+      "inputs": ["src/**", "eslint.config.*", ".eslintrc*", "package.json"],
       "outputs": []
     },
     "typecheck": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
       "outputs": []
     },
     "gen:types": {
