@@ -27,12 +27,12 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Brand header (logo + wordmark) */}
       <div className="mb-2 flex items-center gap-2.5 px-3 py-3">
         <img
-          src="/Vitalock_logo_vector_black.svg"
+          src={`${import.meta.env.BASE_URL}Vitalock_logo_vector_black.svg`}
           alt="Vitalock"
           className="block h-8 w-auto dark:hidden"
         />
         <img
-          src="/Vitalock_logo_vector_white.svg"
+          src={`${import.meta.env.BASE_URL}Vitalock_logo_vector_white.svg`}
           alt=""
           aria-hidden="true"
           className="hidden h-8 w-auto dark:block"

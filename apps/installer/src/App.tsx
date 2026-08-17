@@ -7,12 +7,12 @@ export default function App() {
       <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4">
         <div className="flex items-center gap-2.5">
           <img
-            src="/Vitalock_logo_vector_black.svg"
+            src={`${import.meta.env.BASE_URL}Vitalock_logo_vector_black.svg`}
             alt="Vitalock"
             className="block h-8 w-auto dark:hidden"
           />
           <img
-            src="/Vitalock_logo_vector_white.svg"
+            src={`${import.meta.env.BASE_URL}Vitalock_logo_vector_white.svg`}
             alt=""
             aria-hidden="true"
             className="hidden h-8 w-auto dark:block"
