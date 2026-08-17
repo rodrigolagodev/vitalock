@@ -152,7 +152,7 @@ export default function StockDetailPage() {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-4 rounded-md border p-4"
+        className="flex flex-col gap-4 rounded-md border p-4 bg-card"
       >
         <h2 className="text-lg font-semibold">Editar producto</h2>
         <div className="grid max-w-md gap-4">
