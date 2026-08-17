@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { keysKey, ordenKey, ordensKey } from '@/lib/queryKeys';
 import { keyEventsKey } from './useKeyEvents';
 import { toastMutationError } from './mapMutationError';
+import { requestKeyDisable, cancelKeyDisable } from '@vitalock/supabase';
 
 export interface CreateKeyInput {
   rfid_code: string;
@@ -26,6 +27,12 @@ export interface ChangeStatusInput {
   actor_staff_id?: string | null;
 }
 
+export interface DisableInput {
+  id: string;
+  note?: string | null;
+  actor_staff_id?: string | null;
+}
+
 export interface RecordPickupInput {
   /** Order owning the key — required to invalidate its detail query. */
   order_id: string;
@@ -44,6 +51,9 @@ export interface RecordPickupInput {
  * built) and `changeStatus`, which atomically updates the key status, records
  * the event (optional note), and queues physical key removal/install on
  * operations.key_authorizations via public.change_key_status.
+ *
+ * `requestDisable` / `cancelDisable` handle the reversible pending_disable flow
+ * via dedicated RPCs (not changeStatus which is for emergency terminal disables).
  */
 export function useMutateKey(buildingId: string | undefined) {
   const queryClient = useQueryClient();
@@ -88,6 +98,38 @@ export function useMutateKey(buildingId: string | undefined) {
     onError: toastMutationError,
   });
 
+  const requestDisable = useMutation({
+    mutationFn: async ({ id, note, actor_staff_id }: DisableInput) => {
+      await requestKeyDisable(supabase, {
+        keyId: id,
+        note: note ?? null,
+        actorStaffId: actor_staff_id ?? null,
+      });
+    },
+    onSuccess: (_data, vars) => {
+      void invalidateKeys();
+      void queryClient.invalidateQueries({ queryKey: keyEventsKey(vars.id) });
+      toast.success('Baja solicitada.');
+    },
+    onError: toastMutationError,
+  });
+
+  const cancelDisable = useMutation({
+    mutationFn: async ({ id, note, actor_staff_id }: DisableInput) => {
+      await cancelKeyDisable(supabase, {
+        keyId: id,
+        note: note ?? null,
+        actorStaffId: actor_staff_id ?? null,
+      });
+    },
+    onSuccess: (_data, vars) => {
+      void invalidateKeys();
+      void queryClient.invalidateQueries({ queryKey: keyEventsKey(vars.id) });
+      toast.success('Solicitud de baja cancelada.');
+    },
+    onError: toastMutationError,
+  });
+
   const recordPickup = useMutation({
     mutationFn: async ({
       order_id,
@@ -117,5 +159,5 @@ export function useMutateKey(buildingId: string | undefined) {
     onError: toastMutationError,
   });
 
-  return { createKey, changeStatus, recordPickup };
+  return { createKey, changeStatus, requestDisable, cancelDisable, recordPickup };
 }

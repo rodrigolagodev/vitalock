@@ -6,13 +6,14 @@ import React from 'react';
 import type { ReactNode } from 'react';
 
 const mockChangeStatus = vi.fn();
+const mockRequestDisable = vi.fn();
+const mockCancelDisable = vi.fn();
 
 vi.mock('@/hooks/useMutateKey', () => ({
   useMutateKey: () => ({
-    changeStatus: {
-      mutateAsync: mockChangeStatus,
-      isPending: false,
-    },
+    changeStatus: { mutateAsync: mockChangeStatus, isPending: false },
+    requestDisable: { mutateAsync: mockRequestDisable, isPending: false },
+    cancelDisable: { mutateAsync: mockCancelDisable, isPending: false },
   }),
 }));
 
@@ -119,20 +120,19 @@ describe('KeysTable', () => {
     expect(await screen.findByRole('heading', { name: 'K-0001' })).toBeInTheDocument();
   });
 
-  it('labels the power action "Dar de baja a" for active keys and opens the status dialog', async () => {
+  it('labels the power action "Solicitar baja de" for active keys and opens the status dialog', async () => {
     const user = userEvent.setup();
     render(<KeysTable buildingId="b-1" keys={[keyActiva]} />, { wrapper: makeWrapper() });
 
-    await user.click(screen.getByRole('button', { name: 'Dar de baja a K-0001' }));
-    expect(await screen.findByRole('heading', { name: 'Dar de baja llave' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Solicitar baja de K-0001' }));
+    expect(await screen.findByRole('heading', { name: 'Solicitar baja' })).toBeInTheDocument();
   });
 
-  it('labels the power action "Activar" for disabled keys and opens the status dialog', async () => {
-    const user = userEvent.setup();
+  it('does not show the status-change action button for terminal disabled keys', () => {
     render(<KeysTable buildingId="b-1" keys={[keyDadaDeBaja]} />, { wrapper: makeWrapper() });
 
-    await user.click(screen.getByRole('button', { name: 'Activar K-0002' }));
-    expect(await screen.findByRole('heading', { name: 'Activar llave' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Solicitar baja/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cancelar baja/ })).not.toBeInTheDocument();
   });
 
   it('renders the loading skeleton while fetching', () => {

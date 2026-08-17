@@ -5,7 +5,7 @@ import { keysKey } from '@/lib/queryKeys';
 export interface KeyRow {
   id: string;
   rfid_code: string;
-  status: 'active' | 'disabled';
+  status: 'pending_creation' | 'pending_installation' | 'active' | 'pending_disable' | 'disabled';
   notes: string | null;
   activated_at: string;
   deactivated_at: string | null;

@@ -28,7 +28,7 @@ export function KeyStatusChangeDialog({
   keyRow,
 }: KeyStatusChangeDialogProps) {
   const { staff } = useAuthContext();
-  const { changeStatus } = useMutateKey(buildingId);
+  const { requestDisable, cancelDisable } = useMutateKey(buildingId);
   const [note, setNote] = useState('');
 
   useEffect(() => {
@@ -37,29 +37,32 @@ export function KeyStatusChangeDialog({
 
   if (!keyRow) return null;
 
-  const targetStatus: 'active' | 'disabled' =
-    keyRow.status === 'active' ? 'disabled' : 'active';
-  const actionLabel = targetStatus === 'active' ? 'Activar' : 'Dar de baja';
+  const isRequestDisable = keyRow.status === 'active';
+  const isCancelDisable = keyRow.status === 'pending_disable';
+
+  if (!isRequestDisable && !isCancelDisable) return null;
+
+  const mutation = isRequestDisable ? requestDisable : cancelDisable;
+  const actionLabel = isRequestDisable ? 'Solicitar baja' : 'Cancelar baja';
   const trimmed = note.trim();
-  const canConfirm = !changeStatus.isPending;
+  const canConfirm = !mutation.isPending;
 
   const handleConfirm = async () => {
     if (!canConfirm) return;
-    await changeStatus.mutateAsync({
+    await mutation.mutateAsync({
       id: keyRow.id,
-      status: targetStatus,
-      note: trimmed,
+      note: trimmed || null,
       actor_staff_id: staff?.id ?? null,
     });
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !changeStatus.isPending && onOpenChange(o)}>
+    <Dialog open={open} onOpenChange={(o) => !mutation.isPending && onOpenChange(o)}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {actionLabel} llave
+            {actionLabel}
           </DialogTitle>
           <DialogDescription>
             <span className="font-mono">{keyRow.rfid_code}</span>
@@ -79,11 +82,11 @@ export function KeyStatusChangeDialog({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder={
-              targetStatus === 'disabled'
+              isRequestDisable
                 ? 'Ej: llave perdida por el propietario, no responde, cambio de propietario, etc.'
-                : 'Ej: llave reactivada tras reemplazo de tarjeta'
+                : 'Ej: error al solicitar la baja, llave recuperada'
             }
-            disabled={changeStatus.isPending}
+            disabled={mutation.isPending}
           />
           <p className="text-xs text-muted-foreground">
             Este motivo queda en el historial de la llave.
@@ -94,16 +97,16 @@ export function KeyStatusChangeDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={changeStatus.isPending}
+            disabled={mutation.isPending}
           >
             Cancelar
           </Button>
           <Button
-            variant={targetStatus === 'disabled' ? 'destructive' : 'default'}
+            variant={isRequestDisable ? 'destructive' : 'default'}
             onClick={handleConfirm}
             disabled={!canConfirm}
           >
-            {changeStatus.isPending ? 'Guardando...' : actionLabel}
+            {mutation.isPending ? 'Guardando...' : actionLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

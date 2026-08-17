@@ -166,19 +166,19 @@ Chain strategy: size-exception
 ## W10 — Admin UI: Key States
 
 ### T-21 — RED: KeyStatusChangeDialog dispatches per source state
-- [ ] Write Vitest test in `apps/admin/src/components/keys/__tests__/KeyStatusChangeDialog.test.tsx`: assert dialog shows "Solicitar baja" action when key is `active`; assert dialog shows "Cancelar baja" when key is `pending_disable`; assert correct RPC wrapper is called for each action.
+- [x] Write Vitest test in `apps/admin/src/components/keys/__tests__/KeyStatusChangeDialog.test.tsx`: assert dialog shows "Solicitar baja" action when key is `active`; assert dialog shows "Cancelar baja" when key is `pending_disable`; assert correct RPC wrapper is called for each action.
   [key-lifecycle:R2-active→pending_disable, key-lifecycle:R2-pending_disable→active]
 
 ### T-22 — GREEN: Update useKeys + KeysTable for 5 states
-- [ ] Update `apps/admin/src/hooks/useKeys.ts`: add `pending_creation`, `pending_installation`, `pending_disable` to status query and STATUS_LABEL map. Update `apps/admin/src/components/keys/KeysTable.tsx`: render status badge for all 5 states.
+- [x] Update `apps/admin/src/hooks/useKeys.ts`: add `pending_creation`, `pending_installation`, `pending_disable` to status query and STATUS_LABEL map. Update `apps/admin/src/components/keys/KeysTable.tsx`: render status badge for all 5 states.
   [key-lifecycle:R1]
 
 ### T-23 — GREEN: KeyStatusChangeDialog — context-aware disable actions
-- [ ] Update `apps/admin/src/components/keys/KeyStatusChangeDialog.tsx`: render "Solicitar baja" button calling `requestKeyDisable` when source state is `active`; render "Cancelar baja" button calling `cancelKeyDisable` when source state is `pending_disable`; update `useMutateKey.ts` to expose `requestDisable` and `cancelDisable` mutations.
+- [x] Update `apps/admin/src/components/keys/KeyStatusChangeDialog.tsx`: render "Solicitar baja" button calling `requestKeyDisable` when source state is `active`; render "Cancelar baja" button calling `cancelKeyDisable` when source state is `pending_disable`; update `useMutateKey.ts` to expose `requestDisable` and `cancelDisable` mutations.
   [key-lifecycle:R2-active→pending_disable, key-lifecycle:R2-pending_disable→active]
 
 ### T-24 — Update KeyDetailDialog for new states
-- [ ] Update `apps/admin/src/components/keys/KeyDetailDialog.tsx`: display `pending_disable` state with disable-cancel action; show key_events with new event_type labels; surface `pending_creation` and `pending_installation` as informational states.
+- [x] Update `apps/admin/src/components/keys/KeyDetailDialog.tsx`: display `pending_disable` state with disable-cancel action; show key_events with new event_type labels; surface `pending_creation` and `pending_installation` as informational states.
   [key-lifecycle:R1, key-lifecycle:R3-audit]
 
 ---

@@ -4,7 +4,15 @@ import { supabase } from '@/lib/supabase';
 export interface KeyEventRow {
   id: string;
   key_id: string;
-  event_type: 'activated' | 'deactivated';
+  event_type:
+    | 'activated'
+    | 'deactivated'
+    | 'creation_requested'
+    | 'configured'
+    | 'disable_requested'
+    | 'disable_cancelled'
+    | 'disabled'
+    | 'snapshot_skipped';
   note: string | null;
   actor_staff_id: string | null;
   actor_name: string | null;

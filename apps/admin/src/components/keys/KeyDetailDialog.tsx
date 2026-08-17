@@ -8,6 +8,7 @@ import {
 import { Badge } from '@vitalock/ui';
 import { useKeyEvents } from '@/hooks/useKeyEvents';
 import type { KeyRow } from '@/hooks/useKeys';
+import type { KeyEventRow } from '@/hooks/useKeyEvents';
 
 interface KeyDetailDialogProps {
   open: boolean;
@@ -16,13 +17,44 @@ interface KeyDetailDialogProps {
 }
 
 const STATUS_LABEL: Record<KeyRow['status'], string> = {
+  pending_creation: 'En creación',
+  pending_installation: 'Pendiente de instalación',
   active: 'Activa',
+  pending_disable: 'Baja solicitada',
   disabled: 'Dada de baja',
 };
 
-const EVENT_LABEL: Record<'activated' | 'deactivated', string> = {
+const STATUS_VARIANT: Record<
+  KeyRow['status'],
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  pending_creation: 'secondary',
+  pending_installation: 'outline',
+  active: 'default',
+  pending_disable: 'outline',
+  disabled: 'secondary',
+};
+
+const EVENT_LABEL: Record<KeyEventRow['event_type'], string> = {
   activated: 'Activada',
   deactivated: 'Dada de baja',
+  creation_requested: 'Creación solicitada',
+  configured: 'Configurada',
+  disable_requested: 'Baja solicitada',
+  disable_cancelled: 'Baja cancelada',
+  disabled: 'Deshabilitada',
+  snapshot_skipped: 'Omitida en actualización',
+};
+
+const EVENT_DOT_CLASS: Record<KeyEventRow['event_type'], string> = {
+  activated: 'bg-primary',
+  deactivated: 'bg-muted-foreground',
+  creation_requested: 'bg-muted-foreground',
+  configured: 'bg-primary',
+  disable_requested: 'bg-yellow-500',
+  disable_cancelled: 'bg-primary',
+  disabled: 'bg-destructive',
+  snapshot_skipped: 'bg-muted-foreground',
 };
 
 function fmt(iso: string | null | undefined): string {
@@ -53,6 +85,9 @@ export function KeyDetailDialog({ open, onOpenChange, keyRow }: KeyDetailDialogP
     .filter(Boolean)
     .join(' ');
 
+  const isInformational =
+    keyRow.status === 'pending_creation' || keyRow.status === 'pending_installation';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -69,11 +104,25 @@ export function KeyDetailDialog({ open, onOpenChange, keyRow }: KeyDetailDialogP
           <Row
             label="Estado"
             value={
-              <Badge variant={keyRow.status === 'active' ? 'default' : 'secondary'}>
+              <Badge variant={STATUS_VARIANT[keyRow.status]}>
                 {STATUS_LABEL[keyRow.status]}
               </Badge>
             }
           />
+
+          {isInformational && (
+            <p className="text-xs text-muted-foreground bg-muted rounded px-2 py-1">
+              {keyRow.status === 'pending_creation'
+                ? 'Esta llave está siendo configurada. Podrá instalarse una vez lista.'
+                : 'Esta llave está lista para instalarse en el equipo.'}
+            </p>
+          )}
+
+          {keyRow.status === 'pending_disable' && (
+            <p className="text-xs text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded px-2 py-1">
+              Se solicitó la baja de esta llave. Puede cancelarse antes de que el técnico resuelva la tarea.
+            </p>
+          )}
 
           <hr className="border-border" />
 
@@ -91,7 +140,6 @@ export function KeyDetailDialog({ open, onOpenChange, keyRow }: KeyDetailDialogP
           </p>
 
           <div className="flex flex-col gap-2 text-sm">
-            {/* Static creation entry — always first-in-time */}
             <div className="flex gap-3">
               <span className="w-2 h-2 mt-1.5 rounded-full bg-primary shrink-0" />
               <div className="flex-1 min-w-0">
@@ -115,9 +163,7 @@ export function KeyDetailDialog({ open, onOpenChange, keyRow }: KeyDetailDialogP
             {events.map((e) => (
               <div key={e.id} className="flex gap-3">
                 <span
-                  className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${
-                    e.event_type === 'activated' ? 'bg-primary' : 'bg-muted-foreground'
-                  }`}
+                  className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${EVENT_DOT_CLASS[e.event_type]}`}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between gap-2">

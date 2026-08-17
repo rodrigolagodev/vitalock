@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Power } from 'lucide-react';
-import { StatusBadge } from '@vitalock/ui';
+import { StatusBadge, type StatusTone } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
@@ -20,8 +20,19 @@ function fmtDate(iso: string | null | undefined): string {
 }
 
 const STATUS_LABEL: Record<KeyRow['status'], string> = {
+  pending_creation: 'En creación',
+  pending_installation: 'Pendiente de instalación',
   active: 'Activa',
+  pending_disable: 'Baja solicitada',
   disabled: 'Dada de baja',
+};
+
+const STATUS_TONE: Record<KeyRow['status'], StatusTone> = {
+  pending_creation: 'neutral',
+  pending_installation: 'warning',
+  active: 'success',
+  pending_disable: 'warning',
+  disabled: 'danger',
 };
 
 export function KeysTable({ keys, buildingId, isFetching = false }: KeysTableProps) {
@@ -31,9 +42,13 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
   const actions: DataTableAction<KeyRow>[] = [
     {
       icon: Power,
-      label: (k) =>
-        k.status === 'active' ? `Dar de baja a ${k.rfid_code}` : `Activar ${k.rfid_code}`,
+      label: (k) => {
+        if (k.status === 'active') return `Solicitar baja de ${k.rfid_code}`;
+        if (k.status === 'pending_disable') return `Cancelar baja de ${k.rfid_code}`;
+        return `Ver ${k.rfid_code}`;
+      },
       className: (k) => (k.status === 'active' ? 'text-destructive hover:text-destructive' : ''),
+      show: (k) => k.status === 'active' || k.status === 'pending_disable',
       onClick: (k) => setChangingStatusFor(k),
     },
   ];
@@ -72,7 +87,7 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
           {
             header: 'Estado',
             cell: (k) => (
-              <StatusBadge tone={k.status === 'active' ? 'success' : 'danger'}>
+              <StatusBadge tone={STATUS_TONE[k.status]}>
                 {STATUS_LABEL[k.status]}
               </StatusBadge>
             ),
