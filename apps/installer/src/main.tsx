@@ -4,9 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
-import { loadClientEnv } from '@vitalock/shared';
+import { addLogSink, consoleSink, loadClientEnv } from '@vitalock/shared';
 import { createSupabaseClient } from '@vitalock/supabase';
 import { AuthProvider, ProtectedRoute, AuthErrorPage } from '@vitalock/shared';
+
+addLogSink(consoleSink);
 import App from './App';
 import IndexRoute from './routes/index';
 import LoginPage from './routes/LoginPage';

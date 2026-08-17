@@ -7,7 +7,7 @@ import { useAuthContext } from '@vitalock/shared';
 
 const schema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(1, 'La contraseña es requerida'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
 });
 
 type FormValues = z.infer<typeof schema>;

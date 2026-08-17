@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { escapeIlikeValue } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { administrationsKey } from '@/lib/queryKeys';
 
@@ -29,8 +30,9 @@ export function useAdministrations(
       }
 
       if (search && search.trim() !== '') {
+        const safe = escapeIlikeValue(search.trim());
         query = query.or(
-          `company_name.ilike.%${search.trim()}%,tax_id.ilike.%${search.trim()}%`,
+          `company_name.ilike.%${safe}%,tax_id.ilike.%${safe}%`,
         );
       }
 

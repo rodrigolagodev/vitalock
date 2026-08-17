@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { escapeIlikeValue } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { tareasKey } from '@/lib/queryKeys';
 
@@ -91,8 +92,9 @@ export function useTareas({
 
       // Server-side text search on ticket_number and description.
       if (trimmed) {
+        const safe = escapeIlikeValue(trimmed);
         query = query.or(
-          `ticket_number.ilike.%${trimmed}%,description.ilike.%${trimmed}%`,
+          `ticket_number.ilike.%${safe}%,description.ilike.%${safe}%`,
         );
       }
 

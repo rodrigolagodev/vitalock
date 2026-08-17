@@ -33,8 +33,8 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     render(<LoginPage />);
     await user.type(screen.getByLabelText('Email'), 'admin@vitalock.com');
-    await user.type(screen.getByLabelText('Contraseña'), 'secreto');
+    await user.type(screen.getByLabelText('Contraseña'), 'secreto123');
     await user.click(screen.getByRole('button', { name: 'Ingresar' }));
-    expect(mockSignIn).toHaveBeenCalledWith('admin@vitalock.com', 'secreto');
+    expect(mockSignIn).toHaveBeenCalledWith('admin@vitalock.com', 'secreto123');
   });
 });

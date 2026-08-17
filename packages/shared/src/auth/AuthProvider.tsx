@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 import type { TypedSupabaseClient } from '@vitalock/supabase';
 import { useAuth } from './useAuth';
+import { useIdleTimeout } from './useIdleTimeout';
 import type { StaffRole, UseAuthReturn } from './types';
 
 interface AuthProviderProps {
@@ -14,6 +15,12 @@ export const AuthContext = createContext<UseAuthReturn | null>(null);
 
 export function AuthProvider({ supabase, expectedRole, children }: AuthProviderProps) {
   const auth = useAuth(supabase, expectedRole);
+  useIdleTimeout({
+    enabled: auth.phase === 'authenticated',
+    onIdle: () => {
+      void auth.signOut();
+    },
+  });
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 

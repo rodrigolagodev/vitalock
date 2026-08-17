@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { escapeIlikeValue } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { particularesKey } from '@/lib/queryKeys';
 import { useDebounce } from './useDebounce';
@@ -43,8 +44,9 @@ export function useParticulares({ search }: { search?: string } = {}) {
         .eq('status', 'active');
 
       if (trimmed) {
+        const safe = escapeIlikeValue(trimmed);
         query = query.or(
-          `full_name.ilike.%${trimmed}%,dni.ilike.%${trimmed}%`,
+          `full_name.ilike.%${safe}%,dni.ilike.%${safe}%`,
         );
       }
 

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { escapeIlikeValue } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { ordensKey } from '@/lib/queryKeys';
 
@@ -64,8 +65,9 @@ export function useOrdens({ search, status, orderType }: UseOrdenFilters = {}) {
 
       // Server-side text search on order_number and particular_full_name.
       if (trimmed) {
+        const safe = escapeIlikeValue(trimmed);
         query = query.or(
-          `order_number.ilike.%${trimmed}%,particular_full_name.ilike.%${trimmed}%`,
+          `order_number.ilike.%${safe}%,particular_full_name.ilike.%${safe}%`,
         );
       }
 

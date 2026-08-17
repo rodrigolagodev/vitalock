@@ -6,7 +6,7 @@ import type { AuthState, StaffProfile, StaffRole, UseAuthReturn } from './types'
 const LOADING_PHASES = new Set(['initializing', 'authenticating', 'fetching_profile'] as const);
 
 /** Max time to wait for the staff profile query before giving up (ms). */
-const PROFILE_FETCH_TIMEOUT_MS = 15_000;
+const PROFILE_FETCH_TIMEOUT_MS = 8_000;
 
 const initialState: AuthState = {
   phase: 'initializing',

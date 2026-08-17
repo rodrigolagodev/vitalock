@@ -11,6 +11,7 @@ vi.mock('@vitalock/shared', () => ({
   useAuthContext: () => ({
     staff: { id: mockStaffId, full_name: 'Bruno', role: 'installer', status: 'active' },
   }),
+  logger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
 // Mock supabase with channel support

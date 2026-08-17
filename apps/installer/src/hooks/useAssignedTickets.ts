@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthContext } from '@vitalock/shared';
+import { logger, useAuthContext } from '@vitalock/shared';
 import { assignedTicketsKey } from '@/lib/queryKeys';
+
+const log = logger('useAssignedTickets');
 
 // ---------------------------------------------------------------------------
 // Types
@@ -148,10 +150,7 @@ export function useAssignedTickets(): UseQueryResult<AssignedTicket[]> {
 
     channel.subscribe((status, err) => {
       if (status === 'CHANNEL_ERROR') {
-        console.warn(
-          '[useAssignedTickets] Realtime filter rejected, re-subscribing filterless. Error:',
-          err,
-        );
+        log.warn('Realtime filter rejected, re-subscribing filterless.', err);
         void supabase.removeChannel(channel);
 
         // Re-subscribe without filter; query's own WHERE clause scopes the data

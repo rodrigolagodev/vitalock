@@ -2,8 +2,10 @@ import { useEffect } from 'react';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
-import { useAuthContext } from '@vitalock/shared';
+import { logger, useAuthContext } from '@vitalock/shared';
 import { worklistKey } from '@/lib/queryKeys';
+
+const log = logger('useWorklist');
 
 // ---------------------------------------------------------------------------
 // Types
@@ -255,10 +257,7 @@ export function useWorklist(): UseQueryResult<WorklistAuthorization[]> {
 
     channel.subscribe((status, err) => {
       if (status === 'CHANNEL_ERROR') {
-        console.warn(
-          '[useWorklist] Realtime filter rejected, re-subscribing filterless. Error:',
-          err,
-        );
+        log.warn('Realtime filter rejected, re-subscribing filterless.', err);
         void supabase.removeChannel(channel);
 
         // Re-subscribe without filter
