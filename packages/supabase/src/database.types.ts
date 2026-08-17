@@ -7,8 +7,81 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   identity: {
     Tables: {
+      audit_log: {
+        Row: {
+          actor_id: string | null
+          after_value: string | null
+          before_value: string | null
+          event_type: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          subject_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          after_value?: string | null
+          before_value?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          subject_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          after_value?: string | null
+          before_value?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff: {
         Row: {
           auth_user_id: string | null
@@ -578,6 +651,32 @@ export type Database = {
         }
         Relationships: []
       }
+      rfid_key_intended_equipment: {
+        Row: {
+          created_at: string
+          equipment_id: string
+          rfid_key_id: string
+        }
+        Insert: {
+          created_at?: string
+          equipment_id: string
+          rfid_key_id: string
+        }
+        Update: {
+          created_at?: string
+          equipment_id?: string
+          rfid_key_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfid_key_intended_equipment_rfid_key_id_fkey"
+            columns: ["rfid_key_id"]
+            isOneToOne: false
+            referencedRelation: "rfid_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfid_keys: {
         Row: {
           activated_at: string
@@ -766,6 +865,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_key_disable: {
+        Args: { p_actor_staff_id?: string; p_key_id: string; p_note?: string }
+        Returns: undefined
+      }
       change_key_status: {
         Args: {
           p_actor_staff_id?: string
@@ -785,6 +888,19 @@ export type Database = {
         Returns: string
       }
       confirm_order: { Args: { p_order_id: string }; Returns: undefined }
+      create_equipment_update: {
+        Args: {
+          p_actor_staff_id?: string
+          p_administration_id: string
+          p_building_id: string
+          p_description: string
+          p_equipment_id: string
+          p_keys_to_activate?: string[]
+          p_keys_to_disable?: string[]
+          p_mdb_storage_path: string
+        }
+        Returns: string
+      }
       create_order_with_items: {
         Args: { p_items: Json[]; p_order: Json }
         Returns: string
@@ -826,6 +942,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      request_key_disable: {
+        Args: { p_actor_staff_id?: string; p_key_id: string; p_note?: string }
+        Returns: undefined
+      }
       resolve_equipment_installation: {
         Args: {
           p_actor_staff_id?: string
@@ -846,6 +966,10 @@ export type Database = {
           p_old_equipment_id: string
           p_ticket_id: string
         }
+        Returns: string
+      }
+      resolve_equipment_update: {
+        Args: { p_actor_staff_id?: string; p_task_id: string }
         Returns: string
       }
       resolve_ticket: {
@@ -1500,6 +1624,53 @@ export type Database = {
   }
   support: {
     Tables: {
+      equipment_updates: {
+        Row: {
+          created_at: string
+          created_by_staff_id: string | null
+          equipment_id: string
+          id: string
+          keys_to_activate: string[]
+          keys_to_disable: string[]
+          mdb_storage_path: string
+          resolved_at: string | null
+          resolved_by_staff_id: string | null
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_staff_id?: string | null
+          equipment_id: string
+          id?: string
+          keys_to_activate?: string[]
+          keys_to_disable?: string[]
+          mdb_storage_path: string
+          resolved_at?: string | null
+          resolved_by_staff_id?: string | null
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by_staff_id?: string | null
+          equipment_id?: string
+          id?: string
+          keys_to_activate?: string[]
+          keys_to_disable?: string[]
+          mdb_storage_path?: string
+          resolved_at?: string | null
+          resolved_by_staff_id?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_updates_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_comments: {
         Row: {
           author_staff_id: string | null
@@ -1741,6 +1912,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   identity: {
     Enums: {},
   },
@@ -1757,4 +1931,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
