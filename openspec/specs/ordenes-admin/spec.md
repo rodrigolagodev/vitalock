@@ -185,15 +185,50 @@ any non-terminal state → `cancelled`.
 The `in_preparation` enum value MUST be removed. The DB MUST enforce that status
 transitions are legal (no skip, no reverse from terminal). Specific rules:
 
-- `draft → confirmed`: admin clicks "Confirmar orden" on OrdenDetailPage (keys and technical order types).
-- `confirmed → in_progress`: auto-transition via `recompute_order_status` when work begins — for keys orders: first key item reaches `configured`; for technical orders: first ticket enters `in_progress`.
-- `in_progress → ready_for_pickup`: auto-transition when ALL of the following hold for a keys order: (a) every non-cancelled key `order_item` has `produced_key_id` IS NOT NULL, AND (b) every `key_authorizations` row whose `rfid_key_id` belongs to those items has `sync_state IN ('installed', 'cancelled')`. `sync_state = 'pending_install'` blocks readiness. `sync_state = 'pending_removal'` does NOT block. Key items with `produced_key_id IS NULL` are unresolved and keep the order in `in_progress`. Technical orders skip this state.
-- `ready_for_pickup → in_progress` (demotion): if an order is `ready_for_pickup` and any `key_authorizations` row for its keys transitions to `pending_install`, `recompute_order_status` MUST demote the order back to `in_progress`.
-- `ready_for_pickup → completed`: auto-transition when all non-cancelled key items have `picked_up_at` set.
-- `completed → invoiced`: manual admin action (unchanged).
+- `draft → confirmed`: admin clicks "Confirmar orden" on OrdenDetailPage.
+- `confirmed → in_progress`: auto-transition via `recompute_order_status` when
+  work begins — for keys orders: first key item reaches `configured`; for
+  technical orders: first ticket enters `in_progress`.
+- `in_progress → ready_for_pickup`: auto-transition when ALL of the following
+  hold for a keys order: (a) every non-cancelled key `order_item` has
+  `produced_key_id` IS NOT NULL, AND (b) every `key_authorizations` row whose
+  `rfid_key_id` belongs to those items has `sync_state IN ('installed',
+  'cancelled')`. `sync_state = 'pending_install'` blocks readiness. The
+  `key_authorizations` rows themselves are now created at `equipment_update`
+  resolution, not at `key_configuration`. An order MUST NOT promote to
+  `ready_for_pickup` until the relevant `equipment_update` task has resolved
+  and minted the `key_authorizations` rows.
+- `ready_for_pickup → in_progress` (demotion): if an order is `ready_for_pickup`
+  and any `key_authorizations` row for its keys transitions to `pending_install`,
+  `recompute_order_status` MUST demote the order back to `in_progress`.
+- `ready_for_pickup → completed`: auto-transition when all non-cancelled key
+  items have `picked_up_at` set.
+- `completed → invoiced`: manual admin action.
 - Any non-terminal → `cancelled`: manual "Cancelar orden" button.
 
-(Previously: `draft → in_preparation → ready_for_pickup → completed`; transition from draft was "Iniciar preparación"; `in_preparation` was a valid enum value; `confirmed` and `in_progress` states did not exist in this shape; `ready_for_pickup` used to be reached with only `configured` keys, ignoring pending key installation tasks; there was no demotion rule tied to authorization state; ready_for_pickup gate read `key_installation` tickets, not `key_authorizations.sync_state`)
+(Previously: `in_progress → ready_for_pickup` could trigger as soon as
+`key_authorizations` rows were inserted at `configure_key_order_item` time
+with `sync_state = 'pending_install'`. Under the new lifecycle, `key_authorizations`
+are never created at configure time — they are created only at
+`equipment_update` resolution, at which point `sync_state` reflects the
+physically-confirmed installation state. `ready_for_pickup` therefore fires
+only after the installer has completed and resolved the `equipment_update` task.)
+
+#### Scenario: Order does NOT reach ready_for_pickup after configure only
+
+- GIVEN a keys order in `in_progress` with a configured key item (produced_key_id set)
+- AND the relevant `equipment_update` task has NOT yet been resolved
+- WHEN `recompute_order_status` runs
+- THEN the order stays `in_progress`
+- AND no `key_authorizations` row exists yet (none were created at configure time)
+
+#### Scenario: Order promotes to ready_for_pickup after equipment_update resolves
+
+- GIVEN a keys order in `in_progress` with all non-cancelled key items configured
+- AND the relevant `equipment_update` task resolves, minting `key_authorizations`
+  with `sync_state = 'installed'`
+- WHEN `recompute_order_status` runs (triggered by the resolution)
+- THEN the order status becomes `ready_for_pickup`
 
 #### Scenario: Confirm order transitions draft to confirmed
 
@@ -208,43 +243,19 @@ transitions are legal (no skip, no reverse from terminal). Specific rules:
 - WHEN the first key item reaches status `configured`
 - THEN `recompute_order_status` transitions the order to `in_progress`
 
-#### Scenario: confirmed auto-advances to in_progress on first technical ticket
-
-- GIVEN a technical order with status `confirmed`
-- WHEN the first assigned ticket transitions to status `in_progress`
-- THEN `recompute_order_status` transitions the order to `in_progress`
-
-#### Scenario: Unconfigured key item (produced_key_id NULL) blocks ready_for_pickup
+#### Scenario: Unconfigured key item blocks ready_for_pickup
 
 - GIVEN a keys order in `in_progress` with 2 key items
 - AND item A has `produced_key_id` set; item B has `produced_key_id IS NULL`
 - WHEN `recompute_order_status` runs
-- THEN the order stays `in_progress` (NULL produced_key_id is unresolved)
-
-#### Scenario: All keys configured, all authorizations installed — order promotes
-
-- GIVEN a keys order in `in_progress`
-- AND every non-cancelled key item has `produced_key_id` set
-- AND every `key_authorizations` row for those keys has `sync_state = 'installed'`
-- WHEN `recompute_order_status` runs (e.g. on the last authorization update)
-- THEN the order status becomes `ready_for_pickup`
+- THEN the order stays `in_progress`
 
 #### Scenario: pending_install authorization blocks ready_for_pickup
 
-- GIVEN a keys order in `in_progress`
-- AND every non-cancelled key item has `produced_key_id` set
-- AND at least one `key_authorizations` row has `sync_state = 'pending_install'`
+- GIVEN a keys order in `in_progress` with all key items configured
+- AND a `key_authorizations` row exists with `sync_state = 'pending_install'`
 - WHEN `recompute_order_status` runs
 - THEN the order stays `in_progress`
-
-#### Scenario: pending_removal authorization does NOT block ready_for_pickup
-
-- GIVEN a keys order in `in_progress`
-- AND every non-cancelled key item has `produced_key_id` set
-- AND one `key_authorizations` row has `sync_state = 'pending_removal'`
-- AND all other authorizations have `sync_state IN ('installed', 'cancelled')`
-- WHEN `recompute_order_status` runs
-- THEN the order promotes to `ready_for_pickup` (pending_removal is not a blocker)
 
 #### Scenario: ready_for_pickup demotes to in_progress when authorization flips to pending_install
 
@@ -252,17 +263,10 @@ transitions are legal (no skip, no reverse from terminal). Specific rules:
 - WHEN an existing `key_authorizations` row for one of its keys transitions to `sync_state = 'pending_install'`
 - THEN `recompute_order_status` sets the order status back to `in_progress`
 
-#### Scenario: Cancelled item excluded from auto-transition check
-
-- GIVEN an order in `in_progress` with 1 configured key item and 1 cancelled key item
-- AND the configured item's authorizations all have `sync_state = 'installed'`
-- WHEN `recompute_order_status` runs
-- THEN the order transitions to `ready_for_pickup` (cancelled item and its authorizations are excluded)
-
 #### Scenario: All keys picked up completes the order
 
 - GIVEN an order in `ready_for_pickup` with 2 configured key items
-- WHEN the last pickup is registered (all items have `picked_up_at` set)
+- WHEN the last pickup is registered
 - THEN the order status becomes `completed`
 
 #### Scenario: Cancel order from any non-terminal state
@@ -270,12 +274,6 @@ transitions are legal (no skip, no reverse from terminal). Specific rules:
 - GIVEN order status is `draft`, `confirmed`, `in_progress`, or `ready_for_pickup`
 - WHEN the admin clicks "Cancelar orden" and confirms
 - THEN order status becomes `cancelled`
-
-#### Scenario: Cancel blocked on terminal state
-
-- GIVEN order status is `completed`, `invoiced`, or `cancelled`
-- WHEN the admin attempts to cancel
-- THEN the cancel button is absent or disabled
 
 ---
 
@@ -300,38 +298,41 @@ non-key item types, MUST NOT show the Configurar button.
 The system MUST provide ConfigureKeyItemSheet for resolving a pending key item.
 The sheet MUST collect: `rfid_code` (required text), `unit_id` (required select
 from units belonging to the item's building, plus a QuickUnitCreateDialog link),
-and an optional multi-select of equipment in the same building for
+and an optional multi-select of equipment in the same building for future
 `key_authorizations`. On save the system MUST atomically:
-1. INSERT an `rfid_keys` row with `order_item_id` = the order item id.
-2. INSERT `key_authorizations` for each selected equipment (if any).
-3. UPDATE `order_items.produced_key_id` and `status='configured'`.
-4. **If `order_items.product_id` is non-null**: emit an `egreso_grabacion` movement for that product and decrement `products.stock_total` (all within the same transaction as steps 1–3).
-5. **If a `key_configuration` ticket exists for this order_item**: mark it `resolved` automatically.
-6. **If `order_items.product_id` is null**: steps 1–3 execute normally; NO stock movement is emitted (backward compatible).
+1. INSERT an `rfid_keys` row with `order_item_id` = the order item id and
+   status = `pending_creation`.
+2. UPDATE `order_items.produced_key_id` and `status = 'configured'`.
+3. **If `order_items.product_id` is non-null**: emit an `egreso_grabacion`
+   movement for that product and decrement `products.stock_total`.
+4. **If a `key_configuration` ticket exists for this order_item**: mark it
+   `resolved` automatically (which advances the key to `pending_installation`).
+5. **MUST NOT** insert `key_authorizations` rows at this step — authorization
+   mint is deferred to `resolve_equipment_update`.
 
 The `rfid_keys.order_item_id` MUST be immutable once set (DB trigger enforced).
-SQLSTATE 23503 (FK violation) MUST map to a friendly toast. The
-`ConfigureKeyItemSheet` UI MUST remain unchanged from the admin's perspective —
-stock movement is a transparent back-end side-effect.
-(Previously: on save the RPC only inserted rfid_keys, key_authorizations, and updated order_items; no stock movement was emitted; no ticket was resolved)
+SQLSTATE 23503 (FK violation) MUST map to a friendly toast.
 
-#### Scenario: Admin configures a key item successfully
+(Previously: on save the RPC inserted rfid_keys with status `active`, inserted
+`key_authorizations` for selected equipment inline, and updated order_items.
+Authorization insert at configure time is no longer performed.)
+
+#### Scenario: Admin configures a key item — key minted as pending_creation
 
 - GIVEN a pending key item for building B
 - WHEN the admin fills rfid_code, selects unit U, selects equipment E, and saves
-- THEN an rfid_keys row is created with order_item_id set
-- AND a key_authorizations row is created for equipment E
-- AND order_items.status becomes 'configured'
+- THEN an `rfid_keys` row is created with status `pending_creation` and order_item_id set
+- AND NO `key_authorizations` row is created
+- AND order_items.status becomes `configured`
 - AND a success toast is shown
-- AND the sheet closes
 
 #### Scenario: Configure with no equipment selected
 
 - GIVEN the admin fills rfid_code and unit but selects no equipment
 - WHEN the admin saves
-- THEN the rfid_keys row is created with order_item_id set
-- AND no key_authorizations rows are created
-- AND order_items.status becomes 'configured'
+- THEN the `rfid_keys` row is created with status `pending_creation`
+- AND no `key_authorizations` rows are created
+- AND order_items.status becomes `configured`
 
 #### Scenario: QuickUnitCreateDialog creates unit in-context
 
@@ -353,8 +354,8 @@ stock movement is a transparent back-end side-effect.
 - WHEN admin configures the key item successfully
 - THEN an `egreso_grabacion` movement is created for product P
 - AND `stock_total` decrements by the item quantity
-- AND `stock_reservado` decrements by the item quantity (reservation consumed)
-- AND the rfid_keys row and order_item update are committed in the same transaction
+- AND `stock_reservado` decrements by the item quantity
+- AND the rfid_keys row and order_item update are in the same transaction
 
 #### Scenario: No stock movement emitted when product_id is null
 
@@ -368,7 +369,8 @@ stock movement is a transparent back-end side-effect.
 - GIVEN a `key_configuration` ticket exists for the order_item being configured
 - WHEN the configure RPC succeeds
 - THEN the `key_configuration` ticket status is set to `resolved`
-- AND a `key_installation` ticket is created (per resolution chain rule)
+- AND the `rfid_keys` row advances to status `pending_installation`
+- AND no `key_installation` ticket is spawned
 
 ---
 
