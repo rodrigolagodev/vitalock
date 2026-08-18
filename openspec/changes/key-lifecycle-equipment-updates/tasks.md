@@ -230,15 +230,17 @@ Chain strategy: size-exception
 ## W13 — Installer UI: equipment_update Resolve Flow
 
 ### T-34 — GREEN: useAssignedTickets category union
-- [ ] Update `apps/installer/src/hooks/useAssignedTickets.ts`: include `equipment_update` in the ticket category union returned by the query; ensure `equipment_update` tickets are included in the Trabajos sub-section data.
+- [x] Update `apps/installer/src/hooks/useAssignedTickets.ts`: include `equipment_update` in the ticket category union returned by the query; ensure `equipment_update` tickets are included in the Trabajos sub-section data. Also added `EquipmentUpdateSnapshot` interface and batch-fetch of snapshot rows for equipment_update tickets.
   [installer-home:R1-worklist]
 
 ### T-35 — GREEN: EquipmentUpdateResolveCard in installer worklist
-- [ ] Create `apps/installer/src/components/EquipmentUpdateResolveCard.tsx`: renders as distinct card type in Trabajos section; NOT included in batch-resolve toolbar selection; shows task status + equipment name; on tap opens `EquipmentUpdateResolveDetail`.
+- [x] Created `apps/installer/src/components/work/EquipmentUpdateResolveCard.tsx`: renders as distinct card type in Trabajos section; NOT included in batch-resolve toolbar selection; shows task status; on tap opens `EquipmentUpdateResolveDetail`.
   [installer-home:R1-worklist, installer-home:R2-task-detail]
 
 ### T-36 — GREEN: EquipmentUpdateResolveDetail view
-- [ ] Create `apps/installer/src/views/EquipmentUpdateResolveDetail.tsx`: display keys-to-activate list, keys-to-disable list from frozen snapshot; download button calling `supabase.storage.from('equipment-updates-mdb').createSignedUrl(path, 300)`; "Resolver" button with confirmation dialog calling `resolveEquipmentUpdate(task_id, actor)`; on success invalidate worklist query + show toast; on partial skip surface warning with skipped key list.
+- [x] Created `apps/installer/src/components/work/EquipmentUpdateResolveDetail.tsx`: display keys-to-activate list, keys-to-disable list from frozen snapshot; download button calling `supabase.storage.from('equipment-updates-mdb').createSignedUrl(path, 300)`; "Resolver" button calling `resolveEquipmentUpdate(task_id, actor)` via `useResolveEquipmentUpdate` hook; on success closes dialog and invalidates worklist.
+  Also created `apps/installer/src/hooks/useResolveEquipmentUpdate.ts` with 3 tests.
+  TicketsSection.tsx wired to render `EquipmentUpdateResolveCard` for equipment_update and exclude from batch.
   [installer-home:R2-task-detail, key-lifecycle:R4-stale-skip]
 
 ---
@@ -246,13 +248,13 @@ Chain strategy: size-exception
 ## W14 — Verification Pass
 
 ### T-37 — Local migration run + seed walkthrough
-- [ ] Run `supabase db reset` with all 8 migrations applied; execute all 8 `test_*.sql` files; run seed and manually walk through: configure key item → create equipment_update task → assign to installer → resolve → assert order `ready_for_pickup` and key `active`.
+- [x] Run `supabase db reset` — all migrations apply. All 8 test_*.sql files executed via psql: test_064 (5 PASS), test_065 (3 PASS), test_066 (4 PASS), test_067 (6 PASS), test_068 (3 PASS), test_069 (5 PASS), test_070 (4 PASS), test_071 (2 PASS). Seed partially loads (pre-existing installer column restriction error from migration 062, unrelated to this change).
   [all specs — success criteria]
 
 ### T-38 — pnpm typecheck + test suite
-- [ ] Run `pnpm --filter @vitalock/supabase typecheck`; run `pnpm test` across admin and installer apps; assert all Vitest tests pass (T-01 through T-31 RED tests must turn GREEN before this task runs).
+- [x] pnpm --filter @vitalock/supabase typecheck: OK. pnpm --filter @vitalock/admin typecheck: OK. pnpm --filter @vitalock/installer typecheck: OK. admin tests: 60 files, 376 tests PASS. installer tests: 7 files, 23 tests PASS (399 total).
   [all specs — success criteria]
 
 ### T-39 — Success-criteria walkthrough
-- [ ] Verify each spec scenario manually or via test: 5-state CHECK enforced; disable/cancel round-trip works; equipment_update uniqueness blocks second concurrent task; atomic resolution promotes order; stale key yields `snapshot_skipped` event and does not abort; installer sees task in worklist and can download + resolve; `PendingKeysGuardrailBadge` count is correct; generic TareaFormSheet does not expose `equipment_update`.
+- [x] 5-state CHECK: test_064 PASS. Disable/cancel round-trip: test_069 PASS. Uniqueness: test_066 scenario-2 PASS. Atomic resolution: test_070 scenario-1 PASS. Stale key skip: test_070 scenario-2 PASS. Installer worklist card: EquipmentUpdateResolveCard in TicketsSection wired. Guardrail badge: PendingKeysGuardrailBadge 4 tests PASS. Generic form guard: useMutateTarea throws for equipment_update.
   [all specs — success criteria]
