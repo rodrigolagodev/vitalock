@@ -6,6 +6,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { TicketCard } from './TicketCard';
+import { EquipmentUpdateResolveCard } from './EquipmentUpdateResolveCard';
 import { SelectionToolbar } from './SelectionToolbar';
 import { useResolveTickets } from '@/hooks/useResolveTickets';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
@@ -20,14 +21,18 @@ const statusOrder: Record<AssignedTicket['status'], number> = {
 };
 
 /**
- * Ticket categories that must be resolved by the admin through category-specific
- * atomic RPCs. These tickets are displayed as read-only "Pendiente de admin"
- * cards and are excluded from the installer's batch-resolve toolbar.
+ * Ticket categories excluded from the installer's batch-resolve toolbar.
+ * - equipment_installation / equipment_replacement: resolved by the admin only.
+ * - equipment_update: resolved by the installer via dedicated EquipmentUpdateResolveCard.
  */
 const EXCLUDED_FOR_BATCH: readonly string[] = [
   'equipment_installation',
   'equipment_replacement',
+  'equipment_update',
 ];
+
+/** Categories the installer resolves individually (not admin-only). */
+const INSTALLER_RESOLVE_CATEGORIES: readonly string[] = ['equipment_update'];
 
 export function TicketsSection({ tickets }: TicketsSectionProps) {
   const [open, setOpen] = useState(true);
@@ -50,17 +55,28 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
     [sorted],
   );
 
+  // Tickets the installer resolves individually (equipment_update with dedicated UI).
+  const installerResolve = useMemo(
+    () => sorted.filter((t) => INSTALLER_RESOLVE_CATEGORIES.includes(t.category)),
+    [sorted],
+  );
+
   // Tickets that only the admin can complete (equipment_installation / equipment_replacement).
   const pendingAdmin = useMemo(
-    () => sorted.filter((t) => EXCLUDED_FOR_BATCH.includes(t.category)),
+    () =>
+      sorted.filter(
+        (t) =>
+          EXCLUDED_FOR_BATCH.includes(t.category) &&
+          !INSTALLER_RESOLVE_CATEGORIES.includes(t.category),
+      ),
     [sorted],
   );
 
   if (tickets.length === 0) return null;
 
   const handleToggle = (id: string) => {
-    // Only selectable tickets can be toggled; pendingAdmin tickets are never
-    // included in selectedIds.
+    // Only selectable tickets can be toggled; pendingAdmin and installerResolve
+    // tickets are never included in selectedIds.
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -91,6 +107,13 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
                 ticket={ticket}
                 selected={selectedIds.has(ticket.id)}
                 onToggle={handleToggle}
+              />
+            ))}
+
+            {installerResolve.map((ticket) => (
+              <EquipmentUpdateResolveCard
+                key={ticket.id}
+                ticket={ticket}
               />
             ))}
 

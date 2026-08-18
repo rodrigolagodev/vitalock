@@ -10,18 +10,28 @@ const log = logger('useAssignedTickets');
 // Types
 // ---------------------------------------------------------------------------
 
+export interface EquipmentUpdateSnapshot {
+  /** support.equipment_updates.id */
+  task_id: string;
+  mdb_storage_path: string;
+  keys_to_activate: string[];
+  keys_to_disable: string[];
+}
+
 export interface AssignedTicket {
   id: string;
   title: string;
   description: string | null;
   status: 'open' | 'in_progress';
-  category: 'maintenance' | 'installation' | 'equipment_installation' | 'equipment_replacement' | string;
+  category: 'maintenance' | 'installation' | 'equipment_installation' | 'equipment_replacement' | 'equipment_update' | string;
   opened_at: string;
   building: {
     id: string;
     name: string;
     administration: { id: string; company_name: string };
   };
+  /** Only present when category === 'equipment_update'. */
+  equipmentUpdateSnapshot?: EquipmentUpdateSnapshot | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +100,36 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     }
   }
 
+  // Batch-fetch equipment_update snapshots for equipment_update tickets.
+  // RLS ensures the installer can only see snapshots for their own assigned tickets.
+  const equipmentUpdateTicketIds = rows
+    .filter((r) => r.category === 'equipment_update')
+    .map((r) => r.id);
+
+  const snapshotMap = new Map<string, EquipmentUpdateSnapshot>();
+  if (equipmentUpdateTicketIds.length > 0) {
+    const { data: snapshots } = await supabase
+      .schema('support')
+      .from('equipment_updates')
+      .select('id, ticket_id, mdb_storage_path, keys_to_activate, keys_to_disable')
+      .in('ticket_id', equipmentUpdateTicketIds);
+    for (const s of snapshots ?? []) {
+      const snap = s as unknown as {
+        id: string;
+        ticket_id: string;
+        mdb_storage_path: string;
+        keys_to_activate: string[];
+        keys_to_disable: string[];
+      };
+      snapshotMap.set(snap.ticket_id, {
+        task_id: snap.id,
+        mdb_storage_path: snap.mdb_storage_path,
+        keys_to_activate: snap.keys_to_activate,
+        keys_to_disable: snap.keys_to_disable,
+      });
+    }
+  }
+
   return rows.map((r) => {
     const buildingInfo = r.building_id ? buildingMap.get(r.building_id) : undefined;
     const administration = buildingInfo?.administration_id
@@ -111,6 +151,9 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
             administration: administration ?? { id: '', company_name: '' },
           }
         : { id: '', name: '', administration: { id: '', company_name: '' } },
+      equipmentUpdateSnapshot: r.category === 'equipment_update'
+        ? (snapshotMap.get(r.id) ?? null)
+        : undefined,
     };
   });
 }
