@@ -186,27 +186,27 @@ Chain strategy: size-exception
 ## W11 — Admin UI: equipment_update Create + Detail
 
 ### T-25 — RED: useMutateEquipmentUpdate upload+rollback
-- [ ] Write Vitest test in `apps/admin/src/hooks/__tests__/useMutateEquipmentUpdate.test.ts`: assert storage upload occurs before RPC call; assert on RPC error the uploaded file is deleted (rollback); assert 50 MB client-side validation blocks files over the cap; assert mutation returns error state on failure.
+- [x] Write Vitest test in `apps/admin/src/hooks/__tests__/useMutateEquipmentUpdate.test.ts`: assert storage upload occurs before RPC call; assert on RPC error the uploaded file is deleted (rollback); assert 50 MB client-side validation blocks files over the cap; assert mutation returns error state on failure.
   [equipment-updates:R2-mdb-storage, equipment-updates:R5-admin-creation]
 
 ### T-26 — GREEN: useEquipmentUpdates query hook
-- [ ] Create `apps/admin/src/hooks/useEquipmentUpdates.ts`: query `support.equipment_updates` joined with ticket + equipment for a given equipment_id; return snapshot lists and task status.
+- [x] Create `apps/admin/src/hooks/useEquipmentUpdates.ts`: query `support.equipment_updates` joined with ticket + equipment for a given equipment_id; return snapshot lists and task status.
   [equipment-updates:R5-admin-creation, equipment-updates:R6-rls]
 
 ### T-27 — GREEN: useMutateEquipmentUpdate mutation hook
-- [ ] Create `apps/admin/src/hooks/useMutateEquipmentUpdate.ts`: orchestrate storage upload to `equipment-updates-mdb/{ticket_id}/{filename}.mdb` (client-side 50 MB guard + server-side length check), then call `createEquipmentUpdate` RPC; on error delete orphaned storage object.
+- [x] Create `apps/admin/src/hooks/useMutateEquipmentUpdate.ts`: orchestrate storage upload to `equipment-updates-mdb/{ticket_id}/{filename}.mdb` (client-side 50 MB guard + server-side length check), then call `createEquipmentUpdate` RPC; on error delete orphaned storage object.
   [equipment-updates:R2-mdb-storage, equipment-updates:R5-admin-creation]
 
 ### T-28 — GREEN: EquipmentUpdateFormSheet component
-- [ ] Create `apps/admin/src/components/equipment/EquipmentUpdateFormSheet.tsx`: equipment-context sheet with keys-to-activate list (all `pending_installation` on equipment), keys-to-disable list (all `pending_disable`), `.mdb` file input with 50 MB validation, submit calls `useMutateEquipmentUpdate`; block submit if no file attached.
+- [x] Create `apps/admin/src/components/equipment/EquipmentUpdateFormSheet.tsx`: equipment-context sheet with keys-to-activate list (all `pending_installation` on equipment), keys-to-disable list (all `pending_disable`), `.mdb` file input with 50 MB validation, submit calls `useMutateEquipmentUpdate`; block submit if no file attached.
   [equipment-updates:R5-admin-creation]
 
 ### T-29 — GREEN: EquipmentUpdateTaskDetail component
-- [ ] Create `apps/admin/src/components/equipment/EquipmentUpdateTaskDetail.tsx`: admin view of an equipment_update task; dual snapshot lists (activate / disable); download button calling signed URL; task status badge.
+- [x] Create `apps/admin/src/components/equipment/EquipmentUpdateTaskDetail.tsx`: admin view of an equipment_update task; dual snapshot lists (activate / disable); download button calling signed URL; task status badge.
   [equipment-updates:R5-admin-creation, equipment-updates:R3-atomic]
 
 ### T-30 — Update useMutateTarea to reject equipment_update category
-- [ ] Update `apps/admin/src/hooks/useMutateTarea.ts`: guard at the top of the generic create/update mutation to throw if `category === 'equipment_update'`; update `categoryLabels` map to include `equipment_update` label for display-only use.
+- [x] Update `apps/admin/src/hooks/useMutateTarea.ts`: guard at the top of the generic create/update mutation to throw if `category === 'equipment_update'`; update `categoryLabels` map to include `equipment_update` label for display-only use.
   [equipment-updates:R1-no-generic-form]
 
 ---

@@ -28,6 +28,23 @@ export interface UpdateTareaInput {
   cancellation_reason?: string | null;
 }
 
+export const categoryLabels: Record<
+  | 'maintenance'
+  | 'installation'
+  | 'key_configuration'
+  | 'equipment_installation'
+  | 'equipment_replacement'
+  | 'equipment_update',
+  string
+> = {
+  maintenance: 'Mantenimiento',
+  installation: 'Instalación',
+  key_configuration: 'Configuración de llave',
+  equipment_installation: 'Instalación de equipo',
+  equipment_replacement: 'Cambio de equipo',
+  equipment_update: 'Actualización de equipo',
+};
+
 export function useMutateTarea() {
   const queryClient = useQueryClient();
 
@@ -37,6 +54,12 @@ export function useMutateTarea() {
 
   const createTarea = useMutation({
     mutationFn: async (input: CreateTareaInput) => {
+      if ((input.category as string) === 'equipment_update') {
+        throw new Error(
+          'equipment_update tickets must be created through the EquipmentUpdateFormSheet flow.',
+        );
+      }
+
       const { data, error } = await supabase
         .schema('support')
         .from('tickets')
