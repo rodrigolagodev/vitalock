@@ -11,6 +11,7 @@ import { Button, Badge } from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
 import { useResolveEquipmentUpdate } from '@/hooks/useResolveEquipmentUpdate';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
+import { useRfidKeyCodeMap } from '@/hooks/useRfidKeyCodeMap';
 
 interface EquipmentUpdateResolveDetailProps {
   open: boolean;
@@ -26,7 +27,8 @@ interface EquipmentUpdateResolveDetailProps {
  * Resolve flow:
  *   - Calls resolve_equipment_update RPC atomically.
  *   - On success: closes dialog, invalidates worklist via hook.
- *   - Keys that were already in the target state are silently skipped by the RPC.
+ *   - Keys that were already in the target state are silently skipped by the RPC
+ *     and surfaced as a warning to the installer.
  */
 export function EquipmentUpdateResolveDetail({
   open,
@@ -35,6 +37,11 @@ export function EquipmentUpdateResolveDetail({
 }: EquipmentUpdateResolveDetailProps) {
   const snapshot = ticket.equipmentUpdateSnapshot;
   const resolve = useResolveEquipmentUpdate();
+
+  const allKeyIds = snapshot
+    ? [...snapshot.keys_to_activate, ...snapshot.keys_to_disable]
+    : [];
+  const rfidCodeMap = useRfidKeyCodeMap(allKeyIds);
 
   const handleDownload = async () => {
     if (!snapshot) return;
@@ -55,6 +62,10 @@ export function EquipmentUpdateResolveDetail({
       { onSuccess: () => onOpenChange(false) },
     );
   };
+
+  function keyLabel(id: string): string {
+    return rfidCodeMap.get(id) ?? `${id.slice(0, 8)}…`;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,7 +94,7 @@ export function EquipmentUpdateResolveDetail({
                 <div className="flex flex-wrap gap-1">
                   {snapshot.keys_to_activate.map((id) => (
                     <Badge key={id} variant="secondary" className="font-mono text-xs">
-                      {id.slice(0, 8)}…
+                      {keyLabel(id)}
                     </Badge>
                   ))}
                 </div>
@@ -101,7 +112,7 @@ export function EquipmentUpdateResolveDetail({
                 <div className="flex flex-wrap gap-1">
                   {snapshot.keys_to_disable.map((id) => (
                     <Badge key={id} variant="outline" className="font-mono text-xs">
-                      {id.slice(0, 8)}…
+                      {keyLabel(id)}
                     </Badge>
                   ))}
                 </div>

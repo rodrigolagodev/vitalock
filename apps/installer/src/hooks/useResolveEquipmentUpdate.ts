@@ -1,10 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { resolveEquipmentUpdate } from '@vitalock/supabase';
+import type { ResolveEquipmentUpdateResult } from '@vitalock/supabase';
 import { useAuthContext } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { assignedTicketsKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
+
+export type { ResolveEquipmentUpdateResult };
 
 export interface ResolveEquipmentUpdatePayload {
   /** support.equipment_updates.id (the task snapshot row) */
@@ -20,6 +23,7 @@ export interface ResolveEquipmentUpdatePayload {
  *  - Disables keys_to_disable (pending_disable → disabled)
  *  - Transitions the ticket open → in_progress → resolved
  * On success the assigned-tickets worklist is invalidated.
+ * The mutation result exposes skipped_key_ids so the caller can surface a warning.
  */
 export function useResolveEquipmentUpdate() {
   const { staff } = useAuthContext();
@@ -32,9 +36,16 @@ export function useResolveEquipmentUpdate() {
         taskId,
         actorStaffId: staffId || null,
       }),
-    onSuccess: () => {
+    onSuccess: (result: ResolveEquipmentUpdateResult) => {
       void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
-      toast.success('Actualización de equipo resuelta.');
+      const skipped = result.skipped_key_ids.length;
+      if (skipped > 0) {
+        toast.warning(
+          `Actualización resuelta con ${skipped} ${skipped === 1 ? 'llave omitida' : 'llaves omitidas'}.`,
+        );
+      } else {
+        toast.success('Actualización de equipo resuelta.');
+      }
     },
     onError: toastMutationError,
   });

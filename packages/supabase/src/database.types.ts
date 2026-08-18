@@ -970,7 +970,7 @@ export type Database = {
       }
       resolve_equipment_update: {
         Args: { p_actor_staff_id?: string; p_task_id: string }
-        Returns: string
+        Returns: Json
       }
       resolve_ticket: {
         Args: {

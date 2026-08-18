@@ -8,10 +8,11 @@ import type { ReactNode } from 'react';
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const { mockResolveEquipmentUpdateRpc, mockToastSuccess, mockToastError } = vi.hoisted(() => ({
+const { mockResolveEquipmentUpdateRpc, mockToastSuccess, mockToastError, mockToastWarning } = vi.hoisted(() => ({
   mockResolveEquipmentUpdateRpc: vi.fn(),
   mockToastSuccess: vi.fn(),
   mockToastError: vi.fn(),
+  mockToastWarning: vi.fn(),
 }));
 
 vi.mock('@vitalock/supabase', () => ({
@@ -19,7 +20,7 @@ vi.mock('@vitalock/supabase', () => ({
 }));
 
 vi.mock('sonner', () => ({
-  toast: { success: mockToastSuccess, error: mockToastError },
+  toast: { success: mockToastSuccess, error: mockToastError, warning: mockToastWarning },
 }));
 
 vi.mock('@/lib/supabase', () => ({
@@ -65,7 +66,7 @@ describe('useResolveEquipmentUpdate', () => {
   });
 
   it('calls resolveEquipmentUpdate RPC with taskId and actorStaffId on success', async () => {
-    mockResolveEquipmentUpdateRpc.mockResolvedValueOnce('ok');
+    mockResolveEquipmentUpdateRpc.mockResolvedValueOnce({ ticket_id: 'tkt-abc', skipped_key_ids: [] });
     const { Wrapper, queryClient } = makeWrapper();
 
     // Seed an assigned-tickets cache so invalidation can be tested
@@ -85,8 +86,8 @@ describe('useResolveEquipmentUpdate', () => {
     );
   });
 
-  it('shows success toast on resolution', async () => {
-    mockResolveEquipmentUpdateRpc.mockResolvedValueOnce('ok');
+  it('shows success toast when no keys were skipped', async () => {
+    mockResolveEquipmentUpdateRpc.mockResolvedValueOnce({ ticket_id: 'tkt-abc', skipped_key_ids: [] });
     const { Wrapper } = makeWrapper();
 
     const { result } = renderHook(() => useResolveEquipmentUpdate(), { wrapper: Wrapper });
@@ -97,6 +98,58 @@ describe('useResolveEquipmentUpdate', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('resuelta'));
+    expect(mockToastWarning).not.toHaveBeenCalled();
+  });
+
+  it('shows warning toast with count when skipped_key_ids is non-empty', async () => {
+    const skippedId = 'key-uuid-stale-0001';
+    mockResolveEquipmentUpdateRpc.mockResolvedValueOnce({
+      ticket_id: 'tkt-abc',
+      skipped_key_ids: [skippedId],
+    });
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useResolveEquipmentUpdate(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.mutate({ taskId: 'task-skips', ticketId: 'ticket-skips' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockToastWarning).toHaveBeenCalledWith(expect.stringContaining('omitida'));
+    expect(mockToastSuccess).not.toHaveBeenCalled();
+  });
+
+  it('exposes skipped_key_ids in mutation result when keys were skipped', async () => {
+    const skippedIds = ['key-uuid-001', 'key-uuid-002'];
+    mockResolveEquipmentUpdateRpc.mockResolvedValueOnce({
+      ticket_id: 'tkt-xyz',
+      skipped_key_ids: skippedIds,
+    });
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useResolveEquipmentUpdate(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.mutate({ taskId: 'task-skips2', ticketId: 'ticket-skips2' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.skipped_key_ids).toEqual(skippedIds);
+  });
+
+  it('exposes empty skipped_key_ids in mutation result when no keys were skipped', async () => {
+    mockResolveEquipmentUpdateRpc.mockResolvedValueOnce({ ticket_id: 'tkt-clean', skipped_key_ids: [] });
+    const { Wrapper } = makeWrapper();
+
+    const { result } = renderHook(() => useResolveEquipmentUpdate(), { wrapper: Wrapper });
+
+    await act(async () => {
+      result.current.mutate({ taskId: 'task-clean', ticketId: 'ticket-clean' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.skipped_key_ids).toEqual([]);
   });
 
   it('surfaces error when RPC throws', async () => {
