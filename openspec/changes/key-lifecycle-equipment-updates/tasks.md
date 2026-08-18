@@ -214,15 +214,15 @@ Chain strategy: size-exception
 ## W12 — Admin UI: Guardrail Badge on Equipment Detail
 
 ### T-31 — RED: PendingKeysGuardrailBadge math
-- [ ] Write Vitest test in `apps/admin/src/components/equipment/__tests__/PendingKeysGuardrailBadge.test.tsx`: assert badge renders with count=1 when one `pending_installation` key is outside active train; assert badge hidden when all pending keys are covered by an active train; assert badge absent when no pending keys.
+- [x] Write Vitest test in `apps/admin/src/components/equipment/__tests__/PendingKeysGuardrailBadge.test.tsx`: assert badge renders with count=1 when one `pending_installation` key is outside active train; assert badge hidden when all pending keys are covered by an active train; assert badge absent when no pending keys.
   [equipment-admin:R1-guardrail-badge]
 
 ### T-32 — GREEN: PendingKeysGuardrailBadge component
-- [ ] Create `apps/admin/src/components/equipment/PendingKeysGuardrailBadge.tsx`: compute count of keys in `pending_installation` or `pending_disable` for the equipment that do NOT appear in any `open`/`in_progress` equipment_update snapshot (`keys_to_activate` or `keys_to_disable` arrays); render badge with count when > 0.
+- [x] Create `apps/admin/src/components/equipment/PendingKeysGuardrailBadge.tsx`: compute count of keys in `pending_installation` or `pending_disable` for the equipment that do NOT appear in any `open`/`in_progress` equipment_update snapshot (`keys_to_activate` or `keys_to_disable` arrays); render badge with count when > 0.
   [equipment-admin:R1-guardrail-badge]
 
 ### T-33 — GREEN: Equipment detail page integration
-- [ ] Update the equipment detail page component: render `PendingKeysGuardrailBadge`; add "Crear tarea de actualización" button that opens `EquipmentUpdateFormSheet`; disable button when active train exists (query from `useEquipmentUpdates`).
+- [x] Create `apps/admin/src/components/equipment/EquipmentUpdatePanel.tsx`: per-equipment panel with `PendingKeysGuardrailBadge`, "Crear tarea de actualización" button (disabled when active train exists), active task detail via `EquipmentUpdateTaskDetail`, and `EquipmentUpdateFormSheet` integration.
   [equipment-admin:R2-creation-entry-point]
 
 ---
