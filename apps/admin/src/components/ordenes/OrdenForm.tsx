@@ -149,11 +149,29 @@ export type OrdenFormValues = z.infer<typeof schema>;
 
 const ITEM_TYPE_LABELS: Record<string, string> = {
   key: 'Llave',
+  // 'equipment' es legado — retirado del selector, se mantiene para render de órdenes históricas.
   equipment: 'Equipo',
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  equipment_replacement: 'Cambio de equipo',
+  maintenance: 'Reparar equipo existente',
+  installation: 'Instalar equipo nuevo',
+  equipment_replacement: 'Reemplazar equipo existente',
 };
+
+const SELECTABLE_TECHNICAL_TYPES = [
+  'installation',
+  'equipment_replacement',
+  'maintenance',
+] as const;
+
+type SelectableTechnicalType = (typeof SELECTABLE_TECHNICAL_TYPES)[number];
+
+function isItemComplete(item: OrdenFormValues['items'][number] | undefined): boolean {
+  if (!item) return false;
+  if (item.unit_price == null || item.unit_price <= 0) return false;
+  if (item.item_type === 'key') {
+    return Boolean(item.product_id && item.building_id);
+  }
+  return Boolean(item.building_id);
+}
 
 // ---- Default empty values ----
 
@@ -210,24 +228,38 @@ export function OrdenForm({
   const defaultKeyProductId = keyProducts.length === 1 ? keyProducts[0]!.id : null;
 
   const appendItem = () => {
+    const isKeysOrder = watch('order_type') === 'keys';
+    const isParticular = watch('client_type') === 'particular';
+    // Default pickup a "el mismo particular" cuando el cliente es particular:
+    // 99% de los casos retira la misma persona, evita un click extra por ítem.
+    const pickupSame = isKeysOrder && isParticular;
+
     append({
-      item_type: watch('order_type') === 'keys' ? 'key' : 'installation',
+      item_type: isKeysOrder ? 'key' : 'installation',
       quantity: 1,
       description: '',
-      building_id:
-        watch('client_type') === 'particular'
-          ? particular?.unit_building_id ?? null
-          : null,
+      building_id: isParticular ? particular?.unit_building_id ?? null : null,
       unit_price: null,
-      unit_id:
-        watch('order_type') === 'keys' && watch('client_type') === 'particular'
-          ? particular?.unit_id ?? null
-          : null,
-      pickup_particular_id: null,
-      pickup_same_as_particular: false,
-      product_id: watch('order_type') === 'keys' ? defaultKeyProductId : null,
+      unit_id: isKeysOrder && isParticular ? particular?.unit_id ?? null : null,
+      pickup_particular_id: pickupSame ? particular?.id ?? null : null,
+      pickup_same_as_particular: pickupSame,
+      product_id: isKeysOrder ? defaultKeyProductId : null,
     });
+    if (pickupSame && particular) {
+      setPickupParticulars((prev) => ({ ...prev, [fields.length]: particular }));
+    }
     // Expand the newly appended item; previous ones collapse automatically.
+    setOpenItemIndex(fields.length);
+  };
+
+  const duplicateItem = (idx: number) => {
+    const src = items[idx];
+    if (!src) return;
+    append({ ...src });
+    setPickupParticulars((prev) => ({
+      ...prev,
+      [fields.length]: prev[idx] ?? null,
+    }));
     setOpenItemIndex(fields.length);
   };
 
@@ -436,22 +468,24 @@ export function OrdenForm({
           )}
 
           {fields.map((field, index) => {
-            const itemType = items[index]?.item_type;
+            const item = items[index];
+            const itemType = item?.item_type;
             const isKey = itemType === 'key';
-            const buildingId = items[index]?.building_id ?? null;
+            const buildingId = item?.building_id ?? null;
             const isOpen = openItemIndex === index;
             const buildingName =
               buildings.find((b) => b.id === buildingId)?.name ?? null;
+            const complete = isItemComplete(item);
             const summaryBits: string[] = [];
-            if (items[index]?.item_type) {
-              summaryBits.push(
-                ITEM_TYPE_LABELS[items[index]!.item_type] ?? items[index]!.item_type,
-              );
+            if (itemType) {
+              summaryBits.push(ITEM_TYPE_LABELS[itemType] ?? itemType);
             }
-            summaryBits.push(`× ${items[index]?.quantity ?? 1}`);
+            // La cantidad solo aporta info cuando es un pack de llaves (>1);
+            // en técnicas siempre es 1 y no se muestra.
+            if (isKey && (item?.quantity ?? 1) > 1) {
+              summaryBits.push(`× ${item?.quantity}`);
+            }
             if (buildingName) summaryBits.push(buildingName);
-            if (items[index]?.description)
-              summaryBits.push(items[index]!.description as string);
 
             return (
               <div
@@ -472,11 +506,29 @@ export function OrdenForm({
                       Ítem {index + 1}
                     </span>
                     {!isOpen && (
-                      <span className="truncate text-sm text-foreground">
-                        {summaryBits.join(' · ')}
-                      </span>
+                      <>
+                        <span className="truncate text-sm text-foreground">
+                          {summaryBits.join(' · ')}
+                        </span>
+                        <Badge
+                          variant={complete ? 'default' : 'secondary'}
+                          className="shrink-0"
+                        >
+                          {complete ? 'Completo' : 'Falta info'}
+                        </Badge>
+                      </>
                     )}
                   </button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => duplicateItem(index)}
+                    className="h-6 px-2 text-xs"
+                    aria-label={`Duplicar ítem ${index + 1}`}
+                  >
+                    Duplicar
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
@@ -491,6 +543,7 @@ export function OrdenForm({
                       if (openItemIndex === index) setOpenItemIndex(null);
                     }}
                     className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                    aria-label={`Eliminar ítem ${index + 1}`}
                   >
                     Eliminar
                   </Button>
@@ -501,31 +554,28 @@ export function OrdenForm({
                 {orderType === 'keys' ? (
                   <input type="hidden" {...register(`items.${index}.item_type`)} />
                 ) : (
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor={`items.${index}.item_type`}>Tipo</Label>
+                  <div className="flex flex-col gap-2">
+                    <Label>Tipo *</Label>
                     <Controller
                       control={control}
                       name={`items.${index}.item_type`}
                       render={({ field: f }) => (
-                        <Select value={f.value} onValueChange={f.onChange}>
-                          <SelectTrigger id={`items.${index}.item_type`}>
-                            <SelectValue placeholder="Tipo de ítem" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(
-                              [
-                                'equipment',
-                                'maintenance',
-                                'installation',
-                                'equipment_replacement',
-                              ] as const
-                            ).map((val) => (
-                              <SelectItem key={val} value={val}>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {SELECTABLE_TECHNICAL_TYPES.map((val: SelectableTechnicalType) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => f.onChange(val)}
+                            >
+                              <Badge
+                                variant={f.value === val ? 'default' : 'secondary'}
+                                className="cursor-pointer"
+                              >
                                 {ITEM_TYPE_LABELS[val]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                              </Badge>
+                            </button>
+                          ))}
+                        </div>
                       )}
                     />
                     {errors.items?.[index]?.item_type && (
@@ -536,10 +586,10 @@ export function OrdenForm({
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1">
+                {isKey && (
+                  <div className="flex flex-col gap-1 sm:max-w-[240px]">
                     <Label htmlFor={`items.${index}.quantity`}>
-                      {isKey ? 'Cantidad de llaves del pack' : 'Cantidad'}
+                      Cantidad de llaves del pack
                     </Label>
                     <Input
                       id={`items.${index}.quantity`}
@@ -553,18 +603,7 @@ export function OrdenForm({
                       </p>
                     )}
                   </div>
-
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor={`items.${index}.description`}>
-                      Descripción
-                    </Label>
-                    <Input
-                      id={`items.${index}.description`}
-                      placeholder="Descripción opcional"
-                      {...register(`items.${index}.description`)}
-                    />
-                  </div>
-                </div>
+                )}
 
                 {isKey && (
                   <>
