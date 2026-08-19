@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   identity: {
     Tables: {
       audit_log: {
@@ -404,6 +379,173 @@ export type Database = {
           },
         ]
       }
+      key_order_items: {
+        Row: {
+          building_id: string
+          created_at: string
+          description: string | null
+          id: string
+          item_type: string
+          order_id: string
+          pickup_particular_id: string | null
+          produced_key_id: string | null
+          product_id: string | null
+          quantity: number
+          status: string
+          unit_id: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          building_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_type?: string
+          order_id: string
+          pickup_particular_id?: string | null
+          produced_key_id?: string | null
+          product_id?: string | null
+          quantity?: number
+          status?: string
+          unit_id?: string | null
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          building_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_type?: string
+          order_id?: string
+          pickup_particular_id?: string | null
+          produced_key_id?: string | null
+          product_id?: string | null
+          quantity?: number
+          status?: string
+          unit_id?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_order_items_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "key_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_pickup_particular_id_fkey"
+            columns: ["pickup_particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_produced_key_id_fkey"
+            columns: ["produced_key_id"]
+            isOneToOne: false
+            referencedRelation: "rfid_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_orders: {
+        Row: {
+          administration_id: string | null
+          client_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          order_number: string
+          particular_dni: string | null
+          particular_email: string | null
+          particular_full_name: string | null
+          particular_id: string | null
+          particular_phone: string | null
+          pickup_particular_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          administration_id?: string | null
+          client_type: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_number?: string
+          particular_dni?: string | null
+          particular_email?: string | null
+          particular_full_name?: string | null
+          particular_id?: string | null
+          particular_phone?: string | null
+          pickup_particular_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          administration_id?: string | null
+          client_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_number?: string
+          particular_dni?: string | null
+          particular_email?: string | null
+          particular_full_name?: string | null
+          particular_id?: string | null
+          particular_phone?: string | null
+          pickup_particular_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "administrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_orders_particular_id_fkey"
+            columns: ["particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_orders_pickup_particular_id_fkey"
+            columns: ["pickup_particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           building_id: string | null
@@ -757,6 +899,7 @@ export type Database = {
           note: string | null
           order_id: string | null
           order_item_id: string | null
+          order_kind: string | null
           product_id: string
           quantity: number
           staff_id: string | null
@@ -771,6 +914,7 @@ export type Database = {
           note?: string | null
           order_id?: string | null
           order_item_id?: string | null
+          order_kind?: string | null
           product_id: string
           quantity: number
           staff_id?: string | null
@@ -785,6 +929,7 @@ export type Database = {
           note?: string | null
           order_id?: string | null
           order_item_id?: string | null
+          order_kind?: string | null
           product_id?: string
           quantity?: number
           staff_id?: string | null
@@ -794,24 +939,143 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "stock_movements_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stock_movements_order_item_id_fkey"
-            columns: ["order_item_id"]
-            isOneToOne: false
-            referencedRelation: "order_items"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "stock_movements_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_order_items: {
+        Row: {
+          building_id: string
+          created_at: string
+          description: string | null
+          id: string
+          intended_assignee_staff_id: string | null
+          intended_equipment_id: string | null
+          item_type: string
+          order_id: string
+          product_id: string | null
+          quantity: number
+          status: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          building_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          intended_assignee_staff_id?: string | null
+          intended_equipment_id?: string | null
+          item_type: string
+          order_id: string
+          product_id?: string | null
+          quantity?: number
+          status?: string
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          building_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          intended_assignee_staff_id?: string | null
+          intended_equipment_id?: string | null
+          item_type?: string
+          order_id?: string
+          product_id?: string | null
+          quantity?: number
+          status?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_order_items_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "technical_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_orders: {
+        Row: {
+          administration_id: string | null
+          client_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          order_number: string
+          particular_dni: string | null
+          particular_email: string | null
+          particular_full_name: string | null
+          particular_id: string | null
+          particular_phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          administration_id?: string | null
+          client_type: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_number?: string
+          particular_dni?: string | null
+          particular_email?: string | null
+          particular_full_name?: string | null
+          particular_id?: string | null
+          particular_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          administration_id?: string | null
+          client_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_number?: string
+          particular_dni?: string | null
+          particular_email?: string | null
+          particular_full_name?: string | null
+          particular_id?: string | null
+          particular_phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "administrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_orders_particular_id_fkey"
+            columns: ["particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
             referencedColumns: ["id"]
           },
         ]
@@ -862,11 +1126,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      all_orders: {
+        Row: {
+          administration_id: string | null
+          client_type: string | null
+          created_at: string | null
+          id: string | null
+          notes: string | null
+          order_kind: string | null
+          order_number: string | null
+          particular_full_name: string | null
+          particular_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cancel_key_disable: {
         Args: { p_actor_staff_id?: string; p_key_id: string; p_note?: string }
+        Returns: undefined
+      }
+      cancel_key_order: { Args: { p_order_id: string }; Returns: undefined }
+      cancel_technical_order: {
+        Args: { p_order_id: string }
         Returns: undefined
       }
       change_key_status: {
@@ -887,7 +1171,12 @@ export type Database = {
         }
         Returns: string
       }
+      confirm_key_order: { Args: { p_order_id: string }; Returns: undefined }
       confirm_order: { Args: { p_order_id: string }; Returns: undefined }
+      confirm_technical_order: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       create_equipment_update: {
         Args: {
           p_actor_staff_id?: string
@@ -898,6 +1187,14 @@ export type Database = {
           p_keys_to_activate?: string[]
           p_keys_to_disable?: string[]
           p_mdb_storage_path: string
+        }
+        Returns: string
+      }
+      create_key_order_with_items: {
+        Args: {
+          p_confirm_immediately?: boolean
+          p_items: Json[]
+          p_order: Json
         }
         Returns: string
       }
@@ -927,8 +1224,34 @@ export type Database = {
         }
         Returns: string
       }
+      create_technical_order_with_items: {
+        Args: {
+          p_confirm_immediately?: boolean
+          p_items: Json[]
+          p_order: Json
+        }
+        Returns: string
+      }
+      gen_key_order_number: { Args: never; Returns: string }
       gen_order_number: { Args: never; Returns: string }
+      gen_technical_order_number: { Args: never; Returns: string }
+      mark_key_order_invoiced: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
+      mark_technical_order_invoiced: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
+      recompute_key_order_status: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       recompute_order_status: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
+      recompute_technical_order_status: {
         Args: { p_order_id: string }
         Returns: undefined
       }
@@ -980,7 +1303,25 @@ export type Database = {
         }
         Returns: string
       }
+      update_draft_key_order_with_items: {
+        Args: {
+          p_expected_updated_at: string
+          p_items: Json[]
+          p_order_id: string
+          p_patch: Json
+        }
+        Returns: string
+      }
       update_draft_order_with_items: {
+        Args: {
+          p_expected_updated_at: string
+          p_items: Json[]
+          p_order_id: string
+          p_patch: Json
+        }
+        Returns: string
+      }
+      update_draft_technical_order_with_items: {
         Args: {
           p_expected_updated_at: string
           p_items: Json[]
@@ -1714,16 +2055,17 @@ export type Database = {
           description: string
           equipment_id: string | null
           id: string
+          key_order_item_id: string | null
           notes: string | null
           opened_at: string
           opened_by_staff_id: string | null
-          order_item_id: string | null
           related_bill_id: string | null
           related_key_request_id: string | null
           resolution_notes: string | null
           resolved_at: string | null
           resolved_by_staff_id: string | null
           status: string
+          technical_order_item_id: string | null
           ticket_number: string
           unit_id: string | null
           updated_at: string
@@ -1738,16 +2080,17 @@ export type Database = {
           description: string
           equipment_id?: string | null
           id?: string
+          key_order_item_id?: string | null
           notes?: string | null
           opened_at?: string
           opened_by_staff_id?: string | null
-          order_item_id?: string | null
           related_bill_id?: string | null
           related_key_request_id?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by_staff_id?: string | null
           status?: string
+          technical_order_item_id?: string | null
           ticket_number?: string
           unit_id?: string | null
           updated_at?: string
@@ -1762,16 +2105,17 @@ export type Database = {
           description?: string
           equipment_id?: string | null
           id?: string
+          key_order_item_id?: string | null
           notes?: string | null
           opened_at?: string
           opened_by_staff_id?: string | null
-          order_item_id?: string | null
           related_bill_id?: string | null
           related_key_request_id?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by_staff_id?: string | null
           status?: string
+          technical_order_item_id?: string | null
           ticket_number?: string
           unit_id?: string | null
           updated_at?: string
@@ -1912,9 +2256,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   identity: {
     Enums: {},
   },
@@ -1931,3 +2272,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
