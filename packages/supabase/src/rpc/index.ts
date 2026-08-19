@@ -1,4 +1,3 @@
-export * from './orders';
 export * from './keyOrders';
 export * from './technicalOrders';
 export * from './tickets';
