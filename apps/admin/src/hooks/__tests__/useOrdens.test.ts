@@ -29,26 +29,35 @@ function makeWrapper() {
 import { useOrdens } from '../useOrdens';
 import { ordensKey } from '@/lib/queryKeys';
 
-const fakeOrdens = [
+// Raw rows returned by the all_orders VIEW (include order_kind).
+const fakeViewRows = [
   {
     id: 'o-1',
-    order_number: 'ORD-2026-000001',
+    order_number: 'ORD-LLV-000001',
+    order_kind: 'key',
     client_type: 'administration',
     administration_id: 'adm-1',
     administrations: { company_name: 'Garcia S.A.' },
     particular_full_name: null,
     status: 'draft',
     created_at: '2026-08-10T10:00:00Z',
-    order_items: [{ id: 'oi-1' }],
   },
 ];
+
+// Expected OrdenRow shape after the hook maps order_kind → order_type and adds order_items: [].
+const fakeOrdens = fakeViewRows.map((r) => ({
+  ...r,
+  order_type: r.order_kind === 'key' ? 'keys' : 'technical',
+  order_items: [],
+}));
 
 describe('useOrdens', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     // Default happy chain: from → select → [eq?] → [or?] → order resolves with data
-    mockOrder.mockResolvedValue({ data: fakeOrdens, error: null });
+    // The mock returns raw VIEW rows (with order_kind); the hook maps to order_type.
+    mockOrder.mockResolvedValue({ data: fakeViewRows, error: null });
     // or returns something with order
     mockOr.mockReturnValue({ order: mockOrder });
     // eq returns something with or and order
@@ -56,6 +65,12 @@ describe('useOrdens', () => {
     // select returns the full chain (all intermediate methods)
     mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder });
     mockFrom.mockReturnValue({ select: mockSelect });
+  });
+
+  it('queries from("all_orders") VIEW instead of orders table', async () => {
+    const { result } = renderHook(() => useOrdens(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockFrom).toHaveBeenCalledWith('all_orders');
   });
 
   it('default call uses ordensKey with all+empty string', () => {
@@ -138,17 +153,17 @@ describe('useOrdens', () => {
 
   it('search + administration filter: particular rows pass through (server already ilike-filtered)', async () => {
     const mixedData = [
-      { ...fakeOrdens[0], administrations: { company_name: 'Garcia S.A.' } },
+      { ...fakeViewRows[0], administrations: { company_name: 'Garcia S.A.' } },
       {
         id: 'o-2',
-        order_number: 'ORD-2026-000002',
+        order_number: 'ORD-LLV-000002',
+        order_kind: 'key',
         client_type: 'particular',
         administration_id: null,
         administrations: null,
         particular_full_name: 'garcia martin',
         status: 'draft',
         created_at: '2026-08-10T11:00:00Z',
-        order_items: [],
       },
     ];
     mockOrder.mockResolvedValueOnce({ data: mixedData, error: null });
