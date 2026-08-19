@@ -20,6 +20,8 @@ import OrdenDetailPage from './routes/ordenes/OrdenDetailPage';
 import OrdenEditarPage from './routes/ordenes/OrdenEditarPage';
 import KeyOrdersPage from './routes/llaves/KeyOrdersPage';
 import KeyOrderDetailPage from './routes/llaves/KeyOrderDetailPage';
+import KeyOrderNuevaPage from './routes/llaves/KeyOrderNuevaPage';
+import KeyOrderEditarPage from './routes/llaves/KeyOrderEditarPage';
 import TareasPage from './routes/tareas/TareasPage';
 import TareaDetailPage from './routes/tareas/TareaDetailPage';
 import PersonalPage from './routes/personal/PersonalPage';
@@ -53,7 +55,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="buildings" element={<Navigate to="/administraciones" replace />} />
                   <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
                   <Route path="llaves" element={<KeyOrdersPage />} />
+                  <Route path="llaves/nueva" element={<KeyOrderNuevaPage />} />
                   <Route path="llaves/:keyOrderId" element={<KeyOrderDetailPage />} />
+                  <Route path="llaves/:keyOrderId/editar" element={<KeyOrderEditarPage />} />
                   <Route path="ordenes" element={<OrdenesPage />} />
                   <Route path="ordenes/nueva" element={<OrdenNuevaPage />} />
                   <Route path="ordenes/:ordenId" element={<OrdenDetailPage />} />
