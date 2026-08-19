@@ -47,11 +47,26 @@ export function useMutateOrderItem() {
   });
 
   const cancelOrderItem = useMutation({
-    mutationFn: async ({ id }: CancelOrderItemInput) => {
+    mutationFn: async ({ id, orderId }: CancelOrderItemInput) => {
+      // Phase 1: Determine order_kind via the all_orders VIEW to select the right items table.
+      const { data: kindRow, error: kindError } = await supabase
+        .from('all_orders')
+        .select('order_kind')
+        .eq('id', orderId)
+        .single();
+
+      if (kindError) throw kindError;
+
+      const orderKind = (kindRow as unknown as { order_kind: string } | null)?.order_kind;
+
+      // Phase 2: Cancel the item in the correct bounded-context table.
+      const itemsTable = orderKind === 'technical' ? 'technical_order_items' : 'key_order_items';
+
       const { error } = await supabase
-        .from('order_items')
+        .from(itemsTable as 'key_order_items')
         .update({ status: 'cancelled' })
         .eq('id', id);
+
       if (error) throw error;
     },
     onSuccess: (_data, vars) => {

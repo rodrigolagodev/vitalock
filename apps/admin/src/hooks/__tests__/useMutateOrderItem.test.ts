@@ -13,11 +13,25 @@ vi.mock('@/hooks/mapMutationError', () => ({
 
 import { toastMutationError } from '@/hooks/mapMutationError';
 
-// Chainable supabase mock
+// Chainable supabase mock with per-table routing
 const mockRpc = vi.fn();
-const mockEq = vi.fn();
-const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
-const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate });
+
+// For order_kind lookup: from('all_orders').select('order_kind').eq('id', orderId).single()
+const mockAllOrdersSingle = vi.fn();
+const mockAllOrdersEq = vi.fn().mockReturnValue({ single: mockAllOrdersSingle });
+const mockAllOrdersSelect = vi.fn().mockReturnValue({ eq: mockAllOrdersEq });
+
+// For key_order_items UPDATE: from('key_order_items').update(...).eq(...)
+const mockKeyItemsEq = vi.fn();
+const mockKeyItemsUpdate = vi.fn().mockReturnValue({ eq: mockKeyItemsEq });
+
+// For technical_order_items UPDATE: from('technical_order_items').update(...).eq(...)
+const mockTechItemsEq = vi.fn();
+const mockTechItemsUpdate = vi.fn().mockReturnValue({ eq: mockTechItemsEq });
+
+// Route `from` calls by table name
+const mockFrom = vi.fn();
+
 const mockSupabase = { from: mockFrom, rpc: mockRpc };
 
 vi.mock('@/lib/supabase', () => ({ get supabase() { return mockSupabase; } }));
@@ -39,12 +53,29 @@ import { useMutateOrderItem } from '../useMutateOrderItem';
 describe('useMutateOrderItem', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockEq.mockReturnValue({ error: null });
-    mockUpdate.mockReturnValue({ eq: mockEq });
-    mockFrom.mockReturnValue({ update: mockUpdate });
+
+    // Default: order is of kind 'key'
+    mockAllOrdersSingle.mockResolvedValue({ data: { order_kind: 'key' }, error: null });
+    mockAllOrdersEq.mockReturnValue({ single: mockAllOrdersSingle });
+    mockAllOrdersSelect.mockReturnValue({ eq: mockAllOrdersEq });
+
+    mockKeyItemsEq.mockResolvedValue({ error: null });
+    mockKeyItemsUpdate.mockReturnValue({ eq: mockKeyItemsEq });
+
+    mockTechItemsEq.mockResolvedValue({ error: null });
+    mockTechItemsUpdate.mockReturnValue({ eq: mockTechItemsEq });
+
+    // Route from() by table name
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'all_orders') return { select: mockAllOrdersSelect };
+      if (table === 'key_order_items') return { update: mockKeyItemsUpdate };
+      if (table === 'technical_order_items') return { update: mockTechItemsUpdate };
+      // fallback
+      return { update: mockKeyItemsUpdate };
+    });
   });
 
-  // configureKeyItem
+  // configureKeyItem (unchanged surface — already calls configure_key_order_item RPC)
   it('configureKeyItem calls supabase.rpc("configure_key_order_item") with correct payload', async () => {
     mockRpc.mockResolvedValueOnce({ data: 'new-key-uuid', error: null });
 
@@ -150,9 +181,10 @@ describe('useMutateOrderItem', () => {
     expect(calls[0]![0]).toEqual(dbError);
   });
 
-  // cancelOrderItem
-  it('cancelOrderItem calls UPDATE order_items with status: "cancelled"', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+  // cancelOrderItem — now branches on order_kind via all_orders VIEW lookup
+  it('cancelOrderItem for a key order: fetches order_kind from all_orders then updates key_order_items', async () => {
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: { order_kind: 'key' }, error: null });
+    mockKeyItemsEq.mockResolvedValueOnce({ error: null });
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateOrderItem(), { wrapper: Wrapper });
@@ -164,13 +196,40 @@ describe('useMutateOrderItem', () => {
       });
     });
 
-    expect(mockFrom).toHaveBeenCalledWith('order_items');
-    expect(mockUpdate).toHaveBeenCalledWith({ status: 'cancelled' });
-    expect(mockEq).toHaveBeenCalledWith('id', 'item-cancel');
+    // Step 1: looked up order_kind
+    expect(mockFrom).toHaveBeenCalledWith('all_orders');
+    expect(mockAllOrdersEq).toHaveBeenCalledWith('id', 'order-cancel');
+
+    // Step 2: updated key_order_items
+    expect(mockFrom).toHaveBeenCalledWith('key_order_items');
+    expect(mockKeyItemsUpdate).toHaveBeenCalledWith({ status: 'cancelled' });
+    expect(mockKeyItemsEq).toHaveBeenCalledWith('id', 'item-cancel');
+  });
+
+  it('cancelOrderItem for a technical order: fetches order_kind from all_orders then updates technical_order_items', async () => {
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: { order_kind: 'technical' }, error: null });
+    mockTechItemsEq.mockResolvedValueOnce({ error: null });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateOrderItem(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.cancelOrderItem.mutateAsync({
+        id: 'item-tech',
+        orderId: 'order-tech',
+      });
+    });
+
+    expect(mockFrom).toHaveBeenCalledWith('all_orders');
+    expect(mockAllOrdersEq).toHaveBeenCalledWith('id', 'order-tech');
+    expect(mockFrom).toHaveBeenCalledWith('technical_order_items');
+    expect(mockTechItemsUpdate).toHaveBeenCalledWith({ status: 'cancelled' });
+    expect(mockTechItemsEq).toHaveBeenCalledWith('id', 'item-tech');
   });
 
   it('cancelOrderItem success → invalidates ordenKey + ordensKey', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: { order_kind: 'key' }, error: null });
+    mockKeyItemsEq.mockResolvedValueOnce({ error: null });
 
     const { queryClient, Wrapper } = makeWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
@@ -194,7 +253,8 @@ describe('useMutateOrderItem', () => {
   });
 
   it('cancelOrderItem success → shows cancel toast', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: { order_kind: 'key' }, error: null });
+    mockKeyItemsEq.mockResolvedValueOnce({ error: null });
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateOrderItem(), { wrapper: Wrapper });
@@ -208,5 +268,26 @@ describe('useMutateOrderItem', () => {
 
     await waitFor(() => expect(result.current.cancelOrderItem.isSuccess).toBe(true));
     expect(toast.success).toHaveBeenCalledWith('Ítem cancelado.');
+  });
+
+  it('cancelOrderItem order_kind lookup error → calls toastMutationError', async () => {
+    const dbError = { code: '42501', message: 'permission denied on all_orders' };
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: null, error: dbError });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateOrderItem(), { wrapper: Wrapper });
+
+    await act(async () => {
+      try {
+        await result.current.cancelOrderItem.mutateAsync({
+          id: 'item-err',
+          orderId: 'order-err',
+        });
+      } catch { /* expected */ }
+    });
+
+    await waitFor(() => expect(result.current.cancelOrderItem.isError).toBe(true));
+    const calls = (toastMutationError as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
   });
 });
