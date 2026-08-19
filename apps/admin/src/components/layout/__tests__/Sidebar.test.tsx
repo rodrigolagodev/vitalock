@@ -31,6 +31,7 @@ describe('Sidebar', () => {
       ['Administraciones', '/administraciones'],
       ['Particulares', '/particulares'],
       ['Llaves', '/llaves'],
+      ['Servicio técnico', '/servicio-tecnico'],
       ['Ordenes', '/ordenes'],
       ['Tareas', '/tareas'],
       ['Personal', '/personal'],
@@ -44,6 +45,7 @@ describe('Sidebar', () => {
   it('renders each nav item label exactly once (no separate section labels)', () => {
     renderSidebar();
     expect(screen.getAllByText('Llaves')).toHaveLength(1);
+    expect(screen.getAllByText('Servicio técnico')).toHaveLength(1);
     expect(screen.getAllByText('Ordenes')).toHaveLength(1);
     expect(screen.getAllByText('Personal')).toHaveLength(1);
   });

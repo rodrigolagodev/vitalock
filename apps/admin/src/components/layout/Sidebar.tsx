@@ -8,6 +8,7 @@ import {
   Menu,
   Package,
   Users,
+  Wrench,
   X,
 } from 'lucide-react';
 import { cn } from '@vitalock/ui';
@@ -48,6 +49,12 @@ export function Sidebar({ className }: SidebarProps) {
       <NavItem label="Particulares" to="/particulares" icon={<Home className="h-4 w-4" />} />
 
       <NavItem label="Llaves" to="/llaves" icon={<Key className="h-4 w-4" />} />
+
+      <NavItem
+        label="Servicio técnico"
+        to="/servicio-tecnico"
+        icon={<Wrench className="h-4 w-4" />}
+      />
 
       <NavItem
         label="Ordenes"
