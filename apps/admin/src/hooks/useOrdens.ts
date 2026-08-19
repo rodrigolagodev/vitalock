@@ -30,7 +30,9 @@ export interface OrdenRow {
   /**
    * Item stubs — always an empty array when sourced from all_orders VIEW (VIEW
    * does not embed items). Kept for legacy consumer compat (OrdenesTable.tsx
-   * uses .length). Will be removed when OrdenesTable is retired in PR-7.
+   * uses .length).
+   *
+   * TODO(PR-7): remove this field when OrdenesTable is retired.
    */
   order_items: { id: string }[];
 }
