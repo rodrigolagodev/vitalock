@@ -15,6 +15,7 @@ import {
   updateDraftKeyOrderWithItems,
   markKeyOrderInvoiced,
   configureKeyOrderItem,
+  setKeyOrderPickupPerson,
 } from '../keyOrders';
 
 const sampleOrder = {
@@ -188,6 +189,44 @@ describe('keyOrders RPC wrappers', () => {
   // ──────────────────────────────────────────────────────────────
   // configureKeyOrderItem
   // ──────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────
+  // setKeyOrderPickupPerson (direct-table helper)
+  // ──────────────────────────────────────────────────────────────
+  describe('setKeyOrderPickupPerson', () => {
+    it('updates key_orders.pickup_particular_id for the given order id', async () => {
+      mockEq.mockResolvedValueOnce({ data: null, error: null });
+
+      await setKeyOrderPickupPerson(mockClient, {
+        orderId: 'order-5',
+        pickupParticularId: 'particular-9',
+      });
+
+      expect(mockFrom).toHaveBeenCalledWith('key_orders');
+      expect(mockUpdate).toHaveBeenCalledWith({ pickup_particular_id: 'particular-9' });
+      expect(mockEq).toHaveBeenCalledWith('id', 'order-5');
+    });
+
+    it('accepts null to clear the pickup particular', async () => {
+      mockEq.mockResolvedValueOnce({ data: null, error: null });
+
+      await setKeyOrderPickupPerson(mockClient, {
+        orderId: 'order-5',
+        pickupParticularId: null,
+      });
+
+      expect(mockUpdate).toHaveBeenCalledWith({ pickup_particular_id: null });
+    });
+
+    it('throws on update error', async () => {
+      const err = new Error('Not allowed');
+      mockEq.mockResolvedValueOnce({ data: null, error: err });
+
+      await expect(
+        setKeyOrderPickupPerson(mockClient, { orderId: 'order-5', pickupParticularId: 'p-1' }),
+      ).rejects.toThrow('Not allowed');
+    });
+  });
+
   describe('configureKeyOrderItem', () => {
     it('calls rpc("configure_key_order_item") with all required params and returns uuid', async () => {
       const newKeyId = 'rfid-key-uuid';
