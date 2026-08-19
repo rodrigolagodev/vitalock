@@ -1,24 +1,60 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  cancelOrder,
-  confirmOrder,
-  createOrderWithItems,
-  markOrderInvoiced,
-  setOrderPickupPerson,
-  updateDraftOrderWithItems,
-  type OrderItemPayload,
-  type OrderItemUpdatePayload,
-  type OrderPayload,
+  cancelKeyOrder,
+  confirmKeyOrder,
+  createKeyOrderWithItems,
+  markKeyOrderInvoiced,
+  setKeyOrderPickupPerson,
+  updateDraftKeyOrderWithItems,
+  type KeyOrderItemPayload,
+  type KeyOrderItemUpdatePayload,
+  type KeyOrderPayload,
+} from '@vitalock/supabase';
+import {
+  cancelTechnicalOrder,
+  confirmTechnicalOrder,
+  createTechnicalOrderWithItems,
+  markTechnicalOrderInvoiced,
+  updateDraftTechnicalOrderWithItems,
+  type TechnicalOrderItemPayload,
+  type TechnicalOrderItemUpdatePayload,
+  type TechnicalOrderPayload,
 } from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
 import { ordensKey, ordenKey } from '@/lib/queryKeys';
 import type { OrdenDetailRow } from './useOrden';
 import { toastMutationError } from './mapMutationError';
 
-// Re-export payload types so existing call sites keep working.
-export type CreateOrderInput = OrderPayload;
-export type CreateOrderItemInput = OrderItemPayload;
+// ────────────────────────────────────────────────────────────────────────────
+// Preserved legacy input types — consumer signatures are UNCHANGED.
+// ────────────────────────────────────────────────────────────────────────────
+
+export type OrderType = 'keys' | 'technical';
+
+export interface CreateOrderInput {
+  order_type: OrderType;
+  client_type: 'administration' | 'particular';
+  administration_id?: string | null;
+  particular_id?: string | null;
+  particular_full_name?: string | null;
+  particular_dni?: string | null;
+  particular_phone?: string | null;
+  particular_email?: string | null;
+  notes?: string | null;
+  status?: 'draft';
+}
+
+export interface CreateOrderItemInput {
+  item_type: 'key' | 'equipment' | 'maintenance' | 'installation' | 'equipment_replacement';
+  quantity: number;
+  description?: string | null;
+  building_id?: string | null;
+  unit_price?: number | null;
+  unit_id?: string | null;
+  pickup_particular_id?: string | null;
+  product_id?: string | null;
+}
 
 export interface CreateOrdenInput {
   order: CreateOrderInput;
@@ -35,10 +71,10 @@ export interface ConfirmOrdenInput {
 
 export interface UpdateDraftOrdenInput {
   id: string;
-  /** Optimistic concurrency token — must match orders.updated_at at the DB level. */
+  /** Optimistic concurrency token — must match the DB level. */
   expectedUpdatedAt: string;
   order: Partial<CreateOrderInput>;
-  items: OrderItemUpdatePayload[];
+  items: Array<Partial<CreateOrderItemInput> & { id?: string }>;
 }
 
 export interface SetPickupPersonInput {
@@ -47,12 +83,44 @@ export interface SetPickupPersonInput {
   pickup_particular_id: string | null;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Internal helper: resolve order_kind from the all_orders VIEW.
+// ────────────────────────────────────────────────────────────────────────────
+
+async function resolveOrderKind(orderId: string): Promise<'keys' | 'technical'> {
+  const { data, error } = await supabase
+    .from('all_orders')
+    .select('order_kind')
+    .eq('id', orderId)
+    .single();
+  if (error) throw error;
+  return (data as unknown as { order_kind: string }).order_kind === 'key' ? 'keys' : 'technical';
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Hook — preserved external surface, new internal routing.
+// ────────────────────────────────────────────────────────────────────────────
+
 export function useMutateOrden() {
   const queryClient = useQueryClient();
 
   const createOrden = useMutation({
-    mutationFn: ({ order, items }: CreateOrdenInput) =>
-      createOrderWithItems(supabase, { order, items }),
+    mutationFn: ({ order, items }: CreateOrdenInput) => {
+      if (order.order_type === 'keys') {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { order_type: _ot, status: _s, ...rest } = order;
+        return createKeyOrderWithItems(supabase, {
+          order: rest as KeyOrderPayload,
+          items: items as unknown as KeyOrderItemPayload[],
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { order_type: _ot, status: _s, ...rest } = order;
+      return createTechnicalOrderWithItems(supabase, {
+        order: rest as TechnicalOrderPayload,
+        items: items as unknown as TechnicalOrderItemPayload[],
+      });
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ordensKey() });
       toast.success('Orden creada correctamente.');
@@ -61,7 +129,13 @@ export function useMutateOrden() {
   });
 
   const cancelOrden = useMutation({
-    mutationFn: ({ id }: CancelOrdenInput) => cancelOrder(supabase, id),
+    mutationFn: async ({ id }: CancelOrdenInput) => {
+      const kind = await resolveOrderKind(id);
+      if (kind === 'keys') {
+        return cancelKeyOrder(supabase, id);
+      }
+      return cancelTechnicalOrder(supabase, id);
+    },
     onSuccess: (_data, vars) => {
       void queryClient.invalidateQueries({ queryKey: ordensKey() });
       void queryClient.invalidateQueries({ queryKey: ordenKey(vars.id) });
@@ -71,7 +145,13 @@ export function useMutateOrden() {
   });
 
   const confirmOrden = useMutation({
-    mutationFn: ({ id }: ConfirmOrdenInput) => confirmOrder(supabase, id),
+    mutationFn: async ({ id }: ConfirmOrdenInput) => {
+      const kind = await resolveOrderKind(id);
+      if (kind === 'keys') {
+        return confirmKeyOrder(supabase, id);
+      }
+      return confirmTechnicalOrder(supabase, id);
+    },
     onSuccess: (_data, vars) => {
       void queryClient.invalidateQueries({ queryKey: ordensKey() });
       void queryClient.invalidateQueries({ queryKey: ordenKey(vars.id) });
@@ -81,17 +161,26 @@ export function useMutateOrden() {
   });
 
   const updateDraftOrden = useMutation({
-    mutationFn: ({ id, order, items, expectedUpdatedAt }: UpdateDraftOrdenInput) =>
-      updateDraftOrderWithItems(supabase, {
+    mutationFn: async ({ id, order, items, expectedUpdatedAt }: UpdateDraftOrdenInput) => {
+      const kind = await resolveOrderKind(id);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { order_type: _ot, status: _s, ...patch } = order;
+      if (kind === 'keys') {
+        return updateDraftKeyOrderWithItems(supabase, {
+          orderId: id,
+          expectedUpdatedAt,
+          patch: patch as Partial<KeyOrderPayload>,
+          items: items as unknown as KeyOrderItemUpdatePayload[],
+        });
+      }
+      return updateDraftTechnicalOrderWithItems(supabase, {
         orderId: id,
         expectedUpdatedAt,
-        patch: order,
-        items,
-      }),
-    // Optimistic patch of order-level scalar fields only. Item edits are
-    // reconciled by the post-success invalidation because the cache row
-    // carries embedded FKs (pickup_particulares, rfid_keys) that we cannot
-    // reconstruct from the incoming payload without a round-trip.
+        patch: patch as Partial<TechnicalOrderPayload>,
+        items: items as unknown as TechnicalOrderItemUpdatePayload[],
+      });
+    },
+    // Optimistic patch of order-level scalar fields only.
     onMutate: async ({ id, order }) => {
       const detailKey = ordenKey(id);
       await queryClient.cancelQueries({ queryKey: detailKey });
@@ -119,7 +208,8 @@ export function useMutateOrden() {
 
   const setPickupPerson = useMutation({
     mutationFn: ({ id, pickup_particular_id }: SetPickupPersonInput) =>
-      setOrderPickupPerson(supabase, {
+      // setKeyOrderPickupPerson is key-context only; technical orders have no pickup semantics.
+      setKeyOrderPickupPerson(supabase, {
         orderId: id,
         pickupParticularId: pickup_particular_id,
       }),
@@ -149,7 +239,13 @@ export function useMutateOrden() {
   });
 
   const markOrderInvoicedMutation = useMutation({
-    mutationFn: ({ id }: { id: string }) => markOrderInvoiced(supabase, id),
+    mutationFn: async ({ id }: { id: string }) => {
+      const kind = await resolveOrderKind(id);
+      if (kind === 'keys') {
+        return markKeyOrderInvoiced(supabase, id);
+      }
+      return markTechnicalOrderInvoiced(supabase, id);
+    },
     onSuccess: (_data, vars) => {
       void queryClient.invalidateQueries({ queryKey: ordensKey() });
       void queryClient.invalidateQueries({ queryKey: ordenKey(vars.id) });

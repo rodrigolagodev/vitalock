@@ -13,13 +13,22 @@ vi.mock('@/hooks/mapMutationError', () => ({
 
 import { toastMutationError } from '@/hooks/mapMutationError';
 
-// Chainable supabase mock
+// ─── Supabase mock: per-table routing ────────────────────────────────────────
+
 const mockRpc = vi.fn();
-const mockSingle = vi.fn();
-const mockSelect = vi.fn().mockReturnValue({ single: mockSingle });
-const mockEq = vi.fn().mockReturnValue({ select: mockSelect });
-const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
-const mockFrom = vi.fn().mockReturnValue({ update: mockUpdate });
+
+// all_orders VIEW lookup (used by cancelOrden, confirmOrden, updateDraftOrden, markOrderInvoiced)
+const mockAllOrdersSingle = vi.fn();
+const mockAllOrdersEq = vi.fn().mockReturnValue({ single: mockAllOrdersSingle });
+const mockAllOrdersSelect = vi.fn().mockReturnValue({ eq: mockAllOrdersEq });
+
+// key_orders direct UPDATE (used by setKeyOrderPickupPerson)
+const mockKeyOrdersEq = vi.fn();
+const mockKeyOrdersUpdate = vi.fn().mockReturnValue({ eq: mockKeyOrdersEq });
+
+// Route from() calls by table name
+const mockFrom = vi.fn();
+
 const mockSupabase = { from: mockFrom, rpc: mockRpc };
 
 vi.mock('@/lib/supabase', () => ({ get supabase() { return mockSupabase; } }));
@@ -44,20 +53,30 @@ const sampleOrder = {
   administration_id: 'adm-1',
 };
 const sampleItems = [
-  { item_type: 'key' as const, quantity: 1, building_id: 'b-1' },
+  { item_type: 'key' as const, quantity: 1, building_id: 'b-1', unit_price: 100 },
 ];
 
 describe('useMutateOrden', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset eq chain
-    mockEq.mockReturnValue({ select: mockSelect });
-    mockUpdate.mockReturnValue({ eq: mockEq });
-    mockFrom.mockReturnValue({ update: mockUpdate });
+
+    // Default: order resolves as 'key' kind
+    mockAllOrdersSingle.mockResolvedValue({ data: { order_kind: 'key' }, error: null });
+    mockAllOrdersEq.mockReturnValue({ single: mockAllOrdersSingle });
+    mockAllOrdersSelect.mockReturnValue({ eq: mockAllOrdersEq });
+
+    mockKeyOrdersEq.mockResolvedValue({ error: null });
+    mockKeyOrdersUpdate.mockReturnValue({ eq: mockKeyOrdersEq });
+
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'all_orders') return { select: mockAllOrdersSelect };
+      if (table === 'key_orders') return { update: mockKeyOrdersUpdate };
+      return { update: mockKeyOrdersUpdate };
+    });
   });
 
-  // createOrden
-  it('createOrden calls supabase.rpc("create_order_with_items") with p_order + p_items', async () => {
+  // createOrden — routes to create_key_order_with_items for keys
+  it('createOrden calls supabase.rpc("create_key_order_with_items") with p_order + p_items', async () => {
     const newOrderId = 'new-uuid-1';
     mockRpc.mockResolvedValueOnce({ data: newOrderId, error: null });
 
@@ -71,10 +90,10 @@ describe('useMutateOrden', () => {
       });
     });
 
-    expect(mockRpc).toHaveBeenCalledWith('create_order_with_items', {
-      p_order: sampleOrder,
+    expect(mockRpc).toHaveBeenCalledWith('create_key_order_with_items', expect.objectContaining({
+      p_order: expect.objectContaining({ client_type: 'administration' }),
       p_items: sampleItems,
-    });
+    }));
   });
 
   it('createOrden success → shows success toast', async () => {
@@ -126,7 +145,7 @@ describe('useMutateOrden', () => {
       await result.current.createOrden.mutateAsync({
         order: {
           order_type: 'keys',
-        client_type: 'particular',
+          client_type: 'particular',
           particular_id: 'part-1',
           particular_full_name: 'García Juan',
         },
@@ -134,19 +153,17 @@ describe('useMutateOrden', () => {
       });
     });
 
-    expect(mockRpc).toHaveBeenCalledWith('create_order_with_items', {
+    expect(mockRpc).toHaveBeenCalledWith('create_key_order_with_items', expect.objectContaining({
       p_order: expect.objectContaining({
-        order_type: 'keys',
         client_type: 'particular',
         particular_id: 'part-1',
         particular_full_name: 'García Juan',
       }),
-      p_items: sampleItems,
-    });
+    }));
   });
 
   it('createOrden error → calls toastMutationError', async () => {
-    const dbError = { code: 'P0001', message: 'create_order: at least one item required' };
+    const dbError = { code: 'P0001', message: 'KEY_ORDER_EMPTY: at least one item required' };
     mockRpc.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { Wrapper } = makeWrapper();
@@ -167,9 +184,10 @@ describe('useMutateOrden', () => {
     expect(calls[0]![0]).toEqual(dbError);
   });
 
-  // cancelOrden
-  it('cancelOrden calls UPDATE with status: "cancelled"', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+  // cancelOrden — looks up order_kind then routes to cancel_key_order
+  it('cancelOrden fetches order_kind from all_orders then calls rpc("cancel_key_order")', async () => {
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: { order_kind: 'key' }, error: null });
+    mockRpc.mockResolvedValueOnce({ data: null, error: null });
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
@@ -178,13 +196,13 @@ describe('useMutateOrden', () => {
       await result.current.cancelOrden.mutateAsync({ id: 'order-abc' });
     });
 
-    expect(mockFrom).toHaveBeenCalledWith('orders');
-    expect(mockUpdate).toHaveBeenCalledWith({ status: 'cancelled' });
-    expect(mockEq).toHaveBeenCalledWith('id', 'order-abc');
+    expect(mockFrom).toHaveBeenCalledWith('all_orders');
+    expect(mockAllOrdersEq).toHaveBeenCalledWith('id', 'order-abc');
+    expect(mockRpc).toHaveBeenCalledWith('cancel_key_order', { p_order_id: 'order-abc' });
   });
 
   it('cancelOrden success → shows cancel toast', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+    mockRpc.mockResolvedValueOnce({ data: null, error: null });
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
@@ -204,8 +222,9 @@ describe('useMutateOrden', () => {
     expect('advanceOrdenStatus' in result.current).toBe(false);
   });
 
-  // T-10: confirmOrden
-  it('confirmOrden calls supabase.rpc("confirm_order", { p_order_id: id })', async () => {
+  // confirmOrden — looks up order_kind then routes to confirm_key_order
+  it('confirmOrden fetches order_kind from all_orders then calls rpc("confirm_key_order")', async () => {
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: { order_kind: 'key' }, error: null });
     mockRpc.mockResolvedValueOnce({ data: null, error: null });
 
     const { Wrapper } = makeWrapper();
@@ -215,7 +234,7 @@ describe('useMutateOrden', () => {
       await result.current.confirmOrden.mutateAsync({ id: 'order-draft-1' });
     });
 
-    expect(mockRpc).toHaveBeenCalledWith('confirm_order', { p_order_id: 'order-draft-1' });
+    expect(mockRpc).toHaveBeenCalledWith('confirm_key_order', { p_order_id: 'order-draft-1' });
   });
 
   it('confirmOrden success → shows "Orden confirmada" toast', async () => {
@@ -254,7 +273,7 @@ describe('useMutateOrden', () => {
   });
 
   it('confirmOrden error → calls toastMutationError', async () => {
-    const dbError = { code: 'P0001', message: 'ORDERS_CONFIRM_NOT_DRAFT: order is not in draft status' };
+    const dbError = { code: 'P0001', message: 'KEY_ORDER_NOT_DRAFT: order is not in draft status' };
     mockRpc.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { Wrapper } = makeWrapper();
@@ -272,8 +291,9 @@ describe('useMutateOrden', () => {
     expect(calls[0]![0]).toEqual(dbError);
   });
 
-  // T-11: updateDraftOrden
-  it('updateDraftOrden calls supabase.rpc("update_draft_order_with_items") with correct args', async () => {
+  // updateDraftOrden — looks up order_kind then routes to update_draft_key_order_with_items
+  it('updateDraftOrden calls rpc("update_draft_key_order_with_items") with correct args', async () => {
+    mockAllOrdersSingle.mockResolvedValueOnce({ data: { order_kind: 'key' }, error: null });
     const newUpdatedAt = '2026-08-11T20:00:00.000Z';
     mockRpc.mockResolvedValueOnce({ data: newUpdatedAt, error: null });
 
@@ -282,8 +302,7 @@ describe('useMutateOrden', () => {
 
     const patch = { notes: 'updated notes' };
     const items = [
-      { id: 'item-1', item_type: 'key' as const, quantity: 2 },
-      { item_type: 'equipment' as const, quantity: 1 },
+      { id: 'item-1', item_type: 'key' as const, quantity: 2, building_id: 'b-1', unit_price: 50 },
     ];
     const expectedUpdatedAt = '2026-08-11T19:00:00.000Z';
 
@@ -296,12 +315,10 @@ describe('useMutateOrden', () => {
       });
     });
 
-    expect(mockRpc).toHaveBeenCalledWith('update_draft_order_with_items', {
+    expect(mockRpc).toHaveBeenCalledWith('update_draft_key_order_with_items', expect.objectContaining({
       p_order_id: 'order-draft-2',
-      p_patch: patch,
-      p_items: items,
       p_expected_updated_at: expectedUpdatedAt,
-    });
+    }));
   });
 
   it('updateDraftOrden success → shows "Cambios guardados" toast', async () => {
@@ -350,7 +367,7 @@ describe('useMutateOrden', () => {
   });
 
   it('updateDraftOrden optimistic concurrency error → calls toastMutationError', async () => {
-    const dbError = { code: 'P0001', message: 'ORDERS_UPDATE_CONFLICT: order was modified concurrently' };
+    const dbError = { code: 'P0001', message: 'KEY_ORDER_STALE: order was modified concurrently' };
     mockRpc.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { Wrapper } = makeWrapper();
@@ -362,7 +379,7 @@ describe('useMutateOrden', () => {
           id: 'order-draft-2',
           order: {},
           items: [],
-          expectedUpdatedAt: '2026-08-11T18:00:00.000Z', // stale timestamp
+          expectedUpdatedAt: '2026-08-11T18:00:00.000Z',
         });
       } catch { /* expected */ }
     });
@@ -373,9 +390,9 @@ describe('useMutateOrden', () => {
     expect(calls[0]![0]).toEqual(dbError);
   });
 
-  // setPickupPerson
-  it('setPickupPerson calls UPDATE with pickup_particular_id and filters by id', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+  // setPickupPerson — routes to setKeyOrderPickupPerson (key_orders direct UPDATE)
+  it('setPickupPerson calls UPDATE on key_orders with pickup_particular_id and filters by id', async () => {
+    mockKeyOrdersEq.mockResolvedValueOnce({ error: null });
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
@@ -387,13 +404,13 @@ describe('useMutateOrden', () => {
       });
     });
 
-    expect(mockFrom).toHaveBeenCalledWith('orders');
-    expect(mockUpdate).toHaveBeenCalledWith({ pickup_particular_id: 'part-2' });
-    expect(mockEq).toHaveBeenCalledWith('id', 'order-abc');
+    expect(mockFrom).toHaveBeenCalledWith('key_orders');
+    expect(mockKeyOrdersUpdate).toHaveBeenCalledWith({ pickup_particular_id: 'part-2' });
+    expect(mockKeyOrdersEq).toHaveBeenCalledWith('id', 'order-abc');
   });
 
   it('setPickupPerson success → shows pickup person toast', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+    mockKeyOrdersEq.mockResolvedValueOnce({ error: null });
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
@@ -410,7 +427,7 @@ describe('useMutateOrden', () => {
   });
 
   it('setPickupPerson success → invalidates the order detail and the ordens list', async () => {
-    mockEq.mockResolvedValueOnce({ error: null });
+    mockKeyOrdersEq.mockResolvedValueOnce({ error: null });
 
     const { queryClient, Wrapper } = makeWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
@@ -434,8 +451,8 @@ describe('useMutateOrden', () => {
   });
 
   it('setPickupPerson error → calls toastMutationError', async () => {
-    const dbError = { code: 'P0001', message: 'record_order_key_pickup: order not found' };
-    mockEq.mockResolvedValueOnce({ error: dbError });
+    const dbError = { code: 'P0001', message: 'pickup: order not found' };
+    mockKeyOrdersEq.mockResolvedValueOnce({ error: dbError });
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateOrden(), { wrapper: Wrapper });
