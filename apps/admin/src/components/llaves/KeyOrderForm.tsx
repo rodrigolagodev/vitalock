@@ -39,6 +39,8 @@ const itemSchema = z.object({
     .int()
     .min(1, 'Mínimo 1'),
   description: z.string().optional(),
+  // Kept optional at the field level so the input can be empty during editing;
+  // required-ness is enforced in superRefine below with a client-consistency-aware message.
   building_id: z.string().optional().nullable(),
   unit_price: z.coerce
     .number({ invalid_type_error: 'El precio debe ser un número' })

@@ -23,7 +23,7 @@ import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { useUnits } from '@/hooks/useUnits';
 import { useEquipment } from '@/hooks/useEquipment';
 import { toastMutationError } from '@/hooks/mapMutationError';
-import { QuickUnitCreateDialog } from '@/components/ordenes/QuickUnitCreateDialog';
+import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog';
 import type { KeyOrderItemRow } from '@/hooks/useKeyOrder';
 
 const schema = z.object({
