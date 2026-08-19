@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   identity: {
     Tables: {
       audit_log: {
@@ -546,176 +571,6 @@ export type Database = {
           },
         ]
       }
-      order_items: {
-        Row: {
-          building_id: string | null
-          created_at: string
-          description: string | null
-          id: string
-          item_type: string
-          order_id: string
-          pickup_particular_id: string | null
-          produced_key_id: string | null
-          product_id: string | null
-          quantity: number
-          status: string
-          unit_id: string | null
-          unit_price: number | null
-          updated_at: string
-        }
-        Insert: {
-          building_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          item_type: string
-          order_id: string
-          pickup_particular_id?: string | null
-          produced_key_id?: string | null
-          product_id?: string | null
-          quantity: number
-          status?: string
-          unit_id?: string | null
-          unit_price?: number | null
-          updated_at?: string
-        }
-        Update: {
-          building_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          item_type?: string
-          order_id?: string
-          pickup_particular_id?: string | null
-          produced_key_id?: string | null
-          product_id?: string | null
-          quantity?: number
-          status?: string
-          unit_id?: string | null
-          unit_price?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_items_building_id_fkey"
-            columns: ["building_id"]
-            isOneToOne: false
-            referencedRelation: "buildings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_pickup_particular_id_fkey"
-            columns: ["pickup_particular_id"]
-            isOneToOne: false
-            referencedRelation: "particulares"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_produced_key_id_fkey"
-            columns: ["produced_key_id"]
-            isOneToOne: false
-            referencedRelation: "rfid_keys"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_unit_id_fkey"
-            columns: ["unit_id"]
-            isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      orders: {
-        Row: {
-          administration_id: string | null
-          client_type: string
-          created_at: string
-          id: string
-          notes: string | null
-          order_number: string
-          order_type: string
-          particular_dni: string | null
-          particular_email: string | null
-          particular_full_name: string | null
-          particular_id: string | null
-          particular_phone: string | null
-          pickup_particular_id: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          administration_id?: string | null
-          client_type: string
-          created_at?: string
-          id?: string
-          notes?: string | null
-          order_number?: string
-          order_type?: string
-          particular_dni?: string | null
-          particular_email?: string | null
-          particular_full_name?: string | null
-          particular_id?: string | null
-          particular_phone?: string | null
-          pickup_particular_id?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          administration_id?: string | null
-          client_type?: string
-          created_at?: string
-          id?: string
-          notes?: string | null
-          order_number?: string
-          order_type?: string
-          particular_dni?: string | null
-          particular_email?: string | null
-          particular_full_name?: string | null
-          particular_id?: string | null
-          particular_phone?: string | null
-          pickup_particular_id?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_administration_id_fkey"
-            columns: ["administration_id"]
-            isOneToOne: false
-            referencedRelation: "administrations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_particular_id_fkey"
-            columns: ["particular_id"]
-            isOneToOne: false
-            referencedRelation: "particulares"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_pickup_particular_id_fkey"
-            columns: ["pickup_particular_id"]
-            isOneToOne: false
-            referencedRelation: "particulares"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       particulares: {
         Row: {
           created_at: string
@@ -875,13 +730,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "rfid_keys_order_item_id_fkey"
-            columns: ["order_item_id"]
-            isOneToOne: false
-            referencedRelation: "order_items"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "rfid_keys_unit_id_fkey"
             columns: ["unit_id"]
@@ -1172,7 +1020,6 @@ export type Database = {
         Returns: string
       }
       confirm_key_order: { Args: { p_order_id: string }; Returns: undefined }
-      confirm_order: { Args: { p_order_id: string }; Returns: undefined }
       confirm_technical_order: {
         Args: { p_order_id: string }
         Returns: undefined
@@ -1196,10 +1043,6 @@ export type Database = {
           p_items: Json[]
           p_order: Json
         }
-        Returns: string
-      }
-      create_order_with_items: {
-        Args: { p_items: Json[]; p_order: Json }
         Returns: string
       }
       create_product_with_initial_stock: {
@@ -1233,7 +1076,6 @@ export type Database = {
         Returns: string
       }
       gen_key_order_number: { Args: never; Returns: string }
-      gen_order_number: { Args: never; Returns: string }
       gen_technical_order_number: { Args: never; Returns: string }
       mark_key_order_invoiced: {
         Args: { p_order_id: string }
@@ -1244,10 +1086,6 @@ export type Database = {
         Returns: undefined
       }
       recompute_key_order_status: {
-        Args: { p_order_id: string }
-        Returns: undefined
-      }
-      recompute_order_status: {
         Args: { p_order_id: string }
         Returns: undefined
       }
@@ -1304,15 +1142,6 @@ export type Database = {
         Returns: string
       }
       update_draft_key_order_with_items: {
-        Args: {
-          p_expected_updated_at: string
-          p_items: Json[]
-          p_order_id: string
-          p_patch: Json
-        }
-        Returns: string
-      }
-      update_draft_order_with_items: {
         Args: {
           p_expected_updated_at: string
           p_items: Json[]
@@ -2256,6 +2085,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   identity: {
     Enums: {},
   },
