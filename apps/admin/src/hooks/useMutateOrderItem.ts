@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { ordensKey, ordenKey, keysKey } from '@/lib/queryKeys';
 import { toastMutationError } from './mapMutationError';
+import { resolveOrderKind } from './resolveOrderKind';
 
 export interface ConfigureKeyItemInput {
   orderItemId: string;
@@ -48,16 +49,8 @@ export function useMutateOrderItem() {
 
   const cancelOrderItem = useMutation({
     mutationFn: async ({ id, orderId }: CancelOrderItemInput) => {
-      // Phase 1: Determine order_kind via the all_orders VIEW to select the right items table.
-      const { data: kindRow, error: kindError } = await supabase
-        .from('all_orders')
-        .select('order_kind')
-        .eq('id', orderId)
-        .single();
-
-      if (kindError) throw kindError;
-
-      const orderKind = (kindRow as unknown as { order_kind: string } | null)?.order_kind;
+      // Phase 1: Determine order_kind via the shared resolveOrderKind helper.
+      const orderKind = await resolveOrderKind(orderId);
 
       // Phase 2: Cancel the item in the correct bounded-context table.
       const itemsTable = orderKind === 'technical' ? 'technical_order_items' : 'key_order_items';

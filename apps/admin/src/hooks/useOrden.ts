@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ordenKey } from '@/lib/queryKeys';
+import { resolveOrderKind } from './resolveOrderKind';
 
 export interface OrderItemRow {
   id: string;
@@ -173,17 +174,8 @@ export function useOrden(id: string | undefined) {
     queryFn: async (): Promise<OrdenDetailRow | null> => {
       if (!id) return null;
 
-      // Phase 1: Determine order_kind via the all_orders VIEW.
-      const { data: kindRow, error: kindError } = await supabase
-        .from('all_orders')
-        .select('order_kind')
-        .eq('id', id)
-        .single();
-
-      if (kindError) throw kindError;
-      if (!kindRow) return null;
-
-      const orderKind = (kindRow as unknown as { order_kind: string }).order_kind;
+      // Phase 1: Determine order_kind via the shared resolveOrderKind helper.
+      const orderKind = await resolveOrderKind(id);
 
       if (orderKind === 'key') {
         // Phase 2a: Fetch from key_orders with items.

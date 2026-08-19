@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { resolveOrderKind } from './resolveOrderKind';
 
 export interface OrderTareaRow {
   id: string;
@@ -28,17 +29,8 @@ export function useOrderTareas(orderId: string | undefined) {
     queryFn: async (): Promise<OrderTareaRow[]> => {
       if (!orderId) return [];
 
-      // Phase 1: Determine order_kind via the all_orders VIEW.
-      const { data: kindRow, error: kindError } = await supabase
-        .from('all_orders')
-        .select('order_kind')
-        .eq('id', orderId)
-        .single();
-
-      if (kindError) throw kindError;
-      if (!kindRow) return [];
-
-      const orderKind = (kindRow as unknown as { order_kind: string }).order_kind;
+      // Phase 1: Determine order_kind via the shared resolveOrderKind helper.
+      const orderKind = await resolveOrderKind(orderId);
 
       if (orderKind === 'key') {
         // Key orders do not have tickets (no technical work, no ticket seeding at confirm).

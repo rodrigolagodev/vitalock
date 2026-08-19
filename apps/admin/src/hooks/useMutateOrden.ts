@@ -25,6 +25,7 @@ import { supabase } from '@/lib/supabase';
 import { ordensKey, ordenKey } from '@/lib/queryKeys';
 import type { OrdenDetailRow } from './useOrden';
 import { toastMutationError } from './mapMutationError';
+import { resolveOrderKind as resolveOrderKindShared } from './resolveOrderKind';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Preserved legacy input types — consumer signatures are UNCHANGED.
@@ -84,17 +85,13 @@ export interface SetPickupPersonInput {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Internal helper: resolve order_kind from the all_orders VIEW.
+// Internal helper: resolve order_kind and map to legacy 'keys' | 'technical'.
+// Uses the shared resolveOrderKind helper (returns raw DB 'key' | 'technical').
 // ────────────────────────────────────────────────────────────────────────────
 
 async function resolveOrderKind(orderId: string): Promise<'keys' | 'technical'> {
-  const { data, error } = await supabase
-    .from('all_orders')
-    .select('order_kind')
-    .eq('id', orderId)
-    .single();
-  if (error) throw error;
-  return (data as unknown as { order_kind: string }).order_kind === 'key' ? 'keys' : 'technical';
+  const raw = await resolveOrderKindShared(orderId);
+  return raw === 'key' ? 'keys' : 'technical';
 }
 
 // ────────────────────────────────────────────────────────────────────────────
