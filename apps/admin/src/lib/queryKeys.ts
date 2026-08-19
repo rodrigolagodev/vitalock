@@ -25,6 +25,18 @@ export const keyOrderKey = (id: string) => ['admin', 'key-order', id] as const;
 export const technicalOrdersKey = (status?: string, search?: string) =>
   ['admin', 'technical-orders', status ?? 'all', search ?? ''] as const;
 export const technicalOrderKey = (id: string) => ['admin', 'technical-order', id] as const;
+export const allOrdersKey = (
+  status?: string,
+  search?: string,
+  orderKind?: string,
+) =>
+  [
+    'admin',
+    'all-orders',
+    status ?? 'all',
+    search ?? '',
+    orderKind ?? 'all',
+  ] as const;
 export const tareasKey = (
   search?: string,
   staffId?: string,
