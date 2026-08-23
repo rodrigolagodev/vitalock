@@ -97,3 +97,42 @@ describe('HistorialPage error state', () => {
     expect(screen.getByText(/error al cargar el historial/i)).toBeInTheDocument();
   });
 });
+
+describe('HistorialPage date-range filter', () => {
+  it('renders a "Desde" date input', () => {
+    renderPage();
+    expect(screen.getByLabelText(/desde/i)).toBeInTheDocument();
+  });
+
+  it('renders a "Hasta" date input', () => {
+    renderPage();
+    expect(screen.getByLabelText(/hasta/i)).toBeInTheDocument();
+  });
+
+  it('changing dateFrom passes it to useAllOrders', async () => {
+    renderPage();
+    const desdeInput = screen.getByLabelText(/desde/i);
+    await userEvent.type(desdeInput, '2026-08-01');
+    const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
+    expect(lastCall?.dateFrom).toBe('2026-08-01');
+  });
+
+  it('changing dateTo passes it to useAllOrders', async () => {
+    renderPage();
+    const hastaInput = screen.getByLabelText(/hasta/i);
+    await userEvent.type(hastaInput, '2026-08-31');
+    const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
+    expect(lastCall?.dateTo).toBe('2026-08-31');
+  });
+
+  it('hasFilters becomes true when dateFrom is set', async () => {
+    // When hasFilters=true the "filtered empty" message appears
+    renderPage();
+    const desdeInput = screen.getByLabelText(/desde/i);
+    // Simulate the user typing a date value
+    await userEvent.type(desdeInput, '2026-08-01');
+    // The last call to useAllOrders should include dateFrom
+    const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
+    expect(lastCall?.dateFrom).toBe('2026-08-01');
+  });
+});

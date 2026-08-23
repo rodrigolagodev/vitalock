@@ -29,11 +29,17 @@ export default function HistorialPage() {
   const [search, setSearch] = useState('');
   const [orderKind, setOrderKind] = useState<OrderKindFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const debouncedSearch = useDebounce(search, 300);
 
   const hasFilters =
-    debouncedSearch.trim() !== '' || orderKind !== 'all' || status !== 'all';
+    debouncedSearch.trim() !== '' ||
+    orderKind !== 'all' ||
+    status !== 'all' ||
+    dateFrom !== '' ||
+    dateTo !== '';
 
   const {
     data: orders = [],
@@ -43,6 +49,8 @@ export default function HistorialPage() {
     search: debouncedSearch,
     status: status === 'all' ? undefined : status,
     orderKind: orderKind === 'all' ? undefined : orderKind,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
   });
 
   if (isError) {
@@ -65,6 +73,33 @@ export default function HistorialPage() {
         onChange={(e) => setSearch(e.target.value)}
         className="max-w-sm"
       />
+
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <label htmlFor="date-from" className="text-xs uppercase text-muted-foreground">
+            Desde
+          </label>
+          <Input
+            id="date-from"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-40"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="date-to" className="text-xs uppercase text-muted-foreground">
+            Hasta
+          </label>
+          <Input
+            id="date-to"
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-40"
+          />
+        </div>
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs uppercase text-muted-foreground">Tipo:</span>
