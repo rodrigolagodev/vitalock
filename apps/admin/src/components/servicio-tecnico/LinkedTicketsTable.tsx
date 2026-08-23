@@ -1,5 +1,5 @@
 import { DataTable, StatusBadge, type StatusTone } from '@vitalock/ui';
-import type { OrderTareaRow } from '@/hooks/useOrderTareas';
+import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 
 const TICKET_STATUS_LABELS: Record<string, string> = {
   open: 'Abierto',
@@ -16,14 +16,15 @@ const TICKET_STATUS_TONES: Record<string, StatusTone> = {
 };
 
 interface LinkedTicketsTableProps {
-  tickets: OrderTareaRow[];
+  tickets: TechnicalOrderTicketRow[];
   /** Loading state — renders skeleton. */
   isLoading?: boolean;
 }
 
 /**
  * Read-only table of support.tickets linked to a technical order.
- * Consumes OrderTareaRow (from useOrderTareas which is retargeted for technical orders).
+ * Consumes TechnicalOrderTicketRow (from useTechnicalOrderTickets, scoped to the
+ * technical-orders bounded context — no legacy order_item_id alias).
  *
  * No navigation to /tickets/:id — that route is not yet registered.
  * assigned_to_staff_id is shown as a raw UUID (name resolution requires additional
@@ -41,7 +42,7 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
   }
 
   return (
-    <DataTable<OrderTareaRow>
+    <DataTable<TechnicalOrderTicketRow>
       rows={tickets}
       isFetching={false}
       columns={[

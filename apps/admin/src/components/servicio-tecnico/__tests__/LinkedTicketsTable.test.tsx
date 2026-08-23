@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import type { ReactNode } from 'react';
-import type { OrderTareaRow } from '@/hooks/useOrderTareas';
+import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
@@ -24,14 +24,14 @@ function makeWrapper() {
   };
 }
 
-function makeTicket(overrides: Partial<OrderTareaRow> = {}): OrderTareaRow {
+function makeTicket(overrides: Partial<TechnicalOrderTicketRow> = {}): TechnicalOrderTicketRow {
   return {
     id: 'ticket-1',
     ticket_number: 'TKT-001',
     category: 'maintenance',
     status: 'open',
     description: 'Revisar equipo',
-    order_item_id: 'item-1',
+    technical_order_item_id: 'item-1',
     assigned_to_staff_id: 'staff-1',
     created_at: '2026-08-10T12:00:00Z',
     resolved_at: null,

@@ -6,10 +6,10 @@ import React from 'react';
 import type { TechnicalOrderDetailRow } from '@/hooks/useTechnicalOrder';
 
 // Hoist mocks for vi.mock hoisting requirement
-const { useTechnicalOrderMock, useMutateTechnicalOrderMock, useOrderTareasMock } = vi.hoisted(() => ({
+const { useTechnicalOrderMock, useMutateTechnicalOrderMock, useTechnicalOrderTicketsMock } = vi.hoisted(() => ({
   useTechnicalOrderMock: vi.fn(),
   useMutateTechnicalOrderMock: vi.fn(),
-  useOrderTareasMock: vi.fn(),
+  useTechnicalOrderTicketsMock: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
@@ -17,8 +17,8 @@ vi.mock('@/hooks/useTechnicalOrder', () => ({ useTechnicalOrder: useTechnicalOrd
 vi.mock('@/hooks/useMutateTechnicalOrder', () => ({
   useMutateTechnicalOrder: useMutateTechnicalOrderMock,
 }));
-vi.mock('@/hooks/useOrderTareas', () => ({
-  useOrderTareas: useOrderTareasMock,
+vi.mock('@/hooks/useTechnicalOrderTickets', () => ({
+  useTechnicalOrderTickets: useTechnicalOrderTicketsMock,
 }));
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 // Stub items table and linked tickets to avoid deep dependency chains
@@ -102,7 +102,7 @@ beforeEach(() => {
     isLoading: false,
     isError: false,
   });
-  useOrderTareasMock.mockReturnValue({
+  useTechnicalOrderTicketsMock.mockReturnValue({
     data: [],
     isLoading: false,
     isError: false,

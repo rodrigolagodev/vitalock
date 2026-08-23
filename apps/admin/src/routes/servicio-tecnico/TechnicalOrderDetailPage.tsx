@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Button } from '@vitalock/ui';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
-import { useOrderTareas } from '@/hooks/useOrderTareas';
+import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';
 import { TechnicalOrderStatusBadge } from '@/components/servicio-tecnico/TechnicalOrderStatusBadge';
 import { TechnicalOrderItemsTable } from '@/components/servicio-tecnico/TechnicalOrderItemsTable';
 import { LinkedTicketsTable } from '@/components/servicio-tecnico/LinkedTicketsTable';
@@ -16,7 +16,7 @@ export default function TechnicalOrderDetailPage() {
     cancelTechnicalOrder,
     markTechnicalOrderInvoiced,
   } = useMutateTechnicalOrder();
-  const { data: tickets = [], isLoading: ticketsLoading } = useOrderTareas(techOrderId);
+  const { data: tickets = [], isLoading: ticketsLoading } = useTechnicalOrderTickets(techOrderId);
 
   if (!techOrderId) {
     return (
