@@ -1,0 +1,63 @@
+import { DataTable } from '@vitalock/ui';
+import { Badge } from '@vitalock/ui';
+import type { AllOrderRow } from '@/hooks/useAllOrders';
+
+interface HistorialTableProps {
+  orders: AllOrderRow[];
+  isFetching: boolean;
+  hasFilters?: boolean;
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+function OrderKindBadge({ kind }: { kind: AllOrderRow['order_kind'] }) {
+  if (kind === 'key') {
+    return <Badge variant="secondary">Llaves</Badge>;
+  }
+  return <Badge variant="secondary">Servicio técnico</Badge>;
+}
+
+export function HistorialTable({
+  orders,
+  isFetching,
+  hasFilters = false,
+}: HistorialTableProps) {
+  return (
+    <DataTable<AllOrderRow>
+      rows={orders}
+      isFetching={isFetching}
+      columns={[
+        { header: 'N.º de orden', cell: (row) => row.order_number },
+        {
+          header: 'Tipo',
+          cell: (row) => <OrderKindBadge kind={row.order_kind} />,
+        },
+        {
+          header: 'Estado',
+          cell: (row) => row.status,
+          className: 'text-muted-foreground',
+        },
+        {
+          header: 'Fecha',
+          cell: (row) => formatDate(row.created_at),
+          className: 'text-muted-foreground',
+          hideBelow: 'md',
+        },
+      ]}
+      rowKey={(row) => row.id}
+      firstCell="link"
+      getRowHref={(row) =>
+        row.order_kind === 'key' ? `/llaves/${row.id}` : `/servicio-tecnico/${row.id}`
+      }
+      emptyMessage="No hay órdenes en el historial."
+      filteredEmptyMessage="No se encontraron órdenes con los filtros aplicados."
+      hasFilters={hasFilters}
+    />
+  );
+}
