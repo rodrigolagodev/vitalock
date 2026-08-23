@@ -1,23 +1,15 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Sidebar } from '../Sidebar';
 
-const { useOrdensMock } = vi.hoisted(() => ({ useOrdensMock: vi.fn() }));
-
-vi.mock('@/hooks/useOrdens', () => ({ useOrdens: useOrdensMock }));
-
 function renderSidebar() {
   return render(
-    <MemoryRouter initialEntries={['/ordenes']}>
+    <MemoryRouter initialEntries={['/historial']}>
       <Sidebar />
     </MemoryRouter>,
   );
 }
-
-beforeEach(() => {
-  useOrdensMock.mockReturnValue({ data: [] });
-});
 
 describe('Sidebar', () => {
   it('renders the brand logo above the navigation', () => {
@@ -33,7 +25,6 @@ describe('Sidebar', () => {
       ['Llaves', '/llaves'],
       ['Servicio técnico', '/servicio-tecnico'],
       ['Historial', '/historial'],
-      ['Ordenes', '/ordenes'],
       ['Tareas', '/tareas'],
       ['Personal', '/personal'],
       ['Stock', '/stock'],
@@ -43,29 +34,21 @@ describe('Sidebar', () => {
     }
   });
 
+  it('does not render an Ordenes nav link after retirement', () => {
+    renderSidebar();
+    expect(screen.queryByRole('link', { name: 'Ordenes' })).not.toBeInTheDocument();
+  });
+
   it('renders each nav item label exactly once (no separate section labels)', () => {
     renderSidebar();
     expect(screen.getAllByText('Llaves')).toHaveLength(1);
     expect(screen.getAllByText('Servicio técnico')).toHaveLength(1);
-    expect(screen.getAllByText('Ordenes')).toHaveLength(1);
+    expect(screen.getAllByText('Historial')).toHaveLength(1);
     expect(screen.getAllByText('Personal')).toHaveLength(1);
   });
 
-  it('renders the in-progress ordenes count as a badge pill', () => {
-    useOrdensMock.mockReturnValue({ data: [{ id: 'o-1' }, { id: 'o-2' }, { id: 'o-3' }] });
+  it('renders Historial link pointing to /historial', () => {
     renderSidebar();
-    expect(screen.getByText('3')).toBeInTheDocument();
-  });
-
-  it('hides the badge when there are no in-progress ordenes', () => {
-    useOrdensMock.mockReturnValue({ data: [] });
-    renderSidebar();
-    expect(screen.queryByText('0')).not.toBeInTheDocument();
-  });
-
-  it('hides the badge while ordenes have not loaded', () => {
-    useOrdensMock.mockReturnValue({ data: undefined });
-    renderSidebar();
-    expect(screen.queryByText('0')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Historial' })).toHaveAttribute('href', '/historial');
   });
 });

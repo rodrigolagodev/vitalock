@@ -125,7 +125,7 @@ describe('useMutateKey', () => {
     expect(toast.success).toHaveBeenCalledWith('Retiro registrado.');
   });
 
-  it('recordPickup success → invalidates order detail, ordens list and keys list', async () => {
+  it('recordPickup success → invalidates keys list', async () => {
     mockRpc.mockResolvedValueOnce({ error: null });
 
     const { queryClient, Wrapper } = makeWrapper();
@@ -145,13 +145,14 @@ describe('useMutateKey', () => {
 
     await waitFor(() => expect(result.current.recordPickup.isSuccess).toBe(true));
     expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ['admin', 'orden', 'order-1'],
-    });
-    expect(invalidateSpy).toHaveBeenCalledWith({
-      queryKey: ['admin', 'ordenes', 'all', '', 'all'],
-    });
-    expect(invalidateSpy).toHaveBeenCalledWith({
       queryKey: ['admin', 'keys', 'b-1'],
+    });
+    // legacy order list/detail cache keys removed after /ordenes retirement
+    expect(invalidateSpy).not.toHaveBeenCalledWith({
+      queryKey: expect.arrayContaining(['ordenes']),
+    });
+    expect(invalidateSpy).not.toHaveBeenCalledWith({
+      queryKey: expect.arrayContaining(['orden']),
     });
   });
 

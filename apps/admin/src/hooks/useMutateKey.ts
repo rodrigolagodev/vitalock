@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { keysKey, ordenKey, ordensKey } from '@/lib/queryKeys';
+import { keysKey } from '@/lib/queryKeys';
 import { keyEventsKey } from './useKeyEvents';
 import { toastMutationError } from './mapMutationError';
 import { requestKeyDisable, cancelKeyDisable } from '@vitalock/supabase';
@@ -148,11 +148,9 @@ export function useMutateKey(buildingId: string | undefined) {
       });
       if (error) throw error;
     },
-    onSuccess: (_data, vars) => {
-      // The RPC may auto-complete the order (status → completed), so the
-      // order detail + list and the keys list all need a refresh.
-      void queryClient.invalidateQueries({ queryKey: ordenKey(vars.order_id) });
-      void queryClient.invalidateQueries({ queryKey: ordensKey() });
+    onSuccess: () => {
+      // The RPC may auto-complete the order (status → completed), so
+      // the keys list needs a refresh.
       void invalidateKeys();
       toast.success('Retiro registrado.');
     },

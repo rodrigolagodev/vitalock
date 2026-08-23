@@ -5,18 +5,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { AppShell } from '../AppShell';
 
-const { useAuthContextMock, useOrdensMock } = vi.hoisted(() => ({
+const { useAuthContextMock } = vi.hoisted(() => ({
   useAuthContextMock: vi.fn(),
-  useOrdensMock: vi.fn(),
 }));
 
 vi.mock('@vitalock/shared', () => ({ useAuthContext: useAuthContextMock }));
-vi.mock('@/hooks/useOrdens', () => ({ useOrdens: useOrdensMock }));
 
 function renderShell() {
   return render(
     <ThemeProvider attribute="class">
-      <MemoryRouter initialEntries={['/ordenes']}>
+      <MemoryRouter initialEntries={['/historial']}>
         <AppShell />
       </MemoryRouter>
     </ThemeProvider>,
@@ -28,7 +26,6 @@ beforeEach(() => {
     staff: { full_name: 'Ana Alvarez' },
     signOut: vi.fn(),
   });
-  useOrdensMock.mockReturnValue({ data: [] });
 });
 
 describe('AppShell', () => {

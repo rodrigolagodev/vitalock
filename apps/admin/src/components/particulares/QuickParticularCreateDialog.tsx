@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
-import { QuickUnitCreateDialog } from '@/components/ordenes/QuickUnitCreateDialog';
+import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog';
 import { useMutateParticular } from '@/hooks/useMutateParticular';
 import { useBuildings } from '@/hooks/useBuildings';
 import { useUnits } from '@/hooks/useUnits';

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Building2,
-  ClipboardList,
   History,
   Home,
   Key,
@@ -15,7 +14,6 @@ import {
 import { cn } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { NavItem } from './NavItem';
-import { useOrdens } from '@/hooks/useOrdens';
 
 interface SidebarProps {
   className?: string;
@@ -23,7 +21,6 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [open, setOpen] = useState(false);
-  const { data: inProgressOrdens } = useOrdens({ status: 'in_progress' });
 
   const navContent = (
     <nav className="flex flex-col gap-1 p-4">
@@ -59,12 +56,6 @@ export function Sidebar({ className }: SidebarProps) {
 
       <NavItem label="Historial" to="/historial" icon={<History className="h-4 w-4" />} />
 
-      <NavItem
-        label="Ordenes"
-        to="/ordenes"
-        icon={<ClipboardList className="h-4 w-4" />}
-        badge={inProgressOrdens?.length}
-      />
       <NavItem label="Tareas" to="/tareas" icon={<ListTodo className="h-4 w-4" />} />
 
       <NavItem label="Personal" to="/personal" icon={<Users className="h-4 w-4" />} />
