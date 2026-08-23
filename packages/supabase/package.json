@@ -24,6 +24,6 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run --passWithNoTests",
-    "test:sql": "pg_prove --ext .sql -r ../../supabase/tests-sql"
+    "test:sql": "pg_prove ../../supabase/tests-sql/test_*.sql"
   }
 }
