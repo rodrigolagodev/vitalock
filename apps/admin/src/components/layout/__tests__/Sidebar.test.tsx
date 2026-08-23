@@ -32,6 +32,7 @@ describe('Sidebar', () => {
       ['Particulares', '/particulares'],
       ['Llaves', '/llaves'],
       ['Servicio técnico', '/servicio-tecnico'],
+      ['Historial', '/historial'],
       ['Ordenes', '/ordenes'],
       ['Tareas', '/tareas'],
       ['Personal', '/personal'],

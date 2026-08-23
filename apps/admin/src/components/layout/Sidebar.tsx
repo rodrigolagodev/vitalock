@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Building2,
   ClipboardList,
+  History,
   Home,
   Key,
   ListTodo,
@@ -55,6 +56,8 @@ export function Sidebar({ className }: SidebarProps) {
         to="/servicio-tecnico"
         icon={<Wrench className="h-4 w-4" />}
       />
+
+      <NavItem label="Historial" to="/historial" icon={<History className="h-4 w-4" />} />
 
       <NavItem
         label="Ordenes"

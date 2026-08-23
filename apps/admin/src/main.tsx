@@ -26,6 +26,7 @@ import TechnicalOrdersPage from './routes/servicio-tecnico/TechnicalOrdersPage';
 import TechnicalOrderDetailPage from './routes/servicio-tecnico/TechnicalOrderDetailPage';
 import TechnicalOrderNuevaPage from './routes/servicio-tecnico/TechnicalOrderNuevaPage';
 import TechnicalOrderEditarPage from './routes/servicio-tecnico/TechnicalOrderEditarPage';
+import HistorialPage from './routes/historial/HistorialPage';
 import TareasPage from './routes/tareas/TareasPage';
 import TareaDetailPage from './routes/tareas/TareaDetailPage';
 import PersonalPage from './routes/personal/PersonalPage';
@@ -66,6 +67,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="servicio-tecnico/nueva" element={<TechnicalOrderNuevaPage />} />
                   <Route path="servicio-tecnico/:techOrderId" element={<TechnicalOrderDetailPage />} />
                   <Route path="servicio-tecnico/:techOrderId/editar" element={<TechnicalOrderEditarPage />} />
+                  <Route path="historial" element={<HistorialPage />} />
                   <Route path="ordenes" element={<OrdenesPage />} />
                   <Route path="ordenes/nueva" element={<OrdenNuevaPage />} />
                   <Route path="ordenes/:ordenId" element={<OrdenDetailPage />} />
