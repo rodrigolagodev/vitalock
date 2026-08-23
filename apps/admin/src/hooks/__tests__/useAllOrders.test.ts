@@ -67,15 +67,21 @@ describe('useAllOrders', () => {
     mockOrder.mockResolvedValue({ data: fakeAllOrders, error: null });
     mockOr.mockReturnValue({ order: mockOrder });
     mockIlike.mockReturnValue({ order: mockOrder });
-    mockEq.mockReturnValue({ or: mockOr, order: mockOrder, ilike: mockIlike });
-    mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder, ilike: mockIlike });
+    // gte/lte are part of the chain — must return something that continues the chain
+    const mockLteDefault = vi.fn().mockReturnValue({ order: mockOrder, or: mockOr });
+    const mockGteDefault = vi.fn().mockReturnValue({ lte: mockLteDefault, order: mockOrder, or: mockOr });
+    mockEq.mockReturnValue({ or: mockOr, order: mockOrder, ilike: mockIlike, gte: mockGteDefault, lte: mockLteDefault });
+    mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder, ilike: mockIlike, gte: mockGteDefault, lte: mockLteDefault });
     mockFrom.mockReturnValue({ select: mockSelect });
   });
 
   it('allOrdersKey factory produces the expected shape', () => {
-    expect(allOrdersKey()).toEqual(['admin', 'all-orders', 'all', '', 'all']);
+    expect(allOrdersKey()).toEqual(['admin', 'all-orders', 'all', '', 'all', '', '']);
     expect(allOrdersKey('invoiced', 'garcia', 'key')).toEqual([
-      'admin', 'all-orders', 'invoiced', 'garcia', 'key',
+      'admin', 'all-orders', 'invoiced', 'garcia', 'key', '', '',
+    ]);
+    expect(allOrdersKey('invoiced', 'garcia', 'key', '2026-08-01', '2026-08-31')).toEqual([
+      'admin', 'all-orders', 'invoiced', 'garcia', 'key', '2026-08-01', '2026-08-31',
     ]);
   });
 
@@ -90,7 +96,7 @@ describe('useAllOrders', () => {
     expect(result.current.isLoading).toBe(true);
 
     const key = allOrdersKey();
-    expect(key).toEqual(['admin', 'all-orders', 'all', '', 'all']);
+    expect(key).toEqual(['admin', 'all-orders', 'all', '', 'all', '', '']);
   });
 
   it('returns data from all_orders on success (no filters)', async () => {
@@ -173,5 +179,64 @@ describe('useAllOrders', () => {
     const { result } = renderHook(() => useAllOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toEqual(dbError);
+  });
+
+  describe('date-range filter', () => {
+    let mockGte: ReturnType<typeof vi.fn>;
+    let mockLte: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      mockGte = vi.fn();
+      mockLte = vi.fn();
+
+      // Build a full chainable mock that supports gte/lte in any order
+      const terminal = { order: mockOrder };
+      mockLte.mockReturnValue(terminal);
+      mockGte.mockReturnValue({ lte: mockLte, order: mockOrder });
+      mockEq.mockReturnValue({ or: mockOr, order: mockOrder, ilike: mockIlike, gte: mockGte, lte: mockLte });
+      mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder, ilike: mockIlike, gte: mockGte, lte: mockLte });
+    });
+
+    it('dateFrom alone calls .gte("created_at", dateFrom)', async () => {
+      const { result } = renderHook(
+        () => useAllOrders({ dateFrom: '2026-08-01' }),
+        { wrapper: makeWrapper() },
+      );
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockGte).toHaveBeenCalledWith('created_at', '2026-08-01');
+    });
+
+    it('dateTo alone calls .lte("created_at", dateTo + T23:59:59.999Z)', async () => {
+      mockGte.mockReturnValue({ lte: mockLte, order: mockOrder });
+      mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder, ilike: mockIlike, gte: mockGte, lte: mockLte });
+      const { result } = renderHook(
+        () => useAllOrders({ dateTo: '2026-08-31' }),
+        { wrapper: makeWrapper() },
+      );
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockLte).toHaveBeenCalledWith('created_at', '2026-08-31T23:59:59.999Z');
+    });
+
+    it('dateFrom + dateTo both wired: calls .gte() then .lte()', async () => {
+      const { result } = renderHook(
+        () => useAllOrders({ dateFrom: '2026-08-01', dateTo: '2026-08-31' }),
+        { wrapper: makeWrapper() },
+      );
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(mockGte).toHaveBeenCalledWith('created_at', '2026-08-01');
+      expect(mockLte).toHaveBeenCalledWith('created_at', '2026-08-31T23:59:59.999Z');
+    });
+
+    it('allOrdersKey includes dateFrom and dateTo when set', () => {
+      const key = allOrdersKey('invoiced', 'garcia', 'key', '2026-08-01', '2026-08-31');
+      expect(key).toEqual([
+        'admin', 'all-orders', 'invoiced', 'garcia', 'key', '2026-08-01', '2026-08-31',
+      ]);
+    });
+
+    it('allOrdersKey defaults dateFrom and dateTo to empty string', () => {
+      const key = allOrdersKey();
+      expect(key).toEqual(['admin', 'all-orders', 'all', '', 'all', '', '']);
+    });
   });
 });

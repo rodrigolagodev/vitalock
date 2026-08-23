@@ -26,6 +26,8 @@ export const allOrdersKey = (
   status?: string,
   search?: string,
   orderKind?: string,
+  dateFrom?: string,
+  dateTo?: string,
 ) =>
   [
     'admin',
@@ -33,6 +35,8 @@ export const allOrdersKey = (
     status ?? 'all',
     search ?? '',
     orderKind ?? 'all',
+    dateFrom ?? '',
+    dateTo ?? '',
   ] as const;
 export const tareasKey = (
   search?: string,

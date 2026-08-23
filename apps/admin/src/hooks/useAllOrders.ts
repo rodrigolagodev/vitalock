@@ -24,17 +24,21 @@ export interface UseAllOrdersFilters {
   search?: string;
   status?: string;
   orderKind?: AllOrderKind | 'all';
+  /** Inclusive start date (ISO date string YYYY-MM-DD). Applied as gte on created_at. */
+  dateFrom?: string;
+  /** Inclusive end date (ISO date string YYYY-MM-DD). Applied as lte on created_at at end-of-day (T23:59:59.999Z). */
+  dateTo?: string;
 }
 
 /**
  * Read-only list hook over the public.all_orders VIEW.
  * Used by the /historial module. Never write through this hook.
  */
-export function useAllOrders({ search, status, orderKind }: UseAllOrdersFilters = {}) {
+export function useAllOrders({ search, status, orderKind, dateFrom, dateTo }: UseAllOrdersFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
-    queryKey: allOrdersKey(status, trimmed, orderKind),
+    queryKey: allOrdersKey(status, trimmed, orderKind, dateFrom, dateTo),
     queryFn: async (): Promise<AllOrderRow[]> => {
       let query = supabase
         .from('all_orders')
@@ -48,6 +52,14 @@ export function useAllOrders({ search, status, orderKind }: UseAllOrdersFilters 
 
       if (orderKind && orderKind !== 'all') {
         query = query.eq('order_kind', orderKind);
+      }
+
+      if (dateFrom) {
+        query = query.gte('created_at', dateFrom);
+      }
+
+      if (dateTo) {
+        query = query.lte('created_at', `${dateTo}T23:59:59.999Z`);
       }
 
       if (trimmed) {
