@@ -70,6 +70,7 @@ SELECT lives_ok(
       v_admin_id    uuid;
       v_building_id uuid;
       v_staff_id    uuid;
+      v_product_id  uuid;
       v_order_id    uuid;
       v_ticket_id   uuid;
       v_order_status text;
@@ -78,16 +79,19 @@ SELECT lives_ok(
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 108-S2 Building', 'Calle 2', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 108-S2 Staff', 'installer') RETURNING id INTO v_staff_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 108-S2 Equipment SKU', 'equipment', 10, 0) RETURNING id INTO v_product_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
-            'unit_price', 300
+            'unit_price', 300,
+            'product_id', v_product_id
           )
         ]::jsonb[],
         true
@@ -99,9 +103,12 @@ SELECT lives_ok(
        WHERE toi.order_id = v_order_id
        LIMIT 1;
 
-      UPDATE support.tickets SET status = 'in_progress' WHERE id = v_ticket_id;
-
-      PERFORM public.resolve_ticket(v_ticket_id, 'Trabajo completado', v_staff_id);
+      -- installation tickets must be resolved through resolve_equipment_installation
+      -- so the trigger tickets_require_equipment_on_resolve gets an equipment_id
+      -- attached before the resolved transition.
+      PERFORM public.resolve_equipment_installation(
+        v_ticket_id, 'SN-108-S2', NULL, 'Trabajo completado', v_staff_id
+      );
 
       SELECT status INTO v_order_status FROM public.technical_orders WHERE id = v_order_id;
       ASSERT v_order_status = 'completed',

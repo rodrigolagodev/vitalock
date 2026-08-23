@@ -82,14 +82,14 @@ SELECT lives_ok(
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 110-S2 Building', 'Calle 2', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 110-S2 Staff', 'installer') RETURNING id INTO v_staff_id;
-      INSERT INTO public.products (name, category)
-        VALUES ('Test 110-S2 Equipment SKU', 'equipment') RETURNING id INTO v_product_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 110-S2 Equipment SKU', 'equipment', 10, 0) RETURNING id INTO v_product_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
@@ -141,14 +141,14 @@ SELECT lives_ok(
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 110-S3 Building', 'Calle 3', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 110-S3 Staff', 'installer') RETURNING id INTO v_staff_id;
-      INSERT INTO public.products (name, category)
-        VALUES ('Test 110-S3 Equipment SKU', 'equipment') RETURNING id INTO v_product_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 110-S3 Equipment SKU', 'equipment', 10, 0) RETURNING id INTO v_product_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
