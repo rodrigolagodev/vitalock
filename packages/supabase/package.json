@@ -23,6 +23,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "test:sql": "pg_prove --ext .sql -r ../../supabase/tests-sql"
   }
 }
