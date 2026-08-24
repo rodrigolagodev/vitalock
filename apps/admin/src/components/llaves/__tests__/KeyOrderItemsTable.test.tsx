@@ -20,7 +20,10 @@ vi.mock('@/components/llaves/KeyItemDetailsDialog', () => ({
   KeyItemDetailsDialog: () => null,
 }));
 
-// No hook mocks needed — child dialogs are fully stubbed above
+const useBuildingsByIdsMock = vi.fn();
+vi.mock('@/hooks/useBuildingsByIds', () => ({
+  useBuildingsByIds: (ids: readonly string[]) => useBuildingsByIdsMock(ids),
+}));
 
 import { KeyOrderItemsTable } from '../KeyOrderItemsTable';
 
@@ -59,6 +62,7 @@ function makeItem(overrides: Partial<KeyOrderItemRow> = {}): KeyOrderItemRow {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  useBuildingsByIdsMock.mockReturnValue({ data: undefined });
 });
 
 describe('KeyOrderItemsTable — row rendering', () => {
@@ -142,5 +146,49 @@ describe('KeyOrderItemsTable — configure action', () => {
     fireEvent.click(configBtn);
     // ConfigureKeyItemSheet should open — it renders a SheetTitle
     expect(screen.getByText(/configurar llave/i)).toBeInTheDocument();
+  });
+});
+
+describe('KeyOrderItemsTable — building name resolution', () => {
+  it('renders resolved building name when useBuildingsByIds provides a Map', () => {
+    useBuildingsByIdsMock.mockReturnValue({
+      data: new Map([['bld-1', { id: 'bld-1', name: 'Torre Norte' }]]),
+    });
+    render(
+      <KeyOrderItemsTable
+        items={[makeItem({ building_id: 'bld-1' })]}
+        orderId="ko-1"
+        orderStatus="confirmed"
+      />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByText('Torre Norte')).toBeInTheDocument();
+    expect(screen.queryByText('bld-1')).not.toBeInTheDocument();
+  });
+
+  it('falls back to UUID when the building id is not in the Map', () => {
+    useBuildingsByIdsMock.mockReturnValue({ data: new Map() });
+    render(
+      <KeyOrderItemsTable
+        items={[makeItem({ building_id: 'bld-unknown' })]}
+        orderId="ko-1"
+        orderStatus="confirmed"
+      />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByText('bld-unknown')).toBeInTheDocument();
+  });
+
+  it('renders — when building_id is null', () => {
+    render(
+      <KeyOrderItemsTable
+        items={[makeItem({ building_id: null as unknown as string })]}
+        orderId="ko-1"
+        orderStatus="confirmed"
+      />,
+      { wrapper: makeWrapper() },
+    );
+    // Both the Edificio and Retira columns render "—" — at least one dash present.
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 });

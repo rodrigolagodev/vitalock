@@ -53,6 +53,12 @@ export const tareasKey = (
     status ?? 'all',
   ] as const;
 export const staffKey = () => ['admin', 'staff'] as const;
+export const buildingsByIdsKey = (ids: readonly string[]) =>
+  ['admin', 'buildings', 'by-ids', ...[...ids].sort()] as const;
+export const equipmentByIdsKey = (ids: readonly string[]) =>
+  ['admin', 'equipment', 'by-ids', ...[...ids].sort()] as const;
+export const staffByIdsKey = (ids: readonly string[]) =>
+  ['admin', 'staff', 'by-ids', ...[...ids].sort()] as const;
 export const personalKey = (search?: string, role?: string) =>
   ['admin', 'personal', search ?? '', role ?? 'all'] as const;
 export const productsKey = (category?: string, search?: string) =>

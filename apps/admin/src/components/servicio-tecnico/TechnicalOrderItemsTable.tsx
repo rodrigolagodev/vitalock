@@ -1,4 +1,7 @@
+import { useMemo } from 'react';
 import { DataTable, StatusBadge, type StatusTone } from '@vitalock/ui';
+import { useEquipmentByIds } from '@/hooks/useEquipmentByIds';
+import { useStaffByIds } from '@/hooks/useStaffByIds';
 import type { TechnicalOrderItemRow } from '@/hooks/useTechnicalOrder';
 
 // Technical order item status: 4-state domain (no 'configured', no 'ready_for_pickup').
@@ -30,21 +33,30 @@ interface TechnicalOrderItemsTableProps {
   isFetching?: boolean;
 }
 
-/**
- * Read-only table for technical_order_items.
- *
- * Intent fields (intended_equipment_id / intended_assignee_staff_id) are shown
- * as raw UUIDs — a name lookup would require additional queries per item row
- * (equipment lives in operations.equipment, scoped by building; staff lives in
- * identity.staff). Displaying raw UUIDs is acceptable at this slice and is
- * flagged as a deviation in apply-progress. Resolved names are a PR-8c+ concern.
- *
- * No configure/pickup actions: technical items advance via linked tickets only.
- */
+// Read-only table for technical_order_items. Intent fields resolved to
+// human-readable names via batch lookups; UUID is kept as a fallback when the
+// lookup misses (e.g. rows still fetching or referenced entity was hard-deleted).
 export function TechnicalOrderItemsTable({
   items,
   isFetching = false,
 }: TechnicalOrderItemsTableProps) {
+  const equipmentIds = useMemo(
+    () =>
+      items
+        .map((it) => it.intended_equipment_id)
+        .filter((id): id is string => Boolean(id)),
+    [items],
+  );
+  const staffIds = useMemo(
+    () =>
+      items
+        .map((it) => it.intended_assignee_staff_id)
+        .filter((id): id is string => Boolean(id)),
+    [items],
+  );
+  const { data: equipmentMap } = useEquipmentByIds(equipmentIds);
+  const { data: staffMap } = useStaffByIds(staffIds);
+
   return (
     <DataTable<TechnicalOrderItemRow>
       rows={items}
@@ -70,13 +82,21 @@ export function TechnicalOrderItemsTable({
         },
         {
           header: 'Equipo previsto',
-          cell: (item) => item.intended_equipment_id ?? '—',
+          cell: (item) =>
+            item.intended_equipment_id
+              ? equipmentMap?.get(item.intended_equipment_id)?.serial_number ??
+                item.intended_equipment_id
+              : '—',
           className: 'text-muted-foreground text-xs',
           hideBelow: 'lg',
         },
         {
           header: 'Asignado a',
-          cell: (item) => item.intended_assignee_staff_id ?? '—',
+          cell: (item) =>
+            item.intended_assignee_staff_id
+              ? staffMap?.get(item.intended_assignee_staff_id)?.full_name ??
+                item.intended_assignee_staff_id
+              : '—',
           className: 'text-muted-foreground text-xs',
           hideBelow: 'lg',
         },

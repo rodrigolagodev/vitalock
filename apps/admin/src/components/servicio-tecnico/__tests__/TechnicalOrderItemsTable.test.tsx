@@ -9,6 +9,15 @@ import type { TechnicalOrderItemRow } from '@/hooks/useTechnicalOrder';
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
+const useEquipmentByIdsMock = vi.fn();
+const useStaffByIdsMock = vi.fn();
+vi.mock('@/hooks/useEquipmentByIds', () => ({
+  useEquipmentByIds: (ids: readonly string[]) => useEquipmentByIdsMock(ids),
+}));
+vi.mock('@/hooks/useStaffByIds', () => ({
+  useStaffByIds: (ids: readonly string[]) => useStaffByIdsMock(ids),
+}));
+
 import { TechnicalOrderItemsTable } from '../TechnicalOrderItemsTable';
 
 function makeWrapper() {
@@ -43,6 +52,8 @@ function makeItem(overrides: Partial<TechnicalOrderItemRow> = {}): TechnicalOrde
 
 beforeEach(() => {
   vi.clearAllMocks();
+  useEquipmentByIdsMock.mockReturnValue({ data: undefined });
+  useStaffByIdsMock.mockReturnValue({ data: undefined });
 });
 
 describe('TechnicalOrderItemsTable — row rendering', () => {
@@ -118,8 +129,9 @@ describe('TechnicalOrderItemsTable — status badge', () => {
   });
 });
 
-describe('TechnicalOrderItemsTable — intent fields', () => {
-  it('renders intended_equipment_id UUID when no name is resolved', () => {
+describe('TechnicalOrderItemsTable — intent fields (fallback UUID)', () => {
+  it('renders intended_equipment_id UUID when Map does not resolve it', () => {
+    useEquipmentByIdsMock.mockReturnValue({ data: new Map() });
     render(
       <TechnicalOrderItemsTable
         items={[makeItem({ intended_equipment_id: 'eq-uuid-123' })]}
@@ -138,5 +150,37 @@ describe('TechnicalOrderItemsTable — intent fields', () => {
     );
     // At least one dash rendered (both fields can be null)
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('TechnicalOrderItemsTable — intent fields (resolved names)', () => {
+  it('resolves equipment serial_number via useEquipmentByIds', () => {
+    useEquipmentByIdsMock.mockReturnValue({
+      data: new Map([
+        ['eq-1', { id: 'eq-1', serial_number: 'SN-42', model: 'ModelZ' }],
+      ]),
+    });
+    render(
+      <TechnicalOrderItemsTable
+        items={[makeItem({ intended_equipment_id: 'eq-1' })]}
+      />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByText('SN-42')).toBeInTheDocument();
+    expect(screen.queryByText('eq-1')).not.toBeInTheDocument();
+  });
+
+  it('resolves assignee full_name via useStaffByIds', () => {
+    useStaffByIdsMock.mockReturnValue({
+      data: new Map([['staff-1', { id: 'staff-1', full_name: 'Perez, Ana' }]]),
+    });
+    render(
+      <TechnicalOrderItemsTable
+        items={[makeItem({ intended_assignee_staff_id: 'staff-1' })]}
+      />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByText('Perez, Ana')).toBeInTheDocument();
+    expect(screen.queryByText('staff-1')).not.toBeInTheDocument();
   });
 });

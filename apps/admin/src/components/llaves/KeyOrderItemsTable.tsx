@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Eye, Settings2 } from 'lucide-react';
 import {
   DataTable,
@@ -9,6 +9,7 @@ import {
 import { ConfigureKeyItemSheet } from './ConfigureKeyItemSheet';
 import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
 import { KeyItemDetailsDialog } from './KeyItemDetailsDialog';
+import { useBuildingsByIds } from '@/hooks/useBuildingsByIds';
 import type { KeyOrderItemRow, KeyOrderDetailRow } from '@/hooks/useKeyOrder';
 
 const ITEM_STATUS_LABELS: Record<string, string> = {
@@ -59,6 +60,12 @@ export function KeyOrderItemsTable({
   const [pickupItem, setPickupItem] = useState<KeyOrderItemRow | null>(null);
   const [detailsItem, setDetailsItem] = useState<KeyOrderItemRow | null>(null);
 
+  const buildingIds = useMemo(
+    () => items.map((it) => it.building_id).filter((id): id is string => Boolean(id)),
+    [items],
+  );
+  const { data: buildingsMap } = useBuildingsByIds(buildingIds);
+
   const actions: DataTableAction<KeyOrderItemRow>[] = [
     {
       icon: Settings2,
@@ -91,7 +98,10 @@ export function KeyOrderItemsTable({
           },
           {
             header: 'Edificio',
-            cell: (item) => item.building_id ?? '—',
+            cell: (item) =>
+              item.building_id
+                ? buildingsMap?.get(item.building_id)?.name ?? item.building_id
+                : '—',
             className: 'text-muted-foreground',
           },
           {
