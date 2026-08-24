@@ -4,11 +4,11 @@
 -- Spec: all-orders-view / UNION ALL view correctness
 -- Extends test_093 with cross-context seeding and filter axes.
 -- Prerequisite: migrations 001–095 applied.
--- Identifier markers: PASS 109-S1 through PASS 109-S4 preserved.
+-- Identifier markers: PASS 109-S1 through PASS 109-S5 preserved.
 -- ============================================================
 
 BEGIN;
-SELECT plan(4);
+SELECT plan(5);
 
 -- ============================================================
 -- Scenario 1 (PASS 109-S1): UNION ALL returns rows from both contexts, correct order_kind
@@ -204,6 +204,67 @@ SELECT lives_ok(
     END $$;
   $q$,
   'PASS 109-S4: all_orders status filter axis returns correct subset'
+);
+
+-- ============================================================
+-- Scenario 5 (PASS 109-S5): created_at range filter axis returns correct subset
+-- ============================================================
+-- Closes W-2 (verify report obs #230): the all_orders VIEW spec obs #225
+-- requires a created_at range filter axis; this scenario asserts the axis
+-- works end-to-end via bare WHERE clauses on the view.
+SELECT lives_ok(
+  $q$
+    DO $$
+    DECLARE
+      v_admin_id    uuid;
+      v_building_id uuid;
+      v_order_id    uuid;
+      v_created_at  timestamptz;
+      v_in_range    int;
+      v_from_past   int;
+      v_from_future int;
+    BEGIN
+      INSERT INTO public.administrations (company_name) VALUES ('Test 109-S5 Admin') RETURNING id INTO v_admin_id;
+      INSERT INTO public.buildings (name, address, administration_id)
+        VALUES ('Test 109-S5 Building', 'Calle 5', v_admin_id) RETURNING id INTO v_building_id;
+
+      v_order_id := public.create_key_order_with_items(
+        jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
+        ARRAY[
+          jsonb_build_object('item_type', 'key', 'building_id', v_building_id, 'quantity', 1, 'unit_price', 100)
+        ]::jsonb[],
+        false
+      );
+
+      SELECT created_at INTO v_created_at FROM public.all_orders WHERE id = v_order_id;
+
+      -- Both bounds inclusive (window contains the order)
+      SELECT count(*) INTO v_in_range
+        FROM public.all_orders
+       WHERE id = v_order_id
+         AND created_at >= v_created_at - interval '1 second'
+         AND created_at <= v_created_at + interval '1 second';
+      ASSERT v_in_range = 1,
+        'FAIL 109-S5: expected 1 row inside inclusive window, got ' || v_in_range::text;
+
+      -- Only from bound in the past (order after from → included)
+      SELECT count(*) INTO v_from_past
+        FROM public.all_orders
+       WHERE id = v_order_id
+         AND created_at >= v_created_at - interval '1 hour';
+      ASSERT v_from_past = 1,
+        'FAIL 109-S5: expected 1 row with from bound in past, got ' || v_from_past::text;
+
+      -- From bound in the future (order before from → excluded)
+      SELECT count(*) INTO v_from_future
+        FROM public.all_orders
+       WHERE id = v_order_id
+         AND created_at >= v_created_at + interval '1 hour';
+      ASSERT v_from_future = 0,
+        'FAIL 109-S5: expected 0 rows with from bound in future, got ' || v_from_future::text;
+    END $$;
+  $q$,
+  'PASS 109-S5: all_orders created_at range filter axis returns correct subset'
 );
 
 SELECT * FROM finish();
