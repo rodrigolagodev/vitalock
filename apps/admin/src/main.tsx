@@ -15,6 +15,7 @@ import AdministrationsPage from './routes/administraciones/AdministrationsPage';
 import AdministrationDetailPage from './routes/administraciones/AdministrationDetailPage';
 import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
 import KeyOrdersPage from './routes/llaves/KeyOrdersPage';
+import InventarioPage from './routes/llaves/InventarioPage';
 import KeyOrderDetailPage from './routes/llaves/KeyOrderDetailPage';
 import KeyOrderNuevaPage from './routes/llaves/KeyOrderNuevaPage';
 import KeyOrderEditarPage from './routes/llaves/KeyOrderEditarPage';
@@ -56,6 +57,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="buildings" element={<Navigate to="/administraciones" replace />} />
                   <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
                   <Route path="llaves" element={<KeyOrdersPage />} />
+                  <Route path="llaves/inventario" element={<InventarioPage />} />
                   <Route path="llaves/nueva" element={<KeyOrderNuevaPage />} />
                   <Route path="llaves/:keyOrderId" element={<KeyOrderDetailPage />} />
                   <Route path="llaves/:keyOrderId/editar" element={<KeyOrderEditarPage />} />

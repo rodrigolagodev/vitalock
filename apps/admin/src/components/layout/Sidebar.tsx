@@ -4,6 +4,7 @@ import {
   History,
   Home,
   Key,
+  ListChecks,
   ListTodo,
   Menu,
   Package,
@@ -47,6 +48,12 @@ export function Sidebar({ className }: SidebarProps) {
       <NavItem label="Particulares" to="/particulares" icon={<Home className="h-4 w-4" />} />
 
       <NavItem label="Llaves" to="/llaves" icon={<Key className="h-4 w-4" />} />
+
+      <NavItem
+        label="Inventario de llaves"
+        to="/llaves/inventario"
+        icon={<ListChecks className="h-4 w-4" />}
+      />
 
       <NavItem
         label="Servicio técnico"
