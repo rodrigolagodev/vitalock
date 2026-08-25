@@ -83,3 +83,19 @@ export const keysInventoryKey = (
     physicalStatus ?? 'all',
     workflowStatus ?? 'all',
   ] as const;
+
+export const equipmentInventoryKey = (
+  adminId?: string,
+  buildingId?: string,
+  status?: string,
+) =>
+  [
+    'admin',
+    'equipment-inventory',
+    adminId ?? 'all',
+    buildingId ?? 'all',
+    status ?? 'all',
+  ] as const;
+
+export const equipmentByBuildingKey = (buildingId?: string) =>
+  ['admin', 'equipment-by-building', buildingId ?? 'none'] as const;
