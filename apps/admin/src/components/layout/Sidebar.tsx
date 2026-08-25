@@ -68,7 +68,7 @@ export function Sidebar({ className }: SidebarProps) {
         icon={<Wrench className="h-4 w-4" />}
       />
 
-      <NavItem label="Historial" to="/historial" icon={<History className="h-4 w-4" />} />
+      <NavItem label="Órdenes" to="/ordenes" icon={<History className="h-4 w-4" />} />
 
       <NavItem label="Tareas" to="/tareas" icon={<ListTodo className="h-4 w-4" />} />
 

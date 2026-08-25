@@ -67,7 +67,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="servicio-tecnico/nueva" element={<TechnicalOrderNuevaPage />} />
                   <Route path="servicio-tecnico/:techOrderId" element={<TechnicalOrderDetailPage />} />
                   <Route path="servicio-tecnico/:techOrderId/editar" element={<TechnicalOrderEditarPage />} />
-                  <Route path="historial" element={<HistorialPage />} />
+                  <Route path="ordenes" element={<HistorialPage />} />
+                  <Route path="historial" element={<Navigate to="/ordenes" replace />} />
                   <Route path="tareas" element={<TareasPage />} />
                   <Route path="tareas/:tareaId" element={<TareaDetailPage />} />
                   <Route path="personal" element={<PersonalPage />} />
