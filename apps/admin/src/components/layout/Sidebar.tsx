@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Building2,
+  HardDrive,
   History,
   Home,
   Key,
@@ -53,6 +54,12 @@ export function Sidebar({ className }: SidebarProps) {
         label="Inventario de llaves"
         to="/llaves/inventario"
         icon={<ListChecks className="h-4 w-4" />}
+      />
+
+      <NavItem
+        label="Inventario de equipos"
+        to="/equipos"
+        icon={<HardDrive className="h-4 w-4" />}
       />
 
       <NavItem
