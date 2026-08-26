@@ -22,7 +22,7 @@ describe('Sidebar', () => {
     const expected = [
       ['Administraciones', '/administraciones'],
       ['Particulares', '/particulares'],
-      ['Llaves', '/llaves'],
+      ['Órdenes de llaves', '/llaves'],
       ['Servicio técnico', '/servicio-tecnico'],
       ['Órdenes', '/ordenes'],
       ['Tareas', '/tareas'],
@@ -34,17 +34,23 @@ describe('Sidebar', () => {
     }
   });
 
+  it('renders both inventory links (llaves + equipos) under distinct hrefs', () => {
+    renderSidebar();
+    const inventarioLinks = screen.getAllByRole('link', { name: 'Inventario' });
+    const hrefs = inventarioLinks.map((a) => a.getAttribute('href')).sort();
+    expect(hrefs).toEqual(['/equipos', '/llaves/inventario']);
+  });
+
   it('does not render a Historial nav link after rename', () => {
     renderSidebar();
     expect(screen.queryByRole('link', { name: 'Historial' })).not.toBeInTheDocument();
   });
 
-  it('renders each nav item label exactly once (no separate section labels)', () => {
+  it('groups items under section headers', () => {
     renderSidebar();
-    expect(screen.getAllByText('Llaves')).toHaveLength(1);
-    expect(screen.getAllByText('Servicio técnico')).toHaveLength(1);
-    expect(screen.getAllByText('Órdenes')).toHaveLength(1);
-    expect(screen.getAllByText('Personal')).toHaveLength(1);
+    for (const section of ['Clientes', 'Llaves', 'Equipos', 'Operación', 'Equipo interno']) {
+      expect(screen.getByText(section)).toBeInTheDocument();
+    }
   });
 
   it('renders Órdenes link pointing to /ordenes', () => {
