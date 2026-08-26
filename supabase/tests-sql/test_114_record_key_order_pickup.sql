@@ -5,15 +5,17 @@
 --   * rfid_keys_validate_pickup accepts key_orders origin via key_order_items
 --   * record_order_key_pickup writes pickup fields and auto-completes the order
 --   * record_order_key_pickup rejects when order status is not ready_for_pickup
---   * record_order_key_pickup rejects administration-client orders
 --   * record_order_key_pickup rejects DNI mismatches
 --
--- Identifier markers: PASS 114-S1 through PASS 114-S4.
--- Prerequisite: migrations 001–098 applied.
+-- Note: admin-client acceptance and rejection-without-authorized-particular
+-- moved to test_115 after migration 099 removed the hard admin guard.
+--
+-- Identifier markers: PASS 114-S1 through PASS 114-S3.
+-- Prerequisite: migrations 001–099 applied.
 -- ============================================================
 
 BEGIN;
-SELECT plan(4);
+SELECT plan(3);
 
 -- ============================================================
 -- Scenario 1 (PASS 114-S1): full pickup path advances the order to completed
@@ -119,47 +121,7 @@ SELECT throws_ok(
 );
 
 -- ============================================================
--- Scenario 3 (PASS 114-S3): rejects administration-client orders
--- ============================================================
-SELECT throws_ok(
-  $q$
-    DO $$
-    DECLARE
-      v_admin_id     uuid;
-      v_building_id  uuid;
-      v_unit_id      uuid;
-      v_order_id     uuid;
-      v_item_id      uuid;
-      v_key_id       uuid;
-    BEGIN
-      INSERT INTO public.administrations (company_name) VALUES ('Test 114-S3 Admin') RETURNING id INTO v_admin_id;
-      INSERT INTO public.buildings (name, address, administration_id)
-        VALUES ('Test 114-S3 Building', 'Calle 3', v_admin_id) RETURNING id INTO v_building_id;
-      INSERT INTO public.units (number, building_id)
-        VALUES ('3A', v_building_id) RETURNING id INTO v_unit_id;
-
-      v_order_id := public.create_key_order_with_items(
-        jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
-        ARRAY[
-          jsonb_build_object('item_type', 'key', 'building_id', v_building_id, 'quantity', 1, 'unit_price', 100)
-        ]::jsonb[],
-        true
-      );
-
-      SELECT id INTO v_item_id FROM public.key_order_items WHERE order_id = v_order_id LIMIT 1;
-      v_key_id := public.configure_key_order_item(v_item_id, 'RFID-114-S3', v_unit_id, NULL);
-      PERFORM public.mark_key_order_item_installed(v_item_id);
-      -- Order is ready_for_pickup but client_type = 'administration' → reject.
-      PERFORM public.record_order_key_pickup(v_key_id, 'Test', 'Admin', '99999999');
-    END $$;
-  $q$,
-  'P0001',
-  NULL,
-  'PASS 114-S3: record_order_key_pickup rejects administration-client orders'
-);
-
--- ============================================================
--- Scenario 4 (PASS 114-S4): validate_pickup rejects DNI mismatch
+-- Scenario 3 (PASS 114-S3): validate_pickup rejects DNI mismatch
 -- ============================================================
 SELECT throws_ok(
   $q$
@@ -204,7 +166,7 @@ SELECT throws_ok(
   $q$,
   '23514',
   NULL,
-  'PASS 114-S4: rfid_keys_validate_pickup rejects DNI mismatch (check_violation)'
+  'PASS 114-S3: rfid_keys_validate_pickup rejects DNI mismatch (check_violation)'
 );
 
 SELECT * FROM finish();

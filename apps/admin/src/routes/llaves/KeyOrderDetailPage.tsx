@@ -54,7 +54,6 @@ export default function KeyOrderDetailPage() {
   const isDraft = order.status === 'draft';
   const isCompleted = order.status === 'completed';
   const isReadyForPickup = order.status === 'ready_for_pickup';
-  const isParticular = order.client_type === 'particular';
 
   const clientLabel =
     order.client_type === 'administration'
@@ -174,7 +173,7 @@ export default function KeyOrderDetailPage() {
           items={order.key_order_items}
           orderId={order.id}
           orderStatus={order.status}
-          canRegisterPickup={isParticular && isReadyForPickup}
+          canRegisterPickup={isReadyForPickup}
           buyer={order.particulares}
           isFetching={isLoading}
         />

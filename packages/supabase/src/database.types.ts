@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   identity: {
     Tables: {
       audit_log: {
@@ -367,6 +342,13 @@ export type Database = {
             referencedRelation: "administrations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "buildings_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["administration_id"]
+          },
         ]
       }
       key_events: {
@@ -395,6 +377,13 @@ export type Database = {
           occurred_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "key_events_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "key_events_key_id_fkey"
             columns: ["key_id"]
@@ -462,6 +451,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "key_order_items_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_inventory"
+            referencedColumns: ["building_id"]
+          },
+          {
+            foreignKeyName: "key_order_items_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["building_id"]
+          },
+          {
             foreignKeyName: "key_order_items_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
@@ -469,10 +472,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "key_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["active_order_id"]
+          },
+          {
             foreignKeyName: "key_order_items_pickup_particular_id_fkey"
             columns: ["pickup_particular_id"]
             isOneToOne: false
             referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_produced_key_id_fkey"
+            columns: ["produced_key_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
             referencedColumns: ["id"]
           },
           {
@@ -488,6 +505,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["unit_id"]
           },
           {
             foreignKeyName: "key_order_items_unit_id_fkey"
@@ -556,6 +580,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "key_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["administration_id"]
+          },
+          {
             foreignKeyName: "key_orders_particular_id_fkey"
             columns: ["particular_id"]
             isOneToOne: false
@@ -606,6 +637,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "particulares_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: true
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["unit_id"]
+          },
           {
             foreignKeyName: "particulares_unit_id_fkey"
             columns: ["unit_id"]
@@ -665,6 +703,20 @@ export type Database = {
           rfid_key_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rfid_key_intended_equipment_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfid_key_intended_equipment_rfid_key_id_fkey"
+            columns: ["rfid_key_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rfid_key_intended_equipment_rfid_key_id_fkey"
             columns: ["rfid_key_id"]
@@ -730,6 +782,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rfid_keys_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["unit_id"]
+          },
           {
             foreignKeyName: "rfid_keys_unit_id_fkey"
             columns: ["unit_id"]
@@ -850,6 +909,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "technical_order_items_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_inventory"
+            referencedColumns: ["building_id"]
+          },
+          {
+            foreignKeyName: "technical_order_items_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["building_id"]
+          },
+          {
+            foreignKeyName: "technical_order_items_intended_equipment_id_fkey"
+            columns: ["intended_equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_inventory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "technical_order_items_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
@@ -920,6 +1000,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "technical_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["administration_id"]
+          },
+          {
             foreignKeyName: "technical_orders_particular_id_fkey"
             columns: ["particular_id"]
             isOneToOne: false
@@ -970,6 +1057,20 @@ export type Database = {
             referencedRelation: "buildings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "units_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_inventory"
+            referencedColumns: ["building_id"]
+          },
+          {
+            foreignKeyName: "units_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["building_id"]
+          },
         ]
       }
     }
@@ -989,6 +1090,65 @@ export type Database = {
           updated_at: string | null
         }
         Relationships: []
+      }
+      equipment_inventory: {
+        Row: {
+          access_type: string | null
+          administration_company_name: string | null
+          administration_id: string | null
+          building_id: string | null
+          building_name: string | null
+          id: string | null
+          key_count: number | null
+          key_ids: string[] | null
+          key_labels: string[] | null
+          model: string | null
+          serial_number: string | null
+          status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buildings_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "administrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buildings_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["administration_id"]
+          },
+        ]
+      }
+      keys_inventory: {
+        Row: {
+          active_order_id: string | null
+          active_order_status: string | null
+          administration_company_name: string | null
+          administration_id: string | null
+          building_id: string | null
+          building_name: string | null
+          equipment_id: string | null
+          equipment_model: string | null
+          equipment_serial_number: string | null
+          id: string | null
+          physical_status: string | null
+          rfid_code: string | null
+          unit_id: string | null
+          unit_number: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_authorizations_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -1081,6 +1241,10 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: undefined
       }
+      mark_key_order_item_installed: {
+        Args: { p_order_item_id: string }
+        Returns: undefined
+      }
       mark_technical_order_invoiced: {
         Args: { p_order_id: string }
         Returns: undefined
@@ -1113,7 +1277,7 @@ export type Database = {
           p_note?: string
           p_serial: string
           p_ticket_id: string
-          p_unit_id: string
+          p_unit_id?: string
         }
         Returns: string
       }
@@ -2085,9 +2249,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   identity: {
     Enums: {},
   },
