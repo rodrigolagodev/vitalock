@@ -171,7 +171,7 @@ function buildInitialValues(order: TechnicalOrderDetailRow): TechnicalOrderFormV
 // ---- Item type labels ----
 
 const ITEM_TYPE_LABELS: Record<TechnicalItemType, string> = {
-  equipment: 'Equipo',
+  equipment: 'Trabajo general',
   maintenance: 'Mantenimiento',
   installation: 'Instalación',
   equipment_replacement: 'Reemplazo de equipo',
