@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import React from 'react';
 
 const { useAllOrdersMock } = vi.hoisted(() => ({ useAllOrdersMock: vi.fn() }));
@@ -34,9 +34,9 @@ beforeEach(() => {
 });
 
 describe('HistorialPage heading and search', () => {
-  it('renders the page heading "Historial"', () => {
+  it('renders the page heading "Órdenes"', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: /historial/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /órdenes/i })).toBeInTheDocument();
   });
 
   it('renders a search input', () => {
@@ -134,5 +134,30 @@ describe('HistorialPage date-range filter', () => {
     // The last call to useAllOrders should include dateFrom
     const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
     expect(lastCall?.dateFrom).toBe('2026-08-01');
+  });
+});
+
+describe('/historial → /ordenes redirect', () => {
+  it('navigating to /historial redirects to /ordenes with replace semantics', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/historial']}>
+          <Routes>
+            <Route path="historial" element={<Navigate to="/ordenes" replace />} />
+            <Route
+              path="ordenes"
+              element={<HistorialPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    // After redirect, the hub renders at /ordenes
+    expect(screen.getByRole('heading', { name: /órdenes/i })).toBeInTheDocument();
   });
 });

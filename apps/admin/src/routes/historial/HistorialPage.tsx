@@ -67,7 +67,7 @@ export default function HistorialPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Historial</h1>
+      <h1 className="text-2xl font-semibold">Órdenes</h1>
 
       <Input
         placeholder="Buscar por número de orden, cliente..."

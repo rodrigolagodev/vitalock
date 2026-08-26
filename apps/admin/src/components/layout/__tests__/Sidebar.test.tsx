@@ -5,7 +5,7 @@ import { Sidebar } from '../Sidebar';
 
 function renderSidebar() {
   return render(
-    <MemoryRouter initialEntries={['/historial']}>
+    <MemoryRouter initialEntries={['/ordenes']}>
       <Sidebar />
     </MemoryRouter>,
   );
@@ -24,7 +24,7 @@ describe('Sidebar', () => {
       ['Particulares', '/particulares'],
       ['Llaves', '/llaves'],
       ['Servicio técnico', '/servicio-tecnico'],
-      ['Historial', '/historial'],
+      ['Órdenes', '/ordenes'],
       ['Tareas', '/tareas'],
       ['Personal', '/personal'],
       ['Stock', '/stock'],
@@ -34,21 +34,21 @@ describe('Sidebar', () => {
     }
   });
 
-  it('does not render an Ordenes nav link after retirement', () => {
+  it('does not render a Historial nav link after rename', () => {
     renderSidebar();
-    expect(screen.queryByRole('link', { name: 'Ordenes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Historial' })).not.toBeInTheDocument();
   });
 
   it('renders each nav item label exactly once (no separate section labels)', () => {
     renderSidebar();
     expect(screen.getAllByText('Llaves')).toHaveLength(1);
     expect(screen.getAllByText('Servicio técnico')).toHaveLength(1);
-    expect(screen.getAllByText('Historial')).toHaveLength(1);
+    expect(screen.getAllByText('Órdenes')).toHaveLength(1);
     expect(screen.getAllByText('Personal')).toHaveLength(1);
   });
 
-  it('renders Historial link pointing to /historial', () => {
+  it('renders Órdenes link pointing to /ordenes', () => {
     renderSidebar();
-    expect(screen.getByRole('link', { name: 'Historial' })).toHaveAttribute('href', '/historial');
+    expect(screen.getByRole('link', { name: 'Órdenes' })).toHaveAttribute('href', '/ordenes');
   });
 });

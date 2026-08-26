@@ -66,3 +66,36 @@ export const productsKey = (category?: string, search?: string) =>
 export const productKey = (id: string) => ['admin', 'product', id] as const;
 export const stockMovementsKey = (productId: string) =>
   ['admin', 'stock-movements', productId] as const;
+
+export const keysInventoryKey = (
+  adminId?: string,
+  buildingId?: string,
+  equipmentId?: string,
+  physicalStatus?: string,
+  workflowStatus?: string,
+) =>
+  [
+    'admin',
+    'keys-inventory',
+    adminId ?? 'all',
+    buildingId ?? 'all',
+    equipmentId ?? 'all',
+    physicalStatus ?? 'all',
+    workflowStatus ?? 'all',
+  ] as const;
+
+export const equipmentInventoryKey = (
+  adminId?: string,
+  buildingId?: string,
+  status?: string,
+) =>
+  [
+    'admin',
+    'equipment-inventory',
+    adminId ?? 'all',
+    buildingId ?? 'all',
+    status ?? 'all',
+  ] as const;
+
+export const equipmentByBuildingKey = (buildingId?: string) =>
+  ['admin', 'equipment-by-building', buildingId ?? 'none'] as const;

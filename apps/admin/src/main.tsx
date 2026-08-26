@@ -15,6 +15,7 @@ import AdministrationsPage from './routes/administraciones/AdministrationsPage';
 import AdministrationDetailPage from './routes/administraciones/AdministrationDetailPage';
 import BuildingDetailPage from './routes/buildings/BuildingDetailPage';
 import KeyOrdersPage from './routes/llaves/KeyOrdersPage';
+import InventarioPage from './routes/llaves/InventarioPage';
 import KeyOrderDetailPage from './routes/llaves/KeyOrderDetailPage';
 import KeyOrderNuevaPage from './routes/llaves/KeyOrderNuevaPage';
 import KeyOrderEditarPage from './routes/llaves/KeyOrderEditarPage';
@@ -22,6 +23,7 @@ import TechnicalOrdersPage from './routes/servicio-tecnico/TechnicalOrdersPage';
 import TechnicalOrderDetailPage from './routes/servicio-tecnico/TechnicalOrderDetailPage';
 import TechnicalOrderNuevaPage from './routes/servicio-tecnico/TechnicalOrderNuevaPage';
 import TechnicalOrderEditarPage from './routes/servicio-tecnico/TechnicalOrderEditarPage';
+import EquiposPage from './routes/equipos/EquiposPage';
 import HistorialPage from './routes/historial/HistorialPage';
 import TareasPage from './routes/tareas/TareasPage';
 import TareaDetailPage from './routes/tareas/TareaDetailPage';
@@ -56,14 +58,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <Route path="buildings" element={<Navigate to="/administraciones" replace />} />
                   <Route path="buildings/:buildingId" element={<BuildingDetailPage />} />
                   <Route path="llaves" element={<KeyOrdersPage />} />
+                  <Route path="llaves/inventario" element={<InventarioPage />} />
                   <Route path="llaves/nueva" element={<KeyOrderNuevaPage />} />
                   <Route path="llaves/:keyOrderId" element={<KeyOrderDetailPage />} />
                   <Route path="llaves/:keyOrderId/editar" element={<KeyOrderEditarPage />} />
+                  <Route path="equipos" element={<EquiposPage />} />
                   <Route path="servicio-tecnico" element={<TechnicalOrdersPage />} />
                   <Route path="servicio-tecnico/nueva" element={<TechnicalOrderNuevaPage />} />
                   <Route path="servicio-tecnico/:techOrderId" element={<TechnicalOrderDetailPage />} />
                   <Route path="servicio-tecnico/:techOrderId/editar" element={<TechnicalOrderEditarPage />} />
-                  <Route path="historial" element={<HistorialPage />} />
+                  <Route path="ordenes" element={<HistorialPage />} />
+                  <Route path="historial" element={<Navigate to="/ordenes" replace />} />
                   <Route path="tareas" element={<TareasPage />} />
                   <Route path="tareas/:tareaId" element={<TareaDetailPage />} />
                   <Route path="personal" element={<PersonalPage />} />

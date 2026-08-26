@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import {
   Building2,
+  HardDrive,
   History,
   Home,
   Key,
+  ListChecks,
   ListTodo,
   Menu,
   Package,
@@ -49,12 +51,24 @@ export function Sidebar({ className }: SidebarProps) {
       <NavItem label="Llaves" to="/llaves" icon={<Key className="h-4 w-4" />} />
 
       <NavItem
+        label="Inventario de llaves"
+        to="/llaves/inventario"
+        icon={<ListChecks className="h-4 w-4" />}
+      />
+
+      <NavItem
+        label="Inventario de equipos"
+        to="/equipos"
+        icon={<HardDrive className="h-4 w-4" />}
+      />
+
+      <NavItem
         label="Servicio técnico"
         to="/servicio-tecnico"
         icon={<Wrench className="h-4 w-4" />}
       />
 
-      <NavItem label="Historial" to="/historial" icon={<History className="h-4 w-4" />} />
+      <NavItem label="Órdenes" to="/ordenes" icon={<History className="h-4 w-4" />} />
 
       <NavItem label="Tareas" to="/tareas" icon={<ListTodo className="h-4 w-4" />} />
 
