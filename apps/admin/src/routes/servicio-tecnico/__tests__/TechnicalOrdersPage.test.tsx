@@ -13,6 +13,9 @@ const { useTechnicalOrdersMock } = vi.hoisted(() => ({
 vi.mock('@/hooks/useTechnicalOrders', () => ({
   useTechnicalOrders: useTechnicalOrdersMock,
 }));
+vi.mock('@/hooks/useAdministrations', () => ({
+  useAdministrations: () => ({ data: [], isLoading: false }),
+}));
 
 import TechnicalOrdersPage from '../TechnicalOrdersPage';
 
@@ -72,7 +75,8 @@ describe('TechnicalOrdersPage stat cards', () => {
     const cards = screen.getByTestId('stat-cards');
     expect(within(cards).getByText('Total órdenes')).toBeInTheDocument();
     expect(within(cards).getByText('4')).toBeInTheDocument();
-    expect(within(cards).getByText('En proceso')).toBeInTheDocument();
+    expect(within(cards).getByText('Abiertas')).toBeInTheDocument();
+    expect(within(cards).getByText('Completadas')).toBeInTheDocument();
   });
 });
 

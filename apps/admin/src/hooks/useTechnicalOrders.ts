@@ -26,13 +26,18 @@ export interface TechnicalOrderListRow {
 export interface UseTechnicalOrdersFilters {
   search?: string;
   status?: string;
+  administrationId?: string;
 }
 
-export function useTechnicalOrders({ search, status }: UseTechnicalOrdersFilters = {}) {
+export function useTechnicalOrders({
+  search,
+  status,
+  administrationId,
+}: UseTechnicalOrdersFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
-    queryKey: technicalOrdersKey(status, trimmed),
+    queryKey: technicalOrdersKey(status, trimmed, administrationId),
     queryFn: async (): Promise<TechnicalOrderListRow[]> => {
       let query = supabase
         .from('technical_orders')
@@ -51,6 +56,11 @@ export function useTechnicalOrders({ search, status }: UseTechnicalOrdersFilters
       // Server-side status filter.
       if (status && status !== 'all') {
         query = query.eq('status', status);
+      }
+
+      // Server-side administration filter.
+      if (administrationId && administrationId !== 'all') {
+        query = query.eq('administration_id', administrationId);
       }
 
       // Server-side text search on order_number and particular_full_name.

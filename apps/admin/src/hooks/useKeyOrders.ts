@@ -28,13 +28,14 @@ export interface KeyOrderListRow {
 export interface UseKeyOrdersFilters {
   search?: string;
   status?: string;
+  administrationId?: string;
 }
 
-export function useKeyOrders({ search, status }: UseKeyOrdersFilters = {}) {
+export function useKeyOrders({ search, status, administrationId }: UseKeyOrdersFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
-    queryKey: keyOrdersKey(status, trimmed),
+    queryKey: keyOrdersKey(status, trimmed, administrationId),
     queryFn: async (): Promise<KeyOrderListRow[]> => {
       let query = supabase
         .from('key_orders')
@@ -53,6 +54,11 @@ export function useKeyOrders({ search, status }: UseKeyOrdersFilters = {}) {
       // Server-side status filter.
       if (status && status !== 'all') {
         query = query.eq('status', status);
+      }
+
+      // Server-side administration filter.
+      if (administrationId && administrationId !== 'all') {
+        query = query.eq('administration_id', administrationId);
       }
 
       // Server-side text search on order_number and particular_full_name.
