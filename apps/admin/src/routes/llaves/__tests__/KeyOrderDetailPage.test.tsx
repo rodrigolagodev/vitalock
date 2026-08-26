@@ -146,10 +146,17 @@ describe('KeyOrderDetailPage — action buttons', () => {
     expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
   });
 
-  it('cancel button fires cancelKeyOrder mutation', () => {
+  it('cancel button opens the confirm dialog and firing "Sí" calls cancelKeyOrder', async () => {
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
-    expect(cancelMutate).toHaveBeenCalledWith({ id: 'ko-1' });
+    // First click opens the destructive-confirm dialog.
+    fireEvent.click(screen.getByRole('button', { name: /^cancelar orden$/i }));
+    // Confirming inside the dialog fires the mutation.
+    const confirm = await screen.findByRole('button', { name: /sí, cancelar orden/i });
+    fireEvent.click(confirm);
+    expect(cancelMutate).toHaveBeenCalledWith(
+      { id: 'ko-1' },
+      expect.objectContaining({ onSettled: expect.any(Function) }),
+    );
   });
 
   it('shows mark-invoiced button only when status=completed', () => {
