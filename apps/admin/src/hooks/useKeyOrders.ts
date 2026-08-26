@@ -7,6 +7,7 @@ export type KeyOrderStatus =
   | 'draft'
   | 'confirmed'
   | 'in_progress'
+  | 'pending_installation'
   | 'ready_for_pickup'
   | 'completed'
   | 'invoiced'

@@ -6,6 +6,7 @@ import {
   cancelKeyOrder,
   updateDraftKeyOrderWithItems,
   markKeyOrderInvoiced,
+  markKeyOrderItemInstalled,
   configureKeyOrderItem,
   setKeyOrderPickupPerson,
   type KeyOrderPayload,
@@ -182,6 +183,19 @@ export function useMutateKeyOrder() {
     onError: toastMutationError,
   });
 
+  const markKeyOrderItemInstalledMutation = useMutation({
+    mutationFn: ({ orderItemId }: { orderItemId: string; orderId?: string }) =>
+      markKeyOrderItemInstalled(supabase, orderItemId),
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: keyOrdersKey() });
+      if (vars.orderId) {
+        void queryClient.invalidateQueries({ queryKey: keyOrderKey(vars.orderId) });
+      }
+      toast.success('Llave marcada como instalada.');
+    },
+    onError: toastMutationError,
+  });
+
   return {
     createKeyOrder,
     confirmKeyOrder: confirmKeyOrderMutation,
@@ -190,5 +204,6 @@ export function useMutateKeyOrder() {
     markKeyOrderInvoiced: markKeyOrderInvoicedMutation,
     setKeyOrderPickupPerson: setKeyOrderPickupPersonMutation,
     configureKeyOrderItem: configureKeyOrderItemMutation,
+    markKeyOrderItemInstalled: markKeyOrderItemInstalledMutation,
   };
 }

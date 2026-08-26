@@ -8,7 +8,7 @@ export interface KeyOrderItemRow {
   item_type: 'key';
   quantity: number;
   description: string | null;
-  status: 'pending' | 'configured' | 'cancelled';
+  status: 'pending' | 'configured' | 'installed' | 'cancelled';
   building_id: string;
   unit_id: string | null;
   unit_price: number | null;
@@ -53,6 +53,7 @@ export interface KeyOrderDetailRow {
     | 'draft'
     | 'confirmed'
     | 'in_progress'
+    | 'pending_installation'
     | 'ready_for_pickup'
     | 'completed'
     | 'invoiced'

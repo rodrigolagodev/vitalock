@@ -10,6 +10,7 @@ describe('KeyOrderStatusBadge', () => {
     'draft',
     'confirmed',
     'in_progress',
+    'pending_installation',
     'ready_for_pickup',
     'completed',
     'invoiced',
@@ -30,6 +31,11 @@ describe('KeyOrderStatusBadge', () => {
   it('renders "Listo para retirar" for ready_for_pickup status', () => {
     render(<KeyOrderStatusBadge status="ready_for_pickup" />);
     expect(screen.getByText('Listo para retirar')).toBeInTheDocument();
+  });
+
+  it('renders "Pendiente instalación" for pending_installation status', () => {
+    render(<KeyOrderStatusBadge status="pending_installation" />);
+    expect(screen.getByText('Pendiente instalación')).toBeInTheDocument();
   });
 
   it('renders "Cancelado" for cancelled status', () => {

@@ -135,6 +135,16 @@ export function configureKeyOrderItem(
   );
 }
 
+export async function markKeyOrderItemInstalled(
+  client: TypedSupabaseClient,
+  orderItemId: string,
+): Promise<void> {
+  const { error } = await client.rpc('mark_key_order_item_installed', {
+    p_order_item_id: orderItemId,
+  });
+  if (error) throw error;
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Direct-table helpers for key_orders and key_order_items
 // ────────────────────────────────────────────────────────────────────────────

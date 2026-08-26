@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Eye, Settings2 } from 'lucide-react';
+import { CheckCircle2, Eye, Settings2, UserCheck } from 'lucide-react';
 import {
   DataTable,
   StatusBadge,
@@ -10,17 +10,20 @@ import { ConfigureKeyItemSheet } from './ConfigureKeyItemSheet';
 import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
 import { KeyItemDetailsDialog } from './KeyItemDetailsDialog';
 import { useBuildingsByIds } from '@/hooks/useBuildingsByIds';
+import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import type { KeyOrderItemRow, KeyOrderDetailRow } from '@/hooks/useKeyOrder';
 
 const ITEM_STATUS_LABELS: Record<string, string> = {
   pending: 'Pendiente',
   configured: 'Configurado',
+  installed: 'Instalada',
   cancelled: 'Cancelado',
 };
 
 const ITEM_STATUS_TONES: Record<string, StatusTone> = {
   pending: 'neutral',
   configured: 'brand',
+  installed: 'info',
   cancelled: 'danger',
 };
 
@@ -60,6 +63,8 @@ export function KeyOrderItemsTable({
   const [pickupItem, setPickupItem] = useState<KeyOrderItemRow | null>(null);
   const [detailsItem, setDetailsItem] = useState<KeyOrderItemRow | null>(null);
 
+  const { markKeyOrderItemInstalled } = useMutateKeyOrder();
+
   const buildingIds = useMemo(
     () => items.map((it) => it.building_id).filter((id): id is string => Boolean(id)),
     [items],
@@ -71,11 +76,32 @@ export function KeyOrderItemsTable({
       icon: Settings2,
       label: () => 'Configurar llave',
       onClick: (item) => setConfigureItem(item),
-      // Configure is offered right after confirm ('confirmed') and
-      // while actively being prepared ('in_progress').
       show: (item) =>
         item.status === 'pending' &&
         (orderStatus === 'confirmed' || orderStatus === 'in_progress'),
+    },
+    {
+      icon: CheckCircle2,
+      label: () => 'Marcar instalada',
+      onClick: (item) => {
+        markKeyOrderItemInstalled.mutate({
+          orderItemId: item.id,
+          orderId,
+        });
+      },
+      show: (item) =>
+        item.status === 'configured' &&
+        (orderStatus === 'in_progress' || orderStatus === 'pending_installation'),
+    },
+    {
+      icon: UserCheck,
+      label: () => 'Registrar retiro',
+      onClick: (item) => setPickupItem(item),
+      show: (item) =>
+        canRegisterPickup &&
+        item.status === 'installed' &&
+        item.produced_key_id != null &&
+        (item.rfid_keys?.picked_up_at ?? null) == null,
     },
     {
       icon: Eye,
