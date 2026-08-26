@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface TopbarProps {
+  /** Left slot before the flexible spacer: hamburger menu trigger, breadcrumbs, etc. */
+  leading?: ReactNode;
   /** Avatar initials rendered before the divider (e.g. derived from the signed-in staff name). */
   avatar?: string;
   /** Right slot after the divider: theme toggle + sign-out, etc. */
@@ -10,18 +12,19 @@ export interface TopbarProps {
 }
 
 /**
- * Router-free topbar: avatar initials, divider, and a children slot for
- * actions (theme toggle, sign-out, etc.).
+ * Router-free topbar: optional leading slot, avatar initials, divider, and
+ * a children slot for right-side actions (theme toggle, sign-out, etc.).
  */
-export function Topbar({ avatar, children, className }: TopbarProps) {
+export function Topbar({ leading, avatar, children, className }: TopbarProps) {
   return (
     <header
       className={cn(
-        'flex h-[60px] shrink-0 items-center justify-end gap-4 border-b bg-card px-6',
+        'flex h-[60px] shrink-0 items-center gap-4 border-b bg-card px-6',
         className,
       )}
     >
-      <div className="flex items-center gap-3">
+      {leading && <div className="flex items-center gap-2">{leading}</div>}
+      <div className="ml-auto flex items-center gap-3">
         {avatar && (
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-[14px] font-medium text-muted-foreground">
             {avatar}

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
   Building2,
   HardDrive,
@@ -7,14 +7,11 @@ import {
   Key,
   ListChecks,
   ListTodo,
-  Menu,
   Package,
   Users,
   Wrench,
-  X,
 } from 'lucide-react';
 import { cn } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
 import { NavItem } from './NavItem';
 
 interface SidebarProps {
@@ -29,12 +26,13 @@ function SectionLabel({ children }: { children: ReactNode }) {
   );
 }
 
-export function Sidebar({ className }: SidebarProps) {
-  const [open, setOpen] = useState(false);
-
-  const navContent = (
+/**
+ * Full sidebar nav content — logo + grouped links. Shared between the
+ * desktop `Sidebar` (visible on md+) and the mobile `MobileSidebar` drawer.
+ */
+export function SidebarNav() {
+  return (
     <nav className="flex flex-col gap-1 p-4">
-      {/* Brand header (logo + wordmark) */}
       <div className="mb-2 flex items-center gap-2.5 px-3 py-3">
         <img
           src={`${import.meta.env.BASE_URL}Vitalock_logo_vector_black.svg`}
@@ -111,54 +109,17 @@ export function Sidebar({ className }: SidebarProps) {
       />
     </nav>
   );
+}
 
+export function Sidebar({ className }: SidebarProps) {
   return (
-    <>
-      {/* Desktop sidebar */}
-      <aside
-        className={cn(
-          'hidden w-[240px] shrink-0 flex-col border-r bg-card md:flex',
-          className,
-        )}
-      >
-        {navContent}
-      </aside>
-
-      {/* Mobile hamburger button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden"
-        onClick={() => setOpen(true)}
-        aria-label="Abrir menú"
-      >
-        <Menu className="h-5 w-5" />
-      </Button>
-
-      {/* Mobile slide-over overlay */}
-      {open && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <button
-            type="button"
-            aria-label="Cerrar menú"
-            className="absolute inset-0 cursor-default bg-black/40"
-            onClick={() => setOpen(false)}
-          />
-          <aside className="absolute inset-y-0 left-0 flex w-[280px] flex-col border-r bg-card shadow-xl">
-            <div className="flex items-center justify-end p-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setOpen(false)}
-                aria-label="Cerrar menú"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            {navContent}
-          </aside>
-        </div>
+    <aside
+      className={cn(
+        'hidden w-[240px] shrink-0 flex-col border-r bg-card md:flex',
+        className,
       )}
-    </>
+    >
+      <SidebarNav />
+    </aside>
   );
 }

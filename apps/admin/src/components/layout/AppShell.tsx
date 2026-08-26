@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { Button, Topbar } from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
 import { Sidebar } from './Sidebar';
+import { MobileSidebar } from './MobileSidebar';
 import { ThemeToggle } from './ThemeToggle';
 
 export function AppShell() {
@@ -23,8 +24,8 @@ export function AppShell() {
       <div className="flex w-full min-h-0 flex-1">
         <Sidebar />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {/* Topbar scoped to content: search + bell + avatar + divider; slot carries theme + sign-out */}
-          <Topbar avatar={initials}>
+          {/* Topbar: leading slot carries the mobile hamburger; right slot carries theme + sign-out */}
+          <Topbar leading={<MobileSidebar />} avatar={initials}>
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={() => void signOut()}>
               Salir
