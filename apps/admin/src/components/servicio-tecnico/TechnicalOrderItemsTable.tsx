@@ -21,7 +21,7 @@ const ITEM_STATUS_TONES: Record<string, StatusTone> = {
 
 // item_type domain for technical_order_items (spec #220).
 const ITEM_TYPE_LABELS: Record<string, string> = {
-  equipment: 'Equipo',
+  equipment: 'Trabajo general',
   maintenance: 'Mantenimiento',
   installation: 'Instalación',
   equipment_replacement: 'Reemplazo de equipo',

@@ -60,7 +60,7 @@ describe('useKeyOrders', () => {
     expect(result.current.isLoading).toBe(true);
 
     const key = keyOrdersKey();
-    expect(key).toEqual(['admin', 'key-orders', 'all', '']);
+    expect(key).toEqual(['admin', 'key-orders', 'all', '', 'all']);
   });
 
   it('queries from key_orders table', async () => {

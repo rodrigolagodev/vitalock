@@ -198,7 +198,7 @@ describe('KeyOrderForm', () => {
   });
 
   // T-13c-1e: adding an item works
-  it('adds an item card when "Agregar llave" is clicked', async () => {
+  it('adds an item card when "Agregar línea" is clicked', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
@@ -206,7 +206,7 @@ describe('KeyOrderForm', () => {
     });
 
     expect(screen.queryByText('Llave 1')).not.toBeInTheDocument();
-    const addBtn = screen.getByRole('button', { name: /agregar llave/i });
+    const addBtn = screen.getByRole('button', { name: /agregar l[íi]nea/i });
     await user.click(addBtn);
     expect(screen.getByText('Llave 1')).toBeInTheDocument();
   });
@@ -283,7 +283,7 @@ describe('KeyOrderForm', () => {
     });
 
     // Add one item so items validation passes
-    const addBtn = screen.getByRole('button', { name: /agregar llave/i });
+    const addBtn = screen.getByRole('button', { name: /agregar l[íi]nea/i });
     await user.click(addBtn);
 
     const submitBtn = screen.getByRole('button', { name: /crear y confirmar orden/i });
@@ -299,7 +299,7 @@ describe('KeyOrderForm', () => {
 
   // T-13c-1i: item validation requires building_id
   // Note: item validation errors only render when the item card is expanded (isOpen).
-  // We click "Agregar llave" (which auto-expands the item), then submit without setting building.
+  // We click "Agregar línea" (which auto-expands the item), then submit without setting building.
   it('shows error when item is missing building_id', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
@@ -324,7 +324,7 @@ describe('KeyOrderForm', () => {
     );
 
     // Add an item — it auto-expands so error fields will be in DOM after submit.
-    await user.click(screen.getByRole('button', { name: /agregar llave/i }));
+    await user.click(screen.getByRole('button', { name: /agregar l[íi]nea/i }));
 
     // Submit without filling building_id or product_id
     await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
@@ -360,7 +360,7 @@ describe('KeyOrderForm', () => {
     );
 
     // Add an item — auto-expands, error fields are in DOM after submit.
-    await user.click(screen.getByRole('button', { name: /agregar llave/i }));
+    await user.click(screen.getByRole('button', { name: /agregar l[íi]nea/i }));
 
     // Fill building by clicking the combobox stub, but leave unit_price empty.
     await user.click(screen.getByTestId('building-combobox'));

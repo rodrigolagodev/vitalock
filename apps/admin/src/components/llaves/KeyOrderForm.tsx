@@ -552,7 +552,7 @@ export function KeyOrderForm({
             onClick={appendItem}
             className="self-start"
           >
-            + Agregar llave
+            + Agregar línea
           </Button>
         </section>
 
@@ -655,6 +655,9 @@ function KeyItemUnitField({
           {errors.items[index]?.unit_id?.message}
         </p>
       )}
+      <p className="text-xs text-muted-foreground">
+        Opcional acá — si no la asignás ahora, se pedirá al configurar la llave.
+      </p>
     </div>
   );
 }

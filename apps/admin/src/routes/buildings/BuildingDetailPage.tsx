@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { Badge } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { KeyRow } from '@/hooks/useKeys';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useAdministration } from '@/hooks/useAdministration';
 import { useEquipment } from '@/hooks/useEquipment';
@@ -15,6 +23,7 @@ export default function BuildingDetailPage() {
   const { buildingId } = useParams<{ buildingId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [llavesSearch, setLlavesSearch] = useState('');
+  const [llavesStatus, setLlavesStatus] = useState<'all' | KeyRow['status']>('all');
   const [equiposSearch, setEquiposSearch] = useState('');
 
   const activeTab = searchParams.get('tab') ?? 'llaves';
@@ -66,6 +75,7 @@ export default function BuildingDetailPage() {
   }
 
   const filteredKeys = keys.filter((k) => {
+    if (llavesStatus !== 'all' && k.status !== llavesStatus) return false;
     const q = llavesSearch.trim().toLowerCase();
     if (q === '') return true;
     return (
@@ -115,12 +125,30 @@ export default function BuildingDetailPage() {
 
         <TabsContent value="llaves" className="mt-4 space-y-4">
           <h2 className="text-lg font-semibold">Llaves</h2>
-          <Input
-            placeholder="Buscar llaves por código o unidad..."
-            value={llavesSearch}
-            onChange={(e) => setLlavesSearch(e.target.value)}
-            className="max-w-sm"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              placeholder="Buscar llaves por código o unidad..."
+              value={llavesSearch}
+              onChange={(e) => setLlavesSearch(e.target.value)}
+              className="max-w-sm"
+            />
+            <Select
+              value={llavesStatus}
+              onValueChange={(v) => setLlavesStatus(v as 'all' | KeyRow['status'])}
+            >
+              <SelectTrigger className="w-52">
+                <SelectValue placeholder="Todos los estados" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                <SelectItem value="active">Activa</SelectItem>
+                <SelectItem value="pending_installation">Pendiente instalación</SelectItem>
+                <SelectItem value="pending_creation">En creación</SelectItem>
+                <SelectItem value="pending_disable">Baja solicitada</SelectItem>
+                <SelectItem value="disabled">Dada de baja</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <KeysTable buildingId={buildingId} keys={filteredKeys} isFetching={keysFetching} />
         </TabsContent>
 

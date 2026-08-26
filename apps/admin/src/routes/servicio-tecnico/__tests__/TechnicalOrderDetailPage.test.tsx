@@ -152,10 +152,15 @@ describe('TechnicalOrderDetailPage — action buttons', () => {
     expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
   });
 
-  it('cancel button fires cancelTechnicalOrder mutation', () => {
+  it('cancel button opens the confirm dialog and firing "Sí" calls cancelTechnicalOrder', async () => {
     renderPage();
-    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
-    expect(cancelMutate).toHaveBeenCalledWith({ id: 'to-1' });
+    fireEvent.click(screen.getByRole('button', { name: /^cancelar orden$/i }));
+    const confirm = await screen.findByRole('button', { name: /sí, cancelar orden/i });
+    fireEvent.click(confirm);
+    expect(cancelMutate).toHaveBeenCalledWith(
+      { id: 'to-1' },
+      expect.objectContaining({ onSettled: expect.any(Function) }),
+    );
   });
 
   it('shows mark-invoiced button only when status=completed', () => {

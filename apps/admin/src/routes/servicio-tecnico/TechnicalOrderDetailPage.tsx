@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@vitalock/ui';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
@@ -6,6 +7,7 @@ import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';
 import { TechnicalOrderStatusBadge } from '@/components/servicio-tecnico/TechnicalOrderStatusBadge';
 import { TechnicalOrderItemsTable } from '@/components/servicio-tecnico/TechnicalOrderItemsTable';
 import { LinkedTicketsTable } from '@/components/servicio-tecnico/LinkedTicketsTable';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 const TERMINAL_STATUSES = new Set(['invoiced', 'cancelled']);
 
@@ -67,8 +69,12 @@ export default function TechnicalOrderDetailPage() {
       ? `DNI: ${order.particular_dni}`
       : null;
 
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+
   const handleCancel = () => {
-    cancelTechnicalOrder.mutate({ id: order.id });
+    cancelTechnicalOrder.mutate({ id: order.id }, {
+      onSettled: () => setCancelConfirmOpen(false),
+    });
   };
 
   const handleMarkInvoiced = () => {
@@ -159,7 +165,7 @@ export default function TechnicalOrderDetailPage() {
           {!isTerminal && (
             <Button
               variant="destructive"
-              onClick={handleCancel}
+              onClick={() => setCancelConfirmOpen(true)}
               disabled={cancelTechnicalOrder.isPending}
             >
               {cancelTechnicalOrder.isPending ? 'Cancelando...' : 'Cancelar orden'}
@@ -185,6 +191,18 @@ export default function TechnicalOrderDetailPage() {
           isLoading={ticketsLoading}
         />
       </div>
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        onOpenChange={setCancelConfirmOpen}
+        title={`Cancelar orden ${order.order_number}`}
+        description="Esta acción marca la orden como cancelada. No se puede revertir."
+        confirmLabel="Sí, cancelar orden"
+        cancelLabel="Volver"
+        variant="destructive"
+        isPending={cancelTechnicalOrder.isPending}
+        onConfirm={handleCancel}
+      />
     </div>
   );
 }

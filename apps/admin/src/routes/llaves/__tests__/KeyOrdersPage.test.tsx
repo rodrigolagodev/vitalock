@@ -9,6 +9,9 @@ import type { KeyOrderListRow } from '@/hooks/useKeyOrders';
 const { useKeyOrdersMock } = vi.hoisted(() => ({ useKeyOrdersMock: vi.fn() }));
 
 vi.mock('@/hooks/useKeyOrders', () => ({ useKeyOrders: useKeyOrdersMock }));
+vi.mock('@/hooks/useAdministrations', () => ({
+  useAdministrations: () => ({ data: [], isLoading: false }),
+}));
 
 import KeyOrdersPage from '../KeyOrdersPage';
 
@@ -52,7 +55,7 @@ beforeEach(() => {
 });
 
 describe('KeyOrdersPage stat cards', () => {
-  it('shows total, in-progress and ready-for-pickup counts from loaded rows', () => {
+  it('shows total, open, and completed counts from loaded rows', () => {
     useKeyOrdersMock.mockReturnValue({
       data: makeRows(),
       isFetching: false,
@@ -64,8 +67,8 @@ describe('KeyOrdersPage stat cards', () => {
     const cards = screen.getByTestId('stat-cards');
     expect(within(cards).getByText('Total órdenes')).toBeInTheDocument();
     expect(within(cards).getByText('4')).toBeInTheDocument();
-    expect(within(cards).getByText('En proceso')).toBeInTheDocument();
-    expect(within(cards).getByText('Listo para retirar')).toBeInTheDocument();
+    expect(within(cards).getByText('Abiertas')).toBeInTheDocument();
+    expect(within(cards).getByText('Completadas')).toBeInTheDocument();
   });
 });
 

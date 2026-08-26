@@ -60,7 +60,7 @@ describe('useTechnicalOrders', () => {
     expect(result.current.isLoading).toBe(true);
 
     const key = technicalOrdersKey();
-    expect(key).toEqual(['admin', 'technical-orders', 'all', '']);
+    expect(key).toEqual(['admin', 'technical-orders', 'all', '', 'all']);
   });
 
   it('queries from technical_orders table', async () => {

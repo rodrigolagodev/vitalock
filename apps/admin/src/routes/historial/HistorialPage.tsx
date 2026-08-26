@@ -20,6 +20,8 @@ const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
   { value: 'draft', label: 'Borrador' },
   { value: 'confirmed', label: 'Confirmada' },
   { value: 'in_progress', label: 'En proceso' },
+  { value: 'pending_installation', label: 'Pendiente instalación' },
+  { value: 'ready_for_pickup', label: 'Listo para retirar' },
   { value: 'completed', label: 'Completado' },
   { value: 'invoiced', label: 'Facturado' },
   { value: 'cancelled', label: 'Cancelado' },

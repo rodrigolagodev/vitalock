@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@vitalock/ui';
 import { useKeyOrder } from '@/hooks/useKeyOrder';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { KeyOrderStatusBadge } from '@/components/llaves/KeyOrderStatusBadge';
 import { KeyOrderItemsTable } from '@/components/llaves/KeyOrderItemsTable';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 const TERMINAL_STATUSES = new Set(['completed', 'invoiced', 'cancelled']);
 
@@ -65,8 +67,12 @@ export default function KeyOrderDetailPage() {
       ? `DNI: ${order.particular_dni}`
       : null;
 
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+
   const handleCancel = () => {
-    cancelKeyOrder.mutate({ id: order.id });
+    cancelKeyOrder.mutate({ id: order.id }, {
+      onSettled: () => setCancelConfirmOpen(false),
+    });
   };
 
   const handleMarkInvoiced = () => {
@@ -157,7 +163,7 @@ export default function KeyOrderDetailPage() {
           {!isTerminal && (
             <Button
               variant="destructive"
-              onClick={handleCancel}
+              onClick={() => setCancelConfirmOpen(true)}
               disabled={cancelKeyOrder.isPending}
             >
               {cancelKeyOrder.isPending ? 'Cancelando...' : 'Cancelar orden'}
@@ -178,6 +184,18 @@ export default function KeyOrderDetailPage() {
           isFetching={isLoading}
         />
       </div>
+
+      <ConfirmDialog
+        open={cancelConfirmOpen}
+        onOpenChange={setCancelConfirmOpen}
+        title={`Cancelar orden ${order.order_number}`}
+        description="Esta acción marca la orden como cancelada. No se puede revertir. Los ítems configurados quedarán inertes."
+        confirmLabel="Sí, cancelar orden"
+        cancelLabel="Volver"
+        variant="destructive"
+        isPending={cancelKeyOrder.isPending}
+        onConfirm={handleCancel}
+      />
     </div>
   );
 }

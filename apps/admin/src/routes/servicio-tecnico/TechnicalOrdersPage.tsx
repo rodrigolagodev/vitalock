@@ -5,7 +5,15 @@ import { Input } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { StatCard } from '@vitalock/ui';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useTechnicalOrders } from '@/hooks/useTechnicalOrders';
+import { useAdministrations } from '@/hooks/useAdministrations';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ServicioTecnicoTable } from '@/components/servicio-tecnico/ServicioTecnicoTable';
 import type { TechnicalOrderStatus } from '@/hooks/useTechnicalOrders';
@@ -26,14 +34,19 @@ const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
 export default function TechnicalOrdersPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
+  const [administrationId, setAdministrationId] = useState<string>('all');
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const hasFilters = debouncedSearch.trim() !== '' || status !== 'all';
+  const { data: administrations = [] } = useAdministrations();
+
+  const hasFilters =
+    debouncedSearch.trim() !== '' || status !== 'all' || administrationId !== 'all';
 
   const { data: orders = [], isFetching, isError } = useTechnicalOrders({
     search: debouncedSearch,
     status: status === 'all' ? undefined : status,
+    administrationId: administrationId === 'all' ? undefined : administrationId,
   });
 
   if (isError) {
@@ -62,9 +75,14 @@ export default function TechnicalOrdersPage() {
           icon={<ClipboardList />}
         />
         <StatCard
-          label="En proceso"
+          label="Abiertas"
           value={String(
-            orders.filter((o) => o.status === 'in_progress').length,
+            orders.filter(
+              (o) =>
+                o.status !== 'completed' &&
+                o.status !== 'invoiced' &&
+                o.status !== 'cancelled',
+            ).length,
           )}
           icon={<Clock />}
         />
@@ -77,12 +95,27 @@ export default function TechnicalOrdersPage() {
         />
       </div>
 
-      <Input
-        placeholder="Buscar por número de orden, cliente..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-sm"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          placeholder="Buscar por número de orden, cliente..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <Select value={administrationId} onValueChange={setAdministrationId}>
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="Todas las administraciones" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las administraciones</SelectItem>
+            {administrations.map((admin) => (
+              <SelectItem key={admin.id} value={admin.id}>
+                {admin.company_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs uppercase text-muted-foreground">Estado:</span>
