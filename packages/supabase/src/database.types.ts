@@ -862,6 +862,7 @@ export type Database = {
           id: string
           intended_assignee_staff_id: string | null
           intended_equipment_id: string | null
+          intended_replacement_equipment_id: string | null
           item_type: string
           order_id: string
           product_id: string | null
@@ -877,6 +878,7 @@ export type Database = {
           id?: string
           intended_assignee_staff_id?: string | null
           intended_equipment_id?: string | null
+          intended_replacement_equipment_id?: string | null
           item_type: string
           order_id: string
           product_id?: string | null
@@ -892,6 +894,7 @@ export type Database = {
           id?: string
           intended_assignee_staff_id?: string | null
           intended_equipment_id?: string | null
+          intended_replacement_equipment_id?: string | null
           item_type?: string
           order_id?: string
           product_id?: string | null
@@ -925,6 +928,13 @@ export type Database = {
           {
             foreignKeyName: "technical_order_items_intended_equipment_id_fkey"
             columns: ["intended_equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_order_items_intended_replacement_equipment_id_fkey"
+            columns: ["intended_replacement_equipment_id"]
             isOneToOne: false
             referencedRelation: "equipment_inventory"
             referencedColumns: ["id"]

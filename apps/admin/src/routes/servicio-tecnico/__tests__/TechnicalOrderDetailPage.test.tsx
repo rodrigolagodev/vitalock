@@ -72,6 +72,7 @@ function makeOrder(overrides: Partial<TechnicalOrderDetailRow> = {}): TechnicalO
         unit_price: 500,
         product_id: null,
         intended_equipment_id: 'eq-1',
+        intended_replacement_equipment_id: null,
         intended_assignee_staff_id: 'staff-1',
       },
     ],

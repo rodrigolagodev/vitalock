@@ -29,6 +29,7 @@ export default function TechnicalOrderNuevaPage() {
           unit_price: item.unit_price ?? 0,
           product_id: item.product_id ?? null,
           intended_equipment_id: item.intended_equipment_id ?? null,
+          intended_replacement_equipment_id: item.intended_replacement_equipment_id ?? null,
           intended_assignee_staff_id: item.intended_assignee_staff_id ?? null,
         })),
         confirmImmediately: true,

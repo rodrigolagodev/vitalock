@@ -13,6 +13,7 @@ export interface TechnicalOrderItemRow {
   unit_price: number | null;
   product_id: string | null;
   intended_equipment_id: string | null;
+  intended_replacement_equipment_id: string | null;
   intended_assignee_staff_id: string | null;
 }
 
@@ -92,6 +93,7 @@ export function useTechnicalOrder(id: string | undefined) {
             unit_price,
             product_id,
             intended_equipment_id,
+            intended_replacement_equipment_id,
             intended_assignee_staff_id
           )
         `)

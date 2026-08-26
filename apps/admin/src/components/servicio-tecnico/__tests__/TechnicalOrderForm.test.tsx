@@ -127,6 +127,7 @@ function makeInitialOrder(overrides: Partial<TechnicalOrderDetailRow> = {}): Tec
         unit_price: 200,
         product_id: null,
         intended_equipment_id: 'equip-1',
+        intended_replacement_equipment_id: null,
         intended_assignee_staff_id: 'staff-1',
       },
     ],

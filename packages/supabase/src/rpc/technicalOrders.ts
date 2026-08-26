@@ -31,6 +31,7 @@ export interface TechnicalOrderItemPayload {
   unit_price: number;
   product_id?: string | null;
   intended_equipment_id?: string | null;
+  intended_replacement_equipment_id?: string | null;
   intended_assignee_staff_id?: string | null;
 }
 

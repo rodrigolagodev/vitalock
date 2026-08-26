@@ -43,7 +43,7 @@ export function TechnicalOrderItemsTable({
   const equipmentIds = useMemo(
     () =>
       items
-        .map((it) => it.intended_equipment_id)
+        .flatMap((it) => [it.intended_equipment_id, it.intended_replacement_equipment_id])
         .filter((id): id is string => Boolean(id)),
     [items],
   );
@@ -82,11 +82,23 @@ export function TechnicalOrderItemsTable({
         },
         {
           header: 'Equipo previsto',
-          cell: (item) =>
-            item.intended_equipment_id
+          cell: (item) => {
+            const current = item.intended_equipment_id
               ? equipmentMap?.get(item.intended_equipment_id)?.serial_number ??
                 item.intended_equipment_id
-              : '—',
+              : '—';
+            if (item.item_type !== 'equipment_replacement') return current;
+            const replacement = item.intended_replacement_equipment_id
+              ? equipmentMap?.get(item.intended_replacement_equipment_id)?.serial_number ??
+                item.intended_replacement_equipment_id
+              : '—';
+            return (
+              <div className="flex flex-col">
+                <span>Actual: {current}</span>
+                <span>Reemplazo: {replacement}</span>
+              </div>
+            );
+          },
           className: 'text-muted-foreground text-xs',
           hideBelow: 'lg',
         },

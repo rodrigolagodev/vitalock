@@ -45,6 +45,7 @@ function makeItem(overrides: Partial<TechnicalOrderItemRow> = {}): TechnicalOrde
     unit_price: 500,
     product_id: null,
     intended_equipment_id: 'eq-1',
+    intended_replacement_equipment_id: null,
     intended_assignee_staff_id: 'staff-1',
     ...overrides,
   };
@@ -99,7 +100,7 @@ describe('TechnicalOrderItemsTable — item_type badge', () => {
       <TechnicalOrderItemsTable items={[makeItem({ item_type: 'equipment_replacement' })]} />,
       { wrapper: makeWrapper() },
     );
-    expect(screen.getByText(/reemplazo/i)).toBeInTheDocument();
+    expect(screen.getByText('Reemplazo de equipo')).toBeInTheDocument();
   });
 });
 
