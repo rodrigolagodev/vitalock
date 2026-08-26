@@ -214,7 +214,8 @@ SELECT lives_ok(
       END;
 
       SELECT status INTO v_order_status FROM public.key_orders WHERE id = v_key_order_id;
-      ASSERT v_order_status = 'ready_for_pickup', 'FAIL 092-C precondition: expected key_order in ready_for_pickup, got ' || coalesce(v_order_status, 'NULL');
+      -- Post-097: all-configured advances to pending_installation, not ready_for_pickup.
+      ASSERT v_order_status = 'pending_installation', 'FAIL 092-C precondition: expected key_order in pending_installation, got ' || coalesce(v_order_status, 'NULL');
 
       SELECT public.create_equipment_update(v_equipment_id, v_admin_id, v_building_id, 'Update 092-C', 'path/092c.mdb', array[v_key_id], '{}', v_staff_id) INTO v_task_id;
 

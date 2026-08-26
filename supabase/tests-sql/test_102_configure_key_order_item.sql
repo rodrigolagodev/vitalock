@@ -94,8 +94,10 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- Scenario 3 (PASS 102-S3): configuring all items advances order to ready_for_pickup
+-- Scenario 3 (PASS 102-S3): configuring all items advances order to pending_installation
 -- ============================================================
+-- Post-097: all-configured no longer jumps to ready_for_pickup. The installer
+-- must first mark each item as installed via mark_key_order_item_installed.
 SELECT lives_ok(
   $q$
     DO $$
@@ -129,11 +131,11 @@ SELECT lives_ok(
       END LOOP;
 
       SELECT status INTO v_order_status FROM public.key_orders WHERE id = v_order_id;
-      ASSERT v_order_status = 'ready_for_pickup',
-        'FAIL 102-S3: expected ready_for_pickup after all items configured, got ' || v_order_status;
+      ASSERT v_order_status = 'pending_installation',
+        'FAIL 102-S3: expected pending_installation after all items configured, got ' || v_order_status;
     END $$;
   $q$,
-  'PASS 102-S3: configuring all items advances order to ready_for_pickup'
+  'PASS 102-S3: configuring all items advances order to pending_installation'
 );
 
 -- ============================================================
