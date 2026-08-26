@@ -19,6 +19,7 @@ import { useMutateProduct } from '@/hooks/useMutateProduct';
 import { useStockMovements } from '@/hooks/useStockMovements';
 import { ProductFormFields } from '@/components/stock/ProductFormFields';
 import { StockMovementsTable } from '@/components/stock/StockMovementsTable';
+import { AjusteStockSheet } from '@/components/stock/AjusteStockSheet';
 import type { MovementType, ProductCategory } from '@/types/stock';
 
 const EditProductSchema = z.object({
@@ -67,6 +68,7 @@ export default function StockDetailPage() {
   const [typeFilter, setTypeFilter] = useState<MovementType[]>([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [movementSheetOpen, setMovementSheetOpen] = useState(false);
 
   const {
     control,
@@ -148,7 +150,9 @@ export default function StockDetailPage() {
         breadcrumbs={[{ label: 'Stock', to: '/stock' }, { label: product.name }]}
         title={product.name}
         subtitle={`Disponible: ${product.stock_disponible} · Reservado: ${product.stock_reservado} · Total: ${product.stock_total}`}
-      />
+      >
+        <Button onClick={() => setMovementSheetOpen(true)}>Nuevo movimiento</Button>
+      </PageHeader>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -281,6 +285,14 @@ export default function StockDetailPage() {
           hasFilters={hasFilters}
         />
       </div>
+
+      <AjusteStockSheet
+        open={movementSheetOpen}
+        onOpenChange={setMovementSheetOpen}
+        productId={productId}
+        productName={product.name}
+        stockDisponible={product.stock_disponible}
+      />
     </div>
   );
 }
