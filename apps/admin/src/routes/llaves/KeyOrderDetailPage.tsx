@@ -16,6 +16,7 @@ export default function KeyOrderDetailPage() {
     cancelKeyOrder,
     markKeyOrderInvoiced,
   } = useMutateKeyOrder();
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   if (!keyOrderId) {
     return (
@@ -66,8 +67,6 @@ export default function KeyOrderDetailPage() {
     order.client_type === 'particular' && order.particular_dni
       ? `DNI: ${order.particular_dni}`
       : null;
-
-  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   const handleCancel = () => {
     cancelKeyOrder.mutate({ id: order.id }, {

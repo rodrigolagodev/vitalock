@@ -19,6 +19,7 @@ export default function TechnicalOrderDetailPage() {
     markTechnicalOrderInvoiced,
   } = useMutateTechnicalOrder();
   const { data: tickets = [], isLoading: ticketsLoading } = useTechnicalOrderTickets(techOrderId);
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   if (!techOrderId) {
     return (
@@ -68,8 +69,6 @@ export default function TechnicalOrderDetailPage() {
     order.client_type === 'particular' && order.particular_dni
       ? `DNI: ${order.particular_dni}`
       : null;
-
-  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   const handleCancel = () => {
     cancelTechnicalOrder.mutate({ id: order.id }, {
