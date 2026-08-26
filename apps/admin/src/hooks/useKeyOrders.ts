@@ -29,14 +29,33 @@ export interface UseKeyOrdersFilters {
   search?: string;
   status?: string;
   administrationId?: string;
+  buildingId?: string;
 }
 
-export function useKeyOrders({ search, status, administrationId }: UseKeyOrdersFilters = {}) {
+export function useKeyOrders({
+  search,
+  status,
+  administrationId,
+  buildingId,
+}: UseKeyOrdersFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
-    queryKey: keyOrdersKey(status, trimmed, administrationId),
+    queryKey: keyOrdersKey(status, trimmed, administrationId, buildingId),
     queryFn: async (): Promise<KeyOrderListRow[]> => {
+      let orderIdsWithBuilding: string[] | null = null;
+      if (buildingId && buildingId !== 'all') {
+        const { data: itemsMatch, error: itemsError } = await supabase
+          .from('key_order_items')
+          .select('order_id')
+          .eq('building_id', buildingId);
+        if (itemsError) throw itemsError;
+        orderIdsWithBuilding = Array.from(
+          new Set((itemsMatch ?? []).map((r) => r.order_id)),
+        );
+        if (orderIdsWithBuilding.length === 0) return [];
+      }
+
       let query = supabase
         .from('key_orders')
         .select(`
@@ -59,6 +78,10 @@ export function useKeyOrders({ search, status, administrationId }: UseKeyOrdersF
       // Server-side administration filter.
       if (administrationId && administrationId !== 'all') {
         query = query.eq('administration_id', administrationId);
+      }
+
+      if (orderIdsWithBuilding) {
+        query = query.in('id', orderIdsWithBuilding);
       }
 
       // Server-side text search on order_number and particular_full_name.

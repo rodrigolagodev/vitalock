@@ -16,6 +16,9 @@ vi.mock('@/hooks/useTechnicalOrders', () => ({
 vi.mock('@/hooks/useAdministrations', () => ({
   useAdministrations: () => ({ data: [], isLoading: false }),
 }));
+vi.mock('@/hooks/useBuildings', () => ({
+  useBuildings: () => ({ data: [], isLoading: false }),
+}));
 
 import TechnicalOrdersPage from '../TechnicalOrdersPage';
 

@@ -16,11 +16,35 @@ export const particularesKey = (search?: string) =>
 export const particularKey = (id: string) => ['admin', 'particular', id] as const;
 export const decommissionImpactKey = (equipmentId: string) =>
   ['admin', 'decommission-impact', equipmentId] as const;
-export const keyOrdersKey = (status?: string, search?: string, administrationId?: string) =>
-  ['admin', 'key-orders', status ?? 'all', search ?? '', administrationId ?? 'all'] as const;
+export const keyOrdersKey = (
+  status?: string,
+  search?: string,
+  administrationId?: string,
+  buildingId?: string,
+) =>
+  [
+    'admin',
+    'key-orders',
+    status ?? 'all',
+    search ?? '',
+    administrationId ?? 'all',
+    buildingId ?? 'all',
+  ] as const;
 export const keyOrderKey = (id: string) => ['admin', 'key-order', id] as const;
-export const technicalOrdersKey = (status?: string, search?: string, administrationId?: string) =>
-  ['admin', 'technical-orders', status ?? 'all', search ?? '', administrationId ?? 'all'] as const;
+export const technicalOrdersKey = (
+  status?: string,
+  search?: string,
+  administrationId?: string,
+  buildingId?: string,
+) =>
+  [
+    'admin',
+    'technical-orders',
+    status ?? 'all',
+    search ?? '',
+    administrationId ?? 'all',
+    buildingId ?? 'all',
+  ] as const;
 export const technicalOrderKey = (id: string) => ['admin', 'technical-order', id] as const;
 export const allOrdersKey = (
   status?: string,

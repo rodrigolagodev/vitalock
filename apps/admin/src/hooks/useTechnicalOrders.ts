@@ -27,18 +27,33 @@ export interface UseTechnicalOrdersFilters {
   search?: string;
   status?: string;
   administrationId?: string;
+  buildingId?: string;
 }
 
 export function useTechnicalOrders({
   search,
   status,
   administrationId,
+  buildingId,
 }: UseTechnicalOrdersFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
-    queryKey: technicalOrdersKey(status, trimmed, administrationId),
+    queryKey: technicalOrdersKey(status, trimmed, administrationId, buildingId),
     queryFn: async (): Promise<TechnicalOrderListRow[]> => {
+      let orderIdsWithBuilding: string[] | null = null;
+      if (buildingId && buildingId !== 'all') {
+        const { data: itemsMatch, error: itemsError } = await supabase
+          .from('technical_order_items')
+          .select('order_id')
+          .eq('building_id', buildingId);
+        if (itemsError) throw itemsError;
+        orderIdsWithBuilding = Array.from(
+          new Set((itemsMatch ?? []).map((r) => r.order_id)),
+        );
+        if (orderIdsWithBuilding.length === 0) return [];
+      }
+
       let query = supabase
         .from('technical_orders')
         .select(`
@@ -61,6 +76,10 @@ export function useTechnicalOrders({
       // Server-side administration filter.
       if (administrationId && administrationId !== 'all') {
         query = query.eq('administration_id', administrationId);
+      }
+
+      if (orderIdsWithBuilding) {
+        query = query.in('id', orderIdsWithBuilding);
       }
 
       // Server-side text search on order_number and particular_full_name.

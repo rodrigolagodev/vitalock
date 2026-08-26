@@ -12,6 +12,9 @@ vi.mock('@/hooks/useKeyOrders', () => ({ useKeyOrders: useKeyOrdersMock }));
 vi.mock('@/hooks/useAdministrations', () => ({
   useAdministrations: () => ({ data: [], isLoading: false }),
 }));
+vi.mock('@/hooks/useBuildings', () => ({
+  useBuildings: () => ({ data: [], isLoading: false }),
+}));
 
 import KeyOrdersPage from '../KeyOrdersPage';
 

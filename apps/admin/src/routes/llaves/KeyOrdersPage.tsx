@@ -5,15 +5,10 @@ import { Input } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { StatCard } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useKeyOrders } from '@/hooks/useKeyOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
+import { useBuildings } from '@/hooks/useBuildings';
 import { useDebounce } from '@/hooks/useDebounce';
 import { LlavesTable } from '@/components/llaves/LlavesTable';
 import type { KeyOrderStatus } from '@/hooks/useKeyOrders';
@@ -35,19 +30,25 @@ const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
 export default function KeyOrdersPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('all');
-  const [administrationId, setAdministrationId] = useState<string>('all');
+  const [administrationId, setAdministrationId] = useState<string | undefined>();
+  const [buildingId, setBuildingId] = useState<string | undefined>();
 
   const debouncedSearch = useDebounce(search, 300);
 
   const { data: administrations = [] } = useAdministrations();
+  const { data: buildings = [] } = useBuildings({ administrationId });
 
   const hasFilters =
-    debouncedSearch.trim() !== '' || status !== 'all' || administrationId !== 'all';
+    debouncedSearch.trim() !== '' ||
+    status !== 'all' ||
+    administrationId !== undefined ||
+    buildingId !== undefined;
 
   const { data: orders = [], isFetching, isError } = useKeyOrders({
     search: debouncedSearch,
     status: status === 'all' ? undefined : status,
-    administrationId: administrationId === 'all' ? undefined : administrationId,
+    administrationId,
+    buildingId,
   });
 
   if (isError) {
@@ -103,19 +104,24 @@ export default function KeyOrdersPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <Select value={administrationId} onValueChange={setAdministrationId}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="Todas las administraciones" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las administraciones</SelectItem>
-            {administrations.map((admin) => (
-              <SelectItem key={admin.id} value={admin.id}>
-                {admin.company_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <CascadeFilter
+          value={{ administrationId, buildingId }}
+          onChange={(next) => {
+            setAdministrationId(next.administrationId);
+            setBuildingId(next.buildingId);
+          }}
+          levels={['administration', 'building']}
+          administrations={administrations.map((a) => ({
+            id: a.id,
+            label: a.company_name,
+          }))}
+          buildings={buildings.map((b) => ({
+            id: b.id,
+            label: b.name,
+            parentId: b.administration_id,
+          }))}
+          equipment={[]}
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
