@@ -11,6 +11,7 @@ import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
 import { KeyItemDetailsDialog } from './KeyItemDetailsDialog';
 import { useBuildingsByIds } from '@/hooks/useBuildingsByIds';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
+import { formatCurrencyARS } from '@/lib/format';
 import type { KeyOrderItemRow, KeyOrderDetailRow } from '@/hooks/useKeyOrder';
 
 const ITEM_STATUS_LABELS: Record<string, string> = {
@@ -132,10 +133,7 @@ export function KeyOrderItemsTable({
           },
           {
             header: 'Precio',
-            cell: (item) =>
-              item.unit_price != null
-                ? `$${item.unit_price.toFixed(2)}`
-                : '—',
+            cell: (item) => formatCurrencyARS(item.unit_price),
             className: 'text-right',
           },
           {

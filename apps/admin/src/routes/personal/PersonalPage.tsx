@@ -48,10 +48,10 @@ export default function PersonalPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Staff"
+        title="Personal"
         subtitle="Gestioná al equipo y su información."
       >
-        <Button onClick={() => setCreateOpen(true)}>Nuevo staff</Button>
+        <Button onClick={() => setCreateOpen(true)}>Nuevo integrante</Button>
       </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">

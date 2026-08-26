@@ -552,7 +552,7 @@ export function KeyOrderForm({
             onClick={appendItem}
             className="self-start"
           >
-            + Agregar llave
+            + Agregar línea
           </Button>
         </section>
 

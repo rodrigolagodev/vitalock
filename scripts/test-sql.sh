@@ -32,11 +32,23 @@ fi
 
 echo "→ running ${#files[@]} SQL test(s) against $DATABASE_URL"
 failed=0
+tmp_out="$(mktemp)"
+trap 'rm -f "$tmp_out"' EXIT
 for f in "${files[@]}"; do
   name="$(basename "$f")"
   echo "  · $name"
-  if ! psql "$DATABASE_URL" --quiet --set ON_ERROR_STOP=1 --file "$f" > /dev/null; then
-    echo "    ✗ FAILED"
+  # psql may exit 0 even when pgTAP reports "not ok" — the assertions live in
+  # SELECT rows, not errors. Capture the output and look for the pgTAP failure
+  # markers so a failing scenario is not silently swallowed.
+  if ! psql "$DATABASE_URL" --quiet --set ON_ERROR_STOP=1 --file "$f" > "$tmp_out" 2>&1; then
+    echo "    ✗ FAILED (psql exit)"
+    sed 's/^/      /' "$tmp_out"
+    failed=$((failed + 1))
+    continue
+  fi
+  if grep -qE '^ *not ok |# Looks like you failed' "$tmp_out"; then
+    echo "    ✗ FAILED (pgTAP assertion)"
+    grep -E '^ *not ok |# Failed test |# Looks like you failed' "$tmp_out" | sed 's/^/      /'
     failed=$((failed + 1))
   fi
 done
