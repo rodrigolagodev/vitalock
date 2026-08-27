@@ -4,14 +4,14 @@ import type { TareaRow } from '@/hooks/useTareas';
 type TareaStatus = TareaRow['status'];
 
 const STATUS_LABELS: Record<TareaStatus, string> = {
-  open: 'Abierta',
+  open: 'Pendiente',
   in_progress: 'En curso',
-  resolved: 'Resuelta',
+  resolved: 'Finalizada',
   cancelled: 'Cancelada',
 };
 
 const STATUS_TONES: Record<TareaStatus, StatusTone> = {
-  open: 'info',
+  open: 'neutral',
   in_progress: 'warning',
   resolved: 'success',
   cancelled: 'danger',

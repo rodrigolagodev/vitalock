@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@vitalock/ui';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
+import { useEquipmentByBuilding } from '@/hooks/useEquipmentByBuilding';
 import { CascadeFilter, type CascadeFilterValue } from '@/components/filters/CascadeFilter';
 import { KeysInventoryTable } from '@/components/llaves/KeysInventoryTable';
 import type { CascadeOption } from '@/components/filters/CascadeFilter';
@@ -28,12 +29,50 @@ const WORKFLOW_STATUS_OPTIONS = [
 ];
 
 export default function InventarioPage() {
-  const [cascadeValue, setCascadeValue] = useState<CascadeFilterValue>({});
-  const [physicalStatus, setPhysicalStatus] = useState('all');
-  const [workflowStatus, setWorkflowStatus] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const cascadeValue: CascadeFilterValue = useMemo(
+    () => ({
+      administrationId: searchParams.get('adminId') ?? undefined,
+      buildingId: searchParams.get('buildingId') ?? undefined,
+      equipmentId: searchParams.get('equipmentId') ?? undefined,
+    }),
+    [searchParams],
+  );
+  const physicalStatus = searchParams.get('physicalStatus') ?? 'all';
+  const workflowStatus = searchParams.get('workflowStatus') ?? 'all';
+
+  const updateParams = (updates: Record<string, string | undefined>) => {
+    const next = new URLSearchParams(searchParams);
+    for (const [k, v] of Object.entries(updates)) {
+      if (v == null || v === '') {
+        next.delete(k);
+      } else {
+        next.set(k, v);
+      }
+    }
+    setSearchParams(next, { replace: true });
+  };
+
+  const setCascadeValue = (v: CascadeFilterValue) => {
+    updateParams({
+      adminId: v.administrationId,
+      buildingId: v.buildingId,
+      equipmentId: v.equipmentId,
+    });
+  };
+
+  const setPhysicalStatus = (v: string) => {
+    updateParams({ physicalStatus: v === 'all' ? undefined : v });
+  };
+
+  const setWorkflowStatus = (v: string) => {
+    updateParams({ workflowStatus: v === 'all' ? undefined : v });
+  };
 
   const { data: admins = [] } = useAdministrations();
   const { data: buildings = [] } = useBuildings();
+  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId);
 
   const { data: rows = [], isFetching, isError } = useKeysInventory({
     administrationId: cascadeValue.administrationId,
@@ -54,8 +93,11 @@ export default function InventarioPage() {
     parentId: b.administration_id,
   }));
 
-  // Equipment is sourced from the inventory rows themselves (no extra query needed)
-  const equipmentOptions: CascadeOption[] = [];
+  const equipmentOptions: CascadeOption[] = equipmentByBuilding.map((e) => ({
+    id: e.id,
+    label: e.model ? `${e.model} · ${e.serial_number}` : e.serial_number,
+    parentId: e.building_id,
+  }));
 
   if (isError) {
     return (

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PencilLine, RefreshCw } from 'lucide-react';
 import { StatusBadge, type StatusTone } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
@@ -29,6 +30,7 @@ export function EquipmentTable({
   equipment,
   isFetching = false,
 }: EquipmentTableProps) {
+  const navigate = useNavigate();
   const [editingEquipment, setEditingEquipment] = useState<EquipmentRow | null>(null);
   const [replacingEquipment, setReplacingEquipment] = useState<EquipmentRow | null>(null);
 
@@ -53,6 +55,8 @@ export function EquipmentTable({
         isFetching={isFetching}
         rowKey={(i) => i.id}
         emptyMessage="No hay equipos registrados."
+        firstCell="button"
+        onFirstCellClick={(i) => navigate(`/equipos/${i.id}`)}
         actions={actions}
         columns={[
           { header: 'Modelo', cell: (i) => i.model ?? '—' },

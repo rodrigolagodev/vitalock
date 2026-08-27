@@ -2,10 +2,10 @@ import { DataTable, StatusBadge, type StatusTone } from '@vitalock/ui';
 import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 
 const TICKET_STATUS_LABELS: Record<string, string> = {
-  open: 'Abierto',
-  in_progress: 'En proceso',
-  resolved: 'Resuelto',
-  cancelled: 'Cancelado',
+  open: 'Pendiente',
+  in_progress: 'En curso',
+  resolved: 'Finalizada',
+  cancelled: 'Cancelada',
 };
 
 const TICKET_STATUS_TONES: Record<string, StatusTone> = {

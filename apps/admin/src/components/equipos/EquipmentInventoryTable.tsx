@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { DataTable } from '@vitalock/ui';
 import type { EquipmentInventoryRow } from '@/hooks/useEquipmentInventory';
 
@@ -18,7 +17,7 @@ export function EquipmentInventoryTable({
   rows,
   isFetching = false,
 }: EquipmentInventoryTableProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   return (
     <DataTable<EquipmentInventoryRow>
@@ -26,6 +25,10 @@ export function EquipmentInventoryTable({
       isFetching={isFetching}
       rowKey={(r) => r.id ?? ''}
       emptyMessage="No hay equipos registrados en el inventario."
+      firstCell="button"
+      onFirstCellClick={(r) => {
+        if (r.id) navigate(`/equipos/${r.id}`);
+      }}
       columns={[
         {
           header: 'Número de serie',
@@ -51,43 +54,7 @@ export function EquipmentInventoryTable({
         },
         {
           header: 'Llaves',
-          cell: (r) => {
-            const count = r.key_count ?? 0;
-            const labels = r.key_labels ?? [];
-            const id = r.id ?? '';
-            const isExpanded = expandedId === id;
-
-            if (count === 0) {
-              return <span>{count}</span>;
-            }
-
-            return (
-              <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  aria-label={`Ver llaves de ${r.serial_number ?? id}`}
-                  className="flex items-center gap-1 text-sm text-left hover:underline"
-                  onClick={() => setExpandedId(isExpanded ? null : id)}
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="h-3 w-3" />
-                  ) : (
-                    <ChevronRight className="h-3 w-3" />
-                  )}
-                  {count}
-                </button>
-                {isExpanded && (
-                  <ul className="ml-4 flex flex-col gap-0.5">
-                    {labels.map((label) => (
-                      <li key={label} className="font-mono text-xs text-muted-foreground">
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          },
+          cell: (r) => r.key_count ?? 0,
         },
       ]}
     />

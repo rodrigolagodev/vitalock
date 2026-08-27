@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { DataTable } from '@vitalock/ui';
 import type { KeysInventoryRow } from '@/hooks/useKeysInventory';
 
@@ -7,12 +8,18 @@ interface KeysInventoryTableProps {
 }
 
 export function KeysInventoryTable({ rows, isFetching = false }: KeysInventoryTableProps) {
+  const navigate = useNavigate();
+
   return (
     <DataTable<KeysInventoryRow>
       rows={rows}
       isFetching={isFetching}
       rowKey={(r) => r.id ?? ''}
       emptyMessage="No hay llaves registradas en el inventario."
+      firstCell="button"
+      onFirstCellClick={(r) => {
+        if (r.id) navigate(`/llaves/inventario/${r.id}`);
+      }}
       columns={[
         {
           header: 'RFID',

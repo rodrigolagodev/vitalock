@@ -6,15 +6,24 @@ import React from 'react';
 import type { KeysInventoryRow } from '@/hooks/useKeysInventory';
 
 // Hoisted mocks
-const { useKeysInventoryMock, useAdministrationsMock, useBuildingsMock } = vi.hoisted(() => ({
+const {
+  useKeysInventoryMock,
+  useAdministrationsMock,
+  useBuildingsMock,
+  useEquipmentByBuildingMock,
+} = vi.hoisted(() => ({
   useKeysInventoryMock: vi.fn(),
   useAdministrationsMock: vi.fn(),
   useBuildingsMock: vi.fn(),
+  useEquipmentByBuildingMock: vi.fn(),
 }));
 
 vi.mock('@/hooks/useKeysInventory', () => ({ useKeysInventory: useKeysInventoryMock }));
 vi.mock('@/hooks/useAdministrations', () => ({ useAdministrations: useAdministrationsMock }));
 vi.mock('@/hooks/useBuildings', () => ({ useBuildings: useBuildingsMock }));
+vi.mock('@/hooks/useEquipmentByBuilding', () => ({
+  useEquipmentByBuilding: useEquipmentByBuildingMock,
+}));
 
 import InventarioPage from '../InventarioPage';
 
@@ -60,6 +69,7 @@ beforeEach(() => {
   useKeysInventoryMock.mockReturnValue({ data: [], isFetching: false, isError: false });
   useAdministrationsMock.mockReturnValue({ data: [], isFetching: false });
   useBuildingsMock.mockReturnValue({ data: [], isFetching: false });
+  useEquipmentByBuildingMock.mockReturnValue({ data: [], isFetching: false });
 });
 
 describe('InventarioPage rendering', () => {

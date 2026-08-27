@@ -97,10 +97,8 @@ describe('TareasTable', () => {
     expect(screen.getByText('Admin García S.A.')).toBeInTheDocument();
     expect(screen.getByText('Ana Gómez')).toBeInTheDocument();
     expect(screen.getByText('Configuración de llave')).toBeInTheDocument();
-    // The "Abierta" column header and the status badge share the same label,
-    // so assert the badges through the row cells.
     const cells = screen.getAllByRole('cell').map((cell) => cell.textContent);
-    expect(cells).toContain('Abierta');
+    expect(cells).toContain('Pendiente');
     expect(cells).toContain('Cancelada');
   });
 

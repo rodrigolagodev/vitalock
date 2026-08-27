@@ -22,14 +22,12 @@ const statusOrder: Record<AssignedTicket['status'], number> = {
 
 /**
  * Ticket categories excluded from the installer's batch-resolve toolbar.
- * - equipment_installation / equipment_replacement: resolved by the admin only.
- * - equipment_update: resolved by the installer via dedicated EquipmentUpdateResolveCard.
+ * equipment_update has its own dedicated resolve card (EquipmentUpdateResolveCard).
+ * equipment_installation / equipment_replacement participate in the batch
+ * resolve once the installer has configured pending_new_serial; TicketCard
+ * disables the checkbox until then.
  */
-const EXCLUDED_FOR_BATCH: readonly string[] = [
-  'equipment_installation',
-  'equipment_replacement',
-  'equipment_update',
-];
+const EXCLUDED_FOR_BATCH: readonly string[] = ['equipment_update'];
 
 /** Categories the installer resolves individually (not admin-only). */
 const INSTALLER_RESOLVE_CATEGORIES: readonly string[] = ['equipment_update'];
@@ -49,7 +47,8 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
     [tickets],
   );
 
-  // Tickets the installer can batch-resolve (stock-neutral categories).
+  // Tickets the installer can batch-resolve (stock-neutral categories +
+  // configured equipment tickets).
   const selectable = useMemo(
     () => sorted.filter((t) => !EXCLUDED_FOR_BATCH.includes(t.category)),
     [sorted],
@@ -61,22 +60,9 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
     [sorted],
   );
 
-  // Tickets that only the admin can complete (equipment_installation / equipment_replacement).
-  const pendingAdmin = useMemo(
-    () =>
-      sorted.filter(
-        (t) =>
-          EXCLUDED_FOR_BATCH.includes(t.category) &&
-          !INSTALLER_RESOLVE_CATEGORIES.includes(t.category),
-      ),
-    [sorted],
-  );
-
   if (tickets.length === 0) return null;
 
   const handleToggle = (id: string) => {
-    // Only selectable tickets can be toggled; pendingAdmin and installerResolve
-    // tickets are never included in selectedIds.
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -116,24 +102,6 @@ export function TicketsSection({ tickets }: TicketsSectionProps) {
                 ticket={ticket}
               />
             ))}
-
-            {pendingAdmin.length > 0 && (
-              <div className="flex flex-col gap-2 mt-1">
-                {pendingAdmin.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate">{ticket.title}</span>
-                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                        Pendiente de admin
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </CollapsibleContent>
       </Collapsible>

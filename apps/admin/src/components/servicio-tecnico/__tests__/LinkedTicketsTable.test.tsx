@@ -82,7 +82,7 @@ describe('LinkedTicketsTable — status badge', () => {
       <LinkedTicketsTable tickets={[makeTicket({ status: 'open' })]} isLoading={false} />,
       { wrapper: makeWrapper() },
     );
-    expect(screen.getByText(/abierto/i)).toBeInTheDocument();
+    expect(screen.getByText(/pendiente/i)).toBeInTheDocument();
   });
 
   it('shows resolved status badge', () => {
@@ -93,7 +93,7 @@ describe('LinkedTicketsTable — status badge', () => {
       />,
       { wrapper: makeWrapper() },
     );
-    expect(screen.getByText(/resuelto/i)).toBeInTheDocument();
+    expect(screen.getByText(/finalizada/i)).toBeInTheDocument();
   });
 });
 

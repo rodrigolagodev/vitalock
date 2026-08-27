@@ -21,7 +21,7 @@ const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
   { value: 'draft', label: 'Borrador' },
   { value: 'confirmed', label: 'Confirmada' },
   { value: 'in_progress', label: 'En proceso' },
-  { value: 'completed', label: 'Completado' },
+  { value: 'completed', label: 'Lista para facturar' },
   { value: 'invoiced', label: 'Facturado' },
   { value: 'cancelled', label: 'Cancelado' },
 ];
@@ -88,7 +88,7 @@ export default function TechnicalOrdersPage() {
           icon={<Clock />}
         />
         <StatCard
-          label="Completadas"
+          label="Listas para facturar"
           value={String(
             orders.filter((o) => o.status === 'completed').length,
           )}

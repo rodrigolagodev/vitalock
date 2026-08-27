@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 
 import { KeysInventoryTable } from '../KeysInventoryTable';
@@ -23,47 +24,50 @@ const makeRow = (overrides: Partial<KeysInventoryRow> = {}): KeysInventoryRow =>
   ...overrides,
 });
 
+function renderWithRouter(ui: React.ReactElement) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
+
 describe('KeysInventoryTable', () => {
   it('renders empty state when rows is empty', () => {
-    render(<KeysInventoryTable rows={[]} isFetching={false} />);
+    renderWithRouter(<KeysInventoryTable rows={[]} isFetching={false} />);
     expect(screen.getByText(/no hay llaves/i)).toBeInTheDocument();
   });
 
   it('renders the rfid_code of each row', () => {
     const rows = [makeRow({ rfid_code: 'RFID-001' }), makeRow({ id: 'key-2', rfid_code: 'RFID-002' })];
-    render(<KeysInventoryTable rows={rows} isFetching={false} />);
+    renderWithRouter(<KeysInventoryTable rows={rows} isFetching={false} />);
     expect(screen.getByText('RFID-001')).toBeInTheDocument();
     expect(screen.getByText('RFID-002')).toBeInTheDocument();
   });
 
   it('renders the building_name', () => {
-    render(<KeysInventoryTable rows={[makeRow({ building_name: 'Torre Norte' })]} isFetching={false} />);
+    renderWithRouter(<KeysInventoryTable rows={[makeRow({ building_name: 'Torre Norte' })]} isFetching={false} />);
     expect(screen.getByText('Torre Norte')).toBeInTheDocument();
   });
 
   it('renders the administration_company_name', () => {
-    render(<KeysInventoryTable rows={[makeRow({ administration_company_name: 'Garcia S.A.' })]} isFetching={false} />);
+    renderWithRouter(<KeysInventoryTable rows={[makeRow({ administration_company_name: 'Garcia S.A.' })]} isFetching={false} />);
     expect(screen.getByText('Garcia S.A.')).toBeInTheDocument();
   });
 
   it('renders the unit_number', () => {
-    render(<KeysInventoryTable rows={[makeRow({ unit_number: '3B' })]} isFetching={false} />);
+    renderWithRouter(<KeysInventoryTable rows={[makeRow({ unit_number: '3B' })]} isFetching={false} />);
     expect(screen.getByText('3B')).toBeInTheDocument();
   });
 
   it('renders "—" when equipment_serial_number is null', () => {
-    render(<KeysInventoryTable rows={[makeRow({ equipment_serial_number: null })]} isFetching={false} />);
-    // At least one em-dash displayed
+    renderWithRouter(<KeysInventoryTable rows={[makeRow({ equipment_serial_number: null })]} isFetching={false} />);
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 
   it('renders equipment_serial_number when present', () => {
-    render(<KeysInventoryTable rows={[makeRow({ equipment_serial_number: 'SN-999' })]} isFetching={false} />);
+    renderWithRouter(<KeysInventoryTable rows={[makeRow({ equipment_serial_number: 'SN-999' })]} isFetching={false} />);
     expect(screen.getByText('SN-999')).toBeInTheDocument();
   });
 
   it('renders active_order_status when active_order_id is present', () => {
-    render(
+    renderWithRouter(
       <KeysInventoryTable
         rows={[makeRow({ active_order_id: 'ord-1', active_order_status: 'confirmed' })]}
         isFetching={false}
@@ -73,7 +77,7 @@ describe('KeysInventoryTable', () => {
   });
 
   it('renders "Sin orden" when active_order_id is null', () => {
-    render(<KeysInventoryTable rows={[makeRow({ active_order_id: null })]} isFetching={false} />);
+    renderWithRouter(<KeysInventoryTable rows={[makeRow({ active_order_id: null })]} isFetching={false} />);
     expect(screen.getByText('Sin orden')).toBeInTheDocument();
   });
 });

@@ -5,7 +5,16 @@ import { useTarea } from '@/hooks/useTarea';
 import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
 import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
 import { AssignEquipmentDialog } from '@/components/tareas/AssignEquipmentDialog';
+import { ConfigureEquipmentPanel } from '@/components/tareas/ConfigureEquipmentPanel';
 import type { TareaRow } from '@/hooks/useTareas';
+
+// Categories that use the two-step configure + finalize flow. AssignEquipmentDialog
+// is bypassed for these; ConfigureEquipmentPanel captures the serial and
+// resolve_ticket handles the finalize.
+const CATEGORIES_TWO_STEP_CONFIGURE = new Set<TareaRow['category']>([
+  'equipment_installation',
+  'equipment_replacement',
+]);
 
 const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string> = {
   maintenance: 'Mantenimiento',
@@ -153,18 +162,23 @@ export default function TareaDetailPage() {
       {CATEGORIES_REQUIRING_EQUIPMENT.has(tarea.category) && (
         <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Equipo</h2>
-            {tarea.building_id && tarea.status !== 'resolved' && tarea.status !== 'cancelled' && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAssignOpen(true)}
-              >
-                {tarea.equipment
-                  ? 'Cambiar asignación'
-                  : ASSIGN_BUTTON_LABEL[tarea.category]}
-              </Button>
-            )}
+            <h2 className="text-lg font-semibold">
+              {tarea.category === 'equipment_replacement' ? 'Equipo actual' : 'Equipo'}
+            </h2>
+            {tarea.building_id &&
+              tarea.status !== 'resolved' &&
+              tarea.status !== 'cancelled' &&
+              !CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAssignOpen(true)}
+                >
+                  {tarea.equipment
+                    ? 'Cambiar asignación'
+                    : ASSIGN_BUTTON_LABEL[tarea.category]}
+                </Button>
+              )}
           </div>
 
           {tarea.equipment ? (
@@ -182,11 +196,19 @@ export default function TareaDetailPage() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.
+              {tarea.category === 'equipment_installation'
+                ? 'Todavía no hay equipo instalado. Cargá abajo el serie del equipo que se va a instalar.'
+                : 'Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.'}
             </p>
           )}
         </div>
       )}
+
+      {CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) &&
+        tarea.status !== 'resolved' &&
+        tarea.status !== 'cancelled' && (
+          <ConfigureEquipmentPanel tarea={tarea} />
+        )}
 
       <TareaFormSheet
         open={editOpen}
@@ -194,7 +216,7 @@ export default function TareaDetailPage() {
         tarea={tarea}
       />
 
-      {tarea.building_id && (
+      {tarea.building_id && !CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) && (
         <AssignEquipmentDialog
           open={assignOpen}
           onOpenChange={setAssignOpen}

@@ -6,7 +6,7 @@ const STATUS_LABELS: Record<TechnicalOrderStatus, string> = {
   draft: 'Borrador',
   confirmed: 'Confirmada',
   in_progress: 'En proceso',
-  completed: 'Completado',
+  completed: 'Lista para facturar',
   invoiced: 'Facturado',
   cancelled: 'Cancelado',
 };

@@ -79,3 +79,27 @@ export async function resolveTicket(
   if (error) throw error;
   return data as string;
 }
+
+export interface ConfigureTechnicalTicketEquipmentInput {
+  ticketId: string;
+  newSerial: string;
+  newModel?: string | null;
+}
+
+/**
+ * Step 1 of the two-step equipment task flow. Persists the operator-supplied
+ * serial (and optional model) on the ticket and transitions it to in_progress.
+ * The physical side effects (create/replace equipment, key transfer, stock
+ * movements) run at finalize time via resolveTicket.
+ */
+export async function configureTechnicalTicketEquipment(
+  client: TypedSupabaseClient,
+  input: ConfigureTechnicalTicketEquipmentInput,
+): Promise<void> {
+  const { error } = await client.rpc('configure_technical_ticket_equipment', {
+    p_ticket_id: input.ticketId,
+    p_new_serial: input.newSerial,
+    p_new_model: (input.newModel ?? null) as unknown as string,
+  });
+  if (error) throw error;
+}

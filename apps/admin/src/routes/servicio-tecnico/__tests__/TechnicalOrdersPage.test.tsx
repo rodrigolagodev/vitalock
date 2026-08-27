@@ -79,7 +79,7 @@ describe('TechnicalOrdersPage stat cards', () => {
     expect(within(cards).getByText('Total órdenes')).toBeInTheDocument();
     expect(within(cards).getByText('4')).toBeInTheDocument();
     expect(within(cards).getByText('Abiertas')).toBeInTheDocument();
-    expect(within(cards).getByText('Completadas')).toBeInTheDocument();
+    expect(within(cards).getByText('Listas para facturar')).toBeInTheDocument();
   });
 });
 

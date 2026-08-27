@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import type { ReactNode } from 'react';
 
@@ -19,10 +20,6 @@ vi.mock('@/hooks/useMutateKey', () => ({
 
 vi.mock('@vitalock/shared', () => ({
   useAuthContext: () => ({ staff: [] }),
-}));
-
-vi.mock('@/hooks/useKeyEvents', () => ({
-  useKeyEvents: () => ({ data: [], isLoading: false }),
 }));
 
 import { KeysTable } from '../KeysTable';
@@ -81,12 +78,28 @@ function makeKeys(count: number): KeyRow[] {
   }));
 }
 
-function makeWrapper() {
+function makeWrapper(initialEntries: string[] = ['/']) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
-    return React.createElement(QueryClientProvider, { client: queryClient }, children);
+    return React.createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      React.createElement(
+        MemoryRouter,
+        { initialEntries },
+        React.createElement(
+          Routes,
+          null,
+          React.createElement(Route, { path: '/', element: children }),
+          React.createElement(Route, {
+            path: '/llaves/inventario/:keyId',
+            element: React.createElement('div', null, 'DETAIL_PAGE'),
+          }),
+        ),
+      ),
+    );
   };
 }
 
@@ -111,13 +124,13 @@ describe('KeysTable', () => {
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
-  it('opens the key detail dialog when the first-cell button is clicked', async () => {
+  it('navigates to the key detail page when the first-cell button is clicked', async () => {
     const user = userEvent.setup();
     render(<KeysTable buildingId="b-1" keys={[keyActiva]} />, { wrapper: makeWrapper() });
 
     await user.click(screen.getByRole('button', { name: 'K-0001' }));
 
-    expect(await screen.findByRole('heading', { name: 'K-0001' })).toBeInTheDocument();
+    expect(await screen.findByText('DETAIL_PAGE')).toBeInTheDocument();
   });
 
   it('labels the power action "Solicitar baja de" for active keys and opens the status dialog', async () => {

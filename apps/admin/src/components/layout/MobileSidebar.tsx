@@ -5,9 +5,9 @@ import { Button } from '@vitalock/ui';
 import { SidebarNav } from './Sidebar';
 
 /**
- * Mobile-only navigation: hamburger trigger + slide-over drawer. Meant to
- * be placed in the Topbar's `leading` slot; hidden on md+ where the desktop
- * `Sidebar` takes over.
+ * Mobile-only navigation: hamburger trigger + slide-over drawer anchored
+ * to the left, matching the desktop sidebar's spatial model. Hidden on md+
+ * where the desktop `Sidebar` takes over.
  */
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
@@ -38,7 +38,7 @@ export function MobileSidebar() {
             onClick={() => setOpen(false)}
           />
           <aside className="absolute inset-y-0 left-0 flex w-[280px] flex-col border-r bg-card shadow-xl">
-            <div className="flex items-center justify-end p-4">
+            <div className="flex shrink-0 items-center justify-end p-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -48,7 +48,9 @@ export function MobileSidebar() {
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <SidebarNav />
+            <div className="min-h-0 flex-1">
+              <SidebarNav showLogo={false} />
+            </div>
           </aside>
         </div>
       )}

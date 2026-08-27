@@ -237,6 +237,7 @@ export type Database = {
     Functions: {
       replace_equipment: {
         Args: {
+          p_activate_keys_directly?: boolean
           p_decommission_reason?: string
           p_new_access_type?: string
           p_new_description: string
@@ -1189,6 +1190,14 @@ export type Database = {
         }
         Returns: string
       }
+      configure_technical_ticket_equipment: {
+        Args: {
+          p_new_model?: string
+          p_new_serial: string
+          p_ticket_id: string
+        }
+        Returns: undefined
+      }
       confirm_key_order: { Args: { p_order_id: string }; Returns: undefined }
       confirm_technical_order: {
         Args: { p_order_id: string }
@@ -1295,7 +1304,7 @@ export type Database = {
         Args: {
           p_actor_staff_id?: string
           p_new_description?: string
-          p_new_model: string
+          p_new_model?: string
           p_new_serial: string
           p_note?: string
           p_old_equipment_id: string
@@ -2062,6 +2071,8 @@ export type Database = {
           notes: string | null
           opened_at: string
           opened_by_staff_id: string | null
+          pending_new_model: string | null
+          pending_new_serial: string | null
           related_bill_id: string | null
           related_key_request_id: string | null
           resolution_notes: string | null
@@ -2087,6 +2098,8 @@ export type Database = {
           notes?: string | null
           opened_at?: string
           opened_by_staff_id?: string | null
+          pending_new_model?: string | null
+          pending_new_serial?: string | null
           related_bill_id?: string | null
           related_key_request_id?: string | null
           resolution_notes?: string | null
@@ -2112,6 +2125,8 @@ export type Database = {
           notes?: string | null
           opened_at?: string
           opened_by_staff_id?: string | null
+          pending_new_model?: string | null
+          pending_new_serial?: string | null
           related_bill_id?: string | null
           related_key_request_id?: string | null
           resolution_notes?: string | null

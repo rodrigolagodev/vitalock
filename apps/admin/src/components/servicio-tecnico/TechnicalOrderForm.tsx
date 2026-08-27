@@ -114,24 +114,21 @@ const schema = baseSchema.superRefine((data, ctx) => {
         path: ['items', i, 'intended_equipment_id'],
       });
     }
-    // replacement equipment is required for equipment_replacement, and must differ from the target
-    if (item.item_type === 'equipment_replacement') {
-      if (!item.intended_replacement_equipment_id) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El equipo de reemplazo es obligatorio para este tipo de trabajo',
-          path: ['items', i, 'intended_replacement_equipment_id'],
-        });
-      } else if (
-        item.intended_equipment_id &&
-        item.intended_replacement_equipment_id === item.intended_equipment_id
-      ) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'El equipo de reemplazo no puede ser el mismo que el actual',
-          path: ['items', i, 'intended_replacement_equipment_id'],
-        });
-      }
+    // product_id (from stock) is required for equipment AND equipment_replacement.
+    // For replacement, this is the warehouse product picked at order time; the
+    // installer serializes it later when resolving the ticket.
+    if (
+      (item.item_type === 'equipment' || item.item_type === 'equipment_replacement') &&
+      !item.product_id
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          item.item_type === 'equipment_replacement'
+            ? 'Elegí un equipo del stock para el reemplazo'
+            : 'Elegí un equipo del stock',
+        path: ['items', i, 'product_id'],
+      });
     }
   });
 });
@@ -638,6 +635,7 @@ export function TechnicalOrderForm({
 // ---- TechnicalItemEquipmentField sub-component ----
 
 import type { Control, FieldErrors } from 'react-hook-form';
+import { useProducts } from '@/hooks/useProducts';
 
 interface TechnicalItemEquipmentFieldProps {
   index: number;
@@ -645,6 +643,10 @@ interface TechnicalItemEquipmentFieldProps {
   buildingId: string | null | undefined;
   control: Control<TechnicalOrderFormValues>;
   errors: FieldErrors<TechnicalOrderFormValues>;
+}
+
+function formatEquipmentLabel(model: string | null, serial: string): string {
+  return model ? `${model} · ${serial}` : serial;
 }
 
 function TechnicalItemEquipmentField({
@@ -655,98 +657,126 @@ function TechnicalItemEquipmentField({
   errors,
 }: TechnicalItemEquipmentFieldProps) {
   const { data: equipment = [] } = useEquipment(buildingId ?? '');
+  // Stock catalog of equipment products — the "warehouse" pool used for
+  // installations and replacements. The installer types the serial when
+  // resolving the ticket; here we only reserve a unit of the product.
+  const { data: stockProducts = [] } = useProducts({ category: 'equipment' });
 
   const isReplacement = itemType === 'equipment_replacement';
-  const isRequired = itemType === 'maintenance' || isReplacement;
+  const isInstallation = itemType === 'equipment';
+  const showTargetEquipment =
+    itemType === 'maintenance' || itemType === 'equipment_replacement';
+  const showStockProduct = isInstallation || isReplacement;
 
-  // installation and equipment types don't need equipment picker
-  if (itemType === 'equipment') {
+  // For 'installation' item_type there's neither a target equipment nor a
+  // stock product (it's an on-site service call). Nothing to render.
+  if (itemType === 'installation') {
     return null;
   }
 
-  const primaryLabel = isReplacement
+  const targetLabel = isReplacement
     ? 'Equipo actual (a reemplazar) *'
-    : isRequired
-      ? 'Equipo *'
-      : 'Equipo a instalar (opcional)';
+    : 'Equipo *';
+
+  const stockLabel = isReplacement
+    ? 'Equipo de reemplazo (del stock) *'
+    : 'Equipo a instalar (del stock) *';
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <Label htmlFor={`items.${index}.intended_equipment_id`}>
-          {primaryLabel}
-        </Label>
-        <Controller
-          control={control}
-          name={`items.${index}.intended_equipment_id`}
-          render={({ field: f }) => (
-            <Select
-              value={f.value ?? ''}
-              onValueChange={(v) => f.onChange(v || null)}
-              disabled={!buildingId}
-            >
-              <SelectTrigger id={`items.${index}.intended_equipment_id`}>
-                <SelectValue
-                  placeholder={
-                    buildingId
-                      ? 'Seleccioná un equipo'
-                      : 'Primero elegí un edificio'
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {equipment.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.model ?? e.serial_number}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {errors.items?.[index]?.intended_equipment_id && (
-          <p className="text-xs text-destructive">
-            {errors.items[index]?.intended_equipment_id?.message}
-          </p>
-        )}
-      </div>
-
-      {isReplacement && (
+      {showTargetEquipment && (
         <div className="flex flex-col gap-1">
-          <Label htmlFor={`items.${index}.intended_replacement_equipment_id`}>
-            Equipo de reemplazo (nuevo, desde depósito) *
+          <Label htmlFor={`items.${index}.intended_equipment_id`}>
+            {targetLabel}
           </Label>
           <Controller
             control={control}
-            name={`items.${index}.intended_replacement_equipment_id`}
+            name={`items.${index}.intended_equipment_id`}
             render={({ field: f }) => (
               <Select
                 value={f.value ?? ''}
                 onValueChange={(v) => f.onChange(v || null)}
                 disabled={!buildingId}
               >
-                <SelectTrigger id={`items.${index}.intended_replacement_equipment_id`}>
+                <SelectTrigger id={`items.${index}.intended_equipment_id`}>
                   <SelectValue
                     placeholder={
                       buildingId
-                        ? 'Seleccioná el equipo nuevo'
+                        ? 'Seleccioná un equipo'
                         : 'Primero elegí un edificio'
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {equipment.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.model ?? e.serial_number}
-                    </SelectItem>
-                  ))}
+                  {equipment.length === 0 ? (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      {buildingId
+                        ? 'No hay equipos instalados en este edificio.'
+                        : 'Primero elegí un edificio.'}
+                    </div>
+                  ) : (
+                    equipment.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {formatEquipmentLabel(e.model, e.serial_number)}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             )}
           />
-          {errors.items?.[index]?.intended_replacement_equipment_id && (
+          {errors.items?.[index]?.intended_equipment_id && (
             <p className="text-xs text-destructive">
-              {errors.items[index]?.intended_replacement_equipment_id?.message}
+              {errors.items[index]?.intended_equipment_id?.message}
+            </p>
+          )}
+        </div>
+      )}
+
+      {showStockProduct && (
+        <div className="flex flex-col gap-1">
+          <Label htmlFor={`items.${index}.product_id`}>{stockLabel}</Label>
+          <Controller
+            control={control}
+            name={`items.${index}.product_id`}
+            render={({ field: f }) => (
+              <Select
+                value={f.value ?? ''}
+                onValueChange={(v) => f.onChange(v || null)}
+              >
+                <SelectTrigger id={`items.${index}.product_id`}>
+                  <SelectValue placeholder="Seleccioná un modelo del stock" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stockProducts.length === 0 ? (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      No hay productos de tipo equipo cargados en el stock.
+                    </div>
+                  ) : (
+                    stockProducts.map((p) => {
+                      const outOfStock = p.stock_disponible <= 0;
+                      return (
+                        <SelectItem
+                          key={p.id}
+                          value={p.id}
+                          disabled={outOfStock}
+                        >
+                          {p.name} · {p.stock_disponible} disp.
+                        </SelectItem>
+                      );
+                    })
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          <p className="text-xs text-muted-foreground">
+            El número de serie del equipo lo carga el instalador al resolver la
+            tarea (o el admin desde el panel de tareas).
+          </p>
+          {errors.items?.[index]?.product_id && (
+            <p className="text-xs text-destructive">
+              {errors.items[index]?.product_id?.message}
             </p>
           )}
         </div>

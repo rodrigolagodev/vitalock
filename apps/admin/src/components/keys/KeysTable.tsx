@@ -1,10 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Power } from 'lucide-react';
 import { StatusBadge, type StatusTone } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
-import { KeyDetailDialog } from './KeyDetailDialog';
 import type { KeyRow } from '@/hooks/useKeys';
 
 interface KeysTableProps {
@@ -36,8 +36,8 @@ const STATUS_TONE: Record<KeyRow['status'], StatusTone> = {
 };
 
 export function KeysTable({ keys, buildingId, isFetching = false }: KeysTableProps) {
+  const navigate = useNavigate();
   const [changingStatusFor, setChangingStatusFor] = useState<KeyRow | null>(null);
-  const [detail, setDetail] = useState<KeyRow | null>(null);
 
   const actions: DataTableAction<KeyRow>[] = [
     {
@@ -60,7 +60,7 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
         isFetching={isFetching}
         rowKey={(k) => k.id}
         firstCell="button"
-        onFirstCellClick={setDetail}
+        onFirstCellClick={(k) => navigate(`/llaves/inventario/${k.id}`)}
         emptyMessage="No hay llaves registradas."
         actions={actions}
         columns={[
@@ -113,12 +113,6 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
         onOpenChange={(o) => !o && setChangingStatusFor(null)}
         buildingId={buildingId}
         keyRow={changingStatusFor}
-      />
-
-      <KeyDetailDialog
-        open={Boolean(detail)}
-        onOpenChange={(o) => !o && setDetail(null)}
-        keyRow={detail}
       />
     </>
   );

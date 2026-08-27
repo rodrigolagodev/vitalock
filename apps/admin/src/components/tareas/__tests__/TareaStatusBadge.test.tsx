@@ -3,9 +3,9 @@ import { render, screen } from '@testing-library/react';
 import { TareaStatusBadge } from '../TareaStatusBadge';
 
 describe('TareaStatusBadge', () => {
-  it('renders "Abierta" for open', () => {
+  it('renders "Pendiente" for open', () => {
     render(<TareaStatusBadge status="open" />);
-    expect(screen.getByText('Abierta')).toBeInTheDocument();
+    expect(screen.getByText('Pendiente')).toBeInTheDocument();
   });
 
   it('renders "En curso" for in_progress', () => {
@@ -13,9 +13,9 @@ describe('TareaStatusBadge', () => {
     expect(screen.getByText('En curso')).toBeInTheDocument();
   });
 
-  it('renders "Resuelta" for resolved', () => {
+  it('renders "Finalizada" for resolved', () => {
     render(<TareaStatusBadge status="resolved" />);
-    expect(screen.getByText('Resuelta')).toBeInTheDocument();
+    expect(screen.getByText('Finalizada')).toBeInTheDocument();
   });
 
   it('renders "Cancelada" for cancelled', () => {

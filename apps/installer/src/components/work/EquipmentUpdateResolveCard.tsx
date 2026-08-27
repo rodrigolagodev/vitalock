@@ -9,8 +9,8 @@ interface EquipmentUpdateResolveCardProps {
 }
 
 const statusLabel: Record<AssignedTicket['status'], string> = {
-  open: 'Abierto',
-  in_progress: 'En progreso',
+  open: 'Pendiente',
+  in_progress: 'En curso',
 };
 
 const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> = {

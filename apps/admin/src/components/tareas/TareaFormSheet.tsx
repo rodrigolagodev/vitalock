@@ -116,9 +116,9 @@ const CREATE_CATEGORY_LABELS: Partial<Record<TareaRow['category'], string>> = {
 };
 
 const STATUS_LABELS: Record<TareaRow['status'], string> = {
-  open: 'Abierta',
+  open: 'Pendiente',
   in_progress: 'En curso',
-  resolved: 'Resuelta',
+  resolved: 'Finalizada',
   cancelled: 'Cancelada',
 };
 

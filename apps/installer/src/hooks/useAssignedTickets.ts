@@ -32,6 +32,16 @@ export interface AssignedTicket {
   };
   /** Only present when category === 'equipment_update'. */
   equipmentUpdateSnapshot?: EquipmentUpdateSnapshot | null;
+  /**
+   * Two-step configure flow (equipment_installation, equipment_replacement).
+   * pending_new_serial null while the installer/admin has not loaded the
+   * serial yet; once set, the ticket is ready to be resolved via the standard
+   * "Finalizar tarea" flow.
+   */
+  pending_new_serial: string | null;
+  pending_new_model: string | null;
+  /** products.name of the linked technical_order_item — model placeholder. */
+  intended_product_name: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -51,7 +61,10 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       status,
       category,
       opened_at,
-      building_id
+      building_id,
+      pending_new_serial,
+      pending_new_model,
+      technical_order_item_id
     `)
     .eq('assigned_to_staff_id', staffId)
     .in('status', ['open', 'in_progress']);
@@ -65,6 +78,9 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     category: string;
     opened_at: string;
     building_id: string | null;
+    pending_new_serial: string | null;
+    pending_new_model: string | null;
+    technical_order_item_id: string | null;
   }[];
 
   // Batch lookup of building names + their administration.
@@ -130,6 +146,44 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     }
   }
 
+  // Batch-fetch product names for tickets that link to a technical_order_item —
+  // used as the model placeholder when the operator leaves it blank.
+  const toiIds = [
+    ...new Set(
+      rows
+        .map((r) => r.technical_order_item_id)
+        .filter((v): v is string => Boolean(v)),
+    ),
+  ];
+  const productNameByToiId = new Map<string, string>();
+  if (toiIds.length > 0) {
+    const { data: items } = await supabase
+      .from('technical_order_items')
+      .select('id, product_id')
+      .in('id', toiIds);
+    const productIds = [
+      ...new Set(
+        (items ?? [])
+          .map((i) => i.product_id)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ];
+    const productNameById = new Map<string, string>();
+    if (productIds.length > 0) {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name')
+        .in('id', productIds);
+      for (const p of products ?? []) productNameById.set(p.id, p.name);
+    }
+    for (const i of items ?? []) {
+      if (i.product_id) {
+        const name = productNameById.get(i.product_id);
+        if (name) productNameByToiId.set(i.id, name);
+      }
+    }
+  }
+
   return rows.map((r) => {
     const buildingInfo = r.building_id ? buildingMap.get(r.building_id) : undefined;
     const administration = buildingInfo?.administration_id
@@ -154,6 +208,11 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       equipmentUpdateSnapshot: r.category === 'equipment_update'
         ? (snapshotMap.get(r.id) ?? null)
         : undefined,
+      pending_new_serial: r.pending_new_serial,
+      pending_new_model: r.pending_new_model,
+      intended_product_name: r.technical_order_item_id
+        ? productNameByToiId.get(r.technical_order_item_id) ?? null
+        : null,
     };
   });
 }

@@ -1,0 +1,366 @@
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Badge, Button } from '@vitalock/ui';
+import { useKeyById, type KeyStatus } from '@/hooks/useKeyById';
+import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';
+
+const STATUS_LABEL: Record<KeyStatus, string> = {
+  pending_creation: 'En creación',
+  pending_installation: 'Pendiente de instalación',
+  active: 'Activa',
+  pending_disable: 'Baja solicitada',
+  disabled: 'Dada de baja',
+};
+
+const STATUS_VARIANT: Record<
+  KeyStatus,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  pending_creation: 'secondary',
+  pending_installation: 'outline',
+  active: 'default',
+  pending_disable: 'outline',
+  disabled: 'secondary',
+};
+
+const ORDER_STATUS_LABEL: Record<string, string> = {
+  draft: 'Borrador',
+  confirmed: 'Confirmada',
+  in_progress: 'En proceso',
+  pending_installation: 'Pendiente instalación',
+  ready_for_pickup: 'Listo para retirar',
+  completed: 'Completada',
+  invoiced: 'Facturada',
+  cancelled: 'Cancelada',
+};
+
+const ITEM_STATUS_LABEL: Record<string, string> = {
+  pending: 'Pendiente',
+  configured: 'Configurada',
+  installed: 'Instalada',
+  cancelled: 'Cancelada',
+};
+
+const EVENT_LABEL: Record<KeyEventRow['event_type'], string> = {
+  activated: 'Activada',
+  deactivated: 'Dada de baja',
+  creation_requested: 'Creación solicitada',
+  configured: 'Configurada',
+  disable_requested: 'Baja solicitada',
+  disable_cancelled: 'Baja cancelada',
+  disabled: 'Deshabilitada',
+  snapshot_skipped: 'Omitida en actualización',
+};
+
+const EVENT_DOT_CLASS: Record<KeyEventRow['event_type'], string> = {
+  activated: 'bg-primary',
+  deactivated: 'bg-muted-foreground',
+  creation_requested: 'bg-muted-foreground',
+  configured: 'bg-primary',
+  disable_requested: 'bg-yellow-500',
+  disable_cancelled: 'bg-primary',
+  disabled: 'bg-destructive',
+  snapshot_skipped: 'bg-muted-foreground',
+};
+
+function fmt(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d.getTime())
+    ? '—'
+    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-4 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right">{value}</span>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-3 rounded-lg border bg-card p-4">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+export default function KeyDetailPage() {
+  const { keyId } = useParams<{ keyId: string }>();
+  const { data: keyDetail, isLoading, isError } = useKeyById(keyId);
+  const { data: events = [], isLoading: eventsLoading } = useKeyEvents(keyId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isError || !keyDetail) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16">
+        <p className="text-sm text-destructive">
+          No se pudo cargar la información de la llave.
+        </p>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/llaves/inventario">Volver al inventario</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const pickedUpFullName = [
+    keyDetail.picked_up_by_name,
+    keyDetail.picked_up_by_surname,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const unitDescription = [
+    `Unidad ${keyDetail.unit.number}`,
+    keyDetail.unit.unit_type,
+    keyDetail.unit.is_administrative ? 'administrativa' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const isInformational =
+    keyDetail.status === 'pending_creation' ||
+    keyDetail.status === 'pending_installation';
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Breadcrumb + back */}
+      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <Link
+          to="/llaves/inventario"
+          className="inline-flex items-center gap-1 hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Inventario de llaves
+        </Link>
+      </div>
+
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-4">
+        <h1 className="font-mono text-3xl font-semibold">{keyDetail.rfid_code}</h1>
+        <Badge variant={STATUS_VARIANT[keyDetail.status]}>
+          {STATUS_LABEL[keyDetail.status]}
+        </Badge>
+      </div>
+
+      {/* Contextual notes */}
+      {isInformational && (
+        <p className="rounded bg-muted px-3 py-2 text-sm text-muted-foreground">
+          {keyDetail.status === 'pending_creation'
+            ? 'Esta llave está siendo configurada. Podrá instalarse una vez lista.'
+            : 'Esta llave está lista para instalarse en el equipo.'}
+        </p>
+      )}
+
+      {keyDetail.status === 'pending_disable' && (
+        <p className="rounded bg-yellow-50 px-3 py-2 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+          Se solicitó la baja de esta llave. Puede cancelarse antes de que el técnico resuelva la tarea.
+        </p>
+      )}
+
+      {/* 2-column grid on desktop, single column on mobile */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Section title="Ubicación">
+          <Row
+            label="Administración"
+            value={
+              keyDetail.unit.building?.administration ? (
+                <Link
+                  to={`/administraciones/${keyDetail.unit.building.administration.id}`}
+                  className="text-primary underline-offset-2 hover:underline"
+                >
+                  {keyDetail.unit.building.administration.company_name}
+                </Link>
+              ) : (
+                '—'
+              )
+            }
+          />
+          <Row
+            label="Edificio"
+            value={
+              keyDetail.unit.building ? (
+                <Link
+                  to={`/buildings/${keyDetail.unit.building.id}`}
+                  className="text-primary underline-offset-2 hover:underline"
+                >
+                  {keyDetail.unit.building.name}
+                </Link>
+              ) : (
+                '—'
+              )
+            }
+          />
+          <Row label="Unidad" value={unitDescription} />
+        </Section>
+
+        <Section title="Custodia">
+          <Row
+            label="Retirada por"
+            value={
+              pickedUpFullName || (
+                <span className="text-muted-foreground">Sin retirar</span>
+              )
+            }
+          />
+          <Row label="DNI" value={keyDetail.picked_up_by_dni ?? '—'} />
+          <Row label="Fecha de retiro" value={fmt(keyDetail.picked_up_at)} />
+          <Row
+            label="Entregada por"
+            value={
+              keyDetail.delivered_by?.full_name ?? (
+                <span className="text-muted-foreground">—</span>
+              )
+            }
+          />
+        </Section>
+
+        <Section title="Equipos autorizados">
+          {keyDetail.authorized_equipment.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Sin equipos autorizados.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {keyDetail.authorized_equipment.map((eq) => (
+                <li key={eq.authorization_id} className="text-sm">
+                  <Link
+                    to={`/equipos/${eq.equipment_id}`}
+                    className="text-primary underline-offset-2 hover:underline"
+                  >
+                    {eq.model ? `${eq.model} · ` : ''}
+                    <span className="font-mono">{eq.serial_number}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+
+        <Section title="Ciclo de vida">
+          <Row label="Creada" value={fmt(keyDetail.activated_at)} />
+          {keyDetail.deactivated_at && (
+            <Row label="Dada de baja" value={fmt(keyDetail.deactivated_at)} />
+          )}
+        </Section>
+      </div>
+
+      {/* Full width sections below */}
+      <Section title="Órdenes asociadas">
+        {keyDetail.associated_orders.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No hay órdenes vinculadas a esta llave.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {keyDetail.associated_orders.map((o) => (
+              <li
+                key={o.key_order_id}
+                className="flex flex-col gap-1 border-b border-border/60 pb-3 last:border-b-0 last:pb-0"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <Link
+                    to={`/llaves/${o.key_order_id}`}
+                    className="font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    {o.order_number}
+                  </Link>
+                  <span className="text-xs text-muted-foreground">
+                    {fmt(o.order_created_at)}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span>
+                    Orden: {ORDER_STATUS_LABEL[o.order_status] ?? o.order_status}
+                  </span>
+                  <span>·</span>
+                  <span>
+                    Ítem: {ITEM_STATUS_LABEL[o.item_status] ?? o.item_status}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      <Section title="Historial">
+        <div className="flex flex-col gap-3 text-sm">
+          <div className="flex gap-3">
+            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+            <div className="min-w-0 flex-1">
+              <div className="flex justify-between gap-2">
+                <span className="font-medium">Creada</span>
+                <span className="text-xs text-muted-foreground">
+                  {fmt(keyDetail.activated_at)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {eventsLoading && (
+            <p className="text-xs text-muted-foreground">Cargando eventos…</p>
+          )}
+
+          {!eventsLoading && events.length === 0 && (
+            <p className="pl-5 text-xs text-muted-foreground">
+              Sin cambios de estado registrados.
+            </p>
+          )}
+
+          {events.map((e) => (
+            <div key={e.id} className="flex gap-3">
+              <span
+                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${EVENT_DOT_CLASS[e.event_type]}`}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex justify-between gap-2">
+                  <span className="font-medium">
+                    {EVENT_LABEL[e.event_type]}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {fmt(e.occurred_at)}
+                  </span>
+                </div>
+                <p className="whitespace-pre-wrap text-xs text-muted-foreground">
+                  {e.note}
+                </p>
+                {e.actor_name && (
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Por {e.actor_name}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {keyDetail.notes && (
+        <Section title="Notas">
+          <p className="whitespace-pre-wrap text-sm">{keyDetail.notes}</p>
+        </Section>
+      )}
+    </div>
+  );
+}

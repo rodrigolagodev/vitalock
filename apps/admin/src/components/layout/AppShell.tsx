@@ -1,43 +1,35 @@
 import { Outlet } from 'react-router-dom';
-import { Button, Topbar } from '@vitalock/ui';
-import { useAuthContext } from '@vitalock/shared';
 import { Sidebar } from './Sidebar';
 import { MobileSidebar } from './MobileSidebar';
-import { ThemeToggle } from './ThemeToggle';
 
 export function AppShell() {
-  const { staff, signOut } = useAuthContext();
-
-  const initials = staff?.full_name
-    ? staff.full_name
-        .split(/\s+/)
-        .map((part) => part[0])
-        .filter(Boolean)
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
-    : '';
-
   return (
     <div className="flex h-screen flex-col">
-      {/* Body: fixed sidebar + content column with its own topbar */}
+      {/* Mobile-only topbar: hamburger on the left (matches the desktop
+          sidebar's spatial model) followed by the brand. Hidden on md+
+          where the desktop sidebar carries brand + nav + user menu. */}
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-card px-2 md:hidden">
+        <MobileSidebar />
+        <div className="flex items-center gap-2.5">
+          <img
+            src={`${import.meta.env.BASE_URL}Vitalock_logo_vector_black.svg`}
+            alt="Vitalock"
+            className="block h-7 w-auto dark:hidden"
+          />
+          <img
+            src={`${import.meta.env.BASE_URL}Vitalock_logo_vector_white.svg`}
+            alt=""
+            aria-hidden="true"
+            className="hidden h-7 w-auto dark:block"
+          />
+        </div>
+      </header>
+
       <div className="flex w-full min-h-0 flex-1">
         <Sidebar />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {/* Topbar: leading slot carries the mobile hamburger; right slot carries theme + sign-out */}
-          <Topbar leading={<MobileSidebar />} avatar={initials}>
-            <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={() => void signOut()}>
-              Salir
-            </Button>
-          </Topbar>
-
-          {/* Content surface. min-w-0 lets wide children (tables, code) scroll
-              inside their own container instead of stretching the whole page. */}
-          <main className="min-w-0 flex-1 bg-content p-6">
-            <Outlet />
-          </main>
-        </div>
+        <main className="min-w-0 flex-1 overflow-auto bg-content p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

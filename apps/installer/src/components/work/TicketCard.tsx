@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@vitalock/ui';
 import { Checkbox } from '@vitalock/ui';
@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTicketComments } from '@/hooks/useTicketComments';
 import { TicketCommentsList } from './TicketCommentsList';
 import { AddCommentForm } from './AddCommentForm';
+import { ConfigureEquipmentInline } from './ConfigureEquipmentInline';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
 
 interface TicketCardProps {
@@ -15,8 +16,8 @@ interface TicketCardProps {
 }
 
 const statusLabel: Record<AssignedTicket['status'], string> = {
-  open: 'Abierto',
-  in_progress: 'En progreso',
+  open: 'Pendiente',
+  in_progress: 'En curso',
 };
 
 const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> = {
@@ -24,9 +25,26 @@ const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> =
   in_progress: 'secondary',
 };
 
+const TWO_STEP_CATEGORIES: readonly string[] = [
+  'equipment_installation',
+  'equipment_replacement',
+];
+
 export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {
-  const [expanded, setExpanded] = useState(false);
+  const isTwoStep = TWO_STEP_CATEGORIES.includes(ticket.category);
+  const needsConfigure = isTwoStep && !ticket.pending_new_serial;
+  // Auto-expand two-step tickets so the installer sees the configure form
+  // without an extra tap the first time the card renders.
+  const [expanded, setExpanded] = useState(needsConfigure);
   const { data: comments = [] } = useTicketComments(expanded ? ticket.id : '');
+
+  // When a ticket flips from needing configure to configured (or back),
+  // keep the card open so the operator can see the state change reflected.
+  useEffect(() => {
+    if (needsConfigure) setExpanded(true);
+  }, [needsConfigure]);
+
+  const checkboxDisabled = needsConfigure;
 
   return (
     <>
@@ -35,7 +53,15 @@ export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {
           <Checkbox
             id={`ticket-${ticket.id}`}
             checked={selected}
-            onCheckedChange={() => onToggle(ticket.id)}
+            disabled={checkboxDisabled}
+            aria-label={
+              checkboxDisabled
+                ? 'Cargá el equipo antes de finalizar la tarea'
+                : undefined
+            }
+            onCheckedChange={() => {
+              if (!checkboxDisabled) onToggle(ticket.id);
+            }}
           />
           <button
             type="button"
@@ -62,6 +88,7 @@ export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {
             {ticket.description && (
               <p className="text-sm text-muted-foreground">{ticket.description}</p>
             )}
+            {isTwoStep && <ConfigureEquipmentInline ticket={ticket} />}
             <TicketCommentsList comments={comments} />
             <AddCommentForm ticketId={ticket.id} />
           </div>

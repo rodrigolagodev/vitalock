@@ -1,13 +1,26 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { ThemeProvider } from 'next-themes';
 import { Sidebar } from '../Sidebar';
+
+const { useAuthContextMock } = vi.hoisted(() => ({
+  useAuthContextMock: vi.fn(() => ({
+    staff: { full_name: 'Ana Alvarez' },
+    session: { user: { email: 'ana@vitalock.com' } },
+    signOut: vi.fn(),
+  })),
+}));
+
+vi.mock('@vitalock/shared', () => ({ useAuthContext: useAuthContextMock }));
 
 function renderSidebar() {
   return render(
-    <MemoryRouter initialEntries={['/ordenes']}>
-      <Sidebar />
-    </MemoryRouter>,
+    <ThemeProvider attribute="class">
+      <MemoryRouter initialEntries={['/ordenes']}>
+        <Sidebar />
+      </MemoryRouter>
+    </ThemeProvider>,
   );
 }
 

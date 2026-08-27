@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { DataTable, StatusBadge, type StatusTone } from '@vitalock/ui';
 import { useEquipmentByIds } from '@/hooks/useEquipmentByIds';
 import { useStaffByIds } from '@/hooks/useStaffByIds';
+import { useProductsByIds } from '@/hooks/useProductsByIds';
 import type { TechnicalOrderItemRow } from '@/hooks/useTechnicalOrder';
 
 // Technical order item status: 4-state domain (no 'configured', no 'ready_for_pickup').
@@ -54,8 +55,16 @@ export function TechnicalOrderItemsTable({
         .filter((id): id is string => Boolean(id)),
     [items],
   );
+  const productIds = useMemo(
+    () =>
+      items
+        .map((it) => it.product_id)
+        .filter((id): id is string => Boolean(id)),
+    [items],
+  );
   const { data: equipmentMap } = useEquipmentByIds(equipmentIds);
   const { data: staffMap } = useStaffByIds(staffIds);
+  const { data: productMap } = useProductsByIds(productIds);
 
   return (
     <DataTable<TechnicalOrderItemRow>
@@ -87,17 +96,22 @@ export function TechnicalOrderItemsTable({
               ? equipmentMap?.get(item.intended_equipment_id)?.serial_number ??
                 item.intended_equipment_id
               : '—';
-            if (item.item_type !== 'equipment_replacement') return current;
-            const replacement = item.intended_replacement_equipment_id
-              ? equipmentMap?.get(item.intended_replacement_equipment_id)?.serial_number ??
-                item.intended_replacement_equipment_id
-              : '—';
-            return (
-              <div className="flex flex-col">
-                <span>Actual: {current}</span>
-                <span>Reemplazo: {replacement}</span>
-              </div>
-            );
+            const productName = item.product_id
+              ? productMap?.get(item.product_id)?.name ?? item.product_id
+              : null;
+
+            if (item.item_type === 'equipment_replacement') {
+              return (
+                <div className="flex flex-col">
+                  <span>Actual: {current}</span>
+                  <span>Reemplazo (stock): {productName ?? '—'}</span>
+                </div>
+              );
+            }
+            if (item.item_type === 'equipment') {
+              return productName ?? '—';
+            }
+            return current;
           },
           className: 'text-muted-foreground text-xs',
           hideBelow: 'lg',

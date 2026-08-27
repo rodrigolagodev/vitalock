@@ -13,9 +13,9 @@ interface EquipmentUpdateTaskDetailProps {
 }
 
 const TICKET_STATUS_LABEL: Record<EquipmentUpdateRow['ticket_status'], string> = {
-  open: 'Abierta',
+  open: 'Pendiente',
   in_progress: 'En curso',
-  resolved: 'Resuelta',
+  resolved: 'Finalizada',
   cancelled: 'Cancelada',
 };
 

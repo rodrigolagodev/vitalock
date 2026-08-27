@@ -22,9 +22,9 @@ type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved' | 'cancelled';
 
 const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'Todos' },
-  { value: 'open', label: 'Abiertas' },
+  { value: 'open', label: 'Pendientes' },
   { value: 'in_progress', label: 'En curso' },
-  { value: 'resolved', label: 'Resueltas' },
+  { value: 'resolved', label: 'Finalizadas' },
   { value: 'cancelled', label: 'Canceladas' },
 ];
 

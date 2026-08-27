@@ -100,6 +100,9 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
       keys_to_activate: ['key-uuid-activate-001'],
       keys_to_disable: ['key-uuid-disable-001'],
     },
+    pending_new_serial: null,
+    pending_new_model: null,
+    intended_product_name: null,
     ...overrides,
   };
 }
