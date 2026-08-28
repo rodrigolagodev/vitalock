@@ -393,7 +393,11 @@ export default function EquipoDetailPage() {
 
       {equipment.status === 'active' && (
         <Section title="Llaves pendientes de actualización">
-          <EquipmentKeySnapshotPanel equipmentId={equipment.id} />
+          <EquipmentKeySnapshotPanel
+            equipmentId={equipment.id}
+            buildingId={equipment.building?.id}
+            administrationId={equipment.building?.administration?.id}
+          />
         </Section>
       )}
 
