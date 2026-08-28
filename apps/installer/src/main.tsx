@@ -12,6 +12,7 @@ addLogSink(consoleSink);
 import App from './App';
 import DashboardPage from './routes/DashboardPage';
 import TareasPage from './routes/TareasPage';
+import TaskDetailPage from './routes/TaskDetailPage';
 import HistorialPage from './routes/HistorialPage';
 import LoginPage from './routes/LoginPage';
 import './styles/globals.css';
@@ -37,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route element={<App />}>
                   <Route index element={<DashboardPage />} />
                   <Route path="tareas" element={<TareasPage />} />
+                  <Route path="tareas/:id" element={<TaskDetailPage />} />
                   <Route path="historial" element={<HistorialPage />} />
                 </Route>
               </Route>

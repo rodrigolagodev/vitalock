@@ -1,73 +1,67 @@
 import { useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
-import { useWorklist } from '@/hooks/useWorklist';
+import { Link } from 'react-router-dom';
+import { ChevronRight, Loader2 } from 'lucide-react';
+import { Badge } from '@vitalock/ui';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
-import type { WorklistAuthorization } from '@/hooks/useWorklist';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConnectivityBanner } from '@/components/common/ConnectivityBanner';
-import { BuildingWorkCard } from '@/components/work/BuildingWorkCard';
 
-interface Building {
-  building: { id: string; name: string };
-  administration: { id: string; company_name: string };
-  authorizations: WorklistAuthorization[];
-  tickets: AssignedTicket[];
-}
+const statusOrder: Record<AssignedTicket['status'], number> = {
+  in_progress: 0,
+  open: 1,
+};
 
-/**
- * Merge worklist authorizations + assigned tickets into Building[] via useMemo.
- * No DB round-trip; purely client-side grouping. Satisfies installer-home R5.
- */
-function mergeIntoBuildings(
-  authorizations: WorklistAuthorization[],
-  tickets: AssignedTicket[],
-): Building[] {
-  const map = new Map<string, Building>();
+const statusLabel: Record<AssignedTicket['status'], string> = {
+  open: 'Pendiente',
+  in_progress: 'En curso',
+};
 
-  for (const auth of authorizations) {
-    const bid = auth.equipment.building.id;
-    if (!map.has(bid)) {
-      map.set(bid, {
-        building: {
-          id: auth.equipment.building.id,
-          name: auth.equipment.building.name,
-        },
-        administration: auth.equipment.building.administration,
-        authorizations: [],
-        tickets: [],
-      });
-    }
-    map.get(bid)!.authorizations.push(auth);
-  }
+const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> = {
+  open: 'default',
+  in_progress: 'secondary',
+};
 
-  for (const ticket of tickets) {
-    const bid = ticket.building.id;
-    if (!map.has(bid)) {
-      map.set(bid, {
-        building: { id: ticket.building.id, name: ticket.building.name },
-        administration: ticket.building.administration,
-        authorizations: [],
-        tickets: [],
-      });
-    }
-    map.get(bid)!.tickets.push(ticket);
-  }
+function TaskRow({ ticket }: { ticket: AssignedTicket }) {
+  const snapshot = ticket.equipmentUpdateSnapshot;
+  const hasKeys = !!snapshot && (snapshot.keys_to_activate.length + snapshot.keys_to_disable.length) > 0;
 
-  return [...map.values()].sort((a, b) =>
-    a.building.name.localeCompare(b.building.name, 'es'),
+  return (
+    <li>
+      <Link
+        to={`/tareas/${ticket.id}`}
+        className="flex items-center gap-2 rounded-md border bg-card px-3 py-2.5 transition-colors hover:bg-muted/50"
+      >
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-sm font-medium">{ticket.title}</span>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+            {ticket.building.name && <span className="truncate">{ticket.building.name}</span>}
+            {hasKeys && (
+              <span className="shrink-0 text-muted-foreground">
+                {snapshot!.keys_to_activate.length} alta
+                {' / '}
+                {snapshot!.keys_to_disable.length} baja
+              </span>
+            )}
+          </span>
+        </div>
+        <Badge variant={statusVariant[ticket.status]} className="shrink-0">
+          {statusLabel[ticket.status]}
+        </Badge>
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </Link>
+    </li>
   );
 }
 
 function LoadingSkeletons() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="rounded-lg border p-4 flex flex-col gap-3">
-          <Skeleton className="h-5 w-2/3" />
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-16 w-full" />
+        <div key={i} className="rounded-md border p-3 flex flex-col gap-2">
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-3 w-1/3" />
         </div>
       ))}
     </div>
@@ -77,28 +71,27 @@ function LoadingSkeletons() {
 /**
  * TareasPage — the installer's full working list.
  *
- * Merges useWorklist + useAssignedTickets into Building[] via useMemo and
- * renders one BuildingWorkCard per building. This is the daily driver
- * screen (previously mounted at /); the dashboard now lives at / and
- * links here for the complete list.
+ * Now a flat, scan-friendly list of tasks (one row per task) instead of the
+ * old per-building nested-card layout. Each row links to the individual task
+ * detail at /tareas/:id (master–detail). Ordering: in-progress first, then
+ * by opened date.
  */
 export default function TareasPage() {
-  const worklist = useWorklist();
   const assignedTickets = useAssignedTickets();
 
-  const isLoading =
-    (worklist.isLoading && !worklist.data) ||
-    (assignedTickets.isLoading && !assignedTickets.data);
+  const isLoading = assignedTickets.isLoading && !assignedTickets.data;
+  const isFetching = assignedTickets.isFetching;
 
-  const isFetching = worklist.isFetching || assignedTickets.isFetching;
+  const tasks = useMemo(() => assignedTickets.data ?? [], [assignedTickets.data]);
 
-  const buildings = useMemo(
+  const sorted = useMemo(
     () =>
-      mergeIntoBuildings(
-        worklist.data ?? [],
-        assignedTickets.data ?? [],
-      ),
-    [worklist.data, assignedTickets.data],
+      [...tasks].sort((a, b) => {
+        const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+        if (statusDiff !== 0) return statusDiff;
+        return a.opened_at.localeCompare(b.opened_at);
+      }),
+    [tasks],
   );
 
   return (
@@ -114,20 +107,14 @@ export default function TareasPage() {
 
       {isLoading ? (
         <LoadingSkeletons />
-      ) : buildings.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="flex flex-col gap-4">
-          {buildings.map((b) => (
-            <BuildingWorkCard
-              key={b.building.id}
-              building={b.building}
-              administration={b.administration}
-              authorizations={b.authorizations}
-              tickets={b.tickets}
-            />
+        <ul className="flex flex-col gap-2">
+          {sorted.map((ticket) => (
+            <TaskRow key={ticket.id} ticket={ticket} />
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
