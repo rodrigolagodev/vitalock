@@ -8,7 +8,15 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@vitalock/ui';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useMutateEquipmentUpdate } from '@/hooks/useMutateEquipmentUpdate';
+import { useStaff } from '@/hooks/useStaff';
 import { useAuthContext } from '@vitalock/shared';
 import type { KeyRow } from '@/hooks/useKeys';
 
@@ -38,9 +46,12 @@ export function EquipmentUpdateFormSheet({
 }: EquipmentUpdateFormSheetProps) {
   const { staff } = useAuthContext();
   const { createEquipmentUpdate } = useMutateEquipmentUpdate();
+  const { data: staffList = [] } = useStaff();
+  const installers = staffList.filter((s) => s.role === 'installer');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [assignedTo, setAssignedTo] = useState<string>('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -60,13 +71,14 @@ export function EquipmentUpdateFormSheet({
   const handleClose = () => {
     setSelectedFile(null);
     setFileError(null);
+    setAssignedTo('');
     if (fileInputRef.current) fileInputRef.current.value = '';
     onOpenChange(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!selectedFile || !assignedTo) return;
 
     await createEquipmentUpdate.mutateAsync({
       ticketId,
@@ -78,13 +90,14 @@ export function EquipmentUpdateFormSheet({
       keysToDisable: pendingDisable.map((k) => k.id),
       file: selectedFile,
       actorStaffId: staff?.id ?? null,
+      assignedToStaffId: assignedTo,
     });
 
     handleClose();
   };
 
   const isPending = createEquipmentUpdate.isPending;
-  const canSubmit = Boolean(selectedFile) && !isPending;
+  const canSubmit = Boolean(selectedFile) && Boolean(assignedTo) && !isPending;
 
   return (
     <Sheet open={open} onOpenChange={handleClose}>
@@ -126,6 +139,36 @@ export function EquipmentUpdateFormSheet({
                 ))}
               </ul>
             )}
+          </div>
+
+          {/* Assignee (installer) */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="assigned-to">Instalador asignado *</Label>
+            <Select
+              value={assignedTo}
+              onValueChange={setAssignedTo}
+              disabled={isPending || installers.length === 0}
+            >
+              <SelectTrigger id="assigned-to">
+                <SelectValue
+                  placeholder={
+                    installers.length === 0
+                      ? 'No hay instaladores activos'
+                      : 'Elegí un instalador'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {installers.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              El instalador va a recibir la tarea en su board apenas se cree.
+            </p>
           </div>
 
           {/* MDB file */}

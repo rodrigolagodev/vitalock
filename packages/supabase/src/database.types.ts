@@ -1207,6 +1207,7 @@ export type Database = {
         Args: {
           p_actor_staff_id?: string
           p_administration_id: string
+          p_assigned_to_staff_id?: string
           p_building_id: string
           p_description: string
           p_equipment_id: string

@@ -9,6 +9,8 @@ export interface CreateEquipmentUpdateInput {
   keysToActivate?: string[];
   keysToDisable?: string[];
   actorStaffId?: string | null;
+  /** Staff assigned to resolve the ticket. When null the ticket lands unassigned. */
+  assignedToStaffId?: string | null;
 }
 
 export async function createEquipmentUpdate(
@@ -24,6 +26,7 @@ export async function createEquipmentUpdate(
     p_keys_to_activate: (input.keysToActivate ?? []) as unknown as string[],
     p_keys_to_disable: (input.keysToDisable ?? []) as unknown as string[],
     p_actor_staff_id: (input.actorStaffId ?? null) as unknown as string,
+    p_assigned_to_staff_id: (input.assignedToStaffId ?? null) as unknown as string,
   });
   if (error) throw error;
   return data as string;

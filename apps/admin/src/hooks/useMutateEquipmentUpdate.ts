@@ -17,6 +17,8 @@ export interface CreateEquipmentUpdateInput {
   keysToDisable: string[];
   file: File;
   actorStaffId: string | null;
+  /** Staff assigned to resolve the ticket. When null/undefined the ticket lands unassigned. */
+  assignedToStaffId?: string | null;
 }
 
 export function useMutateEquipmentUpdate() {
@@ -46,6 +48,7 @@ export function useMutateEquipmentUpdate() {
           keysToActivate: input.keysToActivate,
           keysToDisable: input.keysToDisable,
           actorStaffId: input.actorStaffId,
+          assignedToStaffId: input.assignedToStaffId ?? null,
         });
         return taskId;
       } catch (rpcError) {
