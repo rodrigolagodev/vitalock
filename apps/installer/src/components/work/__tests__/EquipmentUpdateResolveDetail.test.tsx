@@ -19,12 +19,25 @@ const {
   mockResolveEquipmentUpdateRpc,
   mockToastSuccess,
   mockToastWarning,
+  mockSupportSchema,
+  mockPriorUpdatesSelect,
+  mockPriorUpdatesEq,
+  mockPriorUpdatesNot,
+  mockPriorUpdatesOrder,
 } = vi.hoisted(() => {
   const mockIn = vi.fn();
   const mockSelect = vi.fn(() => ({ in: mockIn }));
   const mockRfidKeysFrom = vi.fn(() => ({ select: mockSelect }));
   const mockCreateSignedUrl = vi.fn();
   const mockStorageFrom = vi.fn(() => ({ createSignedUrl: mockCreateSignedUrl }));
+
+  // Support-schema chain: supabase.schema('support').from('equipment_updates').select(...).eq(...).not(...).order(...)
+  const mockPriorUpdatesOrder = vi.fn();
+  const mockPriorUpdatesNot = vi.fn(() => ({ order: mockPriorUpdatesOrder }));
+  const mockPriorUpdatesEq = vi.fn(() => ({ not: mockPriorUpdatesNot }));
+  const mockPriorUpdatesSelect = vi.fn(() => ({ eq: mockPriorUpdatesEq }));
+  const mockSupportFrom = vi.fn(() => ({ select: mockPriorUpdatesSelect }));
+  const mockSupportSchema = vi.fn(() => ({ from: mockSupportFrom }));
 
   return {
     mockCreateSignedUrl,
@@ -36,6 +49,11 @@ const {
     mockResolveEquipmentUpdateRpc: vi.fn(),
     mockToastSuccess: vi.fn(),
     mockToastWarning: vi.fn(),
+    mockSupportSchema,
+    mockPriorUpdatesSelect,
+    mockPriorUpdatesEq,
+    mockPriorUpdatesNot,
+    mockPriorUpdatesOrder,
   };
 });
 
@@ -43,6 +61,7 @@ vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: mockFrom,
     storage: { from: mockStorageFrom },
+    schema: mockSupportSchema,
   },
 }));
 
@@ -96,6 +115,7 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     },
     equipmentUpdateSnapshot: {
       task_id: 'task-001',
+      equipment_id: 'equip-001',
       mdb_storage_path: 'task-001/equip.mdb',
       keys_to_activate: ['key-uuid-activate-001'],
       keys_to_disable: ['key-uuid-disable-001'],
@@ -122,6 +142,8 @@ describe('EquipmentUpdateResolveDetail', () => {
       ],
       error: null,
     });
+    // Default: prior updates returns empty list
+    mockPriorUpdatesOrder.mockResolvedValue({ data: [], error: null });
   });
 
   describe('Download .mdb flow', () => {
@@ -260,6 +282,106 @@ describe('EquipmentUpdateResolveDetail', () => {
         expect(screen.getByText('RFID-ACT-001')).toBeInTheDocument();
         // Falls back to slice for the unmapped key
         expect(screen.getByText('key-uuid…')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Prior updates collapsible (rollback section)', () => {
+    it('renders <details> collapsible "Actualizaciones anteriores" when equipment_id is present and prior updates exist', async () => {
+      mockPriorUpdatesOrder.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'upd-001',
+            created_at: '2026-08-10T12:00:00Z',
+            mdb_storage_path: 'task-000/equip.mdb',
+          },
+        ],
+        error: null,
+      });
+
+      const Wrapper = makeWrapper();
+      render(
+        React.createElement(Wrapper, null,
+          React.createElement(EquipmentUpdateResolveDetail, {
+            open: true,
+            onOpenChange: vi.fn(),
+            ticket: makeTicket(),
+          }),
+        ),
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Actualizaciones anteriores')).toBeInTheDocument();
+      });
+
+      // The collapsible must be a <details> element
+      const details = document.querySelector('details');
+      expect(details).toBeInTheDocument();
+    });
+
+    it('renders warning banner when prior updates section is present', async () => {
+      mockPriorUpdatesOrder.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'upd-001',
+            created_at: '2026-08-10T12:00:00Z',
+            mdb_storage_path: 'task-000/equip.mdb',
+          },
+        ],
+        error: null,
+      });
+
+      const Wrapper = makeWrapper();
+      render(
+        React.createElement(Wrapper, null,
+          React.createElement(EquipmentUpdateResolveDetail, {
+            open: true,
+            onOpenChange: vi.fn(),
+            ticket: makeTicket(),
+          }),
+        ),
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/desincronizará la base de datos/i),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('renders a download button for each prior update row', async () => {
+      mockPriorUpdatesOrder.mockResolvedValueOnce({
+        data: [
+          {
+            id: 'upd-001',
+            created_at: '2026-08-10T12:00:00Z',
+            mdb_storage_path: 'task-000/equip.mdb',
+          },
+          {
+            id: 'upd-002',
+            created_at: '2026-08-05T09:00:00Z',
+            mdb_storage_path: 'task-prev/equip.mdb',
+          },
+        ],
+        error: null,
+      });
+
+      const Wrapper = makeWrapper();
+      render(
+        React.createElement(Wrapper, null,
+          React.createElement(EquipmentUpdateResolveDetail, {
+            open: true,
+            onOpenChange: vi.fn(),
+            ticket: makeTicket(),
+          }),
+        ),
+      );
+
+      await waitFor(() => {
+        // One download button per prior update row
+        const downloadBtns = screen.getAllByRole('button', { name: /descargar/i });
+        // The main MDB download button + 2 prior update buttons = 3
+        expect(downloadBtns.length).toBeGreaterThanOrEqual(3);
       });
     });
   });

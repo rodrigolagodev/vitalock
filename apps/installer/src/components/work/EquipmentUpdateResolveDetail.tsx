@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
 import {
   Dialog,
@@ -30,6 +31,19 @@ interface EquipmentUpdateResolveDetailProps {
  *   - Keys that were already in the target state are silently skipped by the RPC
  *     and surfaced as a warning to the installer.
  */
+interface PriorUpdate {
+  id: string;
+  created_at: string;
+  mdb_storage_path: string;
+}
+
+function fmt(iso: string): string {
+  const d = new Date(iso);
+  return isNaN(d.getTime())
+    ? iso
+    : d.toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
 export function EquipmentUpdateResolveDetail({
   open,
   onOpenChange,
@@ -43,6 +57,35 @@ export function EquipmentUpdateResolveDetail({
     : [];
   const rfidCodeMap = useRfidKeyCodeMap(allKeyIds);
 
+  // Prior resolved updates for this equipment (rollback section)
+  const [priorUpdates, setPriorUpdates] = useState<PriorUpdate[]>([]);
+  const [downloadingPriorId, setDownloadingPriorId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const equipmentId = snapshot?.equipment_id;
+    if (!equipmentId) {
+      setPriorUpdates([]);
+      return;
+    }
+
+    let cancelled = false;
+    void supabase
+      .schema('support')
+      .from('equipment_updates')
+      .select('id, created_at, mdb_storage_path')
+      .eq('equipment_id', equipmentId)
+      .not('resolved_at', 'is', null)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled || error) return;
+        setPriorUpdates((data ?? []) as unknown as PriorUpdate[]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [snapshot?.equipment_id]);
+
   const handleDownload = async () => {
     if (!snapshot) return;
     const { data, error } = await supabase.storage
@@ -53,6 +96,22 @@ export function EquipmentUpdateResolveDetail({
     a.href = data.signedUrl;
     a.download = snapshot.mdb_storage_path.split('/').pop() ?? 'db.mdb';
     a.click();
+  };
+
+  const handleDownloadPrior = async (update: PriorUpdate) => {
+    setDownloadingPriorId(update.id);
+    try {
+      const { data, error } = await supabase.storage
+        .from('equipment-updates-mdb')
+        .createSignedUrl(update.mdb_storage_path, 300);
+      if (error || !data?.signedUrl) return;
+      const a = document.createElement('a');
+      a.href = data.signedUrl;
+      a.download = update.mdb_storage_path.split('/').pop() ?? 'db.mdb';
+      a.click();
+    } finally {
+      setDownloadingPriorId(null);
+    }
   };
 
   const handleResolve = () => {
@@ -131,6 +190,43 @@ export function EquipmentUpdateResolveDetail({
               Descargar archivo .mdb
             </Button>
           </div>
+        )}
+
+        {/* Prior updates collapsible — only when equipment_id is set */}
+        {snapshot?.equipment_id && priorUpdates.length > 0 && (
+          <details className="rounded-md border border-border text-sm">
+            <summary className="cursor-pointer select-none px-3 py-2 font-medium">
+              Actualizaciones anteriores
+            </summary>
+            <div className="flex flex-col gap-2 px-3 pb-3 pt-2">
+              {/* Warning banner */}
+              <p className="rounded bg-yellow-50 px-3 py-2 text-xs text-yellow-800 border border-yellow-200">
+                Atención: cargar un archivo anterior desincronizará la base de datos hasta el próximo update correctivo.
+              </p>
+              {/* Prior update rows */}
+              <div className="flex flex-col gap-1">
+                {priorUpdates.map((u) => (
+                  <div
+                    key={u.id}
+                    className="flex items-center justify-between gap-2 rounded border border-border px-2 py-1.5"
+                  >
+                    <span className="text-xs text-muted-foreground">{fmt(u.created_at)}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleDownloadPrior(u)}
+                      disabled={downloadingPriorId === u.id}
+                      className="h-7 px-2 text-xs"
+                    >
+                      <Download className="mr-1 h-3 w-3" />
+                      {downloadingPriorId === u.id ? 'Generando…' : 'Descargar'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </details>
         )}
 
         <DialogFooter>

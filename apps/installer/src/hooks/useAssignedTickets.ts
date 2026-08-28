@@ -13,6 +13,8 @@ const log = logger('useAssignedTickets');
 export interface EquipmentUpdateSnapshot {
   /** support.equipment_updates.id */
   task_id: string;
+  /** public.equipment.id — used to fetch prior resolved updates for rollback. */
+  equipment_id: string | null;
   mdb_storage_path: string;
   keys_to_activate: string[];
   keys_to_disable: string[];
@@ -64,7 +66,8 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       building_id,
       pending_new_serial,
       pending_new_model,
-      technical_order_item_id
+      technical_order_item_id,
+      equipment_id
     `)
     .eq('assigned_to_staff_id', staffId)
     .in('status', ['open', 'in_progress']);
@@ -81,6 +84,7 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     pending_new_serial: string | null;
     pending_new_model: string | null;
     technical_order_item_id: string | null;
+    equipment_id: string | null;
   }[];
 
   // Batch lookup of building names + their administration.
@@ -127,18 +131,20 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     const { data: snapshots } = await supabase
       .schema('support')
       .from('equipment_updates')
-      .select('id, ticket_id, mdb_storage_path, keys_to_activate, keys_to_disable')
+      .select('id, ticket_id, equipment_id, mdb_storage_path, keys_to_activate, keys_to_disable')
       .in('ticket_id', equipmentUpdateTicketIds);
     for (const s of snapshots ?? []) {
       const snap = s as unknown as {
         id: string;
         ticket_id: string;
+        equipment_id: string | null;
         mdb_storage_path: string;
         keys_to_activate: string[];
         keys_to_disable: string[];
       };
       snapshotMap.set(snap.ticket_id, {
         task_id: snap.id,
+        equipment_id: snap.equipment_id ?? null,
         mdb_storage_path: snap.mdb_storage_path,
         keys_to_activate: snap.keys_to_activate,
         keys_to_disable: snap.keys_to_disable,

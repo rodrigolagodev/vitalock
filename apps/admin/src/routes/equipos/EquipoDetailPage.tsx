@@ -5,6 +5,8 @@ import {
   useEquipmentById,
   type EquipmentStatus,
 } from '@/hooks/useEquipmentById';
+import { EquipmentKeySnapshotPanel } from '@/components/equipment/EquipmentKeySnapshotPanel';
+import { EquipmentUpdateHistoryPanel } from '@/components/equipment/EquipmentUpdateHistoryPanel';
 
 const STATUS_LABEL: Record<EquipmentStatus, string> = {
   active: 'Activo',
@@ -387,6 +389,16 @@ export default function EquipoDetailPage() {
             ))}
           </ul>
         )}
+      </Section>
+
+      {equipment.status === 'active' && (
+        <Section title="Llaves pendientes de actualización">
+          <EquipmentKeySnapshotPanel equipmentId={equipment.id} />
+        </Section>
+      )}
+
+      <Section title="Historial de actualizaciones de firmware">
+        <EquipmentUpdateHistoryPanel equipmentId={equipment.id} />
       </Section>
 
       <Section title="Historial">

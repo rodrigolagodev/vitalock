@@ -11,7 +11,7 @@
 -- ============================================================
 
 BEGIN;
-SELECT plan(5);
+SELECT plan(7);
 
 -- ============================================================
 -- Scenario A (PASS 092-A): resolve_equipment_installation on a ticket linked
@@ -227,10 +227,40 @@ SELECT lives_ok(
       SELECT status INTO v_key_status FROM public.rfid_keys WHERE id = v_key_id;
       ASSERT v_key_status = 'active', 'FAIL 092-C: expected key active after resolve, got ' || coalesce(v_key_status, 'NULL');
 
+      -- T-1-1: key_order_items.status must have advanced to 'installed'
+      DECLARE v_koi_status text;
+      BEGIN
+        SELECT status INTO v_koi_status
+          FROM public.key_order_items
+         WHERE id = v_key_order_item_id;
+        ASSERT v_koi_status = 'installed', 'FAIL 092-C: key_order_items not advanced — expected installed, got ' || coalesce(v_koi_status, 'NULL');
+      END;
+
+      -- T-1-1: key_orders.status must have advanced to 'ready_for_pickup'
+      DECLARE v_order_status_after text;
+      BEGIN
+        SELECT status INTO v_order_status_after
+          FROM public.key_orders
+         WHERE id = v_key_order_id;
+        ASSERT v_order_status_after = 'ready_for_pickup', 'FAIL 092-C: key_order not ready_for_pickup — got ' || coalesce(v_order_status_after, 'NULL');
+      END;
+
       ASSERT jsonb_array_length(v_result->'skipped_key_ids') = 0, 'FAIL 092-C: expected 0 skipped keys for new-path activation';
     END $$;
   $q$,
   'PASS 092-C: resolve_equipment_update works correctly for new-path keys (rfid_keys.order_item_id = NULL)'
+);
+
+-- T-1-1 extra check: after resolve_equipment_update on a new-path key, key_order_items reaches 'installed'
+SELECT ok(
+  EXISTS (SELECT 1 FROM public.key_order_items WHERE status = 'installed'),
+  'PASS 092-C: key_order_items.status = installed after resolve_equipment_update on new-path key'
+);
+
+-- T-1-1 extra check: after all items installed, key_orders advances to 'ready_for_pickup'
+SELECT ok(
+  EXISTS (SELECT 1 FROM public.key_orders WHERE status = 'ready_for_pickup'),
+  'PASS 092-C: key_orders.status = ready_for_pickup after single-item order fully installed'
 );
 
 -- ============================================================
