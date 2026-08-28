@@ -10,7 +10,9 @@ import { AuthProvider, ProtectedRoute, AuthErrorPage } from '@vitalock/shared';
 
 addLogSink(consoleSink);
 import App from './App';
-import IndexRoute from './routes/index';
+import DashboardPage from './routes/DashboardPage';
+import TareasPage from './routes/TareasPage';
+import HistorialPage from './routes/HistorialPage';
 import LoginPage from './routes/LoginPage';
 import './styles/globals.css';
 
@@ -33,7 +35,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="/error" element={<AuthErrorPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<App />}>
-                  <Route index element={<IndexRoute />} />
+                  <Route index element={<DashboardPage />} />
+                  <Route path="tareas" element={<TareasPage />} />
+                  <Route path="historial" element={<HistorialPage />} />
                 </Route>
               </Route>
             </Routes>

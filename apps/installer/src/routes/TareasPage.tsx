@@ -9,10 +9,6 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { ConnectivityBanner } from '@/components/common/ConnectivityBanner';
 import { BuildingWorkCard } from '@/components/work/BuildingWorkCard';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface Building {
   building: { id: string; name: string };
   administration: { id: string; company_name: string };
@@ -20,11 +16,10 @@ interface Building {
   tickets: AssignedTicket[];
 }
 
-// ---------------------------------------------------------------------------
-// Merge helper — combines authorizations + tickets into Building[] via useMemo.
-// No DB round-trip; purely client-side grouping. Satisfies installer-home R5.
-// ---------------------------------------------------------------------------
-
+/**
+ * Merge worklist authorizations + assigned tickets into Building[] via useMemo.
+ * No DB round-trip; purely client-side grouping. Satisfies installer-home R5.
+ */
 function mergeIntoBuildings(
   authorizations: WorklistAuthorization[],
   tickets: AssignedTicket[],
@@ -60,15 +55,10 @@ function mergeIntoBuildings(
     map.get(bid)!.tickets.push(ticket);
   }
 
-  // Sort A-Z by building name. Satisfies installer-home R1.
   return [...map.values()].sort((a, b) =>
     a.building.name.localeCompare(b.building.name, 'es'),
   );
 }
-
-// ---------------------------------------------------------------------------
-// Loading skeleton — 3 card placeholders for initial load (R4-SC1)
-// ---------------------------------------------------------------------------
 
 function LoadingSkeletons() {
   return (
@@ -84,19 +74,15 @@ function LoadingSkeletons() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// HomePage
-// ---------------------------------------------------------------------------
-
 /**
- * HomePage — the installer's daily-driver screen.
+ * TareasPage — the installer's full working list.
  *
- * Merges useWorklist + useAssignedTickets into Building[] via useMemo;
- * renders one BuildingWorkCard per building.
- *
- * Satisfies installer-home R1-R8.
+ * Merges useWorklist + useAssignedTickets into Building[] via useMemo and
+ * renders one BuildingWorkCard per building. This is the daily driver
+ * screen (previously mounted at /); the dashboard now lives at / and
+ * links here for the complete list.
  */
-export default function IndexRoute() {
+export default function TareasPage() {
   const worklist = useWorklist();
   const assignedTickets = useAssignedTickets();
 
@@ -117,18 +103,15 @@ export default function IndexRoute() {
 
   return (
     <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Mi turno</h1>
+        <h1 className="text-xl font-bold">Mis tareas</h1>
         {isFetching && !isLoading && (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Actualizando" />
         )}
       </div>
 
-      {/* Connectivity banner — non-blocking */}
       <ConnectivityBanner />
 
-      {/* Content */}
       {isLoading ? (
         <LoadingSkeletons />
       ) : buildings.length === 0 ? (
