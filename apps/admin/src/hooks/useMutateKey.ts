@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { keysKey } from '@/lib/queryKeys';
+import { keysKey, keyOrderKey } from '@/lib/queryKeys';
 import { keyEventsKey } from './useKeyEvents';
 import { toastMutationError } from './mapMutationError';
 import { requestKeyDisable, cancelKeyDisable } from '@vitalock/supabase';
@@ -148,10 +148,16 @@ export function useMutateKey(buildingId: string | undefined) {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      // The RPC may auto-complete the order (status → completed), so
-      // the keys list needs a refresh.
+    onSuccess: (_data, vars) => {
+      // The RPC may auto-complete the order (status → completed), so we
+      // refresh:
+      //   - the key inventory for the building
+      //   - the specific key order (detail page reads item.rfid_keys.picked_up_at)
+      //   - the key orders list (badge counts / lifecycle status)
       void invalidateKeys();
+      void queryClient.invalidateQueries({ queryKey: keyOrderKey(vars.order_id) });
+      // Prefix invalidation catches every `keyOrdersKey(status, search, ...)` variant.
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'key-orders'] });
       toast.success('Retiro registrado.');
     },
     onError: toastMutationError,
