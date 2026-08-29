@@ -27,8 +27,10 @@ interface LinkedTicketsTableProps {
  * Consumes TechnicalOrderTicketRow (from useTechnicalOrderTickets, scoped to the
  * technical-orders bounded context — no legacy order_item_id alias).
  *
- * assigned_to_staff_id is resolved to the staff full name via useStaffByIds;
- * rows without a resolvable assignee render "—".
+ * The first cell ("Nro de Tarea") links to /tareas/:id, the task detail route
+ * that reads the same support.tickets row. assigned_to_staff_id is resolved to
+ * the staff full name via useStaffByIds; rows without a resolvable assignee
+ * render "—".
  */
 export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTicketsTableProps) {
   const staffIds = tickets
@@ -97,6 +99,8 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
         },
       ]}
       rowKey={(t) => t.id}
+      firstCell="link"
+      getRowHref={(t) => `/tareas/${t.id}`}
       emptyMessage="Sin tareas"
     />
   );
