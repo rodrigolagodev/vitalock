@@ -1,5 +1,6 @@
 import { DataTable, StatusBadge, type StatusTone } from '@vitalock/ui';
 import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
+import { useStaffByIds } from '@/hooks/useStaffByIds';
 
 const TICKET_STATUS_LABELS: Record<string, string> = {
   open: 'Pendiente',
@@ -26,11 +27,15 @@ interface LinkedTicketsTableProps {
  * Consumes TechnicalOrderTicketRow (from useTechnicalOrderTickets, scoped to the
  * technical-orders bounded context — no legacy order_item_id alias).
  *
- * No navigation to /tickets/:id — that route is not yet registered.
- * assigned_to_staff_id is shown as a raw UUID (name resolution requires additional
- * query against identity.staff). This is a deviation flagged in apply-progress.
+ * assigned_to_staff_id is resolved to the staff full name via useStaffByIds;
+ * rows without a resolvable assignee render "—".
  */
 export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTicketsTableProps) {
+  const staffIds = tickets
+    .map((t) => t.assigned_to_staff_id)
+    .filter((id): id is string => Boolean(id));
+  const { data: staffMap } = useStaffByIds(staffIds);
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -47,7 +52,7 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
       isFetching={false}
       columns={[
         {
-          header: 'N.º ticket',
+          header: 'Nro de Tarea',
           cell: (t) => t.ticket_number,
         },
         {
@@ -64,7 +69,10 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
         },
         {
           header: 'Asignado a',
-          cell: (t) => t.assigned_to_staff_id ?? '—',
+          cell: (t) =>
+            t.assigned_to_staff_id
+              ? (staffMap?.get(t.assigned_to_staff_id)?.full_name ?? '—')
+              : '—',
           className: 'text-muted-foreground text-xs',
           hideBelow: 'lg',
         },
@@ -89,7 +97,7 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
         },
       ]}
       rowKey={(t) => t.id}
-      emptyMessage="Sin tickets"
+      emptyMessage="Sin tareas"
     />
   );
 }

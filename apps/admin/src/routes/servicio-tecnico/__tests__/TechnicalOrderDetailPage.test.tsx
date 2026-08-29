@@ -221,7 +221,7 @@ describe('TechnicalOrderDetailPage — items section', () => {
 describe('TechnicalOrderDetailPage — linked tickets section', () => {
   it('renders the tickets section heading', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: /tickets/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /tareas relacionadas/i })).toBeInTheDocument();
   });
 
   it('renders the LinkedTicketsTable stub', () => {

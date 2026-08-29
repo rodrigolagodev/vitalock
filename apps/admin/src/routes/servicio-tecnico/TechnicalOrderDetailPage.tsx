@@ -184,7 +184,7 @@ export default function TechnicalOrderDetailPage() {
 
       {/* Linked tickets */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Tickets vinculados</h2>
+        <h2 className="text-lg font-semibold">Tareas relacionadas</h2>
         <LinkedTicketsTable
           tickets={tickets}
           isLoading={ticketsLoading}

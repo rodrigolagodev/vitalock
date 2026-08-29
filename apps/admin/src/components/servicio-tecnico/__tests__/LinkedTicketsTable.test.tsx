@@ -8,6 +8,14 @@ import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
+vi.mock('@/hooks/useStaffByIds', () => ({
+  useStaffByIds: () => ({
+    data: new Map([
+      ['staff-1', { id: 'staff-1', full_name: 'López Juan' }],
+      ['staff-2', { id: 'staff-2', full_name: 'García Ana' }],
+    ]),
+  }),
+}));
 
 import { LinkedTicketsTable } from '../LinkedTicketsTable';
 
@@ -64,6 +72,23 @@ describe('LinkedTicketsTable — row rendering', () => {
     );
     expect(screen.getByText('TKT-999')).toBeInTheDocument();
   });
+
+  it('renders assigned staff full name instead of the raw id', () => {
+    render(
+      <LinkedTicketsTable tickets={[makeTicket({ assigned_to_staff_id: 'staff-1' })]} isLoading={false} />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByText('López Juan')).toBeInTheDocument();
+    expect(screen.queryByText('staff-1')).not.toBeInTheDocument();
+  });
+
+  it('renders a dash when the ticket has no assignee', () => {
+    render(
+      <LinkedTicketsTable tickets={[makeTicket({ assigned_to_staff_id: null })]} isLoading={false} />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+  });
 });
 
 describe('LinkedTicketsTable — empty state', () => {
@@ -72,7 +97,7 @@ describe('LinkedTicketsTable — empty state', () => {
       <LinkedTicketsTable tickets={[]} isLoading={false} />,
       { wrapper: makeWrapper() },
     );
-    expect(screen.getByText(/sin tickets/i)).toBeInTheDocument();
+    expect(screen.getByText(/sin tareas/i)).toBeInTheDocument();
   });
 });
 
