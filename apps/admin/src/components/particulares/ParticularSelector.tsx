@@ -36,7 +36,9 @@ export function ParticularSelector({
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data: results = [], isFetching } = useParticulares({ search: query });
+  const { data: results = [], isFetching, isSearchPending } = useParticulares({
+    search: query,
+  });
 
   const searching = query.trim() !== '';
   const showInputValue = !searching;
@@ -66,7 +68,7 @@ export function ParticularSelector({
   };
 
   return (
-    <div className={className}>
+    <div className={`relative ${className ?? ''}`}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -110,8 +112,8 @@ export function ParticularSelector({
       </div>
 
       {!disabled && open && searching && (
-        <div className="mt-1 rounded-md border bg-popover shadow-md">
-          {isFetching && results.length === 0 ? (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border bg-popover shadow-md">
+          {isSearchPending || isFetching ? (
             <p className="px-3 py-2 text-sm text-muted-foreground">Buscando...</p>
           ) : results.length > 0 ? (
             <ul role="listbox" aria-label="Resultados de búsqueda" className="max-h-56 overflow-y-auto py-1">

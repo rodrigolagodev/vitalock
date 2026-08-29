@@ -163,4 +163,44 @@ describe('ParticularSelector', () => {
 
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
+
+  it('shows the searching placeholder instead of stale results while the debounce is pending', async () => {
+    const user = userEvent.setup();
+    // The data still belongs to the previous (empty) query — the debounce has
+    // not caught up with the live input yet.
+    mockUseParticulares.mockReturnValue({
+      data: [garcia],
+      isFetching: false,
+      isSearchPending: true,
+    });
+
+    render(<ParticularSelector onChange={vi.fn()} />, { wrapper: makeWrapper() });
+
+    await user.type(screen.getByRole('combobox'), 'garc');
+
+    expect(await screen.findByText('Buscando...')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('option', { name: /garcía juan/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not flash the previous full list while the new search is fetching', async () => {
+    const user = userEvent.setup();
+    // The debounce fired and the new query is in flight, but React Query still
+    // surfaces the previous term's data — it must not be rendered as a match.
+    mockUseParticulares.mockReturnValue({
+      data: [garcia],
+      isFetching: true,
+      isSearchPending: false,
+    });
+
+    render(<ParticularSelector onChange={vi.fn()} />, { wrapper: makeWrapper() });
+
+    await user.type(screen.getByRole('combobox'), 'garc');
+
+    expect(await screen.findByText('Buscando...')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('option', { name: /garcía juan/i }),
+    ).not.toBeInTheDocument();
+  });
 });

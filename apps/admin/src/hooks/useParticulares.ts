@@ -31,8 +31,9 @@ const DEBOUNCE_MS = 300;
 export function useParticulares({ search }: { search?: string } = {}) {
   const debouncedSearch = useDebounce(search ?? '', DEBOUNCE_MS);
   const trimmed = debouncedSearch.trim();
+  const liveTrimmed = (search ?? '').trim();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: particularesKey(trimmed),
     queryFn: async (): Promise<ParticularRow[]> => {
       let query = supabase
@@ -72,4 +73,12 @@ export function useParticulares({ search }: { search?: string } = {}) {
       });
     },
   });
+
+  return {
+    ...query,
+    // True while the debounce has not caught up with the live input. During
+    // this window `query.data` still belongs to the previous term — callers
+    // must not render it as if it matched the current search.
+    isSearchPending: liveTrimmed !== trimmed,
+  };
 }
