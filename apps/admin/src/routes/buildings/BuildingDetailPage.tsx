@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { KeyRow } from '@/hooks/useKeys';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useAdministration } from '@/hooks/useAdministration';
@@ -26,10 +26,10 @@ export default function BuildingDetailPage() {
   const [llavesStatus, setLlavesStatus] = useState<'all' | KeyRow['status']>('all');
   const [equiposSearch, setEquiposSearch] = useState('');
 
-  const activeTab = searchParams.get('tab') ?? 'llaves';
+  const activeTab = searchParams.get('tab') ?? 'equipos';
 
   const { data: building, isLoading, isError } = useBuilding(buildingId ?? '');
-  const { data: administration, isLoading: adminLoading } = useAdministration(
+  const { data: administration } = useAdministration(
     building?.administration_id ?? '',
   );
   const { data: equipment = [], isFetching: equipmentFetching } = useEquipment(buildingId ?? '');
@@ -116,14 +116,23 @@ export default function BuildingDetailPage() {
         </Badge>
       </PageHeader>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList>
-          <TabsTrigger value="llaves">Llaves</TabsTrigger>
-          <TabsTrigger value="equipos">Equipos</TabsTrigger>
-        </TabsList>
+      {/* Section selector */}
+      <RadioGroup
+        value={activeTab}
+        onValueChange={handleTabChange}
+        aria-label="Sección del edificio"
+        className="grid w-full grid-cols-2"
+      >
+        <RadioGroupItem value="llaves" className="text-center">
+          Llaves
+        </RadioGroupItem>
+        <RadioGroupItem value="equipos" className="text-center">
+          Equipos
+        </RadioGroupItem>
+      </RadioGroup>
 
-        <TabsContent value="llaves" className="mt-4 space-y-4">
+        {activeTab === 'llaves' && (
+          <div className="mt-4 space-y-4">
           <h2 className="text-lg font-semibold">Llaves</h2>
           <div className="flex flex-wrap items-center gap-2">
             <Input
@@ -150,9 +159,11 @@ export default function BuildingDetailPage() {
             </Select>
           </div>
           <KeysTable buildingId={buildingId} keys={filteredKeys} isFetching={keysFetching} />
-        </TabsContent>
+        </div>
+        )}
 
-        <TabsContent value="equipos" className="mt-4 space-y-4">
+        {activeTab === 'equipos' && (
+          <div className="mt-4 space-y-4">
           <h2 className="text-lg font-semibold">Equipos</h2>
           <Input
             placeholder="Buscar equipos por serie o modelo..."
@@ -165,8 +176,8 @@ export default function BuildingDetailPage() {
             equipment={filteredEquipment}
             isFetching={equipmentFetching}
           />
-        </TabsContent>
-      </Tabs>
+        </div>
+        )}
     </div>
   );
 }
