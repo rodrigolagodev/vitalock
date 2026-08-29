@@ -464,7 +464,7 @@ export function KeyOrderForm({
         {/* ---- Section: Items (each item is a pack of keys) ---- */}
         <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
           <SectionHeading
-            title="Items"
+            title="Lista de items"
             description="Cada item es un pack de llaves del mismo modelo, edificio y precio. Cargalo en el panel de abajo y quedará listado arriba; el modelo y el edificio se recuerdan para el siguiente item."
           />
 

@@ -172,7 +172,7 @@ describe('KeyOrderForm', () => {
       screen.getByRole('button', { name: /crear y confirmar orden/i }),
     ).toBeInTheDocument();
     expect(screen.getByText('Cliente')).toBeInTheDocument();
-    expect(screen.getByText('Items')).toBeInTheDocument();
+    expect(screen.getByText('Lista de items')).toBeInTheDocument();
   });
 
   // T-13c-1b: edit mode renders correct submit label and pre-populates notes
