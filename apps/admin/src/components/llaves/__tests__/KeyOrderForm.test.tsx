@@ -373,4 +373,31 @@ describe('KeyOrderForm', () => {
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it('switches client type via the radio group and requires a particular', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
+
+    // Default is administración — particular selector hidden.
+    expect(screen.queryByTestId('particular-selector')).not.toBeInTheDocument();
+
+    // Radio group exposes both options as radios.
+    const particularRadio = screen.getByRole('radio', { name: /particular/i });
+    await user.click(particularRadio);
+
+    expect(particularRadio).toBeChecked();
+    expect(screen.getByTestId('particular-selector')).toBeInTheDocument();
+
+    // Submit without selecting a particular → validation error, no onSubmit.
+    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/seleccioná un particular/i)).toBeInTheDocument();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

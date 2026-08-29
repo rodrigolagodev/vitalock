@@ -11,7 +11,6 @@ import { ParticularFormSheet } from '@/components/particulares/ParticularFormShe
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
 import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog';
-import { Badge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
@@ -24,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
 import { useUnits } from '@/hooks/useUnits';
@@ -262,27 +262,29 @@ export function KeyOrderForm({
               control={control}
               name="client_type"
               render={({ field }) => (
-                <div className="flex flex-wrap items-center gap-2">
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={(v) =>
+                    field.onChange(v as 'administration' | 'particular')
+                  }
+                  aria-label="Tipo de cliente"
+                  className="grid w-full grid-cols-2"
+                >
                   {(
                     [
                       { value: 'administration', label: 'Administración' },
                       { value: 'particular', label: 'Particular' },
                     ] as const
                   ).map((opt) => (
-                    <button
+                    <RadioGroupItem
                       key={opt.value}
-                      type="button"
-                      onClick={() => field.onChange(opt.value)}
+                      value={opt.value}
+                      className="text-center"
                     >
-                      <Badge
-                        variant={field.value === opt.value ? 'default' : 'secondary'}
-                        className="cursor-pointer"
-                      >
-                        {opt.label}
-                      </Badge>
-                    </button>
+                      {opt.label}
+                    </RadioGroupItem>
                   ))}
-                </div>
+                </RadioGroup>
               )}
             />
           </div>
