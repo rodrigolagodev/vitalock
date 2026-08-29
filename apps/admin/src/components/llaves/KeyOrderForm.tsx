@@ -25,16 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { formatCurrencyARS } from '@/lib/format';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -109,7 +100,7 @@ const schema = baseSchema.superRefine((data, ctx) => {
     if (!item.product_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Seleccioná un modelo de llave (stock)',
+        message: 'Seleccioná una llave (stock)',
         path: ['items', i, 'product_id'],
       });
     }
@@ -117,6 +108,27 @@ const schema = baseSchema.superRefine((data, ctx) => {
 });
 
 export type KeyOrderFormValues = z.infer<typeof schema>;
+
+// ---- Draft line schema (focused load panel) ----
+// The panel validates ONE line in isolation before it joins the order list.
+// Confirmed lines live in the parent form's items array for the final submit.
+const draftItemSchema = z.object({
+  product_id: z.string().min(1, 'Seleccioná una llave (stock)'),
+  quantity: z.coerce
+    .number({ invalid_type_error: 'La cantidad debe ser un número' })
+    .int()
+    .min(1, 'Mínimo 1'),
+  unit_price: z.coerce
+    .number({ invalid_type_error: 'El precio debe ser un número' })
+    .nullable()
+    .refine((v) => v !== null && v > 0, {
+      message: 'El precio debe ser mayor a 0',
+    }),
+  building_id: z.string().min(1, 'El edificio es obligatorio para ítems de tipo llave'),
+  unit_id: z.string().nullable().optional(),
+  pickup_particular_id: z.string().nullable().optional(),
+});
+type DraftItem = z.infer<typeof draftItemSchema>;
 
 // ---- Empty defaults ----
 
@@ -195,7 +207,7 @@ export function KeyOrderForm({
     defaultValues,
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove, update } = useFieldArray({ control, name: 'items' });
 
   const { data: keyProducts = [] } = useProducts({ category: 'rfid_key' });
   const defaultKeyProductId = keyProducts.length === 1 ? keyProducts[0]!.id : null;
@@ -220,6 +232,117 @@ export function KeyOrderForm({
       acc + (Number(it?.quantity) || 0) * (Number(it?.unit_price) || 0),
     0,
   );
+
+  // ---- Focused line draft (list + load panel) ----
+  // The panel edits a single draft line; confirmed lines go into the parent
+  // form's `items`. After confirming, model and building are inherited so the
+  // next line starts almost complete (Nielsen efficiency + recognition).
+  const emptyDraft = (): DraftItem => ({
+    product_id: defaultKeyProductId ?? '',
+    quantity: 1,
+    unit_price: null,
+    building_id: '',
+    unit_id: null,
+    pickup_particular_id: null,
+  });
+
+  const draftForm = useForm<DraftItem>({
+    resolver: zodResolver(draftItemSchema),
+    defaultValues: emptyDraft(),
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
+  });
+  const draftControl = draftForm.control;
+  const draftErrors = draftForm.formState.errors;
+  const draftBuilding = draftForm.watch('building_id');
+  const draftUnit = draftForm.watch('unit_id');
+  const draftQuantity = draftForm.watch('quantity');
+
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [draftParticular, setDraftParticular] = useState<ParticularRow | null>(null);
+
+  const startEdit = (index: number) => {
+    const item = items[index];
+    if (!item) return;
+    draftForm.reset({
+      product_id: item.product_id ?? '',
+      quantity: item.quantity ?? 1,
+      unit_price: item.unit_price ?? null,
+      building_id: item.building_id ?? '',
+      unit_id: item.unit_id ?? null,
+      pickup_particular_id: item.pickup_particular_id ?? null,
+    });
+    setDraftParticular(pickupParticulars[index] ?? null);
+    setEditingIndex(index);
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setDraftParticular(null);
+    draftForm.reset(emptyDraft());
+  };
+
+  const deleteItem = (index: number) => {
+    remove(index);
+    setPickupParticulars((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+    if (editingIndex === index) {
+      cancelEdit();
+    }
+  };
+
+  const submitDraft = () => {
+    void draftForm.handleSubmit((values) => {
+      const editingIdx = editingIndex;
+      const editing = editingIdx !== null;
+      const existing = editing
+        ? (items[editingIdx] as
+            | (KeyOrderFormValues['items'][number] & { _id?: string })
+            | undefined)
+        : undefined;
+      const nextItem = {
+        item_type: 'key' as const,
+        description: existing?.description ?? '',
+        quantity: values.quantity,
+        unit_price: values.unit_price,
+        building_id: values.building_id,
+        unit_id: values.unit_id,
+        pickup_particular_id:
+          draftParticular?.id ?? values.pickup_particular_id ?? null,
+        product_id: values.product_id,
+        ...(existing?._id ? { _id: existing._id } : {}),
+      };
+
+      if (editing && editingIdx !== null) {
+        update(editingIdx, nextItem as unknown as KeyOrderFormValues['items'][number]);
+        setPickupParticulars((prev) => ({
+          ...prev,
+          [editingIdx]: draftParticular,
+        }));
+      } else {
+        append(nextItem as unknown as KeyOrderFormValues['items'][number]);
+        setPickupParticulars((prev) => ({
+          ...prev,
+          [items.length]: draftParticular,
+        }));
+      }
+
+      // Inheritance: keep model + building; reset the rest for the next line.
+      draftForm.reset({
+        product_id: values.product_id,
+        quantity: 1,
+        unit_price: null,
+        building_id: values.building_id,
+        unit_id: null,
+        pickup_particular_id: null,
+      });
+      setDraftParticular(null);
+      setEditingIndex(null);
+    })();
+  };
 
   const { data: buildings = [] } = useBuildings(
     clientType === 'administration' && administrationId
@@ -247,19 +370,6 @@ export function KeyOrderForm({
       return;
     }
     onCancel?.();
-  };
-
-  const appendItem = () => {
-    append({
-      item_type: 'key',
-      quantity: 1,
-      description: '',
-      building_id: null,
-      unit_price: null,
-      unit_id: null,
-      pickup_particular_id: null,
-      product_id: defaultKeyProductId,
-    });
   };
 
   const isFormPending = isPending || isSubmitting;
@@ -351,238 +461,264 @@ export function KeyOrderForm({
           )}
         </section>
 
-        {/* ---- Section: Líneas de llave ---- */}
+        {/* ---- Section: Items (each item is a pack of keys) ---- */}
         <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
           <SectionHeading
-            title="Líneas de llave"
-            description="Cada línea es un pack de llaves con el mismo edificio y precio. Todos los campos quedan visibles."
+            title="Items"
+            description="Cada item es un pack de llaves del mismo modelo, edificio y precio. Cargalo en el panel de abajo y quedará listado arriba; el modelo y el edificio se recuerdan para el siguiente item."
           />
 
           {errors.items && !Array.isArray(errors.items) && (
             <p className="text-sm text-destructive">{errors.items.message}</p>
           )}
 
-          <div className="overflow-x-auto rounded-md border">
-            <Table className="min-w-[1080px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[72px]">Llave</TableHead>
-                  <TableHead className="w-[120px]">Cantidad *</TableHead>
-                  <TableHead className="w-[190px]">Modelo (stock) *</TableHead>
-                  <TableHead className="w-[130px]">Precio unitario *</TableHead>
-                  <TableHead>Edificio *</TableHead>
-                  <TableHead className="w-[170px]">Unidad</TableHead>
-                  <TableHead className="w-[210px]">Persona de retiro</TableHead>
-                  <TableHead className="w-[56px]">
-                    <span className="sr-only">Acciones</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fields.map((field, index) => {
-                  const item = items[index];
-                  const buildingId = item?.building_id ?? null;
+          {/* Confirmed lines summary: compact, one line each, no horizontal scrolling. */}
+          {fields.length > 0 && (
+            <div className="flex flex-col gap-3" data-testid="key-order-lines">
+              {fields.map((field, index) => {
+                const item = items[index];
+                const product = keyProducts.find(
+                  (p) => p.id === item?.product_id,
+                );
+                const building = buildings.find(
+                  (b) => b.id === item?.building_id,
+                );
+                const lineTotal =
+                  (Number(item?.quantity) || 0) *
+                  (Number(item?.unit_price) || 0);
 
-                  return (
-                    <TableRow key={field.id}>
-                      <TableCell className="align-top">
-                        <span className="text-sm font-medium text-muted-foreground">
-                          Llave {index + 1}
+                return (
+                  <div
+                    key={field.id}
+                    data-testid={`key-order-line-${index}`}
+                    className={[
+                      'flex items-center justify-between gap-3 rounded-md border px-4 py-3',
+                      editingIndex === index ? 'ring-1 ring-primary' : '',
+                    ].join(' ')}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 text-sm">
+                        <span className="font-medium text-muted-foreground">
+                          Item {index + 1}
                         </span>
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <div className="flex flex-col gap-1">
-                          <Input
-                            id={`items.${index}.quantity`}
-                            type="number"
-                            min={1}
-                            aria-label={`Cantidad de llaves ${index + 1}`}
-                            className="w-20"
-                            {...register(`items.${index}.quantity`)}
-                          />
-                          {(item?.quantity ?? 1) > 1 && (
-                            <p className="text-xs text-muted-foreground">
-                              Se dividirá en {item?.quantity} llaves individuales.
-                            </p>
-                          )}
-                          {errors.items?.[index]?.quantity && (
-                            <p className="text-xs text-destructive">
-                              {errors.items[index]?.quantity?.message}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <div className="flex flex-col gap-1">
-                          <Controller
-                            control={control}
-                            name={`items.${index}.product_id`}
-                            render={({ field: f }) => (
-                              <Select
-                                value={f.value ?? ''}
-                                onValueChange={(v) => f.onChange(v || null)}
-                              >
-                                <SelectTrigger
-                                  id={`items.${index}.product_id`}
-                                  aria-label={`Modelo de llave ${index + 1}`}
-                                >
-                                  <SelectValue placeholder="Seleccioná un modelo" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {keyProducts.map((p) => (
-                                    <SelectItem key={p.id} value={p.id}>
-                                      {p.name} — disponible: {p.stock_disponible}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                          {errors.items?.[index]?.product_id && (
-                            <p className="text-xs text-destructive">
-                              {errors.items[index]?.product_id?.message}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <div className="flex flex-col gap-1">
-                          <Input
-                            id={`items.${index}.unit_price`}
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            placeholder="0.00"
-                            aria-label={`Precio unitario ${index + 1}`}
-                            className="w-28"
-                            {...register(`items.${index}.unit_price`)}
-                          />
-                          {errors.items?.[index]?.unit_price && (
-                            <p className="text-xs text-destructive">
-                              {errors.items[index]?.unit_price?.message}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <div className="flex flex-col gap-1">
-                          {/* item_type is always 'key' — hidden field to satisfy RHF schema */}
-                          <input
-                            type="hidden"
-                            {...register(`items.${index}.item_type`)}
-                            value="key"
-                          />
-                          <Controller
-                            control={control}
-                            name={`items.${index}.building_id`}
-                            render={({ field: f }) => (
-                              <BuildingCombobox
-                                id={`items.${index}.building_id`}
-                                buildings={buildings}
-                                value={f.value}
-                                onChange={(v) => {
-                                  f.onChange(v);
-                                  setValue(`items.${index}.unit_id`, null);
-                                }}
-                                placeholder="Buscar por nombre o dirección"
-                              />
-                            )}
-                          />
-                          {errors.items?.[index]?.building_id && (
-                            <p className="text-xs text-destructive">
-                              {errors.items[index]?.building_id?.message}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <KeyItemUnitField
-                          index={index}
-                          buildingId={buildingId}
-                          control={control}
-                          errors={errors}
-                        />
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <Controller
-                          control={control}
-                          name={`items.${index}.pickup_particular_id`}
-                          render={({ field: f }) => (
-                            <ParticularSelector
-                              value={pickupParticulars[index] ?? null}
-                              onChange={(p) => {
-                                const pp = p as ParticularRow | null;
-                                setPickupParticulars((prev) => ({ ...prev, [index]: pp }));
-                                f.onChange(pp?.id ?? null);
-                              }}
-                            />
-                          )}
-                        />
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            remove(index);
-                            setPickupParticulars((prev) => {
-                              const next = { ...prev };
-                              delete next[index];
-                              return next;
-                            });
-                          }}
-                          className="h-8 w-8 px-0 text-destructive hover:text-destructive"
-                          aria-label={`Eliminar llave ${index + 1}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={8}>
-                    <div
-                      data-testid="lines-totals"
-                      className="flex flex-wrap items-center justify-between gap-2 text-sm"
-                    >
-                      <span className="text-muted-foreground">
-                        {items.length}{' '}
-                        {items.length === 1 ? 'línea' : 'líneas'} ·{' '}
-                        {keysCount} {keysCount === 1 ? 'llave' : 'llaves'}
-                      </span>
-                      <span className="font-medium">
-                        Total:{' '}
-                        <span className="tabular-nums">
-                          {formatCurrencyARS(totalPrice)}
+                        <span className="truncate font-medium">
+                          {product?.name ?? 'Sin modelo'}
                         </span>
-                      </span>
+                        <span className="shrink-0 text-muted-foreground">
+                          × {item?.quantity ?? 1}
+                        </span>
+                      </p>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        {building?.name ?? 'Sin edificio'} ·{' '}
+                        {formatCurrencyARS(lineTotal)}
+                      </p>
                     </div>
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 px-0"
+                        aria-label={`Editar item ${index + 1}`}
+                        onClick={() => startEdit(index)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 px-0 text-destructive hover:text-destructive"
+                        aria-label={`Eliminar item ${index + 1}`}
+                        onClick={() => deleteItem(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Focused load panel: one line at a time; model + building inherit from the previous line. */}
+          <div className="flex flex-col gap-4 rounded-md border bg-muted/30 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">
+                {editingIndex !== null
+                  ? `Editar item ${editingIndex + 1}`
+                  : 'Nuevo item'}
+              </p>
+              {editingIndex !== null && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={cancelEdit}
+                >
+                  Cancelar
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Modelo */}
+              <div className="flex min-w-0 flex-col gap-2">
+                <Label htmlFor="draft-product-id">Llave *</Label>
+                <Controller
+                  control={draftControl}
+                  name="product_id"
+                  render={({ field: f }) => (
+                    <Select
+                      value={f.value ?? ''}
+                      onValueChange={(v) => f.onChange(v || null)}
+                    >
+                      <SelectTrigger
+                        id="draft-product-id"
+                        aria-label="Llave"
+                      >
+                        <SelectValue placeholder="Seleccioná un modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {keyProducts.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name} — disponible: {p.stock_disponible}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {draftErrors.product_id && (
+                  <p className="text-xs text-destructive">
+                    {draftErrors.product_id.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Cantidad + Precio: short inputs, side by side to save a row */}
+              <div className="flex min-w-0 flex-col gap-2">
+                <div className="grid grid-cols-2 items-start gap-4">
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <Label htmlFor="draft-quantity">Cantidad *</Label>
+                    <Input
+                      id="draft-quantity"
+                      type="number"
+                      min={1}
+                      aria-label="Cantidad de llaves"
+                      {...draftForm.register('quantity')}
+                    />
+                    {draftErrors.quantity && (
+                      <p className="text-xs text-destructive">
+                        {draftErrors.quantity.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <Label htmlFor="draft-unit-price">Precio unitario *</Label>
+                    <Input
+                      id="draft-unit-price"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      placeholder="0.00"
+                      aria-label="Precio unitario"
+                      {...draftForm.register('unit_price')}
+                    />
+                    {draftErrors.unit_price && (
+                      <p className="text-xs text-destructive">
+                        {draftErrors.unit_price.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {(draftQuantity ?? 1) > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    Se dividirá en {draftQuantity} llaves individuales.
+                  </p>
+                )}
+              </div>
+
+              {/* Edificio */}
+              <div className="flex min-w-0 flex-col gap-2">
+                <Label>Edificio *</Label>
+                <BuildingCombobox
+                  id="draft-building-id"
+                  buildings={buildings}
+                  value={draftBuilding ?? ''}
+                  onChange={(v) => {
+                    draftForm.setValue('building_id', v ?? '', {
+                      shouldValidate: true,
+                    });
+                    draftForm.setValue('unit_id', null);
+                  }}
+                  placeholder="Buscar por nombre o dirección"
+                />
+                {draftErrors.building_id && (
+                  <p className="text-xs text-destructive">
+                    {draftErrors.building_id.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Unidad */}
+              <div className="flex min-w-0 flex-col gap-2">
+                <Label>Unidad</Label>
+                <KeyItemUnitField
+                  buildingId={draftBuilding || null}
+                  value={draftUnit ?? null}
+                  onChange={(v) => draftForm.setValue('unit_id', v)}
+                  error={draftErrors.unit_id?.message}
+                />
+              </div>
+
+              {/* Autorizado a retirar */}
+              <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
+                <Label>Autorizado a retirar</Label>
+                <ParticularSelector
+                  value={draftParticular}
+                  onChange={(p) =>
+                    setDraftParticular(p as ParticularRow | null)
+                  }
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex">
+              <Button
+                type="button"
+                className="w-full gap-2"
+                onClick={submitDraft}
+              >
+                {editingIndex !== null ? (
+                  'Guardar cambios'
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Agregar item
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={appendItem}
-            className="self-start"
+          {/* Totals live OUTSIDE the scroll container: always visible on any screen. */}
+          <div
+            data-testid="lines-totals"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-4 py-3 text-sm"
           >
-            + Agregar línea
-          </Button>
+            <span className="text-muted-foreground">
+              {items.length} {items.length === 1 ? 'item' : 'items'} ·{' '}
+              {keysCount} {keysCount === 1 ? 'llave' : 'llaves'}
+            </span>
+            <span className="font-medium">
+              Total:{' '}
+              <span className="tabular-nums">
+                {formatCurrencyARS(totalPrice)}
+              </span>
+            </span>
+          </div>
         </section>
 
         {/* ---- Section: Notas ---- */}
@@ -625,72 +761,72 @@ export function KeyOrderForm({
 }
 
 // ---- KeyItemUnitField sub-component ----
-
-import type { Control, FieldErrors } from 'react-hook-form';
+// Bound to the draft panel: one unit selection, controlled by value/onChange.
 
 interface KeyItemUnitFieldProps {
-  index: number;
   buildingId: string | null | undefined;
-  control: Control<KeyOrderFormValues>;
-  errors: FieldErrors<KeyOrderFormValues>;
+  value: string | null | undefined;
+  onChange: (v: string | null) => void;
+  error?: string;
 }
 
 function KeyItemUnitField({
-  index,
   buildingId,
-  control,
-  errors,
+  value,
+  onChange,
+  error,
 }: KeyItemUnitFieldProps) {
   const [quickUnitOpen, setQuickUnitOpen] = useState(false);
   const { data: units = [] } = useUnits(buildingId ?? '');
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-1.5">
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          <Controller
-            control={control}
-            name={`items.${index}.unit_id`}
-            render={({ field: f }) => (
-              <Select
-                value={f.value ?? ''}
-                onValueChange={(v) => f.onChange(v || null)}
-                disabled={!buildingId}
-              >
-                <SelectTrigger
-                  id={`items.${index}.unit_id`}
-                  aria-label={`Unidad ${index + 1}`}
-                >
-                  <SelectValue placeholder={buildingId ? 'Seleccioná una unidad' : 'Primero elegí edificio'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {units.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.number}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <Select
+            value={value ?? ''}
+            onValueChange={(v) => onChange(v || null)}
+            disabled={!buildingId}
+          >
+            <SelectTrigger id="draft-unit-id" aria-label="Unidad de la llave">
+              <SelectValue
+                placeholder={
+                  buildingId ? 'Seleccioná una unidad' : 'Primero elegí edificio'
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {units.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.number}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-11 shrink-0 px-0"
+          aria-label="Crear unidad"
+          disabled={!buildingId}
+          onClick={() => setQuickUnitOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
         {buildingId && (
           <QuickUnitCreateDialog
             open={quickUnitOpen}
             onOpenChange={setQuickUnitOpen}
             buildingId={buildingId}
-            onCreated={() => setQuickUnitOpen(false)}
+            onCreated={(unitId) => {
+              onChange(unitId);
+              setQuickUnitOpen(false);
+            }}
           />
         )}
       </div>
-      {errors.items?.[index]?.unit_id && (
-        <p className="text-xs text-destructive">
-          {errors.items[index]?.unit_id?.message}
-        </p>
-      )}
-      <p className="text-xs text-muted-foreground">
-        Opcional — se pedirá al configurar la llave.
-      </p>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

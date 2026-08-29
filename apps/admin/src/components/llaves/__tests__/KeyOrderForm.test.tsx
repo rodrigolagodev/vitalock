@@ -59,7 +59,27 @@ vi.mock('@/components/particulares/ParticularFormSheet', () => ({
 }));
 
 vi.mock('@/components/llaves/QuickUnitCreateDialog', () => ({
-  QuickUnitCreateDialog: () => null,
+  QuickUnitCreateDialog: ({
+    open,
+    buildingId,
+    onOpenChange,
+    onCreated,
+  }: {
+    open: boolean;
+    buildingId: string;
+    onOpenChange: (open: boolean) => void;
+    onCreated: (unitId: string) => void;
+  }) =>
+    open ? (
+      <div data-testid="quick-unit-create" data-building={buildingId}>
+        <button type="button" onClick={() => onCreated('unit-new-1')}>
+          Confirmar creación
+        </button>
+        <button type="button" onClick={() => onOpenChange(false)}>
+          Cerrar
+        </button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('@/components/buildings/BuildingCombobox', () => ({
@@ -152,7 +172,7 @@ describe('KeyOrderForm', () => {
       screen.getByRole('button', { name: /crear y confirmar orden/i }),
     ).toBeInTheDocument();
     expect(screen.getByText('Cliente')).toBeInTheDocument();
-    expect(screen.getByText('Líneas de llave')).toBeInTheDocument();
+    expect(screen.getByText('Items')).toBeInTheDocument();
   });
 
   // T-13c-1b: edit mode renders correct submit label and pre-populates notes
@@ -177,7 +197,7 @@ describe('KeyOrderForm', () => {
       <KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
       { wrapper: makeWrapper() },
     );
-    expect(screen.getByText('Llave 1')).toBeInTheDocument();
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
   });
 
   // T-13c-1d: validation blocks submit when no items
@@ -197,18 +217,77 @@ describe('KeyOrderForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // T-13c-1e: adding an item works
-  it('adds an item card when "Agregar línea" is clicked', async () => {
+  // T-13c-1e: adding an item works (list + load panel pattern)
+  it('adds a line to the summary list when the draft panel is submitted', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
       wrapper: makeWrapper(),
     });
 
-    expect(screen.queryByText('Llave 1')).not.toBeInTheDocument();
-    const addBtn = screen.getByRole('button', { name: /agregar l[íi]nea/i });
-    await user.click(addBtn);
-    expect(screen.getByText('Llave 1')).toBeInTheDocument();
+    expect(screen.queryByTestId('key-order-line-0')).not.toBeInTheDocument();
+
+    // Panel inherits the single stock model, but building and price are required.
+    await user.click(screen.getByTestId('building-combobox'));
+    await user.type(
+      screen.getByLabelText(/precio unitario/i),
+      '100',
+    );
+    await user.click(
+      screen.getByRole('button', { name: /agregar item/i }),
+    );
+
+    expect(screen.getByTestId('key-order-line-0')).toBeInTheDocument();
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
+  });
+
+  // T-13c-1g: the create-unit button is always visible, disabled until a building
+  it('renders the create-unit button disabled until a building is selected', () => {
+    const onSubmit = vi.fn();
+    render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
+    const createUnitBtn = screen.getByRole('button', { name: /crear unidad/i });
+    expect(createUnitBtn).toBeInTheDocument();
+    expect(createUnitBtn).toBeDisabled();
+  });
+
+  // T-13c-1h: the create-unit button opens the dialog for the selected building
+  it('opens the unit creation dialog for the selected building', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const createUnitBtn = screen.getByRole('button', { name: /crear unidad/i });
+    expect(createUnitBtn).toBeDisabled();
+
+    await user.click(screen.getByTestId('building-combobox'));
+    expect(createUnitBtn).toBeEnabled();
+
+    await user.click(createUnitBtn);
+    expect(screen.getByTestId('quick-unit-create')).toHaveAttribute(
+      'data-building',
+      'bld-1',
+    );
+  });
+
+  // T-13c-1i: creating a unit from the unit field closes the dialog
+  it('closes the unit creation dialog after the unit is created', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
+
+    await user.click(screen.getByTestId('building-combobox'));
+    await user.click(screen.getByRole('button', { name: /crear unidad/i }));
+    await user.click(
+      screen.getByRole('button', { name: /confirmar creación/i }),
+    );
+
+    expect(screen.queryByTestId('quick-unit-create')).not.toBeInTheDocument();
   });
 
   // T-13c-1f: removing an item works
@@ -220,30 +299,28 @@ describe('KeyOrderForm', () => {
       { wrapper: makeWrapper() },
     );
 
-    expect(screen.getByText('Llave 1')).toBeInTheDocument();
-    const removeBtn = screen.getByRole('button', { name: /eliminar llave 1/i });
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
+    const removeBtn = screen.getByRole('button', { name: /eliminar item 1/i });
     await user.click(removeBtn);
-    expect(screen.queryByText('Llave 1')).not.toBeInTheDocument();
+    expect(screen.queryByText('Item 1')).not.toBeInTheDocument();
   });
 
-  // Always-visible lines table: every field of a line renders immediately,
-  // with no expand/collapse step (previously fields were hidden inside collapsed cards).
-  it('shows all line fields visible right after adding a line (no expand step)', async () => {
-    const user = userEvent.setup();
+  // List + load panel: the focused panel renders immediately with the few
+  // required fields, no expand/collapse step and no scrolling (previous table
+  // required a wide canvas and constant horizontal scroll).
+  it('shows the focused draft panel fields without any expand step', () => {
     const onSubmit = vi.fn();
     render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
       wrapper: makeWrapper(),
     });
 
-    await user.click(screen.getByRole('button', { name: /agregar l[íi]nea/i }));
-
-    expect(screen.getByLabelText(/cantidad de llaves 1/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/precio unitario 1/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/cantidad de llaves/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/precio unitario/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('combobox', { name: /modelo de llave 1/i }),
+      screen.getByRole('combobox', { name: /^llave$/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('combobox', { name: /unidad 1/i }),
+      screen.getByRole('combobox', { name: /unidad de la llave/i }),
     ).toBeInTheDocument();
     expect(screen.getByTestId('building-combobox')).toBeInTheDocument();
   });
@@ -258,8 +335,27 @@ describe('KeyOrderForm', () => {
 
     const totals = screen.getByTestId('lines-totals');
     // makeInitialOrder has one item: quantity 2, unit_price 150 → 2 llaves, $300,00.
-    expect(totals).toHaveTextContent(/1 línea · 2 llaves/);
+    expect(totals).toHaveTextContent(/1 item · 2 llaves/);
     expect(totals).toHaveTextContent(/Total:/);
+    expect(totals).toHaveTextContent(/300,00/);
+  });
+
+  // Add-item button carries a descriptive label (not a bare "+ Agregar item")
+  // and totals stay visible without scrolling the table.
+  it('shows a descriptive add-line button and totals outside the scroll area', () => {
+    const onSubmit = vi.fn();
+    render(
+      <KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(
+      screen.getByRole('button', { name: /agregar item/i }),
+    ).toBeInTheDocument();
+
+    // makeInitialOrder has one item: quantity 2, unit_price 150 → 2 llaves, $300,00.
+    const totals = screen.getByTestId('lines-totals');
+    expect(totals).toHaveTextContent(/1 item · 2 llaves/);
     expect(totals).toHaveTextContent(/300,00/);
   });
 
@@ -320,7 +416,7 @@ describe('KeyOrderForm', () => {
     });
 
     // Add one item so items validation passes
-    const addBtn = screen.getByRole('button', { name: /agregar l[íi]nea/i });
+    const addBtn = screen.getByRole('button', { name: /agregar item/i });
     await user.click(addBtn);
 
     const submitBtn = screen.getByRole('button', { name: /crear y confirmar orden/i });
@@ -334,10 +430,8 @@ describe('KeyOrderForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // T-13c-1i: item validation requires building_id
-  // Note: item validation errors only render when the item card is expanded (isOpen).
-  // We click "Agregar línea" (which auto-expands the item), then submit without setting building.
-  it('shows error when item is missing building_id', async () => {
+  // T-13c-1i: the draft panel validates building_id before the line joins the list
+  it('shows error when the draft line is missing building_id', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
 
@@ -360,20 +454,22 @@ describe('KeyOrderForm', () => {
       { wrapper: makeWrapper() },
     );
 
-    // Add an item — it auto-expands so error fields will be in DOM after submit.
-    await user.click(screen.getByRole('button', { name: /agregar l[íi]nea/i }));
-
-    // Submit without filling building_id or product_id
-    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
+    // Submitting the draft without a building surfaces the panel error
+    // (model defaults to the single stock product, price left empty → building check first).
+    await user.click(
+      screen.getByRole('button', { name: /agregar item/i }),
+    );
 
     await waitFor(() => {
-      expect(screen.getByText(/el edificio es obligatorio/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/el edificio es obligatorio/i),
+      ).toBeInTheDocument();
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // T-13c-1j: item validation requires positive unit_price
-  it('shows error when item has no unit_price', async () => {
+  // T-13c-1j: the draft panel requires a positive unit_price
+  it('shows error when the draft line has no unit_price', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
 
@@ -396,17 +492,18 @@ describe('KeyOrderForm', () => {
       { wrapper: makeWrapper() },
     );
 
-    // Add an item — auto-expands, error fields are in DOM after submit.
-    await user.click(screen.getByRole('button', { name: /agregar l[íi]nea/i }));
-
     // Fill building by clicking the combobox stub, but leave unit_price empty.
     await user.click(screen.getByTestId('building-combobox'));
 
-    // Submit
-    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
+    // Submit the draft
+    await user.click(
+      screen.getByRole('button', { name: /agregar item/i }),
+    );
 
     await waitFor(() => {
-      expect(screen.getByText(/el precio deve ser mayor a 0|el precio debe ser mayor a 0/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/el precio debe ser mayor a 0/i),
+      ).toBeInTheDocument();
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -419,17 +516,18 @@ describe('KeyOrderForm', () => {
       wrapper: makeWrapper(),
     });
 
-    // Default is administración — particular selector hidden.
-    expect(screen.queryByTestId('particular-selector')).not.toBeInTheDocument();
+    // The per-line pickup selector lives in the draft panel regardless of client type.
+    expect(screen.getAllByTestId('particular-selector').length).toBe(1);
 
     // Radio group exposes both options as radios.
     const particularRadio = screen.getByRole('radio', { name: /particular/i });
     await user.click(particularRadio);
 
     expect(particularRadio).toBeChecked();
-    expect(screen.getByTestId('particular-selector')).toBeInTheDocument();
+    // Client section + draft panel both offer a particular selector now.
+    expect(screen.getAllByTestId('particular-selector').length).toBe(2);
 
-    // Submit without selecting a particular → validation error, no onSubmit.
+    // Submit without selecting a particular → client-level validation error, no onSubmit.
     await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
 
     await waitFor(() => {

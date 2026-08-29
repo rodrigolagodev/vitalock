@@ -139,7 +139,7 @@ export default function KeyOrderEditarPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">Editar orden de llaves</h1>
         <p className="text-sm text-muted-foreground">
-          Modificá el cliente o las líneas de llave del borrador.
+          Modificá el cliente o los items del borrador.
         </p>
       </div>
 
