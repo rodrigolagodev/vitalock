@@ -226,6 +226,43 @@ describe('KeyOrderForm', () => {
     expect(screen.queryByText('Llave 1')).not.toBeInTheDocument();
   });
 
+  // Always-visible lines table: every field of a line renders immediately,
+  // with no expand/collapse step (previously fields were hidden inside collapsed cards).
+  it('shows all line fields visible right after adding a line (no expand step)', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
+
+    await user.click(screen.getByRole('button', { name: /agregar l[íi]nea/i }));
+
+    expect(screen.getByLabelText(/cantidad de llaves 1/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/precio unitario 1/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: /modelo de llave 1/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: /unidad 1/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('building-combobox')).toBeInTheDocument();
+  });
+
+  // Table footer shows live totals (visibility of system status).
+  it('shows live line, key and price totals in the table footer', () => {
+    const onSubmit = vi.fn();
+    render(
+      <KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
+      { wrapper: makeWrapper() },
+    );
+
+    const totals = screen.getByTestId('lines-totals');
+    // makeInitialOrder has one item: quantity 2, unit_price 150 → 2 llaves, $300,00.
+    expect(totals).toHaveTextContent(/1 línea · 2 llaves/);
+    expect(totals).toHaveTextContent(/Total:/);
+    expect(totals).toHaveTextContent(/300,00/);
+  });
+
   // T-13c-1g: create mode calls onSubmit (form-level, not mutation-level)
   it('create mode calls onSubmit with correct payload shape when form is valid', async () => {
     const user = userEvent.setup();
