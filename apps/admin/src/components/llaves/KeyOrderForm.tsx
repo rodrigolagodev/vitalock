@@ -10,6 +10,7 @@ import { ParticularSelector } from '@/components/particulares/ParticularSelector
 import { ParticularFormSheet } from '@/components/particulares/ParticularFormSheet';
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
+import { AdministrationCombobox } from '@/components/administrations/AdministrationCombobox';
 import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
@@ -296,21 +297,13 @@ export function KeyOrderForm({
                 control={control}
                 name="administration_id"
                 render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(v) => field.onChange(v || null)}
-                  >
-                    <SelectTrigger id="administration_id">
-                      <SelectValue placeholder="Seleccioná una administración" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {administrations.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.company_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <AdministrationCombobox
+                    id="administration_id"
+                    administrations={administrations}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v || null)}
+                    placeholder="Buscar por razón social o CUIT/CUIL"
+                  />
                 )}
               />
               {errors.administration_id && (
