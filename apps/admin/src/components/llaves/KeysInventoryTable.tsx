@@ -7,9 +7,14 @@ import { keyOrderStatusLabel } from '@/lib/status/keyOrderStatus';
 interface KeysInventoryTableProps {
   rows: KeysInventoryRow[];
   isFetching?: boolean;
+  hasFilters?: boolean;
 }
 
-export function KeysInventoryTable({ rows, isFetching = false }: KeysInventoryTableProps) {
+export function KeysInventoryTable({
+  rows,
+  isFetching = false,
+  hasFilters = false,
+}: KeysInventoryTableProps) {
   const navigate = useNavigate();
 
   return (
@@ -18,6 +23,8 @@ export function KeysInventoryTable({ rows, isFetching = false }: KeysInventoryTa
       isFetching={isFetching}
       rowKey={(r) => r.id ?? ''}
       emptyMessage="No hay llaves registradas en el inventario."
+      hasFilters={hasFilters}
+      filteredEmptyMessage="No se encontraron llaves con los filtros aplicados."
       firstCell="button"
       onFirstCellClick={(r) => {
         if (r.id) navigate(`/llaves/inventario/${r.id}`);

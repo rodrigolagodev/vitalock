@@ -13,9 +13,15 @@ interface KeysTableProps {
   keys: KeyRow[];
   buildingId: string;
   isFetching?: boolean;
+  hasFilters?: boolean;
 }
 
-export function KeysTable({ keys, buildingId, isFetching = false }: KeysTableProps) {
+export function KeysTable({
+  keys,
+  buildingId,
+  isFetching = false,
+  hasFilters = false,
+}: KeysTableProps) {
   const navigate = useNavigate();
   const [changingStatusFor, setChangingStatusFor] = useState<KeyRow | null>(null);
 
@@ -42,6 +48,8 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
         firstCell="button"
         onFirstCellClick={(k) => navigate(`/llaves/inventario/${k.id}`)}
         emptyMessage="No hay llaves registradas."
+        hasFilters={hasFilters}
+        filteredEmptyMessage="No se encontraron llaves con los filtros aplicados."
         actions={actions}
         columns={[
           {

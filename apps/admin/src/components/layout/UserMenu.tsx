@@ -1,12 +1,12 @@
-import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { Button, Switch } from '@vitalock/ui';
+import { ChevronsUpDown, LogOut } from 'lucide-react';
+import { Button } from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@vitalock/ui';
+import { ThemeToggle } from './ThemeToggle';
 
 function initialsFromName(name: string): string {
   return name
@@ -20,8 +20,6 @@ function initialsFromName(name: string): string {
 
 export function UserMenu() {
   const { staff, session, signOut } = useAuthContext();
-  const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
 
   const name = staff?.full_name ?? 'Usuario';
   const email = session?.user?.email ?? '';
@@ -67,19 +65,8 @@ export function UserMenu() {
           )}
         </div>
         <div className="flex items-center justify-between px-3 py-2.5">
-          <div className="flex items-center gap-2 text-sm">
-            {isDark ? (
-              <Moon className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <Sun className="h-4 w-4 text-muted-foreground" />
-            )}
-            <span>Modo oscuro</span>
-          </div>
-          <Switch
-            checked={isDark}
-            onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-            aria-label="Cambiar entre tema claro y oscuro"
-          />
+          <span className="text-sm">Tema</span>
+          <ThemeToggle />
         </div>
         <div className="border-t p-1">
           <Button

@@ -167,7 +167,17 @@ export default function InventarioPage() {
         </div>
       </div>
 
-      <KeysInventoryTable rows={rows} isFetching={isFetching} />
+      <KeysInventoryTable
+        rows={rows}
+        isFetching={isFetching}
+        hasFilters={
+          cascadeValue.administrationId != null ||
+          cascadeValue.buildingId != null ||
+          cascadeValue.equipmentId != null ||
+          physicalStatus !== 'all' ||
+          workflowStatus !== 'all'
+        }
+      />
     </div>
   );
 }

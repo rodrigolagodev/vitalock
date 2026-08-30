@@ -166,7 +166,12 @@ export default function BuildingDetailPage() {
               </SelectContent>
             </Select>
           </div>
-          <KeysTable buildingId={buildingId} keys={filteredKeys} isFetching={keysFetching} />
+          <KeysTable
+            buildingId={buildingId}
+            keys={filteredKeys}
+            isFetching={keysFetching}
+            hasFilters={llavesSearch.trim() !== '' || llavesStatus !== 'all'}
+          />
         </div>
         )}
 
