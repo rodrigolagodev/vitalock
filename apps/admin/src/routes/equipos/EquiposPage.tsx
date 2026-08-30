@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, ErrorState } from '@vitalock/ui';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useEquipmentInventory } from '@/hooks/useEquipmentInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -54,12 +55,11 @@ export default function EquiposPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Inventario de equipos</h1>
+      <PageHeader title="Inventario de equipos">
         <Button asChild>
           <Link to="/servicio-tecnico/nueva">Crear orden técnica</Link>
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="flex flex-col gap-4">
         <CascadeFilter

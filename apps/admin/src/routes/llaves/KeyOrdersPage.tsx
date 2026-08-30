@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, PackageCheck } from 'lucide-react';
 import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useKeyOrders } from '@/hooks/useKeyOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -54,12 +55,11 @@ export default function KeyOrdersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Llaves</h1>
+      <PageHeader title="Llaves">
         <Button asChild>
           <Link to="/llaves/nueva">Nueva orden</Link>
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stat-cards">
         <StatCard

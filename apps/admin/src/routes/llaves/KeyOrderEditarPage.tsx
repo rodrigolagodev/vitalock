@@ -1,6 +1,7 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@vitalock/ui';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { KeyOrderForm } from '@/components/llaves/KeyOrderForm';
 import type { KeyOrderFormValues } from '@/components/llaves/KeyOrderForm';
 import { useKeyOrder } from '@/hooks/useKeyOrder';
@@ -41,20 +42,14 @@ export default function KeyOrderEditarPage() {
   if (order.status !== 'draft') {
     return (
       <div className="flex flex-col gap-6 pb-24">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-          <Link to="/llaves" className="hover:text-foreground transition-colors">
-            Llaves
-          </Link>
-          <span>/</span>
-          <Link
-            to={`/llaves/${order.id}`}
-            className="hover:text-foreground transition-colors"
-          >
-            {order.order_number}
-          </Link>
-          <span>/</span>
-          <span className="text-foreground font-medium">Editar</span>
-        </div>
+        <PageHeader
+          title="Editar orden de llaves"
+          breadcrumbs={[
+            { label: 'Llaves', to: '/llaves' },
+            { label: order.order_number, to: `/llaves/${order.id}` },
+            { label: 'Editar' },
+          ]}
+        />
 
         <div className="flex flex-col gap-4 rounded-md border border-destructive/30 bg-destructive/5 p-5">
           <p className="text-sm text-destructive font-medium">
@@ -121,27 +116,15 @@ export default function KeyOrderEditarPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-24">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-        <Link to="/llaves" className="hover:text-foreground transition-colors">
-          Llaves
-        </Link>
-        <span>/</span>
-        <Link
-          to={`/llaves/${order.id}`}
-          className="hover:text-foreground transition-colors"
-        >
-          {order.order_number}
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">Editar</span>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Editar orden de llaves</h1>
-        <p className="text-sm text-muted-foreground">
-          Modificá el cliente o los items del borrador.
-        </p>
-      </div>
+      <PageHeader
+        title="Editar orden de llaves"
+        subtitle="Modificá el cliente o los items del borrador."
+        breadcrumbs={[
+          { label: 'Llaves', to: '/llaves' },
+          { label: order.order_number, to: `/llaves/${order.id}` },
+          { label: 'Editar' },
+        ]}
+      />
 
       <KeyOrderForm
         mode="edit"

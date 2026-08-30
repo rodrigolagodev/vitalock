@@ -1,4 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { TechnicalOrderForm } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import type { TechnicalOrderFormValues } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
@@ -46,20 +47,14 @@ export default function TechnicalOrderNuevaPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-24">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-        <Link to="/servicio-tecnico" className="hover:text-foreground transition-colors">
-          Servicio técnico
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">Nueva orden</span>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Nueva orden de servicio técnico</h1>
-        <p className="text-sm text-muted-foreground">
-          Completá los datos del cliente y las líneas de trabajo. La orden se confirma automáticamente al guardar.
-        </p>
-      </div>
+      <PageHeader
+        title="Nueva orden de servicio técnico"
+        subtitle="Completá los datos del cliente y las líneas de trabajo. La orden se confirma automáticamente al guardar."
+        breadcrumbs={[
+          { label: 'Servicio técnico', to: '/servicio-tecnico' },
+          { label: 'Nueva orden' },
+        ]}
+      />
 
       <TechnicalOrderForm
         mode="create"

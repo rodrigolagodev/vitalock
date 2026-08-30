@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Badge, ErrorState, Input, SearchInput } from '@vitalock/ui';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useAllOrders } from '@/hooks/useAllOrders';
 import { useDebounce } from '@/hooks/useDebounce';
 import { HistorialTable } from '@/components/historial/HistorialTable';
@@ -60,7 +61,7 @@ export default function HistorialPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Órdenes</h1>
+      <PageHeader title="Órdenes" />
 
       <SearchInput
         placeholder="Buscar por número de orden, cliente..."

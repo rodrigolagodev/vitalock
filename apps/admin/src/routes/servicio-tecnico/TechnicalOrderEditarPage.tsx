@@ -1,6 +1,7 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@vitalock/ui';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { TechnicalOrderForm } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import type { TechnicalOrderFormValues } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
@@ -41,20 +42,14 @@ export default function TechnicalOrderEditarPage() {
   if (order.status !== 'draft') {
     return (
       <div className="flex flex-col gap-6 pb-24">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-          <Link to="/servicio-tecnico" className="hover:text-foreground transition-colors">
-            Servicio técnico
-          </Link>
-          <span>/</span>
-          <Link
-            to={`/servicio-tecnico/${order.id}`}
-            className="hover:text-foreground transition-colors"
-          >
-            {order.order_number}
-          </Link>
-          <span>/</span>
-          <span className="text-foreground font-medium">Editar</span>
-        </div>
+        <PageHeader
+          title="Editar orden de servicio técnico"
+          breadcrumbs={[
+            { label: 'Servicio técnico', to: '/servicio-tecnico' },
+            { label: order.order_number, to: `/servicio-tecnico/${order.id}` },
+            { label: 'Editar' },
+          ]}
+        />
 
         <div className="flex flex-col gap-4 rounded-md border border-destructive/30 bg-destructive/5 p-5">
           <p className="text-sm text-destructive font-medium">
@@ -122,27 +117,15 @@ export default function TechnicalOrderEditarPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-24">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-        <Link to="/servicio-tecnico" className="hover:text-foreground transition-colors">
-          Servicio técnico
-        </Link>
-        <span>/</span>
-        <Link
-          to={`/servicio-tecnico/${order.id}`}
-          className="hover:text-foreground transition-colors"
-        >
-          {order.order_number}
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">Editar</span>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Editar orden de servicio técnico</h1>
-        <p className="text-sm text-muted-foreground">
-          Modificá el cliente o las líneas de trabajo del borrador.
-        </p>
-      </div>
+      <PageHeader
+        title="Editar orden de servicio técnico"
+        subtitle="Modificá el cliente o las líneas de trabajo del borrador."
+        breadcrumbs={[
+          { label: 'Servicio técnico', to: '/servicio-tecnico' },
+          { label: order.order_number, to: `/servicio-tecnico/${order.id}` },
+          { label: 'Editar' },
+        ]}
+      />
 
       <TechnicalOrderForm
         mode="edit"

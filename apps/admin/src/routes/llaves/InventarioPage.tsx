@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Button, ErrorState } from '@vitalock/ui';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -105,12 +106,11 @@ export default function InventarioPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Inventario de llaves</h1>
+      <PageHeader title="Inventario de llaves">
         <Button asChild>
           <Link to="/llaves/nueva">Crear orden de llave</Link>
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="flex flex-col gap-4">
         <CascadeFilter

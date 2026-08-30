@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, CheckCircle2 } from 'lucide-react';
 import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useTechnicalOrders } from '@/hooks/useTechnicalOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -53,12 +54,11 @@ export default function TechnicalOrdersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Servicio técnico</h1>
+      <PageHeader title="Servicio técnico">
         <Button asChild>
           <Link to="/servicio-tecnico/nueva">Nueva orden</Link>
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stat-cards">
         <StatCard
