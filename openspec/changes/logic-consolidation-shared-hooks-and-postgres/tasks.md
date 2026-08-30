@@ -174,40 +174,29 @@ Total: ~910 LOC
 
 > Migration + typegen + hook rewrites + test updates. Satisfies REQ-DB-ORDERS-VIEW-1, REQ-CLIENT-ORDERS-1, REQ-TYPEGEN-1.2. Independent of C, E.
 
-- [ ] D.1 **Preflight**: Read `apps/admin/src/hooks/useKeyOrders.ts` and `apps/admin/src/hooks/useTechnicalOrders.ts`; confirm the two-query N+1 pattern (lines 46–57 and 44–55) and the client-side company_name `.filter()` (lines 100–108 and 98–106); document current PostgREST table name used.
-  - Acceptance: both N+1 patterns and JS filter calls confirmed.
+- [x] D.1 **Preflight**: two-query N+1 + client `.filter()` on `administrations.company_name` confirmed.
 
-- [ ] D.2 **Smoke-test embed filterability** (ADR-3 option b): Against local Supabase, verify that PostgREST can filter `key_orders` by `key_order_items.building_id` via embed (`?key_order_items.building_id=eq.<uuid>`). If the filter returns zero rows for a known match, ADR-3 option (b) fails and option (a) must be used instead.
-  - Acceptance: embed filter returns correct rows → proceed with option (b); OR embed fails → document in task output and use `building_ids uuid[]` with `array_agg` in view body.
+- [x] D.2 **Smoke-test embed filterability**: PostgREST embed on view works out of the box — `.from('key_orders_summary').select('*, key_order_items!inner(id)').eq('key_order_items.building_id', X)` returns correct rows in a single request. ADR-3 option (b) confirmed; no `building_ids uuid[]` fallback needed.
 
-- [ ] D.3 **Write forward migration**: Create `supabase/migrations/<timestamp>_order_summary_views.sql` with: `CREATE INDEX IF NOT EXISTS administrations_company_name_trgm_idx`; `CREATE OR REPLACE VIEW public.key_orders_summary`; `CREATE OR REPLACE VIEW public.technical_orders_summary` — bodies per design data model section; apply ADR-3 option (b) unless D.2 forced option (a).
-  - Acceptance: `supabase db reset` applies migration; both views are queryable.
+- [x] D.3 **Forward migration**: `supabase/migrations/20260830000108_order_summary_views.sql` — pg_trgm extension + trigram GIN index on `administrations.company_name` + `public.key_orders_summary` + `public.technical_orders_summary` (both `security_invoker = true`, `SELECT <base>.*, a.company_name`).
 
-- [ ] D.4 **Write rollback migration**: Create `supabase/migrations/<timestamp>_order_summary_views_rollback.sql` per ADR-9 (`DROP INDEX`, `DROP VIEW` for both views).
-  - Acceptance: rollback script runs without error.
+- [x] D.4 **Rollback migration**: `supabase/rollbacks/20260830000108_order_summary_views_rollback.sql` (outside `migrations/` for the same reason as Slice C).
 
-- [ ] D.5 **Write pgTAP test file**: Create `supabase/tests/views/order_summaries.sql` covering all four scenarios REQ-DB-ORDERS-VIEW-1.1 through REQ-DB-ORDERS-VIEW-1.4 (server-side ILIKE, building_id filter, combined filter, empty result set) for both `key_orders_summary` and `technical_orders_summary`.
-  - Acceptance: `supabase test db` passes all plan lines.
+- [x] D.5 **pgTAP tests**: `supabase/tests-sql/test_123_order_summary_views.sql` — 8/8 GREEN covering REQ-DB-ORDERS-VIEW-1.1..1.4 for each view (ILIKE, building_id filter, combined, empty result).
 
-- [ ] D.6 **Regenerate types**: Run `pnpm --filter @vitalock/supabase typegen`; verify `Database['public']['Views']['key_orders_summary']` and `Database['public']['Views']['technical_orders_summary']` are present and include `company_name`.
-  - Acceptance: REQ-TYPEGEN-1.2 satisfied; `pnpm tsc --noEmit` passes.
+- [x] D.6 **Regenerate types**: `Database['public']['Views']['key_orders_summary']` and `['technical_orders_summary']` present.
 
-- [ ] D.7 **Rewrite `useKeyOrders`**: Replace two-query N+1 pattern with single query against `key_orders_summary`; replace JS `.filter()` on `company_name` with `.ilike('company_name', ...)` on the view; apply building_id filter via embed or array operator per ADR-3 decision from D.2.
-  - Acceptance: hook has exactly one Supabase query in the filter path (REQ-CLIENT-ORDERS-1.3).
+- [x] D.7 **Rewrite `useKeyOrders`**: single query against `key_orders_summary` with `!inner` embed for building filter and `company_name.ilike.%X%` in the `.or()` search chain. Client reshapes flat `company_name` back into the nested `{ administrations: { company_name } }` shape to preserve consumer contract per design line 365 (no consumer signature changes).
 
-- [ ] D.8 **Rewrite `useTechnicalOrders`**: Same rewrite as D.7 for `technical_orders_summary`.
-  - Acceptance: same single-query criterion.
+- [x] D.8 **Rewrite `useTechnicalOrders`**: same rewrite for `technical_orders_summary`.
 
-- [ ] D.9 **Update `useKeyOrders.test.ts`**: Mock new view-backed query; add assertion that `.ilike('company_name', ...)` is called server-side; assert no prior `key_order_items` pre-query; preserve list/pagination semantics.
-  - Acceptance: tests pass; no client-side `.filter()` assertion remains.
+- [x] D.9 **Update `useKeyOrders.test.ts`**: 12/12 GREEN — new assertions: `from('key_orders_summary')`, no client `.filter()`, `!inner` embed for building, reshape into nested `administrations`.
 
-- [ ] D.10 **Update `useTechnicalOrders.test.ts`**: Same update shape as D.9.
-  - Acceptance: tests pass.
+- [x] D.10 **Update `useTechnicalOrders.test.ts`**: 12/12 GREEN, same shape as D.9.
 
-- [ ] D.11 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
-  - Acceptance: all green.
+- [x] D.11 **Verification**: `pnpm test` → 626/626 admin (+2 from Slice C); typecheck + build clean for admin/shared/supabase/ui; installer TS errors pre-existing (commit d915224).
 
-- [ ] D.12 **Delivery**: Commit all files atomically per ADR-8: `feat(db): key/technical orders summary views [slice-D]`; push to PR D branch targeting PR C branch.
+- [ ] D.12 **Delivery**: Commit + push slice D directly to main per user directive (skipping design's PR chain).
 
 ---
 

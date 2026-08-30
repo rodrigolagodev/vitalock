@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import type { ReactNode } from 'react';
 
-// Chainable supabase mock
+// Chainable supabase mock (from → select → [eq?] → [or?] → order)
 const mockOrder = vi.fn();
 const mockOr = vi.fn();
 const mockEq = vi.fn();
@@ -29,13 +29,14 @@ function makeWrapper() {
 import { useKeyOrders } from '../useKeyOrders';
 import { keyOrdersKey } from '@/lib/queryKeys';
 
-const fakeKeyOrders = [
+// View-shaped raw rows (as returned by supabase.from('key_orders_summary'))
+const fakeSummaryRows = [
   {
     id: 'ko-1',
     order_number: 'ORD-LLV-000001',
     client_type: 'administration',
     administration_id: 'adm-1',
-    administrations: { company_name: 'Garcia S.A.' },
+    company_name: 'Garcia S.A.',
     particular_full_name: null,
     status: 'draft',
     created_at: '2026-08-10T10:00:00Z',
@@ -47,10 +48,9 @@ describe('useKeyOrders', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default happy chain: from → select → [eq?] → [or?] → order resolves with data
-    mockOrder.mockResolvedValue({ data: fakeKeyOrders, error: null });
+    mockOrder.mockResolvedValue({ data: fakeSummaryRows, error: null });
     mockOr.mockReturnValue({ order: mockOrder });
-    mockEq.mockReturnValue({ or: mockOr, order: mockOrder });
+    mockEq.mockReturnValue({ eq: mockEq, or: mockOr, order: mockOrder });
     mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder });
     mockFrom.mockReturnValue({ select: mockSelect });
   });
@@ -63,16 +63,23 @@ describe('useKeyOrders', () => {
     expect(key).toEqual(['admin', 'key-orders', 'all', '', 'all', 'all']);
   });
 
-  it('queries from key_orders table', async () => {
+  it('queries from key_orders_summary view (single round trip)', async () => {
     const { result } = renderHook(() => useKeyOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockFrom).toHaveBeenCalledWith('key_orders');
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+    expect(mockFrom).toHaveBeenCalledWith('key_orders_summary');
   });
 
-  it('returns data on success (no filters)', async () => {
+  it('reshapes flat company_name into nested administrations for consumer compat', async () => {
     const { result } = renderHook(() => useKeyOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual(fakeKeyOrders);
+    expect(result.current.data).toEqual([
+      expect.objectContaining({
+        id: 'ko-1',
+        administrations: { company_name: 'Garcia S.A.' },
+        key_order_items: [{ id: 'koi-1' }],
+      }),
+    ]);
   });
 
   it('no .or() filter called when no search term', async () => {
@@ -97,13 +104,28 @@ describe('useKeyOrders', () => {
     expect(mockEq).not.toHaveBeenCalled();
   });
 
-  it('search param fires .or() with ilike on order_number + particular_full_name', async () => {
+  it('buildingId filter uses embed inner-join on key_order_items (no pre-query)', async () => {
+    const { result } = renderHook(() => useKeyOrders({ buildingId: 'bld-1' }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    // Single from() call — no pre-query for order ids
+    expect(mockFrom).toHaveBeenCalledTimes(1);
+    // Embed filter applied via .eq
+    expect(mockEq).toHaveBeenCalledWith('key_order_items.building_id', 'bld-1');
+    // select clause carries the !inner hint
+    expect(mockSelect).toHaveBeenCalledWith(
+      expect.stringContaining('key_order_items!inner(id,building_id)'),
+    );
+  });
+
+  it('search fires .or() with ilike on order_number + particular_full_name + company_name', async () => {
     const { result } = renderHook(() => useKeyOrders({ search: 'garcia' }), {
       wrapper: makeWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockOr).toHaveBeenCalledWith(
-      'order_number.ilike.%garcia%,particular_full_name.ilike.%garcia%',
+      'order_number.ilike.%garcia%,particular_full_name.ilike.%garcia%,company_name.ilike.%garcia%',
     );
   });
 
@@ -113,7 +135,7 @@ describe('useKeyOrders', () => {
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockOr).toHaveBeenCalledWith(
-      'order_number.ilike.%ORD%,particular_full_name.ilike.%ORD%',
+      'order_number.ilike.%ORD%,particular_full_name.ilike.%ORD%,company_name.ilike.%ORD%',
     );
   });
 

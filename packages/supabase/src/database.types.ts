@@ -476,6 +476,13 @@ export type Database = {
             foreignKeyName: "key_order_items_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "key_orders_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "keys_inventory"
             referencedColumns: ["active_order_id"]
           },
@@ -948,6 +955,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "technical_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "technical_orders_summary"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "technical_order_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -1134,6 +1148,55 @@ export type Database = {
           },
         ]
       }
+      key_orders_summary: {
+        Row: {
+          administration_id: string | null
+          client_type: string | null
+          company_name: string | null
+          created_at: string | null
+          id: string | null
+          notes: string | null
+          order_number: string | null
+          particular_dni: string | null
+          particular_email: string | null
+          particular_full_name: string | null
+          particular_id: string | null
+          particular_phone: string | null
+          pickup_particular_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "administrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["administration_id"]
+          },
+          {
+            foreignKeyName: "key_orders_particular_id_fkey"
+            columns: ["particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_orders_pickup_particular_id_fkey"
+            columns: ["pickup_particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       keys_inventory: {
         Row: {
           active_order_id: string | null
@@ -1157,6 +1220,47 @@ export type Database = {
             columns: ["equipment_id"]
             isOneToOne: false
             referencedRelation: "equipment_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_orders_summary: {
+        Row: {
+          administration_id: string | null
+          client_type: string | null
+          company_name: string | null
+          created_at: string | null
+          id: string | null
+          notes: string | null
+          order_number: string | null
+          particular_dni: string | null
+          particular_email: string | null
+          particular_full_name: string | null
+          particular_id: string | null
+          particular_phone: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "administrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_orders_administration_id_fkey"
+            columns: ["administration_id"]
+            isOneToOne: false
+            referencedRelation: "keys_inventory"
+            referencedColumns: ["administration_id"]
+          },
+          {
+            foreignKeyName: "technical_orders_particular_id_fkey"
+            columns: ["particular_id"]
+            isOneToOne: false
+            referencedRelation: "particulares"
             referencedColumns: ["id"]
           },
         ]
