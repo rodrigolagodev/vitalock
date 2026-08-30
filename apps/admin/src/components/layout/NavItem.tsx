@@ -39,7 +39,7 @@ export function NavItem({ label, to, icon, badge, excludeSubpaths }: NavItemProp
       {icon}
       <span>{label}</span>
       {showBadge && (
-        <span className="ml-auto rounded-[20px] bg-success px-2 py-0.5 text-[12px] font-bold text-white">
+        <span className="ml-auto rounded-full bg-success px-2 py-0.5 text-[12px] font-bold text-white">
           {badge}
         </span>
       )}
