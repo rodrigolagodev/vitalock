@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PencilLine, RefreshCw } from 'lucide-react';
 import { StatusBadge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import {
   equipmentStatusLabel,
@@ -67,10 +68,7 @@ export function EquipmentTable({
           {
             header: 'Instalado',
             className: 'text-sm text-muted-foreground',
-            cell: (i) =>
-              i.installed_at
-                ? new Date(i.installed_at).toLocaleDateString('es-AR')
-                : '—',
+            cell: (i) => formatDate(i.installed_at),
           },
         ]}
       />

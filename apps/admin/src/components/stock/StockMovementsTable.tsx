@@ -1,4 +1,5 @@
 import { DataTable } from '@vitalock/ui';
+import { formatCurrency, formatDateTime } from '@/lib/format';
 import type { MovementType, StockMovementRow } from '@/types/stock';
 
 interface StockMovementsTableProps {
@@ -18,21 +19,6 @@ const MOVEMENT_LABELS: Record<MovementType, string> = {
   reserva: 'Reserva',
   liberacion_reserva: 'Liberación de reserva',
 };
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
-}
-
-function formatCost(value: number | null): string {
-  if (value == null) return '—';
-  return value.toLocaleString('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-  });
-}
 
 function formatQuantity(qty: number): string {
   return qty > 0 ? `+${qty}` : String(qty);
@@ -71,7 +57,7 @@ export function StockMovementsTable({
             <span
               className={
                 m.quantity > 0
-                  ? 'font-medium text-emerald-600'
+                  ? 'font-medium text-success'
                   : 'font-medium text-destructive'
               }
             >
@@ -82,7 +68,7 @@ export function StockMovementsTable({
         {
           header: 'Costo unitario',
           className: 'text-muted-foreground',
-          cell: (m) => formatCost(m.unit_cost),
+          cell: (m) => formatCurrency(m.unit_cost),
         },
         {
           header: 'Personal',

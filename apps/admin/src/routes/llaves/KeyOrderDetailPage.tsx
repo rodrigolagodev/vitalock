@@ -7,6 +7,7 @@ import {
   SectionHeading,
   Skeleton,
 } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import { useKeyOrder } from '@/hooks/useKeyOrder';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { KeyOrderStatusBadge } from '@/components/llaves/KeyOrderStatusBadge';
@@ -133,12 +134,7 @@ export default function KeyOrderDetailPage() {
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Creada el{' '}
-              {new Date(order.created_at).toLocaleDateString('es-AR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-              })}
+              Creada el {formatDate(order.created_at)}
             </p>
           </div>
 

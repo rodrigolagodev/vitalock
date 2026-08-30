@@ -306,7 +306,7 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
                   p.category === selectedCategory &&
                   p.name.trim().toLowerCase() === typedName.toLowerCase(),
               ) && (
-                <p className="text-sm text-amber-600">
+                <p className="text-sm text-warning">
                   Ya existe &quot;{typedName}&quot; en esta categoría. Se
                   validará al guardar.
                 </p>

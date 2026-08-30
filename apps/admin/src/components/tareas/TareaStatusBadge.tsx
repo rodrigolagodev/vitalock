@@ -1,21 +1,9 @@
-import { StatusBadge, type StatusTone } from '@vitalock/ui';
-import type { TareaRow } from '@/hooks/useTareas';
-
-type TareaStatus = TareaRow['status'];
-
-const STATUS_LABELS: Record<TareaStatus, string> = {
-  open: 'Pendiente',
-  in_progress: 'En curso',
-  resolved: 'Finalizada',
-  cancelled: 'Cancelada',
-};
-
-const STATUS_TONES: Record<TareaStatus, StatusTone> = {
-  open: 'neutral',
-  in_progress: 'warning',
-  resolved: 'success',
-  cancelled: 'danger',
-};
+import { StatusBadge } from '@vitalock/ui';
+import {
+  tareaStatusLabel,
+  tareaStatusTone,
+  type TareaStatus,
+} from '@/lib/status/tareaStatus';
 
 interface TareaStatusBadgeProps {
   status: TareaStatus;
@@ -23,8 +11,8 @@ interface TareaStatusBadgeProps {
 
 export function TareaStatusBadge({ status }: TareaStatusBadgeProps) {
   return (
-    <StatusBadge tone={STATUS_TONES[status]}>
-      {STATUS_LABELS[status]}
+    <StatusBadge tone={tareaStatusTone(status)}>
+      {tareaStatusLabel(status)}
     </StatusBadge>
   );
 }

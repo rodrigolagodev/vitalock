@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Badge,
   Button,
   ErrorState,
   NotFoundState,
   SearchInput,
   SectionHeading,
   Skeleton,
+  StatusBadge,
 } from '@vitalock/ui';
+import {
+  administrationStatusLabel,
+  administrationStatusTone,
+} from '@/lib/status/administrationStatus';
 import { useAdministration } from '@/hooks/useAdministration';
 import { useBuildings } from '@/hooks/useBuildings';
 import { BuildingsTable } from '@/components/buildings/BuildingsTable';
@@ -93,9 +97,9 @@ export default function AdministrationDetailPage() {
         subtitle={subtitle}
         breadcrumbs={[{ label: 'Administraciones', to: '/administraciones' }]}
       >
-        <Badge variant={administration.status === 'active' ? 'default' : 'secondary'}>
-          {administration.status === 'active' ? 'Activa' : 'Inactiva'}
-        </Badge>
+        <StatusBadge tone={administrationStatusTone(administration.status)}>
+          {administrationStatusLabel(administration.status)}
+        </StatusBadge>
         <Button variant="outline" size="sm" onClick={() => setEditSheetOpen(true)}>
           Editar
         </Button>

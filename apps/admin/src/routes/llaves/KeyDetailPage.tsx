@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
+import { formatDateTime } from '@/lib/format';
 import { Section } from '@/components/common/Section';
 import { useKeyById } from '@/hooks/useKeyById';
 import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';
@@ -29,14 +30,6 @@ const EVENT_DOT_CLASS: Record<KeyEventRow['event_type'], string> = {
   disabled: 'bg-destructive',
   snapshot_skipped: 'bg-muted-foreground',
 };
-
-function fmt(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
-}
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -174,7 +167,7 @@ export default function KeyDetailPage() {
             }
           />
           <Row label="DNI" value={keyDetail.picked_up_by_dni ?? '—'} />
-          <Row label="Fecha de retiro" value={fmt(keyDetail.picked_up_at)} />
+          <Row label="Fecha de retiro" value={formatDateTime(keyDetail.picked_up_at)} />
           <Row
             label="Entregada por"
             value={
@@ -206,9 +199,9 @@ export default function KeyDetailPage() {
         </Section>
 
         <Section title="Ciclo de vida">
-          <Row label="Creada" value={fmt(keyDetail.activated_at)} />
+          <Row label="Creada" value={formatDateTime(keyDetail.activated_at)} />
           {keyDetail.deactivated_at && (
-            <Row label="Dada de baja" value={fmt(keyDetail.deactivated_at)} />
+            <Row label="Dada de baja" value={formatDateTime(keyDetail.deactivated_at)} />
           )}
         </Section>
       </div>
@@ -232,7 +225,7 @@ export default function KeyDetailPage() {
                     {o.order_number}
                   </Link>
                   <span className="text-xs text-muted-foreground">
-                    {fmt(o.order_created_at)}
+                    {formatDateTime(o.order_created_at)}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -258,7 +251,7 @@ export default function KeyDetailPage() {
               <div className="flex justify-between gap-2">
                 <span className="font-medium">Creada</span>
                 <span className="text-xs text-muted-foreground">
-                  {fmt(keyDetail.activated_at)}
+                  {formatDateTime(keyDetail.activated_at)}
                 </span>
               </div>
             </div>
@@ -286,7 +279,7 @@ export default function KeyDetailPage() {
                     {EVENT_LABEL[e.event_type]}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {fmt(e.occurred_at)}
+                    {formatDateTime(e.occurred_at)}
                   </span>
                 </div>
                 <p className="whitespace-pre-wrap text-xs text-muted-foreground">

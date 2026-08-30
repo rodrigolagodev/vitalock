@@ -1,4 +1,5 @@
 import { DataTable, Badge } from '@vitalock/ui';
+import { formatCurrency, formatDateTime } from '@/lib/format';
 import { CATEGORY_LABELS } from './ProductFormFields';
 import type { ProductRow } from '@/types/stock';
 
@@ -6,21 +7,6 @@ interface ProductsTableProps {
   rows: ProductRow[];
   isFetching: boolean;
   hasFilters?: boolean;
-}
-
-function formatCost(value: number | null): string {
-  if (value == null) return '—';
-  return value.toLocaleString('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-  });
-}
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 export function ProductsTable({ rows, isFetching, hasFilters = false }: ProductsTableProps) {
@@ -38,7 +24,7 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
         },
         {
           header: 'Precio de costo',
-          cell: (product) => formatCost(product.cost_price),
+          cell: (product) => formatCurrency(product.cost_price),
           className: 'text-muted-foreground',
         },
         { header: 'Stock total', cell: (product) => product.stock_total },

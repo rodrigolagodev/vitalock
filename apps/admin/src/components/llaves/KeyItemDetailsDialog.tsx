@@ -6,6 +6,7 @@ import {
   DialogDescription,
 } from '@vitalock/ui';
 import { StatusBadge } from '@vitalock/ui';
+import { formatDateTime } from '@/lib/format';
 import { useOrderKeyDetails } from '@/hooks/useOrderKeyDetails';
 import type { KeyOrderItemRow } from '@/hooks/useKeyOrder';
 
@@ -14,14 +15,6 @@ interface KeyItemDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   /** The order item whose produced key is being inspected. */
   item: KeyOrderItemRow;
-}
-
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -137,7 +130,7 @@ export function KeyItemDetailsDialog({
             />
             {data.picked_up_at && (
               <>
-                <Row label="Fecha" value={formatDate(data.picked_up_at)} />
+                <Row label="Fecha" value={formatDateTime(data.picked_up_at)} />
                 <Row label="Retirada por" value={pickedUpFullName || '—'} />
                 <Row label="DNI" value={data.picked_up_by_dni ?? '—'} />
               </>
@@ -145,7 +138,7 @@ export function KeyItemDetailsDialog({
 
             <hr className="border-border" />
 
-            <Row label="Creada" value={formatDate(data.activated_at)} />
+            <Row label="Creada" value={formatDateTime(data.activated_at)} />
           </div>
         )}
       </DialogContent>

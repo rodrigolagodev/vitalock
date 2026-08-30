@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { PencilLine } from 'lucide-react';
 import { DataTable, StatusBadge, IconButton } from '@vitalock/ui';
+import {
+  administrationStatusLabel,
+  administrationStatusTone,
+} from '@/lib/status/administrationStatus';
 import { AdministrationFormSheet } from './AdministrationFormSheet';
 import { AdministrationStatusToggle } from './AdministrationStatusToggle';
 import type { AdministrationRow } from '@/hooks/useAdministrations';
@@ -35,8 +39,8 @@ export function AdministrationsTable({
           {
             header: 'Estado',
             cell: (admin) => (
-              <StatusBadge tone={admin.status === 'active' ? 'success' : 'neutral'}>
-                {admin.status === 'active' ? 'Activa' : 'Inactiva'}
+              <StatusBadge tone={administrationStatusTone(admin.status)}>
+                {administrationStatusLabel(admin.status)}
               </StatusBadge>
             ),
           },

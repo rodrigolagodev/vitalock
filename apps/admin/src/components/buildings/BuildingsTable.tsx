@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { PencilLine } from 'lucide-react';
 import { DataTable, StatusBadge, IconButton } from '@vitalock/ui';
+import {
+  buildingStatusLabel,
+  buildingStatusTone,
+} from '@/lib/status/buildingStatus';
 import { BuildingFormSheet } from './BuildingFormSheet';
 import { BuildingStatusToggle } from './BuildingStatusToggle';
 import type { BuildingRow } from '@/hooks/useBuildings';
@@ -30,8 +34,8 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
           {
             header: 'Estado',
             cell: (building) => (
-              <StatusBadge tone={building.status === 'active' ? 'success' : 'neutral'}>
-                {building.status === 'active' ? 'Activo' : 'Inactivo'}
+              <StatusBadge tone={buildingStatusTone(building.status)}>
+                {buildingStatusLabel(building.status)}
               </StatusBadge>
             ),
           },

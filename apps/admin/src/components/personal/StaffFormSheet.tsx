@@ -20,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
+import { STAFF_ROLE_META } from '@/lib/status/staffRole';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
 import { toastMutationError } from '@/hooks/mapMutationError';
 import type { StaffRole } from '@/hooks/useMutateStaff';
@@ -46,21 +48,6 @@ const schema = z
   });
 
 type FormValues = z.infer<typeof schema>;
-
-// ---- Labels ----
-
-const ROLE_LABELS: Record<StaffRole, string> = {
-  admin: 'Admin',
-  installer: 'Instalador',
-};
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
 
 interface StaffFormSheetProps {
   open: boolean;
@@ -194,9 +181,9 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
                     <SelectValue placeholder="Seleccioná un rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(ROLE_LABELS).map(([val, label]) => (
+                    {Object.entries(STAFF_ROLE_META).map(([val, meta]) => (
                       <SelectItem key={val} value={val}>
-                        {label}
+                        {meta.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

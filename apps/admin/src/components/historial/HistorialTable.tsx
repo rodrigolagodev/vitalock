@@ -1,19 +1,12 @@
 import { DataTable } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import type { AllOrderRow } from '@/hooks/useAllOrders';
 
 interface HistorialTableProps {
   orders: AllOrderRow[];
   isFetching: boolean;
   hasFilters?: boolean;
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
 }
 
 function OrderKindBadge({ kind }: { kind: AllOrderRow['order_kind'] }) {

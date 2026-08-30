@@ -7,6 +7,7 @@ import {
   SectionHeading,
   Skeleton,
 } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
 import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';
@@ -135,12 +136,7 @@ export default function TechnicalOrderDetailPage() {
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Creada el{' '}
-              {new Date(order.created_at).toLocaleDateString('es-AR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-              })}
+              Creada el {formatDate(order.created_at)}
             </p>
           </div>
 

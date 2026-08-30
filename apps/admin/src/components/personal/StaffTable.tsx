@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Trash2, PencilLine } from 'lucide-react';
 import {
   DataTable,
-  Badge,
+  StatusBadge,
   Button,
   type DataTableAction,
   Dialog,
@@ -12,13 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@vitalock/ui';
+import { staffRoleLabel, staffRoleTone } from '@/lib/status/staffRole';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
 import type { StaffRow } from '@/hooks/usePersonal';
-
-const ROLE_LABELS: Record<StaffRow['role'], string> = {
-  admin: 'Admin',
-  installer: 'Instalador',
-};
 
 interface StaffTableProps {
   rows: StaffRow[];
@@ -81,7 +77,9 @@ export function StaffTable({
           {
             header: 'Rol',
             cell: (staff) => (
-              <Badge variant="secondary">{ROLE_LABELS[staff.role]}</Badge>
+              <StatusBadge tone={staffRoleTone(staff.role)}>
+                {staffRoleLabel(staff.role)}
+              </StatusBadge>
             ),
           },
         ]}

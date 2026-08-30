@@ -9,6 +9,7 @@ import {
   Skeleton,
   StatusBadge,
 } from '@vitalock/ui';
+import { formatDateTime } from '@/lib/format';
 import { useTarea } from '@/hooks/useTarea';
 import { equipmentStatusLabel, equipmentStatusTone } from '@/lib/status/equipmentStatus';
 import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
@@ -59,14 +60,6 @@ const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'] | 'key_installation', str
   equipment_installation: 'Registrar equipo instalado',
   equipment_replacement: 'Reemplazar equipo',
 };
-
-function fmt(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
-}
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -156,8 +149,8 @@ export default function TareaDetailPage() {
         />
         <Row label="Asignado a" value={tarea.assigned_to_name ?? 'Sin asignar'} />
         <Row label="Abierta por" value={tarea.opened_by_name ?? '—'} />
-        <Row label="Abierta" value={fmt(tarea.opened_at)} />
-        <Row label="Actualizada" value={fmt(tarea.updated_at)} />
+        <Row label="Abierta" value={formatDateTime(tarea.opened_at)} />
+        <Row label="Actualizada" value={formatDateTime(tarea.updated_at)} />
         {tarea.resolution_notes && (
           <Row label="Notas de resolución" value={tarea.resolution_notes} />
         )}

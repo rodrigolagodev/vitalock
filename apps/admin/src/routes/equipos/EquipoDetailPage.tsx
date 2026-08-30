@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
+import { formatDateTime } from '@/lib/format';
 import { Section } from '@/components/common/Section';
 import { useEquipmentById } from '@/hooks/useEquipmentById';
 import {
@@ -19,14 +20,6 @@ const ITEM_TYPE_LABEL: Record<string, string> = {
   maintenance: 'Mantenimiento',
   equipment_replacement: 'Reemplazo',
 };
-
-function fmt(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
-}
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -219,9 +212,9 @@ export default function EquipoDetailPage() {
         )}
 
         <Section title="Ciclo de vida">
-          <Row label="Instalado" value={fmt(equipment.installed_at)} />
+          <Row label="Instalado" value={formatDateTime(equipment.installed_at)} />
           {equipment.decommissioned_at && (
-            <Row label="Dado de baja" value={fmt(equipment.decommissioned_at)} />
+            <Row label="Dado de baja" value={formatDateTime(equipment.decommissioned_at)} />
           )}
           {equipment.decommission_reason && (
             <Row label="Motivo de baja" value={equipment.decommission_reason} />
@@ -263,7 +256,7 @@ export default function EquipoDetailPage() {
                         </td>
                         <td className="py-2 pr-4">{k.unit_number ?? '—'}</td>
                         <td className="py-2 text-muted-foreground">
-                          {fmt(k.installed_at)}
+                          {formatDateTime(k.installed_at)}
                         </td>
                       </tr>
                     ))}
@@ -312,7 +305,7 @@ export default function EquipoDetailPage() {
                     {o.order_number}
                   </Link>
                   <span className="text-xs text-muted-foreground">
-                    {fmt(o.order_created_at)}
+                    {formatDateTime(o.order_created_at)}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -357,7 +350,7 @@ export default function EquipoDetailPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex justify-between gap-2">
                   <span className="font-medium">{e.label}</span>
-                  <span className="text-xs text-muted-foreground">{fmt(e.at)}</span>
+                  <span className="text-xs text-muted-foreground">{formatDateTime(e.at)}</span>
                 </div>
                 {e.note && (
                   <p className="whitespace-pre-wrap text-xs text-muted-foreground">

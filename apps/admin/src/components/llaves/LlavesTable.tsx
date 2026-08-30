@@ -1,4 +1,5 @@
 import { DataTable } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import { KeyOrderStatusBadge } from './KeyOrderStatusBadge';
 import type { KeyOrderListRow } from '@/hooks/useKeyOrders';
 
@@ -13,14 +14,6 @@ function clientLabel(row: KeyOrderListRow): string {
     return row.administrations?.company_name ?? '—';
   }
   return row.particular_full_name ?? '—';
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
 }
 
 export function LlavesTable({

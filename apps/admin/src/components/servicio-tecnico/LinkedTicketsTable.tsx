@@ -1,20 +1,8 @@
-import { DataTable, StatusBadge, type StatusTone } from '@vitalock/ui';
+import { DataTable, StatusBadge } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
+import { tareaStatusLabel, tareaStatusTone } from '@/lib/status/tareaStatus';
 import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 import { useStaffByIds } from '@/hooks/useStaffByIds';
-
-const TICKET_STATUS_LABELS: Record<string, string> = {
-  open: 'Pendiente',
-  in_progress: 'En curso',
-  resolved: 'Finalizada',
-  cancelled: 'Cancelada',
-};
-
-const TICKET_STATUS_TONES: Record<string, StatusTone> = {
-  open: 'neutral',
-  in_progress: 'warning',
-  resolved: 'success',
-  cancelled: 'danger',
-};
 
 interface LinkedTicketsTableProps {
   tickets: TechnicalOrderTicketRow[];
@@ -81,19 +69,14 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
         {
           header: 'Estado',
           cell: (t) => (
-            <StatusBadge tone={TICKET_STATUS_TONES[t.status] ?? 'neutral'}>
-              {TICKET_STATUS_LABELS[t.status] ?? t.status}
+            <StatusBadge tone={tareaStatusTone(t.status)}>
+              {tareaStatusLabel(t.status)}
             </StatusBadge>
           ),
         },
         {
           header: 'Creado',
-          cell: (t) =>
-            new Date(t.created_at).toLocaleDateString('es-AR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-            }),
+          cell: (t) => formatDate(t.created_at),
           className: 'text-muted-foreground',
           hideBelow: 'lg',
         },

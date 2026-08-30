@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import { useMutateEquipmentUpdate } from '@/hooks/useMutateEquipmentUpdate';
 import { useStaff } from '@/hooks/useStaff';
 import { useAuthContext } from '@vitalock/shared';
@@ -85,7 +86,7 @@ export function EquipmentUpdateFormSheet({
       equipmentId,
       administrationId,
       buildingId,
-      description: `Actualización de equipo — ${new Date().toLocaleDateString('es-AR')}`,
+      description: `Actualización de equipo — ${formatDate(new Date())}`,
       keysToActivate: pendingActivate.map((k) => k.id),
       keysToDisable: pendingDisable.map((k) => k.id),
       file: selectedFile,

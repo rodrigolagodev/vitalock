@@ -1,5 +1,6 @@
 import { PencilLine } from 'lucide-react';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import { TareaStatusBadge } from './TareaStatusBadge';
 import type { TareaRow } from '@/hooks/useTareas';
 
@@ -18,14 +19,6 @@ const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string>
   equipment_installation: 'Instalación de equipo',
   equipment_replacement: 'Cambio de equipo',
 };
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
 
 export function TareasTable({
   rows,

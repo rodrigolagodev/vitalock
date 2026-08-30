@@ -4,20 +4,13 @@ import { DataTable } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { formatDateTime } from '@/lib/format';
 import { useEquipmentUpdateHistory } from '@/hooks/useEquipmentUpdateHistory';
 import { useStaffByIds } from '@/hooks/useStaffByIds';
 import type { EquipmentUpdateHistoryRow } from '@/hooks/useEquipmentUpdateHistory';
 
 interface EquipmentUpdateHistoryPanelProps {
   equipmentId: string;
-}
-
-function fmt(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 /**
@@ -62,7 +55,7 @@ export function EquipmentUpdateHistoryPanel({ equipmentId }: EquipmentUpdateHist
       columns={[
         {
           header: 'Fecha',
-          cell: (r) => fmt(r.created_at),
+          cell: (r) => formatDateTime(r.created_at),
         },
         {
           header: 'Resuelto por',

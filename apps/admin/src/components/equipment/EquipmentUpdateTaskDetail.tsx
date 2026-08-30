@@ -1,40 +1,17 @@
 import { useState } from 'react';
 import { Download } from 'lucide-react';
-import { Badge } from '@vitalock/ui';
+import { StatusBadge } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { formatDateTime } from '@/lib/format';
+import { tareaStatusLabel, tareaStatusTone } from '@/lib/status/tareaStatus';
 import type { EquipmentUpdateRow } from '@/hooks/useEquipmentUpdates';
 
 interface EquipmentUpdateTaskDetailProps {
   update: EquipmentUpdateRow;
   keysToActivate: Array<{ id: string; rfid_code: string; unit: { number: string } }>;
   keysToDisable: Array<{ id: string; rfid_code: string; unit: { number: string } }>;
-}
-
-const TICKET_STATUS_LABEL: Record<EquipmentUpdateRow['ticket_status'], string> = {
-  open: 'Pendiente',
-  in_progress: 'En curso',
-  resolved: 'Finalizada',
-  cancelled: 'Cancelada',
-};
-
-const TICKET_STATUS_VARIANT: Record<
-  EquipmentUpdateRow['ticket_status'],
-  'default' | 'secondary' | 'outline'
-> = {
-  open: 'default',
-  in_progress: 'outline',
-  resolved: 'secondary',
-  cancelled: 'secondary',
-};
-
-function fmt(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 export function EquipmentUpdateTaskDetail({
@@ -64,19 +41,19 @@ export function EquipmentUpdateTaskDetail({
       {/* Status badge */}
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Estado:</span>
-        <Badge variant={TICKET_STATUS_VARIANT[update.ticket_status]}>
-          {TICKET_STATUS_LABEL[update.ticket_status]}
-        </Badge>
+        <StatusBadge tone={tareaStatusTone(update.ticket_status)}>
+          {tareaStatusLabel(update.ticket_status)}
+        </StatusBadge>
       </div>
 
       {/* Timestamps */}
       <div className="grid grid-cols-2 gap-2 text-sm">
         <span className="text-muted-foreground">Creada</span>
-        <span>{fmt(update.created_at)}</span>
+        <span>{formatDateTime(update.created_at)}</span>
         {update.resolved_at && (
           <>
             <span className="text-muted-foreground">Resuelta</span>
-            <span>{fmt(update.resolved_at)}</span>
+            <span>{formatDateTime(update.resolved_at)}</span>
           </>
         )}
       </div>

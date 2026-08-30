@@ -4,6 +4,7 @@ import { Power } from 'lucide-react';
 import { StatusBadge } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
+import { formatDate } from '@/lib/format';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
 import type { KeyRow } from '@/hooks/useKeys';
 import { keyStatusLabel, keyStatusTone } from '@/lib/status/keyStatus';
@@ -12,12 +13,6 @@ interface KeysTableProps {
   keys: KeyRow[];
   buildingId: string;
   isFetching?: boolean;
-}
-
-function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-AR');
 }
 
 export function KeysTable({ keys, buildingId, isFetching = false }: KeysTableProps) {
@@ -80,7 +75,7 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
           {
             header: 'Activada',
             className: 'text-sm text-muted-foreground',
-            cell: (k) => fmtDate(k.activated_at),
+            cell: (k) => formatDate(k.activated_at),
           },
           {
             header: 'Retirada por',

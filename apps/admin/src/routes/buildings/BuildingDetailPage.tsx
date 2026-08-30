@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Badge } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
@@ -19,7 +18,12 @@ import {
   SearchInput,
   SectionHeading,
   Skeleton,
+  StatusBadge,
 } from '@vitalock/ui';
+import {
+  buildingStatusLabel,
+  buildingStatusTone,
+} from '@/lib/status/buildingStatus';
 import type { KeyRow } from '@/hooks/useKeys';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useAdministration } from '@/hooks/useAdministration';
@@ -119,12 +123,12 @@ export default function BuildingDetailPage() {
             : { label: 'Sin administración' },
         ]}
       >
-        <Badge
-          variant={building.status === 'active' ? 'default' : 'secondary'}
+        <StatusBadge
+          tone={buildingStatusTone(building.status)}
           className="shrink-0"
         >
-          {building.status === 'active' ? 'Activo' : 'Inactivo'}
-        </Badge>
+          {buildingStatusLabel(building.status)}
+        </StatusBadge>
       </PageHeader>
 
       {/* Section selector */}
