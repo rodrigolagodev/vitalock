@@ -8,7 +8,7 @@ vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
-vi.mock('@/hooks/mapMutationError', () => ({
+vi.mock('@/lib/errors/toast', () => ({
   toastMutationError: vi.fn(),
 }));
 

@@ -24,7 +24,7 @@ import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog
 import { useMutateParticular } from '@/hooks/useMutateParticular';
 import { useBuildings } from '@/hooks/useBuildings';
 import { useUnits } from '@/hooks/useUnits';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { ParticularRow } from '@/hooks/useParticulares';
 
 const schema = z.object({

@@ -17,7 +17,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { keyOrdersKey, keyOrderKey } from '@/lib/queryKeys';
 import type { KeyOrderDetailRow } from './useKeyOrder';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export interface CreateKeyOrderInput {
   order: KeyOrderPayload;

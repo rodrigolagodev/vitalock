@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export interface CreateBuildingInput {
   name: string;

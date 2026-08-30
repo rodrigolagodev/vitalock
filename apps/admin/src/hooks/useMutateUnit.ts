@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { unitsKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { UnitRow } from './useUnits';
 
 export interface CreateUnitInput {

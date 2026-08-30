@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { productsKey, stockMovementsKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { MovementType, ProductCategory } from '@/types/stock';
 
 export interface CreateMovementInput {

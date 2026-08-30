@@ -14,7 +14,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { technicalOrdersKey, technicalOrderKey } from '@/lib/queryKeys';
 import type { TechnicalOrderDetailRow } from './useTechnicalOrder';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export interface CreateTechnicalOrderInput {
   order: TechnicalOrderPayload;

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@vitalock/shared';
 import { ticketCommentsKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { TicketComment } from './useTicketComments';
 
 // ---------------------------------------------------------------------------

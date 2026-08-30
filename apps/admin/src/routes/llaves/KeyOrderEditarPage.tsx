@@ -6,7 +6,7 @@ import { KeyOrderForm } from '@/components/llaves/KeyOrderForm';
 import type { KeyOrderFormValues } from '@/components/llaves/KeyOrderForm';
 import { useKeyOrder } from '@/hooks/useKeyOrder';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export default function KeyOrderEditarPage() {
   const { keyOrderId } = useParams<{ keyOrderId: string }>();

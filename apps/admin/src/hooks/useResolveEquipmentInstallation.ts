@@ -6,7 +6,7 @@ import {
 } from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
 import { equipmentKey, tareasKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 /**
  * Atomically resolves an equipment_installation ticket.

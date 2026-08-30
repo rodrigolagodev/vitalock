@@ -6,7 +6,7 @@ import {
 } from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
 import { tareasKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 /**
  * Step 1 of the two-step equipment task flow. Writes the operator-supplied

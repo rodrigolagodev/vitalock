@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@vitalock/shared';
 import { assignedTicketsKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export interface ResolvePayload {
   ids: string[];

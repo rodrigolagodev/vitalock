@@ -20,7 +20,7 @@ import {
 } from '@vitalock/ui';
 import { Switch } from '@vitalock/ui';
 import { useMutateUnit } from '@/hooks/useMutateUnit';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 const schema = z.object({
   number: z.string().min(1, 'El número es obligatorio'),

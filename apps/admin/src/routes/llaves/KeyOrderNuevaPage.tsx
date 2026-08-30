@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { KeyOrderForm } from '@/components/llaves/KeyOrderForm';
 import type { KeyOrderFormValues } from '@/components/llaves/KeyOrderForm';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export default function KeyOrderNuevaPage() {
   const navigate = useNavigate();

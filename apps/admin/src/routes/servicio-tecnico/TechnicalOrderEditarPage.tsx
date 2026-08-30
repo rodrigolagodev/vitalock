@@ -6,7 +6,7 @@ import { TechnicalOrderForm } from '@/components/servicio-tecnico/TechnicalOrder
 import type { TechnicalOrderFormValues } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export default function TechnicalOrderEditarPage() {
   const { techOrderId } = useParams<{ techOrderId: string }>();

@@ -23,7 +23,7 @@ import { useBuildings } from '@/hooks/useBuildings';
 import { useUnits } from '@/hooks/useUnits';
 import { useEquipment } from '@/hooks/useEquipment';
 import { useStaff } from '@/hooks/useStaff';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { TareaRow } from '@/hooks/useTareas';
 
 // ---- Zod schema ----

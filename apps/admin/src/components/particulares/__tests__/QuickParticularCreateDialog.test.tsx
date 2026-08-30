@@ -32,7 +32,7 @@ vi.mock('@/hooks/useUnits', () => ({
   useUnits: (buildingId: string) => mockUseUnits(buildingId),
 }));
 
-vi.mock('@/hooks/mapMutationError', () => ({
+vi.mock('@/lib/errors/toast', () => ({
   toastMutationError: vi.fn(),
 }));
 

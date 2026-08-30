@@ -9,11 +9,11 @@ vi.mock('sonner', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }));
 
-vi.mock('@/hooks/mapMutationError', () => ({
+vi.mock('@/lib/errors/toast', () => ({
   toastMutationError: vi.fn(),
 }));
 
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 // Chainable supabase mock: from → insert → select → single (createKey),
 // rpc (changeStatus + recordPickup)

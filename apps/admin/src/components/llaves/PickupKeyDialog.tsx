@@ -13,7 +13,7 @@ import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { useMutateKey } from '@/hooks/useMutateKey';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { KeyOrderItemRow } from '@/hooks/useKeyOrder';
 
 const schema = z.object({

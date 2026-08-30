@@ -7,11 +7,11 @@ import { toast } from 'sonner';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
-vi.mock('@/hooks/mapMutationError', () => ({
+vi.mock('@/lib/errors/toast', () => ({
   toastMutationError: vi.fn(),
 }));
 
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 // Chainable supabase mock — supports rpc() only (technical orders have no direct table updates)
 const mockRpc = vi.fn();

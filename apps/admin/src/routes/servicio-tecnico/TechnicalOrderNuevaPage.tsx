@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { TechnicalOrderForm } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import type { TechnicalOrderFormValues } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export default function TechnicalOrderNuevaPage() {
   const navigate = useNavigate();

@@ -23,7 +23,7 @@ import {
 import { formatDate } from '@/lib/format';
 import { STAFF_ROLE_META } from '@/lib/status/staffRole';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { StaffRole } from '@/hooks/useMutateStaff';
 import type { StaffRow } from '@/hooks/usePersonal';
 

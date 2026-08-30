@@ -8,11 +8,11 @@ import { equipmentKey } from '@/lib/queryKeys';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
-vi.mock('@/hooks/mapMutationError', () => ({
+vi.mock('@/lib/errors/toast', () => ({
   toastMutationError: vi.fn(),
 }));
 
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 // Mock supabase with schema + rpc chain
 const mockRpc = vi.fn();

@@ -7,7 +7,7 @@ import {
 import { useAuthContext } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { assignedTicketsKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 /**
  * Step 1 of the two-step equipment task flow. Loads the serial (and optional

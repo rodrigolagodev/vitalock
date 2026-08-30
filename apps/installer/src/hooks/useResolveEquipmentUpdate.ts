@@ -5,7 +5,7 @@ import type { ResolveEquipmentUpdateResult } from '@vitalock/supabase';
 import { useAuthContext } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { assignedTicketsKey } from '@/lib/queryKeys';
-import { toastMutationError } from './mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 
 export type { ResolveEquipmentUpdateResult };
 

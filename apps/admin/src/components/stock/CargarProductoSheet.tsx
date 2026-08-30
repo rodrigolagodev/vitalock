@@ -23,7 +23,7 @@ import { ProductFormFields } from './ProductFormFields';
 import { useProducts } from '@/hooks/useProducts';
 import { useMutateStockMovement } from '@/hooks/useMutateStockMovement';
 import { useAuthContext } from '@vitalock/shared';
-import { toastMutationError } from '@/hooks/mapMutationError';
+import { toastMutationError } from '@/lib/errors/toast';
 import type { MovementType } from '@/types/stock';
 
 const schema = z
