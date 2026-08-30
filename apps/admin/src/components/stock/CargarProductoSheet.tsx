@@ -8,9 +8,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from '@/components/ui/sheet';
+} from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import {
   Select,
@@ -18,7 +18,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import { ProductFormFields } from './ProductFormFields';
 import { useProducts } from '@/hooks/useProducts';
 import { useMutateStockMovement } from '@/hooks/useMutateStockMovement';

@@ -6,7 +6,7 @@ import { Input, type InputProps } from '../input';
 // The native HTML `size` attribute is a number; omit it so `size` can carry
 // the pattern's visual scale ('default' | 'lg') per design D6.
 export interface SearchInputProps extends Omit<InputProps, 'size'> {
-  /** `lg` matches the topbar reference: h-12 w-[372px] */
+  /** `lg` matches the topbar reference at the canonical control height: h-11 w-[372px] */
   size?: 'default' | 'lg';
 }
 
@@ -26,7 +26,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           className={cn(
             'pl-9',
             size === 'lg' &&
-              'h-12 w-[372px] rounded-[8px] bg-card placeholder:text-[18px] placeholder:text-muted-foreground',
+              'h-11 w-[372px] rounded-lg bg-card placeholder:text-[18px] placeholder:text-muted-foreground',
             className,
           )}
           {...props}

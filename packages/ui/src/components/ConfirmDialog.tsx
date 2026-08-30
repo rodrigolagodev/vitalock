@@ -5,8 +5,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@vitalock/ui';
+} from './dialog';
+import { Button } from './button';
 
 export interface ConfirmDialogProps {
   open: boolean;

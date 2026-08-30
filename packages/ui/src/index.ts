@@ -42,6 +42,47 @@ export {
   DialogDescription,
 } from './components/dialog';
 export { Input, type InputProps } from './components/input';
+export { Label } from './components/label';
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+} from './components/select';
+export {
+  Sheet,
+  SheetPortal,
+  SheetOverlay,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from './components/sheet';
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from './components/tabs';
+export {
+  RadioGroup,
+  RadioGroupItem,
+} from './components/radio-group';
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from './components/popover';
+export { ConfirmDialog, type ConfirmDialogProps } from './components/ConfirmDialog';
 export { Switch } from './components/switch';
 export { Textarea } from './components/textarea';
 export {

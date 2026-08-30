@@ -3,8 +3,10 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "../lib/utils"
 
+// Badge is intentionally a pill: `rounded-full` is the canonical pill shape
+// and stays visually stable across sizes, unlike a fixed corner radius.
 const badgeVariants = cva(
-  "inline-flex items-center whitespace-nowrap rounded-[20px] border px-2.5 py-0.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {

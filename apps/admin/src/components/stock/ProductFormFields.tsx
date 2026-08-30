@@ -1,14 +1,14 @@
 import { Controller } from 'react-hook-form';
 import type { Control, FieldErrors, FieldPath, FieldValues } from 'react-hook-form';
 import { Input } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import type { ProductCategory } from '@/types/stock';
 
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {

@@ -10,14 +10,14 @@ import {
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import { Switch } from '@vitalock/ui';
 import { useMutateUnit } from '@/hooks/useMutateUnit';
 import { toastMutationError } from '@/hooks/mapMutationError';

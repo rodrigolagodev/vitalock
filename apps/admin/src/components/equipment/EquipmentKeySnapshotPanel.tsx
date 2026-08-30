@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Copy, Check, PlusCircle } from 'lucide-react';
 import { Button } from '@vitalock/ui';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@vitalock/ui';
 import { usePendingKeysForEquipment } from '@/hooks/usePendingKeysForEquipment';
 import { useEquipmentUpdates } from '@/hooks/useEquipmentUpdates';
 import { useKeys } from '@/hooks/useKeys';

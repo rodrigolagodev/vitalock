@@ -5,7 +5,7 @@ import { useKeyOrder } from '@/hooks/useKeyOrder';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { KeyOrderStatusBadge } from '@/components/llaves/KeyOrderStatusBadge';
 import { KeyOrderItemsTable } from '@/components/llaves/KeyOrderItemsTable';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { ConfirmDialog } from '@vitalock/ui';
 
 const TERMINAL_STATUSES = new Set(['completed', 'invoiced', 'cancelled']);
 

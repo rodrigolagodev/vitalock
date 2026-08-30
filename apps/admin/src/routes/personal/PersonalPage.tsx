@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { usePersonal } from '@/hooks/usePersonal';
 import { useDebounce } from '@/hooks/useDebounce';

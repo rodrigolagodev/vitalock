@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
 import { useMutateKey } from '@/hooks/useMutateKey';
 import { useAuthContext } from '@vitalock/shared';

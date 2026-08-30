@@ -6,7 +6,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@vitalock/ui';
 
 function initialsFromName(name: string): string {
   return name

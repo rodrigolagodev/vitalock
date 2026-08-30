@@ -11,7 +11,7 @@ import {
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { useMutateKey } from '@/hooks/useMutateKey';
 import { toastMutationError } from '@/hooks/mapMutationError';
 import type { KeyOrderItemRow } from '@/hooks/useKeyOrder';

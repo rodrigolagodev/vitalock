@@ -8,7 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useTareas } from '@/hooks/useTareas';
 import { useStaff } from '@/hooks/useStaff';

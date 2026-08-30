@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
 import { useDecommissionImpact } from '@/hooks/useDecommissionImpact';
 import type { UpdateStatusInput } from '@/hooks/useMutateEquipment';

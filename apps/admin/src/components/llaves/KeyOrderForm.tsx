@@ -15,7 +15,7 @@ import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
 import {
   Select,
@@ -23,8 +23,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+} from '@vitalock/ui';
+import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { formatCurrencyARS } from '@/lib/format';
 import { useAdministrations } from '@/hooks/useAdministrations';

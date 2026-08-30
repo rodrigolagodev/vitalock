@@ -7,7 +7,7 @@ import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';
 import { TechnicalOrderStatusBadge } from '@/components/servicio-tecnico/TechnicalOrderStatusBadge';
 import { TechnicalOrderItemsTable } from '@/components/servicio-tecnico/TechnicalOrderItemsTable';
 import { LinkedTicketsTable } from '@/components/servicio-tecnico/LinkedTicketsTable';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { ConfirmDialog } from '@vitalock/ui';
 
 const TERMINAL_STATUSES = new Set(['invoiced', 'cancelled']);
 

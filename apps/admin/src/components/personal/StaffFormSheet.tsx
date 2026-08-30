@@ -8,10 +8,10 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from '@/components/ui/sheet';
+} from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
 import {
   Select,
@@ -19,7 +19,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
 import { toastMutationError } from '@/hooks/mapMutationError';
 import type { StaffRole } from '@/hooks/useMutateStaff';

@@ -5,14 +5,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Input } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { Checkbox } from '@vitalock/ui';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProduct } from '@/hooks/useProduct';
 import { useMutateProduct } from '@/hooks/useMutateProduct';

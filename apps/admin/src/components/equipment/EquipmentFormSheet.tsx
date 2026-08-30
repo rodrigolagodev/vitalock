@@ -8,10 +8,10 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from '@/components/ui/sheet';
+} from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { useMutateEquipment } from '@/hooks/useMutateEquipment';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import { EquipmentStatusSelect } from './EquipmentStatusSelect';

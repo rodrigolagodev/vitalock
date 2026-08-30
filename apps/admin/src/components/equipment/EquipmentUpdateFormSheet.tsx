@@ -5,16 +5,16 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from '@/components/ui/sheet';
+} from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import { useMutateEquipmentUpdate } from '@/hooks/useMutateEquipmentUpdate';
 import { useStaff } from '@/hooks/useStaff';
 import { useAuthContext } from '@vitalock/shared';

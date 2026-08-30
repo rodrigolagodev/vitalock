@@ -161,7 +161,7 @@ export function DataTable<T>({
     // overflow-x-auto keeps horizontal overflow scoped to the table card:
     // wide tables scroll inside their rounded border instead of stretching
     // the surrounding layout. Requires min-w-0 on the flex ancestor.
-    <div className="overflow-x-auto rounded-[12px] border bg-card">
+    <div className="overflow-x-auto rounded-xl border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">

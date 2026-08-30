@@ -12,14 +12,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@vitalock/ui';
 import { useEquipment } from '@/hooks/useEquipment';
 import { useProducts } from '@/hooks/useProducts';
 import { useMutateTicketEquipment } from '@/hooks/useMutateTicketEquipment';

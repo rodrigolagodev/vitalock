@@ -12,7 +12,7 @@ import {
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@/components/ui/label';
+import { Label } from '@vitalock/ui';
 import { useReplaceEquipment } from '@/hooks/useReplaceEquipment';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 
