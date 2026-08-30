@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import {
   Building2,
   HardDrive,
@@ -11,20 +10,12 @@ import {
   Users,
   Wrench,
 } from 'lucide-react';
-import { cn } from '@vitalock/ui';
+import { cn, SidebarGroup } from '@vitalock/ui';
 import { NavItem } from './NavItem';
 import { UserMenu } from './UserMenu';
 
 interface SidebarProps {
   className?: string;
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <p className="mt-4 px-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:mt-0">
-      {children}
-    </p>
-  );
 }
 
 interface SidebarNavProps {
@@ -61,66 +52,71 @@ export function SidebarNav({ showLogo = true }: SidebarNavProps = {}) {
       )}
 
       <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-4 pt-4 pb-4">
-        <SectionLabel>Clientes</SectionLabel>
-        <NavItem
-          label="Administraciones"
-          to="/administraciones"
-          icon={<Building2 className="h-4 w-4" />}
-        />
-        <NavItem
-          label="Particulares"
-          to="/particulares"
-          icon={<Home className="h-4 w-4" />}
-        />
+        <SidebarGroup label="Clientes">
+          <NavItem
+            label="Administraciones"
+            to="/administraciones"
+            icon={<Building2 className="h-4 w-4" />}
+          />
+          <NavItem
+            label="Particulares"
+            to="/particulares"
+            icon={<Home className="h-4 w-4" />}
+          />
+        </SidebarGroup>
 
-        <SectionLabel>Llaves</SectionLabel>
-        <NavItem
-          label="Órdenes de llaves"
-          to="/llaves"
-          icon={<Key className="h-4 w-4" />}
-          excludeSubpaths={['/llaves/inventario']}
-        />
-        <NavItem
-          label="Inventario"
-          to="/llaves/inventario"
-          icon={<ListChecks className="h-4 w-4" />}
-        />
+        <SidebarGroup label="Llaves">
+          <NavItem
+            label="Órdenes de llaves"
+            to="/llaves"
+            icon={<Key className="h-4 w-4" />}
+            excludeSubpaths={['/llaves/inventario']}
+          />
+          <NavItem
+            label="Inventario"
+            to="/llaves/inventario"
+            icon={<ListChecks className="h-4 w-4" />}
+          />
+        </SidebarGroup>
 
-        <SectionLabel>Equipos</SectionLabel>
-        <NavItem
-          label="Servicio técnico"
-          to="/servicio-tecnico"
-          icon={<Wrench className="h-4 w-4" />}
-        />
-        <NavItem
-          label="Inventario"
-          to="/equipos"
-          icon={<HardDrive className="h-4 w-4" />}
-        />
+        <SidebarGroup label="Equipos">
+          <NavItem
+            label="Servicio técnico"
+            to="/servicio-tecnico"
+            icon={<Wrench className="h-4 w-4" />}
+          />
+          <NavItem
+            label="Inventario"
+            to="/equipos"
+            icon={<HardDrive className="h-4 w-4" />}
+          />
+        </SidebarGroup>
 
-        <SectionLabel>Operación</SectionLabel>
-        <NavItem
-          label="Órdenes"
-          to="/ordenes"
-          icon={<History className="h-4 w-4" />}
-        />
-        <NavItem
-          label="Tareas"
-          to="/tareas"
-          icon={<ListTodo className="h-4 w-4" />}
-        />
-        <NavItem
-          label="Stock"
-          to="/stock"
-          icon={<Package className="h-4 w-4" />}
-        />
+        <SidebarGroup label="Operación">
+          <NavItem
+            label="Órdenes"
+            to="/ordenes"
+            icon={<History className="h-4 w-4" />}
+          />
+          <NavItem
+            label="Tareas"
+            to="/tareas"
+            icon={<ListTodo className="h-4 w-4" />}
+          />
+          <NavItem
+            label="Stock"
+            to="/stock"
+            icon={<Package className="h-4 w-4" />}
+          />
+        </SidebarGroup>
 
-        <SectionLabel>Equipo interno</SectionLabel>
-        <NavItem
-          label="Personal"
-          to="/personal"
-          icon={<Users className="h-4 w-4" />}
-        />
+        <SidebarGroup label="Equipo interno">
+          <NavItem
+            label="Personal"
+            to="/personal"
+            icon={<Users className="h-4 w-4" />}
+          />
+        </SidebarGroup>
       </nav>
 
       <div className="shrink-0 border-t">

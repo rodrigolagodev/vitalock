@@ -32,7 +32,7 @@ export function PageHeader({
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center gap-1.5 text-[14px] text-muted-foreground"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground"
         >
           {breadcrumbs.map((crumb, index) => (
             <span key={index} className="flex items-center gap-1.5">

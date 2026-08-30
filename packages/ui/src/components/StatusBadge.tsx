@@ -43,7 +43,7 @@ export function StatusBadge({
   return (
     <Badge
       variant="outline"
-      className={cn("text-[12px]", STATUS_TONE_CLASSES[tone], className)}
+      className={cn("text-xs", STATUS_TONE_CLASSES[tone], className)}
       {...props}
     />
   )

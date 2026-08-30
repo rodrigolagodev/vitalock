@@ -29,7 +29,7 @@ export function NavItem({ label, to, icon, badge, excludeSubpaths }: NavItemProp
       to={to}
       className={({ isActive }) =>
         cn(
-          'flex w-full items-center gap-2 rounded-lg px-4 py-2 text-[14px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+          'flex w-full items-center gap-2 rounded-lg px-4 py-2 text-base font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
           isActive &&
             !isExcluded &&
             'rounded-lg bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
@@ -39,7 +39,7 @@ export function NavItem({ label, to, icon, badge, excludeSubpaths }: NavItemProp
       {icon}
       <span>{label}</span>
       {showBadge && (
-        <span className="ml-auto rounded-full bg-success px-2 py-0.5 text-[12px] font-bold text-white">
+        <span className="ml-auto rounded-full bg-success px-2 py-0.5 text-xs font-bold text-white">
           {badge}
         </span>
       )}

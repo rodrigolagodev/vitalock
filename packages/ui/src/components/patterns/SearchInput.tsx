@@ -27,7 +27,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             'pl-9',
             '[&::-webkit-search-cancel-button]:appearance-none',
             size === 'lg' &&
-              'h-11 w-[372px] rounded-lg bg-card placeholder:text-[18px] placeholder:text-muted-foreground',
+              'h-11 w-[372px] rounded-lg bg-card placeholder:text-base placeholder:text-muted-foreground',
             className,
           )}
           {...props}

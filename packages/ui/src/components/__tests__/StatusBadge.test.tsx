@@ -16,7 +16,7 @@ describe('StatusBadge', () => {
     expect(screen.getByText('Estado')).toBeInTheDocument();
   });
 
-  it('renders every tone with the same pill format (text-[12px] + rounded-full)', () => {
+  it('renders every tone with the same pill format (text-xs + rounded-full)', () => {
     const tones: StatusTone[] = [
       'neutral',
       'info',
@@ -37,7 +37,7 @@ describe('StatusBadge', () => {
     const badges = container.querySelectorAll('[class*="rounded-full"]');
     expect(badges.length).toBe(tones.length);
     for (const badge of badges) {
-      expect(badge.className).toContain('text-[12px]');
+      expect(badge.className).toContain('text-xs');
     }
   });
 

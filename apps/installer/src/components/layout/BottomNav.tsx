@@ -17,7 +17,7 @@ function BottomNavItem({ label, to, icon, end }: BottomNavItemProps) {
       end={end}
       className={({ isActive }) =>
         cn(
-          'flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium text-muted-foreground transition-colors',
+          'flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs font-medium text-muted-foreground transition-colors',
           isActive && 'text-primary',
         )
       }

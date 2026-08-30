@@ -38,7 +38,7 @@ export function MobileTopbarUserButton() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="Abrir menú de usuario"
         >
           {initials}

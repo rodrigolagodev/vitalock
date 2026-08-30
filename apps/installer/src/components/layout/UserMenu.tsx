@@ -43,7 +43,7 @@ export function UserMenu({ side = 'top' }: UserMenuProps = {}) {
           className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:bg-muted"
           aria-label="Abrir menú de usuario"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-[13px] font-medium text-muted-foreground">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
             {initials}
           </span>
           <div className="flex min-w-0 flex-1 flex-col">

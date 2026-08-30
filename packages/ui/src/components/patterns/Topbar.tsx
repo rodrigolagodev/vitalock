@@ -26,7 +26,7 @@ export function Topbar({ leading, avatar, children, className }: TopbarProps) {
       {leading && <div className="flex items-center gap-2">{leading}</div>}
       <div className="ml-auto flex items-center gap-3">
         {avatar && (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-[14px] font-medium text-muted-foreground">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
             {avatar}
           </span>
         )}
