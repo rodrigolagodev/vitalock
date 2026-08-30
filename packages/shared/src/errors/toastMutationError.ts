@@ -18,6 +18,7 @@ const P0001_HANDLERS: Array<[substring: string, message: string]> = [
   ['create_order', 'Error al crear la orden. Revisá los datos.'],
   ['replace', 'No se pudo completar el reemplazo. Revisá los datos.'],
   ['record_order_key_pickup', 'Error al registrar el retiro. La orden debe estar lista para retiro.'],
+  ['create_and_assign_equipment', 'Error al crear y asignar el equipo. Revisá los datos.'],
 ];
 
 /**

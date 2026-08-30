@@ -80,6 +80,37 @@ export async function resolveTicket(
   return data as string;
 }
 
+export interface CreateAndAssignEquipmentInput {
+  ticketId: string;
+  buildingId: string;
+  serial: string;
+  model: string;
+  description?: string | null;
+  accessType: string;
+}
+
+/**
+ * Atomic replacement for the two-step INSERT+UPDATE previously issued from
+ * the admin `useMutateTicketEquipment` hook. Creates the equipment row and
+ * links it to the ticket in a single transaction; either both succeed or
+ * neither is persisted.
+ */
+export async function createAndAssignEquipment(
+  client: TypedSupabaseClient,
+  input: CreateAndAssignEquipmentInput,
+): Promise<string> {
+  const { data, error } = await client.rpc('create_and_assign_equipment', {
+    p_ticket_id: input.ticketId,
+    p_building_id: input.buildingId,
+    p_serial: input.serial,
+    p_model: input.model,
+    p_description: (input.description ?? '') as unknown as string,
+    p_access_type: input.accessType,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
 export interface ConfigureTechnicalTicketEquipmentInput {
   ticketId: string;
   newSerial: string;

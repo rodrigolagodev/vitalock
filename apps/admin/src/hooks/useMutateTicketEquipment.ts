@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { createAndAssignEquipment as createAndAssignEquipmentRpc } from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
 import { equipmentKey, tareasKey } from '@/lib/queryKeys';
 import { toastMutationError } from '@/lib/errors/toast';
@@ -22,12 +23,13 @@ export interface CreateAndAssignEquipmentInput {
  * Ticket ↔ equipment assignment for technical tickets.
  *   - assignExistingEquipment:  maintenance → link an equipment already
  *     living in the building to the ticket.
- *   - createAndAssignEquipment: installation → create the equipment row
- *     and link it to the ticket. This path is retained for the generic
+ *   - createAndAssignEquipment: installation → atomically create the
+ *     equipment row and link it to the ticket via the
+ *     public.create_and_assign_equipment RPC. Retained for the generic
  *     'installation' category which has no product_id and therefore
- *     cannot use the atomic RPCs (resolve_equipment_installation is
- *     category-guarded to 'equipment_installation' only). The two-step
- *     flow (create + separate resolve_ticket call) remains correct here.
+ *     cannot use the atomic resolve_equipment_installation RPC (that one
+ *     is category-guarded to 'equipment_installation' only). A separate
+ *     resolve_ticket call still follows this mutation.
  *
  * NOTE: replaceEquipmentInTicket was retired. equipment_replacement tickets
  * now resolve atomically through useResolveEquipmentReplacement, which calls
@@ -62,30 +64,15 @@ export function useMutateTicketEquipment(buildingId: string | null | undefined) 
   });
 
   const createAndAssignEquipment = useMutation({
-    mutationFn: async (input: CreateAndAssignEquipmentInput) => {
-      const { data: created, error: insertErr } = await supabase
-        .schema('operations')
-        .from('equipment')
-        .insert({
-          building_id: input.buildingId,
-          serial_number: input.serial_number,
-          model: input.model,
-          description: input.description ?? '',
-          access_type: input.access_type,
-        })
-        .select('id')
-        .single();
-      if (insertErr) throw insertErr;
-
-      const { error: linkErr } = await supabase
-        .schema('support')
-        .from('tickets')
-        .update({ equipment_id: created.id })
-        .eq('id', input.ticketId);
-      if (linkErr) throw linkErr;
-
-      return created.id;
-    },
+    mutationFn: (input: CreateAndAssignEquipmentInput) =>
+      createAndAssignEquipmentRpc(supabase, {
+        ticketId: input.ticketId,
+        buildingId: input.buildingId,
+        serial: input.serial_number,
+        model: input.model,
+        description: input.description ?? null,
+        accessType: input.access_type,
+      }),
     onSuccess: (_data, vars) => {
       invalidate(vars.ticketId);
       toast.success('Equipo creado y asignado a la tarea.');

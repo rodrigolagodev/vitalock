@@ -1203,6 +1203,17 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: undefined
       }
+      create_and_assign_equipment: {
+        Args: {
+          p_access_type: string
+          p_building_id: string
+          p_description: string
+          p_model: string
+          p_serial: string
+          p_ticket_id: string
+        }
+        Returns: string
+      }
       create_equipment_update: {
         Args: {
           p_actor_staff_id?: string

@@ -136,40 +136,37 @@ Total: ~910 LOC
 
 > Migration + typegen + hook rewrite + new vitest. Satisfies REQ-DB-CREATE-ASSIGN-EQUIP-1, REQ-CLIENT-EQUIP-1, REQ-TYPEGEN-1.1. Depends on Slice A.
 
-- [ ] C.1 **Preflight**: Read `apps/admin/src/hooks/useMutateTicketEquipment.ts` lines 64–85; confirm the current two-step INSERT+UPDATE pattern; verify `AssignEquipmentDialog.tsx` is the sole caller per explore.md.
+- [x] C.1 **Preflight**: Read `apps/admin/src/hooks/useMutateTicketEquipment.ts` lines 64–85; confirm the current two-step INSERT+UPDATE pattern; verify `AssignEquipmentDialog.tsx` is the sole caller per explore.md.
   - Acceptance: two-step pattern confirmed; no other callers found.
 
-- [ ] C.2 **Write vitest RED tests**: Create `apps/admin/src/hooks/__tests__/useMutateTicketEquipment.test.ts` with two cases per ADR-10: (1) mock RPC resolves → mutation state is `success`; (2) mock RPC rejects with `code: '23505'` → mutation state is `error`. Mock `@vitalock/supabase/rpc/tickets` at module level.
-  - Acceptance: tests fail (RED) because hook still uses two-step pattern.
+- [x] C.2 **Write vitest RED tests**: Create `apps/admin/src/hooks/__tests__/useMutateTicketEquipment.test.ts` with two cases per ADR-10: (1) mock RPC resolves → mutation state is `success`; (2) mock RPC rejects with `code: '23505'` → mutation state is `error`. Mock `@vitalock/supabase/rpc/tickets` at module level.
+  - Acceptance: RED confirmed — success case failed with two-step hook; GREEN after C.9.
 
-- [ ] C.3 **Write forward migration**: Create `supabase/migrations/<timestamp>_create_and_assign_equipment.sql` with the `CREATE OR REPLACE FUNCTION public.create_and_assign_equipment(...)` body from the design data model section.
-  - Acceptance: `supabase db reset` applies migration without error.
+- [x] C.3 **Write forward migration**: Create `supabase/migrations/20260830000107_create_and_assign_equipment.sql`. Uses actual schema column `serial_number` (not `serial` as design draft) and `description NOT NULL`.
+  - Acceptance: `supabase migration up` applies cleanly to local DB.
 
-- [ ] C.4 **Write rollback migration**: Create `supabase/migrations/<timestamp>_create_and_assign_equipment_rollback.sql` with `DROP FUNCTION IF EXISTS public.create_and_assign_equipment(uuid, uuid, text, text, text, text);` per ADR-9.
-  - Acceptance: rollback script runs without error on a migrated DB.
+- [x] C.4 **Write rollback migration**: Placed at `supabase/rollbacks/20260830000107_create_and_assign_equipment_rollback.sql` (deviating from ADR-9 which placed it in `migrations/` — that path would have been auto-applied and dropped the RPC on next `supabase db reset`).
+  - Acceptance: idempotent `DROP FUNCTION IF EXISTS` script.
 
-- [ ] C.5 **Write pgTAP test file**: Create `supabase/tests/rpc/create_and_assign_equipment.sql` covering all five scenarios REQ-DB-CREATE-ASSIGN-EQUIP-1.1 through REQ-DB-CREATE-ASSIGN-EQUIP-1.5 (happy path, invalid ticket_id, RLS-denied caller, duplicate serial, rollback on second-step failure).
-  - Acceptance: `supabase test db` reports all plan lines pass.
+- [x] C.5 **Write pgTAP test file**: `supabase/tests-sql/test_122_create_and_assign_equipment.sql` (following actual repo convention, not `supabase/tests/rpc/` as design draft said). Five scenarios REQ-DB-CREATE-ASSIGN-EQUIP-1.1..1.5.
+  - Acceptance: `pg_prove` reports 5/5 PASS.
 
-- [ ] C.6 **Regenerate types**: Run `pnpm --filter @vitalock/supabase typegen`; verify `Database['public']['Functions']['create_and_assign_equipment']` is present in `packages/supabase/src/database.types.ts`.
-  - Acceptance: REQ-TYPEGEN-1.1 satisfied; `pnpm tsc --noEmit` passes.
+- [x] C.6 **Regenerate types**: Ran `bash scripts/gen-types.sh` (no package.json typegen script — script exists at repo scripts/). `Database['public']['Functions']['create_and_assign_equipment']` present at line 1206 of database.types.ts.
+  - Acceptance: REQ-TYPEGEN-1.1 satisfied.
 
-- [ ] C.7 **Add RPC wrapper**: Add `createAndAssignEquipment(input)` wrapper to `packages/supabase/src/rpc/tickets.ts` calling `supabase.rpc('create_and_assign_equipment', {...})` per design interface changes section.
-  - Acceptance: wrapper exported; typed against new `database.types.ts`.
+- [x] C.7 **Add RPC wrapper**: `createAndAssignEquipment(client, input)` added to `packages/supabase/src/rpc/tickets.ts`.
+  - Acceptance: exported and typed.
 
-- [ ] C.8 **Add Slice C P0001 entry**: Add `create_and_assign_equipment` substring and message to `packages/shared/src/errors/toastMutationError.ts` P0001 built-in list per ADR-5.
-  - Acceptance: the new substring is present in the ordered list.
+- [x] C.8 **Add Slice C P0001 entry**: Appended to `P0001_HANDLERS` in `packages/shared/src/errors/toastMutationError.ts`.
 
-- [ ] C.9 **Rewrite hook**: Rewrite `apps/admin/src/hooks/useMutateTicketEquipment.ts` `createAndAssignEquipment` mutation to call `createAndAssignEquipment` RPC wrapper instead of the two-step pattern; remove the two sequential queries.
-  - Acceptance: hook makes exactly one RPC call (REQ-CLIENT-EQUIP-1.2).
+- [x] C.9 **Rewrite hook**: `useMutateTicketEquipment.createAndAssignEquipment` collapsed to a single RPC call via the wrapper. JSDoc updated.
+  - Acceptance: hook body issues exactly one `client.rpc('create_and_assign_equipment', ...)` call (REQ-CLIENT-EQUIP-1.2).
 
-- [ ] C.10 **Verify tests go GREEN**: Run `pnpm --filter @vitalock/admin test -- useMutateTicketEquipment`; both C.2 cases must now pass.
-  - Acceptance: tests pass (GREEN); no two-step pattern in hook body.
+- [x] C.10 **Verify tests go GREEN**: `pnpm --filter @vitalock/admin exec vitest run src/hooks/__tests__/useMutateTicketEquipment.test.ts` → 2/2 pass.
 
-- [ ] C.11 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
-  - Acceptance: all green; no orphaned two-step pattern in hook.
+- [x] C.11 **Verification**: `pnpm test` → 624/624 admin, all packages pass. `pnpm typecheck` and `pnpm build` — only pre-existing installer `TaskDetailPage.test.tsx` errors (commit d915224, unrelated to Slice C — same as noted for Slices A/B).
 
-- [ ] C.12 **Delivery**: Commit all files together — migration, rollback, pgTAP, typegen, wrapper, P0001 entry, hook rewrite, tests — as one atomic commit per ADR-8: `feat(db): atomic create_and_assign_equipment RPC [slice-C]`; push to PR C branch targeting PR B branch.
+- [ ] C.12 **Delivery**: Commit all files together as one atomic commit per ADR-8: `feat(db): atomic create_and_assign_equipment RPC [slice-C]`; push to PR C branch targeting PR B branch.
 
 ---
 
