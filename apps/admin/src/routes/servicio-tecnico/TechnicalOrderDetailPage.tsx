@@ -8,6 +8,7 @@ import {
   Skeleton,
 } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
 import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';
@@ -89,91 +90,68 @@ export default function TechnicalOrderDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-        <Link to="/servicio-tecnico" className="hover:text-foreground transition-colors">
-          Servicio técnico
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">{order.order_number}</span>
-      </div>
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{order.order_number}</h1>
-            <TechnicalOrderStatusBadge status={order.status} />
-          </div>
-
-          {/* Client info */}
+      <PageHeader
+        title={order.order_number}
+        breadcrumbs={[
+          { label: 'Servicio técnico', to: '/servicio-tecnico' },
+          { label: order.order_number },
+        ]}
+        titleAdornment={<TechnicalOrderStatusBadge status={order.status} />}
+        subtitle={
           <div className="flex flex-col gap-0.5">
             {order.client_type === 'administration' ? (
               order.administration_id ? (
                 <Link
                   to={`/administraciones/${order.administration_id}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                  className="hover:text-foreground transition-colors underline-offset-4 hover:underline"
                 >
                   {clientLabel}
                 </Link>
               ) : (
-                <p className="text-sm text-muted-foreground">{clientLabel}</p>
+                <span>{clientLabel}</span>
               )
             ) : (
-              <div className="flex flex-col gap-0.5">
-                <p className="text-sm font-medium">{clientLabel}</p>
-                {clientDetail && (
-                  <p className="text-xs text-muted-foreground">{clientDetail}</p>
-                )}
+              <>
+                <span className="font-medium">{clientLabel}</span>
+                {clientDetail && <span className="text-xs">{clientDetail}</span>}
                 {order.particular_phone && (
-                  <p className="text-xs text-muted-foreground">
-                    Tel: {order.particular_phone}
-                  </p>
+                  <span className="text-xs">Tel: {order.particular_phone}</span>
                 )}
                 {order.particular_email && (
-                  <p className="text-xs text-muted-foreground">{order.particular_email}</p>
+                  <span className="text-xs">{order.particular_email}</span>
                 )}
-              </div>
+              </>
             )}
-            <p className="text-xs text-muted-foreground">
-              Creada el {formatDate(order.created_at)}
-            </p>
+            <span className="text-xs">Creada el {formatDate(order.created_at)}</span>
+            {order.notes && (
+              <span className="mt-2 max-w-lg">{order.notes}</span>
+            )}
           </div>
-
-          {/* Notes */}
-          {order.notes && (
-            <p className="mt-2 text-sm text-muted-foreground max-w-lg">{order.notes}</p>
-          )}
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {isDraft && (
-            <Button asChild variant="outline">
-              <Link to={`/servicio-tecnico/${order.id}/editar`}>Editar</Link>
-            </Button>
-          )}
-
-          {isCompleted && (
-            <Button
-              onClick={handleMarkInvoiced}
-              disabled={markTechnicalOrderInvoiced.isPending}
-            >
-              {markTechnicalOrderInvoiced.isPending ? 'Marcando...' : 'Marcar facturada'}
-            </Button>
-          )}
-
-          {!isTerminal && (
-            <Button
-              variant="destructive"
-              onClick={() => setCancelConfirmOpen(true)}
-              disabled={cancelTechnicalOrder.isPending}
-            >
-              {cancelTechnicalOrder.isPending ? 'Cancelando...' : 'Cancelar orden'}
-            </Button>
-          )}
-        </div>
-      </div>
+        }
+      >
+        {isDraft && (
+          <Button asChild variant="outline">
+            <Link to={`/servicio-tecnico/${order.id}/editar`}>Editar</Link>
+          </Button>
+        )}
+        {isCompleted && (
+          <Button
+            onClick={handleMarkInvoiced}
+            disabled={markTechnicalOrderInvoiced.isPending}
+          >
+            {markTechnicalOrderInvoiced.isPending ? 'Marcando...' : 'Marcar facturada'}
+          </Button>
+        )}
+        {!isTerminal && (
+          <Button
+            variant="destructive"
+            onClick={() => setCancelConfirmOpen(true)}
+            disabled={cancelTechnicalOrder.isPending}
+          >
+            {cancelTechnicalOrder.isPending ? 'Cancelando...' : 'Cancelar orden'}
+          </Button>
+        )}
+      </PageHeader>
 
       {/* Items table */}
       <div className="flex flex-col gap-3">

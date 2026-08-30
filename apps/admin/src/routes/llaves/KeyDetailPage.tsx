@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Section } from '@/components/common/Section';
 import { useKeyById } from '@/hooks/useKeyById';
 import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';
@@ -87,24 +87,19 @@ export default function KeyDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb + back */}
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <Link
-          to="/llaves/inventario"
-          className="inline-flex items-center gap-1 hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Inventario de llaves
-        </Link>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-4">
-        <h1 className="font-mono text-3xl font-semibold">{keyDetail.rfid_code}</h1>
-        <StatusBadge tone={keyStatusTone(keyDetail.status)}>
-          {keyStatusLabel(keyDetail.status)}
-        </StatusBadge>
-      </div>
+      <PageHeader
+        title={keyDetail.rfid_code}
+        titleClassName="font-mono"
+        breadcrumbs={[
+          { label: 'Inventario de llaves', to: '/llaves/inventario' },
+          { label: keyDetail.rfid_code },
+        ]}
+        titleAdornment={
+          <StatusBadge tone={keyStatusTone(keyDetail.status)}>
+            {keyStatusLabel(keyDetail.status)}
+          </StatusBadge>
+        }
+      />
 
       {/* Contextual notes */}
       {isInformational && (

@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Section } from '@/components/common/Section';
 import { useEquipmentById } from '@/hooks/useEquipmentById';
 import {
@@ -102,29 +102,19 @@ export default function EquipoDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb */}
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <Link
-          to="/equipos"
-          className="inline-flex items-center gap-1 hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Inventario de equipos
-        </Link>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">{equipment.model ?? 'Equipo'}</h1>
-          <p className="font-mono text-sm text-muted-foreground">
-            {equipment.serial_number}
-          </p>
-        </div>
-        <StatusBadge tone={equipmentStatusTone(equipment.status)}>
-          {equipmentStatusLabel(equipment.status)}
-        </StatusBadge>
-      </div>
+      <PageHeader
+        title={equipment.model ?? 'Equipo'}
+        breadcrumbs={[
+          { label: 'Inventario de equipos', to: '/equipos' },
+          { label: equipment.model ?? equipment.serial_number },
+        ]}
+        titleAdornment={
+          <StatusBadge tone={equipmentStatusTone(equipment.status)}>
+            {equipmentStatusLabel(equipment.status)}
+          </StatusBadge>
+        }
+        subtitle={<span className="font-mono">{equipment.serial_number}</span>}
+      />
 
       {equipment.status === 'maintenance' && (
         <p className="rounded bg-warning/10 px-3 py-2 text-sm text-warning dark:bg-warning/10 dark:text-warning">

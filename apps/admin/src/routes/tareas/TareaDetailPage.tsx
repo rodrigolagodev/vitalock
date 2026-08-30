@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Button,
   EmptyState,
@@ -10,6 +10,7 @@ import {
   StatusBadge,
 } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useTarea } from '@/hooks/useTarea';
 import { equipmentStatusLabel, equipmentStatusTone } from '@/lib/status/equipmentStatus';
 import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
@@ -113,27 +114,17 @@ export default function TareaDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-        <Link to="/tareas" className="hover:text-foreground transition-colors">
-          Tareas
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">{tarea.ticket_number}</span>
-      </div>
-
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">{tarea.ticket_number}</h1>
-            <TareaStatusBadge status={tarea.status} />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {CATEGORY_LABELS[tarea.category] ?? tarea.category}
-          </p>
-        </div>
-
+      <PageHeader
+        title={tarea.ticket_number}
+        subtitle={CATEGORY_LABELS[tarea.category] ?? tarea.category}
+        breadcrumbs={[
+          { label: 'Tareas', to: '/tareas' },
+          { label: tarea.ticket_number },
+        ]}
+        titleAdornment={<TareaStatusBadge status={tarea.status} />}
+      >
         <Button onClick={() => setEditOpen(true)}>Editar</Button>
-      </div>
+      </PageHeader>
 
       <div className="grid grid-cols-1 gap-4 rounded-md border bg-card p-4 md:grid-cols-2">
         <Row label="Descripción" value={tarea.description || '—'} />
