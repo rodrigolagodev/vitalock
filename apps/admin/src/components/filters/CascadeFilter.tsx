@@ -1,3 +1,18 @@
+import {
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@vitalock/ui';
+
+/**
+ * Radix Select disallows empty string as a value, so we use a sentinel token
+ * for the "all/none" option and normalize it on the way out.
+ */
+const ALL_VALUE = '__all__';
+
 export interface CascadeOption {
   id: string;
   label: string;
@@ -77,79 +92,91 @@ export function CascadeFilter({
     <div className="flex flex-wrap items-end gap-3">
       {showAdmin && (
         <div className="flex flex-col gap-1">
-          <label
+          <Label
             htmlFor="cascade-admin"
-            className="text-xs font-medium text-muted-foreground uppercase"
+            className="text-xs font-medium uppercase text-muted-foreground"
           >
             Administración
-          </label>
-          <select
-            id="cascade-admin"
-            aria-label="Administración"
-            className="h-9 rounded-md border bg-background px-3 text-sm"
-            value={value.administrationId ?? ''}
+          </Label>
+          <Select
+            value={value.administrationId ?? ALL_VALUE}
             disabled={disabled}
-            onChange={(e) => handleAdminChange(e.target.value)}
+            onValueChange={(v) =>
+              handleAdminChange(v === ALL_VALUE ? '' : v)
+            }
           >
-            <option value="">Todas</option>
-            {administrations.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id="cascade-admin" aria-label="Administración" className="w-56">
+              <SelectValue placeholder="Todas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_VALUE}>Todas</SelectItem>
+              {administrations.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
       {showBuilding && (
         <div className="flex flex-col gap-1">
-          <label
+          <Label
             htmlFor="cascade-building"
-            className="text-xs font-medium text-muted-foreground uppercase"
+            className="text-xs font-medium uppercase text-muted-foreground"
           >
             Edificio
-          </label>
-          <select
-            id="cascade-building"
-            aria-label="Edificio"
-            className="h-9 rounded-md border bg-background px-3 text-sm"
-            value={value.buildingId ?? ''}
+          </Label>
+          <Select
+            value={value.buildingId ?? ALL_VALUE}
             disabled={disabled || !value.administrationId}
-            onChange={(e) => handleBuildingChange(e.target.value)}
+            onValueChange={(v) =>
+              handleBuildingChange(v === ALL_VALUE ? '' : v)
+            }
           >
-            <option value="">Todos</option>
-            {filteredBuildings.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id="cascade-building" aria-label="Edificio" className="w-56">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_VALUE}>Todos</SelectItem>
+              {filteredBuildings.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
       {showEquipment && (
         <div className="flex flex-col gap-1">
-          <label
+          <Label
             htmlFor="cascade-equipment"
-            className="text-xs font-medium text-muted-foreground uppercase"
+            className="text-xs font-medium uppercase text-muted-foreground"
           >
             Equipo
-          </label>
-          <select
-            id="cascade-equipment"
-            aria-label="Equipo"
-            className="h-9 rounded-md border bg-background px-3 text-sm"
-            value={value.equipmentId ?? ''}
+          </Label>
+          <Select
+            value={value.equipmentId ?? ALL_VALUE}
             disabled={disabled || !value.buildingId}
-            onChange={(e) => handleEquipmentChange(e.target.value)}
+            onValueChange={(v) =>
+              handleEquipmentChange(v === ALL_VALUE ? '' : v)
+            }
           >
-            <option value="">Todos</option>
-            {filteredEquipment.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger id="cascade-equipment" aria-label="Equipo" className="w-56">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_VALUE}>Todos</SelectItem>
+              {filteredEquipment.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
     </div>

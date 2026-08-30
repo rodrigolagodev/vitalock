@@ -11,6 +11,7 @@ const MOCK_ADMINS = [
 const MOCK_BUILDINGS = [
   { id: 'bld-1', label: 'Torre Norte', parentId: 'adm-1' },
   { id: 'bld-2', label: 'Torre Sur', parentId: 'adm-2' },
+  { id: 'bld-3', label: 'Torre Este', parentId: 'adm-1' },
 ];
 const MOCK_EQUIPMENT = [
   { id: 'eq-1', label: 'SN-001', parentId: 'bld-1' },
@@ -38,38 +39,53 @@ function renderFilter(
   };
 }
 
+/** Opens a Radix Select trigger and clicks the option matching optionName. */
+async function selectRadixOption(
+  triggerName: RegExp,
+  optionName: RegExp,
+): Promise<void> {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('combobox', { name: triggerName }));
+  await user.click(await screen.findByRole('option', { name: optionName }));
+}
+
 describe('CascadeFilter rendering', () => {
   it('renders the administration select', () => {
     renderFilter();
-    expect(screen.getByLabelText(/administración/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: /administración/i }),
+    ).toBeInTheDocument();
   });
 
   it('renders building select disabled when no administration selected', () => {
     renderFilter();
-    expect(screen.getByLabelText(/edificio/i)).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: /edificio/i })).toBeDisabled();
   });
 
   it('renders equipment select disabled when no building selected', () => {
     renderFilter();
-    expect(screen.getByLabelText(/equipo/i)).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: /equipo/i })).toBeDisabled();
   });
 
   it('building select is enabled when administrationId is set', () => {
     renderFilter({ value: { administrationId: 'adm-1' } });
-    expect(screen.getByLabelText(/edificio/i)).not.toBeDisabled();
+    expect(
+      screen.getByRole('combobox', { name: /edificio/i }),
+    ).not.toBeDisabled();
   });
 
   it('equipment select is enabled when both administrationId and buildingId are set', () => {
     renderFilter({ value: { administrationId: 'adm-1', buildingId: 'bld-1' } });
-    expect(screen.getByLabelText(/equipo/i)).not.toBeDisabled();
+    expect(
+      screen.getByRole('combobox', { name: /equipo/i }),
+    ).not.toBeDisabled();
   });
 });
 
 describe('CascadeFilter interactions', () => {
   it('calls onChange with administrationId when admin is selected', async () => {
     const { onChange } = renderFilter();
-    const select = screen.getByLabelText(/administración/i);
-    await userEvent.selectOptions(select, 'adm-1');
+    await selectRadixOption(/administración/i, /^garcia s\.a\.$/i);
     expect(onChange).toHaveBeenCalledWith({ administrationId: 'adm-1' });
   });
 
@@ -77,30 +93,27 @@ describe('CascadeFilter interactions', () => {
     const { onChange } = renderFilter({
       value: { administrationId: 'adm-1', buildingId: 'bld-1', equipmentId: 'eq-1' },
     });
-    const select = screen.getByLabelText(/administración/i);
-    await userEvent.selectOptions(select, 'adm-2');
+    await selectRadixOption(/administración/i, /^torres corp\.$/i);
     expect(onChange).toHaveBeenCalledWith({ administrationId: 'adm-2' });
   });
 
   it('calls onChange with buildingId preserving administrationId when building selected', async () => {
     const { onChange } = renderFilter({ value: { administrationId: 'adm-1' } });
-    const select = screen.getByLabelText(/edificio/i);
-    await userEvent.selectOptions(select, 'bld-1');
+    await selectRadixOption(/edificio/i, /^torre norte$/i);
     expect(onChange).toHaveBeenCalledWith({
       administrationId: 'adm-1',
       buildingId: 'bld-1',
     });
   });
 
-  it('selecting building resets equipmentId', async () => {
+  it('selecting a different building resets equipmentId', async () => {
     const { onChange } = renderFilter({
       value: { administrationId: 'adm-1', buildingId: 'bld-1', equipmentId: 'eq-1' },
     });
-    const select = screen.getByLabelText(/edificio/i);
-    await userEvent.selectOptions(select, 'bld-1');
+    await selectRadixOption(/edificio/i, /^torre este$/i);
     expect(onChange).toHaveBeenCalledWith({
       administrationId: 'adm-1',
-      buildingId: 'bld-1',
+      buildingId: 'bld-3',
     });
   });
 
@@ -108,8 +121,7 @@ describe('CascadeFilter interactions', () => {
     const { onChange } = renderFilter({
       value: { administrationId: 'adm-1', buildingId: 'bld-1' },
     });
-    const select = screen.getByLabelText(/equipo/i);
-    await userEvent.selectOptions(select, 'eq-1');
+    await selectRadixOption(/equipo/i, /^sn-001$/i);
     expect(onChange).toHaveBeenCalledWith({
       administrationId: 'adm-1',
       buildingId: 'bld-1',
@@ -121,8 +133,7 @@ describe('CascadeFilter interactions', () => {
     const { onChange } = renderFilter({
       value: { administrationId: 'adm-1', buildingId: 'bld-1', equipmentId: 'eq-1' },
     });
-    const select = screen.getByLabelText(/administración/i);
-    await userEvent.selectOptions(select, '');
+    await selectRadixOption(/administración/i, /^todas$/i);
     expect(onChange).toHaveBeenCalledWith({});
   });
 });
@@ -139,8 +150,14 @@ describe('CascadeFilter levels prop', () => {
         equipment={MOCK_EQUIPMENT}
       />,
     );
-    expect(screen.getByLabelText(/administración/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/edificio/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/equipo/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: /administración/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: /edificio/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: /equipo/i }),
+    ).not.toBeInTheDocument();
   });
 });

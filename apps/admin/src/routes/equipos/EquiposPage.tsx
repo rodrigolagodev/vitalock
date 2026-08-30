@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, ErrorState } from '@vitalock/ui';
+import {
+  Button,
+  ErrorState,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useEquipmentInventory } from '@/hooks/useEquipmentInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -73,24 +82,28 @@ export default function EquiposPage() {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-col gap-1">
-            <label
+            <Label
               htmlFor="equipment-status"
               className="text-xs font-medium uppercase text-muted-foreground"
             >
               Estado del equipo
-            </label>
-            <select
-              id="equipment-status"
-              className="h-9 rounded-md border bg-background px-3 text-sm"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              {EQUIPMENT_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            </Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger
+                id="equipment-status"
+                aria-label="Estado del equipo"
+                className="w-56"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EQUIPMENT_STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

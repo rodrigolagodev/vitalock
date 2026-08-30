@@ -1,6 +1,15 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, ErrorState } from '@vitalock/ui';
+import {
+  Button,
+  ErrorState,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -124,45 +133,53 @@ export default function InventarioPage() {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-col gap-1">
-            <label
+            <Label
               htmlFor="physical-status"
               className="text-xs font-medium uppercase text-muted-foreground"
             >
               Estado físico
-            </label>
-            <select
-              id="physical-status"
-              className="h-9 rounded-md border bg-background px-3 text-sm"
-              value={physicalStatus}
-              onChange={(e) => setPhysicalStatus(e.target.value)}
-            >
-              {PHYSICAL_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            </Label>
+            <Select value={physicalStatus} onValueChange={setPhysicalStatus}>
+              <SelectTrigger
+                id="physical-status"
+                aria-label="Estado físico"
+                className="w-56"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PHYSICAL_STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label
+            <Label
               htmlFor="workflow-status"
               className="text-xs font-medium uppercase text-muted-foreground"
             >
               Estado de orden
-            </label>
-            <select
-              id="workflow-status"
-              className="h-9 rounded-md border bg-background px-3 text-sm"
-              value={workflowStatus}
-              onChange={(e) => setWorkflowStatus(e.target.value)}
-            >
-              {WORKFLOW_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            </Label>
+            <Select value={workflowStatus} onValueChange={setWorkflowStatus}>
+              <SelectTrigger
+                id="workflow-status"
+                aria-label="Estado de orden"
+                className="w-56"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {WORKFLOW_STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
