@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Copy, Check, PlusCircle } from 'lucide-react';
-import { Button } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState } from '@vitalock/ui';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@vitalock/ui';
 import { usePendingKeysForEquipment } from '@/hooks/usePendingKeysForEquipment';
 import { useEquipmentUpdates } from '@/hooks/useEquipmentUpdates';
@@ -37,9 +37,7 @@ function formatSnapshotForClipboard(
 
 function KeyTable({ keys, emptyMessage }: { keys: PendingKey[]; emptyMessage: string }) {
   if (keys.length === 0) {
-    return (
-      <p className="py-4 text-sm text-muted-foreground text-center">{emptyMessage}</p>
-    );
+    return <EmptyState message={emptyMessage} className="py-4 text-center" />;
   }
 
   return (
@@ -122,9 +120,10 @@ export function EquipmentKeySnapshotPanel({
 
   if (isError) {
     return (
-      <p className="text-sm text-destructive py-4">
-        No se pudo cargar el estado de llaves pendientes.
-      </p>
+      <ErrorState
+        message="No se pudo cargar el estado de llaves pendientes."
+        className="py-4"
+      />
     );
   }
 

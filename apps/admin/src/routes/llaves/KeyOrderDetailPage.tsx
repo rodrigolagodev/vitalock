@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Button } from '@vitalock/ui';
+import { Button, ConfirmDialog } from '@vitalock/ui';
+import {
+  ErrorState,
+  NotFoundState,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { useKeyOrder } from '@/hooks/useKeyOrder';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { KeyOrderStatusBadge } from '@/components/llaves/KeyOrderStatusBadge';
 import { KeyOrderItemsTable } from '@/components/llaves/KeyOrderItemsTable';
-import { ConfirmDialog } from '@vitalock/ui';
 
 const TERMINAL_STATUSES = new Set(['completed', 'invoiced', 'cancelled']);
 
@@ -20,36 +25,37 @@ export default function KeyOrderDetailPage() {
 
   if (!keyOrderId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">ID de orden inválido.</p>
-        <Link to="/llaves" className="mt-4 text-sm underline">
-          Volver a llaves
-        </Link>
-      </div>
+      <ErrorState
+        message="ID de orden inválido."
+        back={{ label: 'Volver a llaves', to: '/llaves' }}
+        className="py-24"
+      />
     );
   }
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
-        <div className="h-4 w-40 animate-pulse rounded-md bg-muted" />
-        <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
-        <div className="h-64 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   if (isError || order == null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          {isError ? 'Error al cargar la orden.' : 'Orden no encontrada.'}
-        </p>
-        <Link to="/llaves" className="mt-4 text-sm underline">
-          Volver a llaves
-        </Link>
-      </div>
+    return isError ? (
+      <ErrorState
+        message="Error al cargar la orden."
+        back={{ label: 'Volver a llaves', to: '/llaves' }}
+        className="py-24"
+      />
+    ) : (
+      <NotFoundState
+        message="Orden no encontrada."
+        back={{ label: 'Volver a llaves', to: '/llaves' }}
+      />
     );
   }
 
@@ -173,7 +179,7 @@ export default function KeyOrderDetailPage() {
 
       {/* Items table */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Ítems</h2>
+        <SectionHeading title="Ítems" variant="secondary" />
         <KeyOrderItemsTable
           items={order.key_order_items}
           orderId={order.id}

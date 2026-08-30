@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Badge } from '@vitalock/ui';
-import { Input } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
@@ -9,7 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@vitalock/ui';
-import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@vitalock/ui';
+import {
+  ErrorState,
+  NotFoundState,
+  SearchInput,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import type { KeyRow } from '@/hooks/useKeys';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useAdministration } from '@/hooks/useAdministration';
@@ -41,36 +51,37 @@ export default function BuildingDetailPage() {
 
   if (!buildingId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">ID de edificio inválido.</p>
-        <Link to="/administraciones" className="mt-4 text-sm underline">
-          Volver a administraciones
-        </Link>
-      </div>
+      <ErrorState
+        message="ID de edificio inválido."
+        back={{ label: 'Volver a administraciones', to: '/administraciones' }}
+        className="py-24"
+      />
     );
   }
 
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
-        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
-        <div className="h-4 w-32 animate-pulse rounded-md bg-muted" />
-        <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
-        <div className="h-64 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   if (isError || building == null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          {isError ? 'Error al cargar el edificio.' : 'Edificio no encontrado.'}
-        </p>
-        <Link to="/administraciones" className="mt-4 text-sm underline">
-          Volver a administraciones
-        </Link>
-      </div>
+    return isError ? (
+      <ErrorState
+        message="Error al cargar el edificio."
+        back={{ label: 'Volver a administraciones', to: '/administraciones' }}
+        className="py-24"
+      />
+    ) : (
+      <NotFoundState
+        message="Edificio no encontrado."
+        back={{ label: 'Volver a administraciones', to: '/administraciones' }}
+      />
     );
   }
 
@@ -117,25 +128,18 @@ export default function BuildingDetailPage() {
       </PageHeader>
 
       {/* Section selector */}
-      <RadioGroup
-        value={activeTab}
-        onValueChange={handleTabChange}
-        aria-label="Sección del edificio"
-        className="grid w-full grid-cols-2"
-      >
-        <RadioGroupItem value="llaves" className="text-center">
-          Llaves
-        </RadioGroupItem>
-        <RadioGroupItem value="equipos" className="text-center">
-          Equipos
-        </RadioGroupItem>
-      </RadioGroup>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-2" aria-label="Sección del edificio">
+          <TabsTrigger value="llaves">Llaves</TabsTrigger>
+          <TabsTrigger value="equipos">Equipos</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
         {activeTab === 'llaves' && (
           <div className="mt-4 space-y-4">
-          <h2 className="text-lg font-semibold">Llaves</h2>
+          <SectionHeading title="Llaves" variant="secondary" />
           <div className="flex flex-wrap items-center gap-2">
-            <Input
+            <SearchInput
               placeholder="Buscar llaves por código o unidad..."
               value={llavesSearch}
               onChange={(e) => setLlavesSearch(e.target.value)}
@@ -164,8 +168,8 @@ export default function BuildingDetailPage() {
 
         {activeTab === 'equipos' && (
           <div className="mt-4 space-y-4">
-          <h2 className="text-lg font-semibold">Equipos</h2>
-          <Input
+          <SectionHeading title="Equipos" variant="secondary" />
+          <SearchInput
             placeholder="Buscar equipos por serie o modelo..."
             value={equiposSearch}
             onChange={(e) => setEquiposSearch(e.target.value)}

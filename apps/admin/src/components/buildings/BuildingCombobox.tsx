@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Search, X } from 'lucide-react';
-import { Input } from '@vitalock/ui';
+import { X } from 'lucide-react';
+import { SearchInput } from '@vitalock/ui';
 import type { BuildingRow } from '@/hooks/useBuildings';
 
 interface BuildingComboboxProps {
@@ -67,14 +67,13 @@ export function BuildingCombobox({
   return (
     <div className={`relative ${className ?? ''}`}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
+        <SearchInput
           id={id}
           role="combobox"
           aria-expanded={open}
           aria-label="Buscar edificio"
           placeholder={placeholder}
-          className="pl-9 pr-9"
+          className="pr-9"
           value={showInputValue ? displayValue : query}
           onChange={(e) => {
             setQuery(e.target.value);

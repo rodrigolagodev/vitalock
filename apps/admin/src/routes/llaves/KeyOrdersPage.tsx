@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, PackageCheck } from 'lucide-react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
-import { Badge } from '@vitalock/ui';
-import { StatCard } from '@vitalock/ui';
+import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useKeyOrders } from '@/hooks/useKeyOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -52,13 +49,7 @@ export default function KeyOrdersPage() {
   });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar las órdenes de llave. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar las órdenes de llave. Recargá la página." />;
   }
 
   return (
@@ -98,7 +89,7 @@ export default function KeyOrdersPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Buscar por número de orden, cliente..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

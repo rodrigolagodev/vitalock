@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Badge, Button } from '@vitalock/ui';
+import { Badge, Button, EmptyState, ErrorState } from '@vitalock/ui';
+import { Section } from '@/components/common/Section';
 import { useKeyById, type KeyStatus } from '@/hooks/useKeyById';
 import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';
 
@@ -80,23 +81,6 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-3 rounded-lg border bg-card p-4">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
 export default function KeyDetailPage() {
   const { keyId } = useParams<{ keyId: string }>();
   const { data: keyDetail, isLoading, isError } = useKeyById(keyId);
@@ -112,14 +96,14 @@ export default function KeyDetailPage() {
 
   if (isError || !keyDetail) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16">
-        <p className="text-sm text-destructive">
-          No se pudo cargar la información de la llave.
-        </p>
+      <ErrorState
+        message="No se pudo cargar la información de la llave."
+        className="gap-4 py-16"
+      >
         <Button asChild variant="outline" size="sm">
           <Link to="/llaves/inventario">Volver al inventario</Link>
         </Button>
-      </div>
+      </ErrorState>
     );
   }
 
@@ -237,9 +221,7 @@ export default function KeyDetailPage() {
 
         <Section title="Equipos autorizados">
           {keyDetail.authorized_equipment.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Sin equipos autorizados.
-            </p>
+            <EmptyState message="Sin equipos autorizados." />
           ) : (
             <ul className="flex flex-col gap-2">
               {keyDetail.authorized_equipment.map((eq) => (
@@ -268,9 +250,7 @@ export default function KeyDetailPage() {
       {/* Full width sections below */}
       <Section title="Órdenes asociadas">
         {keyDetail.associated_orders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No hay órdenes vinculadas a esta llave.
-          </p>
+          <EmptyState message="No hay órdenes vinculadas a esta llave." />
         ) : (
           <ul className="flex flex-col gap-3">
             {keyDetail.associated_orders.map((o) => (
@@ -323,9 +303,10 @@ export default function KeyDetailPage() {
           )}
 
           {!eventsLoading && events.length === 0 && (
-            <p className="pl-5 text-xs text-muted-foreground">
-              Sin cambios de estado registrados.
-            </p>
+            <EmptyState
+              message="Sin cambios de estado registrados."
+              className="pl-5 text-xs"
+            />
           )}
 
           {events.map((e) => (

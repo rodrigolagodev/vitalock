@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Badge, Button } from '@vitalock/ui';
+import { Badge, Button, EmptyState, ErrorState } from '@vitalock/ui';
+import { Section } from '@/components/common/Section';
 import {
   useEquipmentById,
   type EquipmentStatus,
@@ -72,23 +73,6 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-3 rounded-lg border bg-card p-4">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
 function EquipmentLabel({
   serial_number,
   model,
@@ -118,14 +102,14 @@ export default function EquipoDetailPage() {
 
   if (isError || !equipment) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16">
-        <p className="text-sm text-destructive">
-          No se pudo cargar la información del equipo.
-        </p>
+      <ErrorState
+        message="No se pudo cargar la información del equipo."
+        className="gap-4 py-16"
+      >
         <Button asChild variant="outline" size="sm">
           <Link to="/equipos">Volver al inventario</Link>
         </Button>
-      </div>
+      </ErrorState>
     );
   }
 
@@ -288,9 +272,7 @@ export default function EquipoDetailPage() {
           );
           if (activeKeys.length === 0) {
             return (
-              <p className="text-sm text-muted-foreground">
-                No hay llaves activas en este equipo.
-              </p>
+              <EmptyState message="No hay llaves activas en este equipo." />
             );
           }
           return (
@@ -350,9 +332,7 @@ export default function EquipoDetailPage() {
 
       <Section title="Órdenes técnicas asociadas">
         {equipment.associated_orders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No hay órdenes técnicas vinculadas a este equipo.
-          </p>
+          <EmptyState message="No hay órdenes técnicas vinculadas a este equipo." />
         ) : (
           <ul className="flex flex-col gap-3">
             {equipment.associated_orders.map((o) => (

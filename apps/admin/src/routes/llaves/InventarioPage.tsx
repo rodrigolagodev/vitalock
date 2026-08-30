@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button } from '@vitalock/ui';
+import { Button, ErrorState } from '@vitalock/ui';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -100,13 +100,7 @@ export default function InventarioPage() {
   }));
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar el inventario de llaves. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar el inventario de llaves. Recargá la página." />;
   }
 
   return (

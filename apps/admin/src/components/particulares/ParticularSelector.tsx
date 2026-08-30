@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Search, X } from 'lucide-react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { X } from 'lucide-react';
+import { Button, SearchInput } from '@vitalock/ui';
 import { useParticulares } from '@/hooks/useParticulares';
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { QuickParticularCreateDialog } from './QuickParticularCreateDialog';
@@ -70,13 +69,12 @@ export function ParticularSelector({
   return (
     <div className={`relative ${className ?? ''}`}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
+        <SearchInput
           role="combobox"
           aria-expanded={open && searching}
           aria-label="Buscar particular"
           placeholder="Buscar particular"
-          className={value && showInputValue && !disabled && onEdit ? 'pl-9 pr-24' : 'pl-9 pr-9'}
+          className={value && showInputValue && !disabled && onEdit ? 'pr-24' : 'pr-9'}
           value={showInputValue ? (value?.full_name ?? '') : query}
           onChange={handleInputChange}
           disabled={disabled}

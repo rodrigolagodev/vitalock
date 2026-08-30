@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Badge } from '@vitalock/ui';
-import { Input } from '@vitalock/ui';
+import { Badge, ErrorState, Input, SearchInput } from '@vitalock/ui';
 import { useAllOrders } from '@/hooks/useAllOrders';
 import { useDebounce } from '@/hooks/useDebounce';
 import { HistorialTable } from '@/components/historial/HistorialTable';
@@ -56,20 +55,14 @@ export default function HistorialPage() {
   });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar el historial. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar el historial. Recargá la página." />;
   }
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Órdenes</h1>
 
-      <Input
+      <SearchInput
         placeholder="Buscar por número de orden, cliente..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}

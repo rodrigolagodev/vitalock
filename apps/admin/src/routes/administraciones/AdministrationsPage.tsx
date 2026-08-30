@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Building2, CircleCheck } from 'lucide-react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
-import { StatCard } from '@vitalock/ui';
+import { Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useDebounce } from '@/hooks/useDebounce';
 import { AdministrationsTable } from '@/components/administrations/AdministrationsTable';
@@ -21,13 +19,7 @@ export default function AdministrationsPage() {
   });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar las administraciones. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar las administraciones. Recargá la página." />;
   }
 
   return (
@@ -56,7 +48,7 @@ export default function AdministrationsPage() {
         />
       </div>
 
-      <Input
+      <SearchInput
         placeholder="Buscar por razón social o CUIT/CUIL..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}

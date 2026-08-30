@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@vitalock/ui';
+import { Button, ErrorState } from '@vitalock/ui';
 import { useEquipmentInventory } from '@/hooks/useEquipmentInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -49,13 +49,7 @@ export default function EquiposPage() {
   }));
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar el inventario de equipos. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar el inventario de equipos. Recargá la página." />;
   }
 
   return (

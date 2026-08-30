@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { Button, ErrorState, SearchInput } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useParticulares } from '@/hooks/useParticulares';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -24,13 +23,7 @@ export default function ParticularesPage() {
   } = useParticulares({ search: debouncedSearch });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar los particulares. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar los particulares. Recargá la página." />;
   }
 
   return (
@@ -43,7 +36,7 @@ export default function ParticularesPage() {
       </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Buscar por nombre o DNI..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

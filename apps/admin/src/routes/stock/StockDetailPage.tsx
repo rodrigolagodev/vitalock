@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +12,12 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+} from '@vitalock/ui';
+import {
+  ErrorState,
+  NotFoundState,
+  SectionHeading,
+  Skeleton,
 } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProduct } from '@/hooks/useProduct';
@@ -92,37 +98,36 @@ export default function StockDetailPage() {
 
   if (!productId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          ID de producto inválido.
-        </p>
-        <Link to="/stock" className="mt-4 text-sm underline">
-          Volver a stock
-        </Link>
-      </div>
+      <ErrorState
+        message="ID de producto inválido."
+        back={{ label: 'Volver a stock', to: '/stock' }}
+        className="py-24"
+      />
     );
   }
 
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
-        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
-        <div className="h-4 w-40 animate-pulse rounded-md bg-muted" />
-        <div className="h-64 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   if (isError || product == null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          {isError ? 'Error al cargar el producto.' : 'Producto no encontrado.'}
-        </p>
-        <Link to="/stock" className="mt-4 text-sm underline">
-          Volver a stock
-        </Link>
-      </div>
+    return isError ? (
+      <ErrorState
+        message="Error al cargar el producto."
+        back={{ label: 'Volver a stock', to: '/stock' }}
+        className="py-24"
+      />
+    ) : (
+      <NotFoundState
+        message="Producto no encontrado."
+        back={{ label: 'Volver a stock', to: '/stock' }}
+      />
     );
   }
 
@@ -158,7 +163,7 @@ export default function StockDetailPage() {
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col gap-4 rounded-md border p-4 bg-card"
       >
-        <h2 className="text-lg font-semibold">Editar producto</h2>
+        <SectionHeading title="Editar producto" variant="secondary" />
         <div className="grid max-w-md gap-4">
           <ProductFormFields
             control={control}
@@ -179,7 +184,7 @@ export default function StockDetailPage() {
       </form>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Movimientos de stock</h2>
+        <SectionHeading title="Movimientos de stock" variant="secondary" />
 
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-2">

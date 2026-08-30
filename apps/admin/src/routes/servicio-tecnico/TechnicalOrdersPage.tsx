@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, CheckCircle2 } from 'lucide-react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
-import { Badge } from '@vitalock/ui';
-import { StatCard } from '@vitalock/ui';
+import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useTechnicalOrders } from '@/hooks/useTechnicalOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -51,13 +48,7 @@ export default function TechnicalOrdersPage() {
   });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar las órdenes de servicio técnico. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar las órdenes de servicio técnico. Recargá la página." />;
   }
 
   return (
@@ -97,7 +88,7 @@ export default function TechnicalOrdersPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Buscar por número de orden, cliente..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

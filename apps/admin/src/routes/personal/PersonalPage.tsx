@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { Button, ErrorState, SearchInput } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
@@ -36,13 +35,7 @@ export default function PersonalPage() {
   });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar el personal. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar el personal. Recargá la página." />;
   }
 
   return (
@@ -55,7 +48,7 @@ export default function PersonalPage() {
       </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Buscar por nombre, email o id..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

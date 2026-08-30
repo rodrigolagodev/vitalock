@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input } from '@vitalock/ui';
-import { Label } from '@vitalock/ui';
+import { Button, Input, Label, SectionHeading } from '@vitalock/ui';
 import { useConfigureTechnicalTicketEquipment } from '@/hooks/useConfigureTechnicalTicketEquipment';
 import type { TareaDetailRow } from '@/hooks/useTarea';
 
@@ -82,8 +81,7 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
 
   return (
     <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{heading}</h2>
+      <SectionHeading title={heading} variant="secondary">
         {configured && !editing && (
           <Button
             variant="outline"
@@ -94,7 +92,7 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
             Editar
           </Button>
         )}
-      </div>
+      </SectionHeading>
 
       {!showForm && configured && (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

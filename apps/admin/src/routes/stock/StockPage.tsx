@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { Package, TriangleAlert } from 'lucide-react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
-import { Badge } from '@vitalock/ui';
-import { StatCard } from '@vitalock/ui';
+import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProducts } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -39,13 +36,7 @@ export default function StockPage() {
   });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar los productos. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar los productos. Recargá la página." />;
   }
 
   return (
@@ -75,7 +66,7 @@ export default function StockPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Buscar por nombre..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}

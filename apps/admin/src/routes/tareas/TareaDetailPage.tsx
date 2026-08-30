@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  NotFoundState,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { useTarea } from '@/hooks/useTarea';
 import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
 import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
@@ -76,37 +83,36 @@ export default function TareaDetailPage() {
 
   if (!tareaId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          ID de tarea inválido.
-        </p>
-        <Link to="/tareas" className="mt-4 text-sm underline">
-          Volver a tareas
-        </Link>
-      </div>
+      <ErrorState
+        message="ID de tarea inválido."
+        back={{ label: 'Volver a tareas', to: '/tareas' }}
+        className="py-24"
+      />
     );
   }
 
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
-        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
-        <div className="h-4 w-40 animate-pulse rounded-md bg-muted" />
-        <div className="h-64 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   if (isError || tarea == null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          {isError ? 'Error al cargar la tarea.' : 'Tarea no encontrada.'}
-        </p>
-        <Link to="/tareas" className="mt-4 text-sm underline">
-          Volver a tareas
-        </Link>
-      </div>
+    return isError ? (
+      <ErrorState
+        message="Error al cargar la tarea."
+        back={{ label: 'Volver a tareas', to: '/tareas' }}
+        className="py-24"
+      />
+    ) : (
+      <NotFoundState
+        message="Tarea no encontrada."
+        back={{ label: 'Volver a tareas', to: '/tareas' }}
+      />
     );
   }
 
@@ -161,10 +167,12 @@ export default function TareaDetailPage() {
 
       {CATEGORIES_REQUIRING_EQUIPMENT.has(tarea.category) && (
         <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              {tarea.category === 'equipment_replacement' ? 'Equipo actual' : 'Equipo'}
-            </h2>
+          <SectionHeading
+            title={
+              tarea.category === 'equipment_replacement' ? 'Equipo actual' : 'Equipo'
+            }
+            variant="secondary"
+          >
             {tarea.building_id &&
               tarea.status !== 'resolved' &&
               tarea.status !== 'cancelled' &&
@@ -179,7 +187,7 @@ export default function TareaDetailPage() {
                     : ASSIGN_BUTTON_LABEL[tarea.category]}
                 </Button>
               )}
-          </div>
+          </SectionHeading>
 
           {tarea.equipment ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -195,11 +203,13 @@ export default function TareaDetailPage() {
               <Row label="Estado" value={tarea.equipment.status} />
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              {tarea.category === 'equipment_installation'
-                ? 'Todavía no hay equipo instalado. Cargá abajo el serie del equipo que se va a instalar.'
-                : 'Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.'}
-            </p>
+            <EmptyState
+              message={
+                tarea.category === 'equipment_installation'
+                  ? 'Todavía no hay equipo instalado. Cargá abajo el serie del equipo que se va a instalar.'
+                  : 'Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.'
+              }
+            />
           )}
         </div>
       )}

@@ -1,8 +1,14 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Badge } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
-import { Input } from '@vitalock/ui';
+import { useParams } from 'react-router-dom';
+import {
+  Badge,
+  Button,
+  ErrorState,
+  NotFoundState,
+  SearchInput,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { useAdministration } from '@/hooks/useAdministration';
 import { useBuildings } from '@/hooks/useBuildings';
 import { BuildingsTable } from '@/components/buildings/BuildingsTable';
@@ -24,36 +30,37 @@ export default function AdministrationDetailPage() {
 
   if (!adminId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">ID de administración inválido.</p>
-        <Link to="/administraciones" className="mt-4 text-sm underline">
-          Volver a administraciones
-        </Link>
-      </div>
+      <ErrorState
+        message="ID de administración inválido."
+        back={{ label: 'Volver a administraciones', to: '/administraciones' }}
+        className="py-24"
+      />
     );
   }
 
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
-        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
-        <div className="h-4 w-32 animate-pulse rounded-md bg-muted" />
-        <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
-        <div className="h-64 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   if (isError || administration == null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          {isError ? 'Error al cargar la administración.' : 'Administración no encontrada.'}
-        </p>
-        <Link to="/administraciones" className="mt-4 text-sm underline">
-          Volver a administraciones
-        </Link>
-      </div>
+    return isError ? (
+      <ErrorState
+        message="Error al cargar la administración."
+        back={{ label: 'Volver a administraciones', to: '/administraciones' }}
+        className="py-24"
+      />
+    ) : (
+      <NotFoundState
+        message="Administración no encontrada."
+        back={{ label: 'Volver a administraciones', to: '/administraciones' }}
+      />
     );
   }
 
@@ -96,13 +103,12 @@ export default function AdministrationDetailPage() {
 
       {/* Buildings section */}
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Edificios</h2>
+        <SectionHeading title="Edificios" variant="secondary">
           <Button size="sm" onClick={() => setBuildingSheetOpen(true)}>
             Nuevo edificio
           </Button>
-        </div>
-        <Input
+        </SectionHeading>
+        <SearchInput
           placeholder="Buscar edificios por nombre o dirección..."
           value={buildingSearch}
           onChange={(e) => setBuildingSearch(e.target.value)}

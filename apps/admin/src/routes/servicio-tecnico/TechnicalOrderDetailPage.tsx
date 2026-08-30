@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Button } from '@vitalock/ui';
+import { Button, ConfirmDialog } from '@vitalock/ui';
+import {
+  ErrorState,
+  NotFoundState,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
 import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';
 import { TechnicalOrderStatusBadge } from '@/components/servicio-tecnico/TechnicalOrderStatusBadge';
 import { TechnicalOrderItemsTable } from '@/components/servicio-tecnico/TechnicalOrderItemsTable';
 import { LinkedTicketsTable } from '@/components/servicio-tecnico/LinkedTicketsTable';
-import { ConfirmDialog } from '@vitalock/ui';
 
 const TERMINAL_STATUSES = new Set(['invoiced', 'cancelled']);
 
@@ -23,36 +28,37 @@ export default function TechnicalOrderDetailPage() {
 
   if (!techOrderId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">ID de orden inválido.</p>
-        <Link to="/servicio-tecnico" className="mt-4 text-sm underline">
-          Volver a servicio técnico
-        </Link>
-      </div>
+      <ErrorState
+        message="ID de orden inválido."
+        back={{ label: 'Volver a servicio técnico', to: '/servicio-tecnico' }}
+        className="py-24"
+      />
     );
   }
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
-        <div className="h-4 w-40 animate-pulse rounded-md bg-muted" />
-        <div className="h-10 w-48 animate-pulse rounded-md bg-muted" />
-        <div className="h-64 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   if (isError || order == null) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-muted-foreground">
-          {isError ? 'Error al cargar la orden.' : 'Orden no encontrada.'}
-        </p>
-        <Link to="/servicio-tecnico" className="mt-4 text-sm underline">
-          Volver a servicio técnico
-        </Link>
-      </div>
+    return isError ? (
+      <ErrorState
+        message="Error al cargar la orden."
+        back={{ label: 'Volver a servicio técnico', to: '/servicio-tecnico' }}
+        className="py-24"
+      />
+    ) : (
+      <NotFoundState
+        message="Orden no encontrada."
+        back={{ label: 'Volver a servicio técnico', to: '/servicio-tecnico' }}
+      />
     );
   }
 
@@ -175,7 +181,7 @@ export default function TechnicalOrderDetailPage() {
 
       {/* Items table */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Ítems</h2>
+        <SectionHeading title="Ítems" variant="secondary" />
         <TechnicalOrderItemsTable
           items={order.technical_order_items}
           isFetching={isLoading}
@@ -184,7 +190,7 @@ export default function TechnicalOrderDetailPage() {
 
       {/* Linked tickets */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Tareas relacionadas</h2>
+        <SectionHeading title="Tareas relacionadas" variant="secondary" />
         <LinkedTicketsTable
           tickets={tickets}
           isLoading={ticketsLoading}

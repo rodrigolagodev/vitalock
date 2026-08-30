@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { Input } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
-import { Badge } from '@vitalock/ui';
+import { Badge, Button, ErrorState, SearchInput } from '@vitalock/ui';
 import {
   Select,
   SelectContent,
@@ -57,13 +55,7 @@ export default function TareasPage() {
   });
 
   if (isError) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-destructive">
-          Error al cargar las tareas. Recargá la página.
-        </p>
-      </div>
-    );
+    return <ErrorState message="Error al cargar las tareas. Recargá la página." />;
   }
 
   return (
@@ -76,7 +68,7 @@ export default function TareasPage() {
       </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Buscar por número, descripción, edificio o asignado..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
