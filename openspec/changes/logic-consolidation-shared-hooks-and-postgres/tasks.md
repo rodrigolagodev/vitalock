@@ -101,32 +101,32 @@ Total: ~910 LOC
 
 > TS-only. No migration. No typegen. Satisfies REQ-SHARED-CONFIG-EQUIP-1. Depends on Slice A.
 
-- [ ] B.1 **Preflight**: Read `apps/admin/src/hooks/useConfigureTechnicalTicketEquipment.ts` and `apps/installer/src/hooks/useConfigureTechnicalTicketEquipment.ts`; confirm `mutationFn` is byte-for-byte identical; document the differing `onSuccess` invalidation keys for each app.
+- [x] B.1 **Preflight**: Read `apps/admin/src/hooks/useConfigureTechnicalTicketEquipment.ts` and `apps/installer/src/hooks/useConfigureTechnicalTicketEquipment.ts`; confirm `mutationFn` is byte-for-byte identical; document the differing `onSuccess` invalidation keys for each app.
   - Acceptance: findings match ADR-7; both files call `configureTechnicalTicketEquipment` from `@vitalock/supabase/rpc/tickets`.
 
-- [ ] B.2 **Create `packages/shared/src/hooks/` subpath**: Create directory with `index.ts`; add `export * from './hooks';` to `packages/shared/src/index.ts`.
+- [x] B.2 **Create `packages/shared/src/hooks/` subpath**: Create directory with `index.ts`; add `export * from './hooks';` to `packages/shared/src/index.ts`.
   - Acceptance: `pnpm --filter @vitalock/shared build` succeeds with the new barrel.
 
-- [ ] B.3 **Create factory**: Create `packages/shared/src/hooks/useConfigureTechnicalTicketEquipment.ts` implementing `createUseConfigureTechnicalTicketEquipment(opts)` per ADR-7 signature; no `useAuthContext`; no hardcoded query keys.
+- [x] B.3 **Create factory**: Create `packages/shared/src/hooks/useConfigureTechnicalTicketEquipment.ts` implementing `createUseConfigureTechnicalTicketEquipment(opts)` per ADR-7 signature; no `useAuthContext`; no hardcoded query keys.
   - Acceptance: factory compiles; `useQueryClient` is not called inside the factory.
 
-- [ ] B.4 **Write shared factory test (RED → GREEN)**: Create `packages/shared/src/hooks/__tests__/useConfigureTechnicalTicketEquipment.test.ts` with two vitest cases for REQ-SHARED-CONFIG-EQUIP-1.1 and REQ-SHARED-CONFIG-EQUIP-1.2. Write tests before implementing — RED first.
+- [x] B.4 **Write shared factory test (RED → GREEN)**: Create `packages/shared/src/hooks/__tests__/useConfigureTechnicalTicketEquipment.test.ts` with two vitest cases for REQ-SHARED-CONFIG-EQUIP-1.1 and REQ-SHARED-CONFIG-EQUIP-1.2. Write tests before implementing — RED first.
   - Acceptance: both scenarios pass after B.3 is complete.
 
-- [ ] B.5 **Rewrite admin hook**: Collapse `apps/admin/src/hooks/useConfigureTechnicalTicketEquipment.ts` to a 3-line factory call passing admin `onSuccess` (invalidates `tareasKey()` + `['admin', 'tarea', vars.ticketId]`) and `mapMutationError` with admin extra handlers.
+- [x] B.5 **Rewrite admin hook**: Collapse `apps/admin/src/hooks/useConfigureTechnicalTicketEquipment.ts` to a 3-line factory call passing admin `onSuccess` (invalidates `tareasKey()` + `['admin', 'tarea', vars.ticketId]`) and `mapMutationError` with admin extra handlers.
   - Acceptance: file is ≤10 lines; no `useMutation` boilerplate.
 
-- [ ] B.6 **Rewrite installer hook**: Collapse `apps/installer/src/hooks/useConfigureTechnicalTicketEquipment.ts` to a factory call passing installer `onSuccess` (invalidates `assignedTicketsKey(staffId)`) and `mapMutationError`.
+- [x] B.6 **Rewrite installer hook**: Collapse `apps/installer/src/hooks/useConfigureTechnicalTicketEquipment.ts` to a factory call passing installer `onSuccess` (invalidates `assignedTicketsKey(staffId)`) and `mapMutationError`.
   - Acceptance: file is ≤10 lines.
 
-- [ ] B.7 **Update admin hook test**: Update `apps/admin/src/hooks/__tests__/useConfigureTechnicalTicketEquipment.test.ts` to assert `tareasKey()` and `['admin', 'tarea', vars.ticketId]` are invalidated (REQ-SHARED-CONFIG-EQUIP-1.3).
+- [x] B.7 **Update admin hook test**: Update `apps/admin/src/hooks/__tests__/useConfigureTechnicalTicketEquipment.test.ts` to assert `tareasKey()` and `['admin', 'tarea', vars.ticketId]` are invalidated (REQ-SHARED-CONFIG-EQUIP-1.3).
   - Acceptance: test passes; no dead import references.
 
-- [ ] B.8 **Update installer hook test**: Update `apps/installer/src/hooks/__tests__/useConfigureTechnicalTicketEquipment.test.ts` to assert `assignedTicketsKey(staffId)` is invalidated (REQ-SHARED-CONFIG-EQUIP-1.4).
+- [x] B.8 **Update installer hook test**: Update `apps/installer/src/hooks/__tests__/useConfigureTechnicalTicketEquipment.test.ts` to assert `assignedTicketsKey(staffId)` is invalidated (REQ-SHARED-CONFIG-EQUIP-1.4).
   - Acceptance: test passes.
 
-- [ ] B.9 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
-  - Acceptance: all green.
+- [x] B.9 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
+  - Acceptance: all green except pre-existing installer TaskDetailPage.test.tsx TS errors (commit d915224, not introduced by Slice B).
 
 - [ ] B.10 **Delivery**: Commit `feat(shared): add createUseConfigureTechnicalTicketEquipment factory [slice-B]`; push to PR B branch targeting PR A branch.
 

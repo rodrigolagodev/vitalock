@@ -1,9 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  configureTechnicalTicketEquipment,
-  type ConfigureTechnicalTicketEquipmentInput,
-} from '@vitalock/supabase';
+import { createUseConfigureTechnicalTicketEquipment } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { tareasKey } from '@/lib/queryKeys';
 import { toastMutationError } from '@/lib/errors/toast';
@@ -16,14 +13,13 @@ import { toastMutationError } from '@/lib/errors/toast';
 export function useConfigureTechnicalTicketEquipment() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (input: ConfigureTechnicalTicketEquipmentInput) =>
-      configureTechnicalTicketEquipment(supabase, input),
-    onSuccess: (_data, vars) => {
+  return createUseConfigureTechnicalTicketEquipment({
+    supabase,
+    onSuccess: (vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'tarea', vars.ticketId] });
       queryClient.invalidateQueries({ queryKey: tareasKey() });
       toast.success('Equipo configurado. Falta finalizar la tarea.');
     },
-    onError: toastMutationError,
-  });
+    mapMutationError: toastMutationError,
+  })();
 }
