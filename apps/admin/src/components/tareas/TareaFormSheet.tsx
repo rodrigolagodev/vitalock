@@ -3,21 +3,19 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
-import { Button } from '@/components/ui/button';
-import { Label } from '@vitalock/ui';
-import { Textarea } from '@/components/ui/textarea';
-import {
+  Button,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  Textarea,
 } from '@vitalock/ui';
 import { useMutateTarea } from '@/hooks/useMutateTarea';
 import { useAdministrations } from '@/hooks/useAdministrations';
