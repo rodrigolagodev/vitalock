@@ -38,6 +38,8 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     building: {
       id: 'b-1',
       name: 'Torre Norte',
+      address: null,
+      city: null,
       administration: { id: 'a-1', company_name: 'Admin S.A.' },
     },
     pending_new_serial: null,

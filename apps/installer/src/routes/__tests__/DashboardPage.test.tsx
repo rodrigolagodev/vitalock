@@ -40,6 +40,8 @@ function makeTicket(id: string, overrides: Partial<AssignedTicket> = {}): Assign
     building: {
       id: 'b1',
       name: 'Edificio Uno',
+      address: null,
+      city: null,
       administration: { id: 'a1', company_name: 'Admin A' },
     },
     pending_new_serial: null,

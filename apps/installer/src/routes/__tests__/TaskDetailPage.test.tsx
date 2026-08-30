@@ -17,11 +17,15 @@ const {
   mockPriorUpdatesOrder,
   mockResolveEquipmentUpdateRpc,
   mockUseResolveEquipmentUpdate,
+  mockUseResolveTickets,
   mockToastSuccess,
   mockToastWarning,
   mockUseAssignedTickets,
   mockUseRfidKeyCodeMap,
   mockUseTicketComments,
+  mockUseEquipmentById,
+  mockUseMaintenanceHistory,
+  mockUseEquipmentUpdateHistory,
 } = vi.hoisted(() => {
   const mockCreateSignedUrl = vi.fn();
   const mockStorageFrom = vi.fn(() => ({ createSignedUrl: mockCreateSignedUrl }));
@@ -43,6 +47,10 @@ const {
       mutate: vi.fn(),
       isPending: false,
     })),
+    mockUseResolveTickets: vi.fn(() => ({
+      mutate: vi.fn(),
+      isPending: false,
+    })),
     mockToastSuccess: vi.fn(),
     mockToastWarning: vi.fn(),
     mockUseAssignedTickets: vi.fn<(ids?: never) => { data: unknown[]; isLoading: boolean; isFetching: boolean }>(() => ({
@@ -52,6 +60,9 @@ const {
     })),
     mockUseRfidKeyCodeMap: vi.fn<(ids: string[]) => Map<string, string>>(() => new Map()),
     mockUseTicketComments: vi.fn<(id: string) => { data: unknown[] }>(() => ({ data: [] })),
+    mockUseEquipmentById: vi.fn(() => ({ data: null, isLoading: false, isFetching: false })),
+    mockUseMaintenanceHistory: vi.fn(() => ({ data: [], isLoading: false, isFetching: false })),
+    mockUseEquipmentUpdateHistory: vi.fn(() => ({ data: [], isLoading: false, isFetching: false })),
   };
 });
 
@@ -94,6 +105,20 @@ vi.mock('@/hooks/useTicketComments', () => ({
   useTicketComments: (id: string) => mockUseTicketComments(id),
 }));
 
+vi.mock('@/hooks/useResolveTickets', () => ({
+  useResolveTickets: () => mockUseResolveTickets(),
+}));
+
+vi.mock('@/hooks/useEquipmentDetail', () => ({
+  useEquipmentById: () => mockUseEquipmentById(),
+  useMaintenanceHistory: () => mockUseMaintenanceHistory(),
+  useEquipmentUpdateHistory: () => mockUseEquipmentUpdateHistory(),
+}));
+
+vi.mock('@/components/work/ConfigureEquipmentInline', () => ({
+  ConfigureEquipmentInline: () => <div data-testid="configure-equipment-inline" />,
+}));
+
 // ---------------------------------------------------------------------------
 // Import under test (after mocks)
 // ---------------------------------------------------------------------------
@@ -116,6 +141,8 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     building: {
       id: 'bld-001',
       name: 'Edificio Test',
+      address: null,
+      city: null,
       administration: { id: 'adm-001', company_name: 'Admin Test' },
     },
     equipmentUpdateSnapshot: {
@@ -160,6 +187,10 @@ beforeEach(() => {
   mockUseRfidKeyCodeMap.mockReturnValue(new Map([['key-uuid-activate-001', 'RFID-ACT-001']]));
   mockUseTicketComments.mockReturnValue({ data: [] });
   mockPriorUpdatesOrder.mockResolvedValue({ data: [], error: null });
+  mockUseResolveTickets.mockReturnValue({ mutate: vi.fn(), isPending: false });
+  mockUseEquipmentById.mockReturnValue({ data: null, isLoading: false, isFetching: false });
+  mockUseMaintenanceHistory.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+  mockUseEquipmentUpdateHistory.mockReturnValue({ data: [], isLoading: false, isFetching: false });
 });
 
 afterEach(() => {
@@ -240,5 +271,137 @@ describe('TaskDetailPage', () => {
     mockUseAssignedTickets.mockReturnValue({ data: [], isLoading: false, isFetching: false });
     renderDetail();
     expect(screen.getByText(/No se encontró la tarea/)).toBeInTheDocument();
+  });
+
+  describe('equipment_installation category', () => {
+    it('shows configure equipment inline and Finalizar tarea button', () => {
+      mockUseAssignedTickets.mockReturnValue({
+        data: [
+          makeTicket({
+            category: 'equipment_installation',
+            title: 'Instalación SN-002',
+            equipment_id: 'equip-new-001',
+            pending_new_serial: null,
+            pending_new_model: null,
+            intended_product_name: 'Modelo X',
+          }),
+        ],
+        isLoading: false,
+        isFetching: false,
+      });
+      renderDetail();
+
+      expect(screen.getByText('Instalación de equipo')).toBeInTheDocument();
+      expect(screen.getByTestId('configure-equipment-inline')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Finalizar tarea' })).toBeInTheDocument();
+    });
+  });
+
+  describe('equipment_replacement category', () => {
+    it('shows old equipment details, configure equipment inline, and Finalizar tarea button', () => {
+      mockUseAssignedTickets.mockReturnValue({
+        data: [
+          makeTicket({
+            category: 'equipment_replacement',
+            title: 'Reemplazo SN-003',
+            equipment_id: 'equip-old-001',
+            pending_new_serial: null,
+            pending_new_model: null,
+            intended_product_name: 'Modelo Y',
+          }),
+        ],
+        isLoading: false,
+        isFetching: false,
+      });
+      mockUseEquipmentById.mockReturnValue({
+        data: { serial_number: 'OLD-12345', model: 'Old Model', access_type: 'principal' },
+        isLoading: false,
+        isFetching: false,
+      });
+      renderDetail();
+
+      expect(screen.getByText('Reemplazo de equipo')).toBeInTheDocument();
+      expect(screen.getByText('Equipo a reemplazar')).toBeInTheDocument();
+      expect(screen.getByText('OLD-12345')).toBeInTheDocument();
+      expect(screen.getByTestId('configure-equipment-inline')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Finalizar tarea' })).toBeInTheDocument();
+    });
+  });
+
+  describe('maintenance category', () => {
+    it('shows equipment details and Finalizar tarea button', () => {
+      mockUseAssignedTickets.mockReturnValue({
+        data: [
+          makeTicket({
+            category: 'maintenance',
+            title: 'Mantenimiento SN-004',
+            equipment_id: 'equip-maint-001',
+          }),
+        ],
+        isLoading: false,
+        isFetching: false,
+      });
+      mockUseEquipmentById.mockReturnValue({
+        data: { serial_number: 'MAINT-999', model: 'Maint Model', status: 'active' },
+        isLoading: false,
+        isFetching: false,
+      });
+      mockUseMaintenanceHistory.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+      renderDetail();
+
+      expect(screen.getByText('Mantenimiento')).toBeInTheDocument();
+      expect(screen.getByText('Equipo a mantener')).toBeInTheDocument();
+      expect(screen.getByText('MAINT-999')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Finalizar tarea' })).toBeInTheDocument();
+    });
+
+    it('shows maintenance history when prior records exist', () => {
+      mockUseAssignedTickets.mockReturnValue({
+        data: [
+          makeTicket({
+            category: 'maintenance',
+            title: 'Mantenimiento SN-004',
+            equipment_id: 'equip-maint-001',
+          }),
+        ],
+        isLoading: false,
+        isFetching: false,
+      });
+      mockUseEquipmentById.mockReturnValue({
+        data: { serial_number: 'MAINT-999', model: 'Maint Model', status: 'active' },
+        isLoading: false,
+        isFetching: false,
+      });
+      mockUseMaintenanceHistory.mockReturnValue({
+        data: [
+          { id: 't-prev', title: 'Mantenimiento previo', status: 'resolved', category: 'maintenance', opened_at: '2026-01-01T00:00:00Z', resolved_at: '2026-01-05T00:00:00Z', resolution_notes: 'Todo ok' },
+        ],
+        isLoading: false,
+        isFetching: false,
+      });
+      renderDetail();
+
+      expect(screen.getByText('Mantenimientos anteriores del equipo (1)')).toBeInTheDocument();
+      expect(screen.getByText('Mantenimiento previo')).toBeInTheDocument();
+    });
+  });
+
+  describe('equipment_update without snapshot', () => {
+    it('shows the not-found error message', () => {
+      mockUseAssignedTickets.mockReturnValue({
+        data: [
+          makeTicket({
+            category: 'equipment_update',
+            title: 'Actualización sin snapshot',
+            equipmentUpdateSnapshot: undefined,
+          }),
+        ],
+        isLoading: false,
+        isFetching: false,
+      });
+      renderDetail();
+
+      expect(screen.getByText(/No se encontró la tarea de actualización asociada a este ticket/)).toBeInTheDocument();
+    });
   });
 });

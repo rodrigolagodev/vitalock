@@ -30,8 +30,12 @@ export interface AssignedTicket {
   building: {
     id: string;
     name: string;
-    administration: { id: string; company_name: string };
+    address: string | null;
+    city: string | null;
+    administration: { id: string; company_name: string; address?: string | null };
   };
+  /** The equipment this ticket targets, when it has one (maintenance, replacement, etc.). */
+  equipment_id?: string | null;
   /** Only present when category === 'equipment_update'. */
   equipmentUpdateSnapshot?: EquipmentUpdateSnapshot | null;
   /**
@@ -91,14 +95,23 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
   const buildingIds = [
     ...new Set(rows.map((r) => r.building_id).filter((v): v is string => Boolean(v))),
   ];
-  const buildingMap = new Map<string, { id: string; name: string; administration_id: string | null }>();
+  const buildingMap = new Map<
+    string,
+    { id: string; name: string; address: string | null; city: string | null; administration_id: string | null }
+  >();
   if (buildingIds.length > 0) {
     const { data: buildings } = await supabase
       .from('buildings')
-      .select('id, name, administration_id')
+      .select('id, name, address, city, administration_id')
       .in('id', buildingIds);
     for (const b of buildings ?? []) {
-      buildingMap.set(b.id, { id: b.id, name: b.name, administration_id: b.administration_id });
+      buildingMap.set(b.id, {
+        id: b.id,
+        name: b.name,
+        address: b.address,
+        city: b.city,
+        administration_id: b.administration_id,
+      });
     }
   }
 
@@ -109,14 +122,18 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
         .filter((v): v is string => Boolean(v)),
     ),
   ];
-  const administrationMap = new Map<string, { id: string; company_name: string }>();
+  const administrationMap = new Map<string, { id: string; company_name: string; address: string | null }>();
   if (administrationIds.length > 0) {
     const { data: administrations } = await supabase
       .from('administrations')
-      .select('id, company_name')
+      .select('id, company_name, address')
       .in('id', administrationIds);
     for (const a of administrations ?? []) {
-      administrationMap.set(a.id, { id: a.id, company_name: a.company_name });
+      administrationMap.set(a.id, {
+        id: a.id,
+        company_name: a.company_name,
+        address: a.address,
+      });
     }
   }
 
@@ -208,9 +225,18 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
         ? {
             id: buildingInfo.id,
             name: buildingInfo.name,
-            administration: administration ?? { id: '', company_name: '' },
+            address: buildingInfo.address,
+            city: buildingInfo.city,
+            administration: administration ?? { id: '', company_name: '', address: null },
           }
-        : { id: '', name: '', administration: { id: '', company_name: '' } },
+        : {
+            id: '',
+            name: '',
+            address: null,
+            city: null,
+            administration: { id: '', company_name: '', address: null },
+          },
+      equipment_id: r.equipment_id,
       equipmentUpdateSnapshot: r.category === 'equipment_update'
         ? (snapshotMap.get(r.id) ?? null)
         : undefined,

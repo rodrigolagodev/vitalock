@@ -111,6 +111,8 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     building: {
       id: 'bld-001',
       name: 'Edificio Test',
+      address: null,
+      city: null,
       administration: { id: 'adm-001', company_name: 'Admin Test' },
     },
     equipmentUpdateSnapshot: {
