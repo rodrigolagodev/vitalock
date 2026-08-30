@@ -1,46 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Badge, Button, EmptyState, ErrorState } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
 import { Section } from '@/components/common/Section';
-import { useKeyById, type KeyStatus } from '@/hooks/useKeyById';
+import { useKeyById } from '@/hooks/useKeyById';
 import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';
-
-const STATUS_LABEL: Record<KeyStatus, string> = {
-  pending_creation: 'En creación',
-  pending_installation: 'Pendiente de instalación',
-  active: 'Activa',
-  pending_disable: 'Baja solicitada',
-  disabled: 'Dada de baja',
-};
-
-const STATUS_VARIANT: Record<
-  KeyStatus,
-  'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-  pending_creation: 'secondary',
-  pending_installation: 'outline',
-  active: 'default',
-  pending_disable: 'outline',
-  disabled: 'secondary',
-};
-
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  draft: 'Borrador',
-  confirmed: 'Confirmada',
-  in_progress: 'En proceso',
-  pending_installation: 'Pendiente instalación',
-  ready_for_pickup: 'Listo para retirar',
-  completed: 'Completada',
-  invoiced: 'Facturada',
-  cancelled: 'Cancelada',
-};
-
-const ITEM_STATUS_LABEL: Record<string, string> = {
-  pending: 'Pendiente',
-  configured: 'Configurada',
-  installed: 'Instalada',
-  cancelled: 'Cancelada',
-};
+import { keyStatusLabel, keyStatusTone } from '@/lib/status/keyStatus';
+import { keyOrderStatusLabel } from '@/lib/status/keyOrderStatus';
+import { keyItemStatusLabel } from '@/lib/status/keyItemStatus';
 
 const EVENT_LABEL: Record<KeyEventRow['event_type'], string> = {
   activated: 'Activada',
@@ -58,7 +24,7 @@ const EVENT_DOT_CLASS: Record<KeyEventRow['event_type'], string> = {
   deactivated: 'bg-muted-foreground',
   creation_requested: 'bg-muted-foreground',
   configured: 'bg-primary',
-  disable_requested: 'bg-yellow-500',
+  disable_requested: 'bg-warning',
   disable_cancelled: 'bg-primary',
   disabled: 'bg-destructive',
   snapshot_skipped: 'bg-muted-foreground',
@@ -142,9 +108,9 @@ export default function KeyDetailPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center gap-4">
         <h1 className="font-mono text-3xl font-semibold">{keyDetail.rfid_code}</h1>
-        <Badge variant={STATUS_VARIANT[keyDetail.status]}>
-          {STATUS_LABEL[keyDetail.status]}
-        </Badge>
+        <StatusBadge tone={keyStatusTone(keyDetail.status)}>
+          {keyStatusLabel(keyDetail.status)}
+        </StatusBadge>
       </div>
 
       {/* Contextual notes */}
@@ -157,7 +123,7 @@ export default function KeyDetailPage() {
       )}
 
       {keyDetail.status === 'pending_disable' && (
-        <p className="rounded bg-yellow-50 px-3 py-2 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+        <p className="rounded bg-warning/10 px-3 py-2 text-sm text-warning dark:bg-warning/10 dark:text-warning">
           Se solicitó la baja de esta llave. Puede cancelarse antes de que el técnico resuelva la tarea.
         </p>
       )}
@@ -271,11 +237,11 @@ export default function KeyDetailPage() {
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <span>
-                    Orden: {ORDER_STATUS_LABEL[o.order_status] ?? o.order_status}
+                    Orden: {keyOrderStatusLabel(o.order_status)}
                   </span>
                   <span>·</span>
                   <span>
-                    Ítem: {ITEM_STATUS_LABEL[o.item_status] ?? o.item_status}
+                    Ítem: {keyItemStatusLabel(o.item_status)}
                   </span>
                 </div>
               </li>

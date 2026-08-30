@@ -1,17 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { DataTable } from '@vitalock/ui';
+import { DataTable, StatusBadge } from '@vitalock/ui';
 import type { EquipmentInventoryRow } from '@/hooks/useEquipmentInventory';
+import {
+  equipmentStatusLabel,
+  equipmentStatusTone,
+} from '@/lib/status/equipmentStatus';
 
 interface EquipmentInventoryTableProps {
   rows: EquipmentInventoryRow[];
   isFetching?: boolean;
 }
-
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Activo',
-  maintenance: 'Mantenimiento',
-  dead: 'Dado de baja',
-};
 
 export function EquipmentInventoryTable({
   rows,
@@ -42,7 +40,11 @@ export function EquipmentInventoryTable({
         },
         {
           header: 'Estado',
-          cell: (r) => STATUS_LABELS[r.status ?? ''] ?? r.status ?? '—',
+          cell: (r) => (
+            <StatusBadge tone={equipmentStatusTone(r.status)}>
+              {equipmentStatusLabel(r.status)}
+            </StatusBadge>
+          ),
         },
         {
           header: 'Edificio',

@@ -1,23 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilLine, RefreshCw } from 'lucide-react';
-import { StatusBadge, type StatusTone } from '@vitalock/ui';
+import { StatusBadge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
 import type { EquipmentRow } from '@/hooks/useEquipment';
+import {
+  equipmentStatusLabel,
+  equipmentStatusTone,
+} from '@/lib/status/equipmentStatus';
 import { EquipmentFormSheet } from './EquipmentFormSheet';
 import { ReplaceEquipmentDialog } from './ReplaceEquipmentDialog';
-
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Activo',
-  maintenance: 'Mantenimiento',
-  dead: 'Dado de baja',
-};
-
-const STATUS_TONES: Record<string, StatusTone> = {
-  active: 'success',
-  maintenance: 'warning',
-  dead: 'danger',
-};
 
 interface EquipmentTableProps {
   buildingId: string;
@@ -67,8 +59,8 @@ export function EquipmentTable({
           {
             header: 'Estado',
             cell: (i) => (
-              <StatusBadge tone={STATUS_TONES[i.status] ?? 'neutral'}>
-                {STATUS_LABELS[i.status] ?? i.status}
+              <StatusBadge tone={equipmentStatusTone(i.status)}>
+                {equipmentStatusLabel(i.status)}
               </StatusBadge>
             ),
           },

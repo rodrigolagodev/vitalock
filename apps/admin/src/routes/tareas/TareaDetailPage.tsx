@@ -7,8 +7,10 @@ import {
   NotFoundState,
   SectionHeading,
   Skeleton,
+  StatusBadge,
 } from '@vitalock/ui';
 import { useTarea } from '@/hooks/useTarea';
+import { equipmentStatusLabel, equipmentStatusTone } from '@/lib/status/equipmentStatus';
 import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
 import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
 import { AssignEquipmentDialog } from '@/components/tareas/AssignEquipmentDialog';
@@ -200,7 +202,14 @@ export default function TareaDetailPage() {
                   tarea.equipment.access_type
                 }
               />
-              <Row label="Estado" value={tarea.equipment.status} />
+              <Row
+                label="Estado"
+                value={
+                  <StatusBadge tone={equipmentStatusTone(tarea.equipment.status)}>
+                    {equipmentStatusLabel(tarea.equipment.status)}
+                  </StatusBadge>
+                }
+              />
             </div>
           ) : (
             <EmptyState

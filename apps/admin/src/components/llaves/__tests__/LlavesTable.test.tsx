@@ -88,9 +88,9 @@ describe('LlavesTable', () => {
       wrapper: makeWrapper(),
     });
 
-    // 'confirmed' → 'Confirmada', 'ready_for_pickup' → 'Listo para retirar'
+    // 'confirmed' → 'Confirmada', 'ready_for_pickup' → 'Lista para retirar'
     expect(screen.getByText('Confirmada')).toBeInTheDocument();
-    expect(screen.getByText('Listo para retirar')).toBeInTheDocument();
+    expect(screen.getByText('Lista para retirar')).toBeInTheDocument();
   });
 
   it('renders order_number as a link to /llaves/:id', () => {

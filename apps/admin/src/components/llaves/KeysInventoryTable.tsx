@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { DataTable } from '@vitalock/ui';
+import { DataTable, StatusBadge } from '@vitalock/ui';
 import type { KeysInventoryRow } from '@/hooks/useKeysInventory';
+import { keyStatusLabel, keyStatusTone } from '@/lib/status/keyStatus';
+import { keyOrderStatusLabel } from '@/lib/status/keyOrderStatus';
 
 interface KeysInventoryTableProps {
   rows: KeysInventoryRow[];
@@ -39,7 +41,11 @@ export function KeysInventoryTable({ rows, isFetching = false }: KeysInventoryTa
         },
         {
           header: 'Estado físico',
-          cell: (r) => r.physical_status ?? '—',
+          cell: (r) => (
+            <StatusBadge tone={keyStatusTone(r.physical_status)}>
+              {keyStatusLabel(r.physical_status)}
+            </StatusBadge>
+          ),
         },
         {
           header: 'Equipo asignado',
@@ -48,7 +54,9 @@ export function KeysInventoryTable({ rows, isFetching = false }: KeysInventoryTa
         {
           header: 'Orden activa',
           cell: (r) =>
-            r.active_order_id ? (r.active_order_status ?? '—') : 'Sin orden',
+            r.active_order_id
+              ? keyOrderStatusLabel(r.active_order_status)
+              : 'Sin orden',
         },
       ]}
     />

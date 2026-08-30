@@ -1,59 +1,23 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Badge, Button, EmptyState, ErrorState } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
 import { Section } from '@/components/common/Section';
+import { useEquipmentById } from '@/hooks/useEquipmentById';
 import {
-  useEquipmentById,
-  type EquipmentStatus,
-} from '@/hooks/useEquipmentById';
+  equipmentStatusLabel,
+  equipmentStatusTone,
+} from '@/lib/status/equipmentStatus';
+import { keyOrderStatusLabel } from '@/lib/status/keyOrderStatus';
+import { keyItemStatusLabel } from '@/lib/status/keyItemStatus';
+import { accessTypeLabel } from '@/lib/status/accessType';
 import { EquipmentKeySnapshotPanel } from '@/components/equipment/EquipmentKeySnapshotPanel';
 import { EquipmentUpdateHistoryPanel } from '@/components/equipment/EquipmentUpdateHistoryPanel';
-
-const STATUS_LABEL: Record<EquipmentStatus, string> = {
-  active: 'Activo',
-  maintenance: 'Mantenimiento',
-  dead: 'Dado de baja',
-};
-
-const STATUS_VARIANT: Record<
-  EquipmentStatus,
-  'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-  active: 'default',
-  maintenance: 'outline',
-  dead: 'destructive',
-};
-
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  draft: 'Borrador',
-  confirmed: 'Confirmada',
-  in_progress: 'En proceso',
-  completed: 'Completada',
-  invoiced: 'Facturada',
-  cancelled: 'Cancelada',
-};
-
-const ITEM_STATUS_LABEL: Record<string, string> = {
-  pending: 'Pendiente',
-  in_progress: 'En proceso',
-  completed: 'Completada',
-  cancelled: 'Cancelada',
-};
 
 const ITEM_TYPE_LABEL: Record<string, string> = {
   equipment: 'Equipo',
   installation: 'Instalación',
   maintenance: 'Mantenimiento',
   equipment_replacement: 'Reemplazo',
-};
-
-const ACCESS_TYPE_LABEL: Record<string, string> = {
-  peatonal: 'Peatonal',
-  cochera: 'Cochera',
-  service: 'Service',
-  terraza: 'Terraza',
-  amenities: 'Amenities',
-  other: 'Otro',
 };
 
 function fmt(iso: string | null | undefined): string {
@@ -164,13 +128,13 @@ export default function EquipoDetailPage() {
             {equipment.serial_number}
           </p>
         </div>
-        <Badge variant={STATUS_VARIANT[equipment.status]}>
-          {STATUS_LABEL[equipment.status]}
-        </Badge>
+        <StatusBadge tone={equipmentStatusTone(equipment.status)}>
+          {equipmentStatusLabel(equipment.status)}
+        </StatusBadge>
       </div>
 
       {equipment.status === 'maintenance' && (
-        <p className="rounded bg-yellow-50 px-3 py-2 text-sm text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+        <p className="rounded bg-warning/10 px-3 py-2 text-sm text-warning dark:bg-warning/10 dark:text-warning">
           Este equipo está en mantenimiento.
         </p>
       )}
@@ -212,7 +176,7 @@ export default function EquipoDetailPage() {
           {equipment.access_type && (
             <Row
               label="Tipo de acceso"
-              value={ACCESS_TYPE_LABEL[equipment.access_type] ?? equipment.access_type}
+              value={accessTypeLabel(equipment.access_type)}
             />
           )}
         </Section>
@@ -358,11 +322,11 @@ export default function EquipoDetailPage() {
                   </span>
                   <span>·</span>
                   <span>
-                    Orden: {ORDER_STATUS_LABEL[o.order_status] ?? o.order_status}
+                    Orden: {keyOrderStatusLabel(o.order_status)}
                   </span>
                   <span>·</span>
                   <span>
-                    Ítem: {ITEM_STATUS_LABEL[o.item_status] ?? o.item_status}
+                    Ítem: {keyItemStatusLabel(o.item_status)}
                   </span>
                 </div>
               </li>

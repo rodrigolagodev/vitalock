@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@vitalock/ui';
+import { equipmentStatusLabel } from '@/lib/status/equipmentStatus';
 
 export type EquipmentStatus = 'active' | 'maintenance' | 'dead';
 
@@ -15,12 +16,6 @@ interface EquipmentStatusSelectProps {
   onDeadSelected: () => void;
   disabled?: boolean;
 }
-
-const STATUS_LABELS: Record<EquipmentStatus, string> = {
-  active: 'Activo',
-  maintenance: 'Mantenimiento',
-  dead: 'Dado de baja',
-};
 
 /**
  * Single-select for equipment status transitions.
@@ -48,7 +43,7 @@ export function EquipmentStatusSelect({
   return (
     <Select value={value} onValueChange={handleValueChange} disabled={isDisabled}>
       <SelectTrigger>
-        <SelectValue>{STATUS_LABELS[value]}</SelectValue>
+        <SelectValue>{equipmentStatusLabel(value)}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="active">Activo</SelectItem>

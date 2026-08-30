@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Power } from 'lucide-react';
-import { StatusBadge, type StatusTone } from '@vitalock/ui';
+import { StatusBadge } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
 import type { KeyRow } from '@/hooks/useKeys';
+import { keyStatusLabel, keyStatusTone } from '@/lib/status/keyStatus';
 
 interface KeysTableProps {
   keys: KeyRow[];
@@ -18,22 +19,6 @@ function fmtDate(iso: string | null | undefined): string {
   const d = new Date(iso);
   return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('es-AR');
 }
-
-const STATUS_LABEL: Record<KeyRow['status'], string> = {
-  pending_creation: 'En creación',
-  pending_installation: 'Pendiente de instalación',
-  active: 'Activa',
-  pending_disable: 'Baja solicitada',
-  disabled: 'Dada de baja',
-};
-
-const STATUS_TONE: Record<KeyRow['status'], StatusTone> = {
-  pending_creation: 'neutral',
-  pending_installation: 'warning',
-  active: 'success',
-  pending_disable: 'warning',
-  disabled: 'danger',
-};
 
 export function KeysTable({ keys, buildingId, isFetching = false }: KeysTableProps) {
   const navigate = useNavigate();
@@ -87,8 +72,8 @@ export function KeysTable({ keys, buildingId, isFetching = false }: KeysTablePro
           {
             header: 'Estado',
             cell: (k) => (
-              <StatusBadge tone={STATUS_TONE[k.status]}>
-                {STATUS_LABEL[k.status]}
+              <StatusBadge tone={keyStatusTone(k.status)}>
+                {keyStatusLabel(k.status)}
               </StatusBadge>
             ),
           },

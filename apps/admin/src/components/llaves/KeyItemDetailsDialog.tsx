@@ -5,7 +5,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@vitalock/ui';
-import { Badge } from '@vitalock/ui';
+import { StatusBadge } from '@vitalock/ui';
 import { useOrderKeyDetails } from '@/hooks/useOrderKeyDetails';
 import type { KeyOrderItemRow } from '@/hooks/useKeyOrder';
 
@@ -129,9 +129,9 @@ export function KeyItemDetailsDialog({
               label="Estado"
               value={
                 data.picked_up_at ? (
-                  <Badge>Retirada</Badge>
+                  <StatusBadge tone="success">Retirada</StatusBadge>
                 ) : (
-                  <Badge variant="secondary">Pendiente de retiro</Badge>
+                  <StatusBadge tone="warning">Pendiente de retiro</StatusBadge>
                 )
               }
             />

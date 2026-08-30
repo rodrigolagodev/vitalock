@@ -4,7 +4,6 @@ import {
   DataTable,
   StatusBadge,
   type DataTableAction,
-  type StatusTone,
 } from '@vitalock/ui';
 import { ConfigureKeyItemSheet } from './ConfigureKeyItemSheet';
 import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
@@ -12,21 +11,8 @@ import { KeyItemDetailsDialog } from './KeyItemDetailsDialog';
 import { useBuildingsByIds } from '@/hooks/useBuildingsByIds';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { formatCurrencyARS } from '@/lib/format';
+import { keyItemStatusLabel, keyItemStatusTone } from '@/lib/status/keyItemStatus';
 import type { KeyOrderItemRow, KeyOrderDetailRow } from '@/hooks/useKeyOrder';
-
-const ITEM_STATUS_LABELS: Record<string, string> = {
-  pending: 'Pendiente',
-  configured: 'Configurado',
-  installed: 'Instalada',
-  cancelled: 'Cancelado',
-};
-
-const ITEM_STATUS_TONES: Record<string, StatusTone> = {
-  pending: 'neutral',
-  configured: 'brand',
-  installed: 'info',
-  cancelled: 'danger',
-};
 
 interface KeyOrderItemsTableProps {
   items: KeyOrderItemRow[];
@@ -139,8 +125,8 @@ export function KeyOrderItemsTable({
           {
             header: 'Estado',
             cell: (item) => (
-              <StatusBadge tone={ITEM_STATUS_TONES[item.status] ?? 'neutral'}>
-                {ITEM_STATUS_LABELS[item.status] ?? item.status}
+              <StatusBadge tone={keyItemStatusTone(item.status)}>
+                {keyItemStatusLabel(item.status)}
               </StatusBadge>
             ),
           },

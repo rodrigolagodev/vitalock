@@ -66,14 +66,15 @@ describe('KeysInventoryTable', () => {
     expect(screen.getByText('SN-999')).toBeInTheDocument();
   });
 
-  it('renders active_order_status when active_order_id is present', () => {
+  it('renders active_order_status label when active_order_id is present', () => {
     renderWithRouter(
       <KeysInventoryTable
         rows={[makeRow({ active_order_id: 'ord-1', active_order_status: 'confirmed' })]}
         isFetching={false}
       />,
     );
-    expect(document.body.textContent).toContain('confirmed');
+    // 'confirmed' maps to the canonical feminine label 'Confirmada'
+    expect(screen.getByText('Confirmada')).toBeInTheDocument();
   });
 
   it('renders "Sin orden" when active_order_id is null', () => {

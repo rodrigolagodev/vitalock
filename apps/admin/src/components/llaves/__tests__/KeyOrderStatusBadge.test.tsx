@@ -30,16 +30,16 @@ describe('KeyOrderStatusBadge', () => {
 
   it('renders "Listo para retirar" for ready_for_pickup status', () => {
     render(<KeyOrderStatusBadge status="ready_for_pickup" />);
-    expect(screen.getByText('Listo para retirar')).toBeInTheDocument();
+    expect(screen.getByText('Lista para retirar')).toBeInTheDocument();
   });
 
-  it('renders "Pendiente instalación" for pending_installation status', () => {
+  it('renders "Pendiente de instalación" for pending_installation status', () => {
     render(<KeyOrderStatusBadge status="pending_installation" />);
-    expect(screen.getByText('Pendiente instalación')).toBeInTheDocument();
+    expect(screen.getByText('Pendiente de instalación')).toBeInTheDocument();
   });
 
-  it('renders "Cancelado" for cancelled status', () => {
+  it('renders "Cancelada" for cancelled status', () => {
     render(<KeyOrderStatusBadge status="cancelled" />);
-    expect(screen.getByText('Cancelado')).toBeInTheDocument();
+    expect(screen.getByText('Cancelada')).toBeInTheDocument();
   });
 });
