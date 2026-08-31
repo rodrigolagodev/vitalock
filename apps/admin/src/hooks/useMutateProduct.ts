@@ -9,7 +9,6 @@ export interface UpdateProductInput {
   id: string;
   name?: string;
   category?: ProductCategory;
-  cost_price?: number | null;
 }
 
 export function useMutateProduct() {

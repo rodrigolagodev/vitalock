@@ -26,12 +26,12 @@ import { useStockMovements } from '@/hooks/useStockMovements';
 import { ProductFormFields } from '@/components/stock/ProductFormFields';
 import { StockMovementsTable } from '@/components/stock/StockMovementsTable';
 import { AjusteStockSheet } from '@/components/stock/AjusteStockSheet';
+import { formatCurrency } from '@/lib/format';
 import type { MovementType, ProductCategory } from '@/types/stock';
 
 const EditProductSchema = z.object({
   name: z.string().min(1, 'El nombre es obligatorio').max(120, 'Máximo 120 caracteres'),
   category: z.enum(['rfid_key', 'equipment']),
-  cost_price: z.number().nonnegative('No puede ser negativo').nullable(),
 });
 
 type EditFormValues = z.infer<typeof EditProductSchema>;
@@ -83,7 +83,7 @@ export default function StockDetailPage() {
     formState: { errors, isDirty, isSubmitting },
   } = useForm<EditFormValues>({
     resolver: zodResolver(EditProductSchema),
-    defaultValues: { name: '', category: 'rfid_key', cost_price: null },
+    defaultValues: { name: '', category: 'rfid_key' },
   });
 
   useEffect(() => {
@@ -91,7 +91,6 @@ export default function StockDetailPage() {
       reset({
         name: product.name,
         category: product.category as ProductCategory,
-        cost_price: product.cost_price,
       });
     }
   }, [product, reset]);
@@ -169,9 +168,15 @@ export default function StockDetailPage() {
             control={control}
             name="name"
             categoryName="category"
-            costPriceName="cost_price"
             errors={errors}
           />
+          <div className="flex flex-col gap-1">
+            <Label>Precio de costo</Label>
+            <p className="text-sm font-medium">{formatCurrency(product.cost_price)}</p>
+            <p className="text-xs text-muted-foreground">
+              El precio de costo se actualiza automáticamente al registrar una compra con costo unitario.
+            </p>
+          </div>
         </div>
         <div>
           <Button
