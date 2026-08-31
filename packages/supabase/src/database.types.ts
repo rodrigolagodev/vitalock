@@ -2150,6 +2150,13 @@ export type Database = {
             foreignKeyName: "equipment_updates_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: true
+            referencedRelation: "technical_order_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_updates_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
             referencedRelation: "tickets"
             referencedColumns: ["id"]
           },
@@ -2183,6 +2190,13 @@ export type Database = {
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "installer_tickets_with_context"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_comments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "technical_order_tickets"
             referencedColumns: ["id"]
           },
           {
@@ -2313,6 +2327,21 @@ export type Database = {
           ticket_number: string | null
           unit_id: string | null
           updated_at: string | null
+        }
+        Relationships: []
+      }
+      technical_order_tickets: {
+        Row: {
+          assigned_to_staff_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          resolved_at: string | null
+          status: string | null
+          technical_order_id: string | null
+          technical_order_item_id: string | null
+          ticket_number: string | null
         }
         Relationships: []
       }
