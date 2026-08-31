@@ -152,7 +152,11 @@ export default function TareaDetailPage() {
         {tarea.notes && <Row label="Notas" value={tarea.notes} />}
       </div>
 
-      {CATEGORIES_REQUIRING_EQUIPMENT.has(tarea.category) && (
+      {CATEGORIES_REQUIRING_EQUIPMENT.has(tarea.category) &&
+        // For 'installation' the equipment is created at resolve time — hide
+        // the section pre-resolve so the empty state doesn't sit above the
+        // configure panel. Post-resolve (equipment != null) it shows normally.
+        (tarea.category !== 'installation' || tarea.equipment != null) && (
         <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
           <SectionHeading
             title={
