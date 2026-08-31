@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { Boxes, Coins, Lock, Package } from 'lucide-react';
 import { Input } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
@@ -16,25 +14,19 @@ import {
 import {
   ErrorState,
   NotFoundState,
-  SectionHeading,
   Skeleton,
+  StatCard,
 } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { EditableTitle } from '@/components/layout/EditableTitle';
 import { useProduct } from '@/hooks/useProduct';
 import { useMutateProduct } from '@/hooks/useMutateProduct';
 import { useStockMovements } from '@/hooks/useStockMovements';
-import { ProductFormFields } from '@/components/stock/ProductFormFields';
+import { CATEGORY_LABELS } from '@/components/stock/ProductFormFields';
 import { StockMovementsTable } from '@/components/stock/StockMovementsTable';
 import { AjusteStockSheet } from '@/components/stock/AjusteStockSheet';
 import { formatCurrency } from '@/lib/format';
-import type { MovementType, ProductCategory } from '@/types/stock';
-
-const EditProductSchema = z.object({
-  name: z.string().min(1, 'El nombre es obligatorio').max(120, 'Máximo 120 caracteres'),
-  category: z.enum(['rfid_key', 'equipment']),
-});
-
-type EditFormValues = z.infer<typeof EditProductSchema>;
+import type { MovementType } from '@/types/stock';
 
 const MOVEMENT_LABELS: Record<MovementType, string> = {
   compra: 'Compra',
@@ -75,25 +67,6 @@ export default function StockDetailPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [movementSheetOpen, setMovementSheetOpen] = useState(false);
-
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors, isDirty, isSubmitting },
-  } = useForm<EditFormValues>({
-    resolver: zodResolver(EditProductSchema),
-    defaultValues: { name: '', category: 'rfid_key' },
-  });
-
-  useEffect(() => {
-    if (product) {
-      reset({
-        name: product.name,
-        category: product.category as ProductCategory,
-      });
-    }
-  }, [product, reset]);
 
   if (!productId) {
     return (
@@ -142,55 +115,59 @@ export default function StockDetailPage() {
     return true;
   });
 
-  const onSubmit = (values: EditFormValues) => {
-    updateProduct.mutate({ id: productId, ...values });
+  const handleSaveName = (name: string) => {
+    if (productId) {
+      updateProduct.mutate({ id: productId, name });
+    }
   };
 
-  const isSaving = updateProduct.isPending || isSubmitting;
+  const isSaving = updateProduct.isPending;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         breadcrumbs={[{ label: 'Stock', to: '/stock' }, { label: product.name }]}
-        title={product.name}
-        subtitle={`Disponible: ${product.stock_disponible} · Reservado: ${product.stock_reservado} · Total: ${product.stock_total}`}
+        title={
+          <EditableTitle
+            value={product.name}
+            onSave={handleSaveName}
+            isSaving={isSaving}
+            adornment={
+              <Badge variant="secondary" data-testid="product-category">
+                {CATEGORY_LABELS[product.category]}
+              </Badge>
+            }
+          />
+        }
       >
         <Button onClick={() => setMovementSheetOpen(true)}>Nuevo movimiento</Button>
       </PageHeader>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-4 rounded-md border p-4 bg-card"
-      >
-        <SectionHeading title="Editar producto" variant="secondary" />
-        <div className="grid max-w-md gap-4">
-          <ProductFormFields
-            control={control}
-            name="name"
-            categoryName="category"
-            errors={errors}
-          />
-          <div className="flex flex-col gap-1">
-            <Label>Precio de costo</Label>
-            <p className="text-sm font-medium">{formatCurrency(product.cost_price)}</p>
-            <p className="text-xs text-muted-foreground">
-              El precio de costo se actualiza automáticamente al registrar una compra con costo unitario.
-            </p>
-          </div>
-        </div>
-        <div>
-          <Button
-            type="submit"
-            disabled={!isDirty || isSaving}
-          >
-            {isSaving ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
-        </div>
-      </form>
+      {/* ---- Live stock snapshot ---- */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-testid="product-stats">
+        <StatCard
+          label="Disponible"
+          value={product.stock_disponible}
+          icon={<Package />}
+        />
+        <StatCard
+          label="Reservado"
+          value={product.stock_reservado}
+          icon={<Lock />}
+        />
+        <StatCard
+          label="Total"
+          value={product.stock_total}
+          icon={<Boxes />}
+        />
+        <StatCard
+          label="Costo de compra"
+          value={formatCurrency(product.cost_price)}
+          icon={<Coins />}
+        />
+      </div>
 
       <div className="flex flex-col gap-3">
-        <SectionHeading title="Movimientos de stock" variant="secondary" />
-
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-2">
             <Label>Tipo</Label>

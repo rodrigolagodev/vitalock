@@ -9,7 +9,7 @@ export interface Crumb {
 }
 
 interface PageHeaderProps {
-  title: string;
+  title: ReactNode;
   subtitle?: ReactNode;
   breadcrumbs?: Crumb[];
   /** Adornment rendered inline next to the title (e.g. a StatusBadge). */

@@ -2,13 +2,7 @@ import { Controller } from 'react-hook-form';
 import type { Control, FieldErrors, FieldPath, FieldValues } from 'react-hook-form';
 import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import type { ProductCategory } from '@/types/stock';
 
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
@@ -30,7 +24,8 @@ interface ProductFormFieldsProps<T extends FieldValues> {
 
 /**
  * Shared controlled inputs for the product form: name, category and cost_price.
- * Uses react-hook-form `Controller`, matching the StaffFormSheet select pattern.
+ * Uses react-hook-form `Controller`; the category renders as a segmented
+ * `RadioGroup` (only two product categories), matching the KeyOrderForm pattern.
  */
 export function ProductFormFields<T extends FieldValues>({
   control,
@@ -66,27 +61,28 @@ export function ProductFormFields<T extends FieldValues>({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="product-category">Categoría *</Label>
+        <Label>Categoría *</Label>
         <Controller
           control={control}
           name={categoryName}
           render={({ field }) => (
-            <Select
+            <RadioGroup
               value={field.value ?? ''}
               onValueChange={field.onChange}
               disabled={disabled}
+              aria-label="Categoría"
+              className="grid w-full max-w-md grid-cols-2"
             >
-              <SelectTrigger id="product-category">
-                <SelectValue placeholder="Seleccioná una categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                  <SelectItem key={val} value={val}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                <RadioGroupItem
+                  key={val}
+                  value={val}
+                  className="text-center"
+                >
+                  {label}
+                </RadioGroupItem>
+              ))}
+            </RadioGroup>
           )}
         />
         {message(categoryName) && (
