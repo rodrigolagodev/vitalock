@@ -30,6 +30,30 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
   });
 }
 
+// Polyfill window.localStorage for jsdom so hooks that persist state (e.g.
+// useSidebarCollapsed) behave deterministically in tests.
+if (typeof window !== 'undefined' && typeof window.localStorage === 'undefined') {
+  const store = new Map<string, string>();
+  const storage: Storage = {
+    get length() {
+      return store.size;
+    },
+    clear: () => store.clear(),
+    getItem: (key: string) => store.get(key) ?? null,
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+  };
+  Object.defineProperty(window, 'localStorage', {
+    value: storage,
+    configurable: true,
+  });
+}
+
 // Polyfill pointer-capture and scrollIntoView for jsdom (required by
 // @radix-ui/react-select, which calls them on pointer events and open).
 if (typeof Element !== 'undefined' && typeof Element.prototype.hasPointerCapture !== 'function') {
