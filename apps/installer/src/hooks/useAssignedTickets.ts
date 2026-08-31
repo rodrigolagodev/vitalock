@@ -55,12 +55,12 @@ export interface AssignedTicket {
 // ---------------------------------------------------------------------------
 
 async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> {
-  // Note: PostgREST cannot embed cross-schema FKs (support -> public), so we
-  // fetch flat rows and resolve building + administration names with batch
-  // lookups. An embed like building:building_id(...) fails with PGRST200.
+  // Single view query resolves the ticket + building + administration
+  // context. support.installer_tickets_with_context (migration 000110)
+  // handles the cross-schema JOIN PostgREST cannot embed directly.
   const { data, error } = await supabase
     .schema('support')
-    .from('tickets')
+    .from('installer_tickets_with_context')
     .select(`
       id,
       description,
@@ -68,6 +68,12 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       category,
       opened_at,
       building_id,
+      building_name,
+      building_address,
+      building_city,
+      building_administration_id,
+      administration_company_name,
+      administration_address,
       pending_new_serial,
       pending_new_model,
       technical_order_item_id,
@@ -85,57 +91,21 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     category: string;
     opened_at: string;
     building_id: string | null;
+    building_name: string | null;
+    building_address: string | null;
+    building_city: string | null;
+    building_administration_id: string | null;
+    administration_company_name: string | null;
+    administration_address: string | null;
     pending_new_serial: string | null;
     pending_new_model: string | null;
     technical_order_item_id: string | null;
     equipment_id: string | null;
   }[];
 
-  // Batch lookup of building names + their administration.
-  const buildingIds = [
-    ...new Set(rows.map((r) => r.building_id).filter((v): v is string => Boolean(v))),
-  ];
-  const buildingMap = new Map<
-    string,
-    { id: string; name: string; address: string | null; city: string | null; administration_id: string | null }
-  >();
-  if (buildingIds.length > 0) {
-    const { data: buildings } = await supabase
-      .from('buildings')
-      .select('id, name, address, city, administration_id')
-      .in('id', buildingIds);
-    for (const b of buildings ?? []) {
-      buildingMap.set(b.id, {
-        id: b.id,
-        name: b.name,
-        address: b.address,
-        city: b.city,
-        administration_id: b.administration_id,
-      });
-    }
-  }
-
-  const administrationIds = [
-    ...new Set(
-      [...buildingMap.values()]
-        .map((b) => b.administration_id)
-        .filter((v): v is string => Boolean(v)),
-    ),
-  ];
-  const administrationMap = new Map<string, { id: string; company_name: string; address: string | null }>();
-  if (administrationIds.length > 0) {
-    const { data: administrations } = await supabase
-      .from('administrations')
-      .select('id, company_name, address')
-      .in('id', administrationIds);
-    for (const a of administrations ?? []) {
-      administrationMap.set(a.id, {
-        id: a.id,
-        company_name: a.company_name,
-        address: a.address,
-      });
-    }
-  }
+  // Enrichment queries below are orthogonal to the tickets/building/admin
+  // stitching — they hydrate category-specific side data and cannot be
+  // inlined into the same view without over-fetching for the common case.
 
   // Batch-fetch equipment_update snapshots for equipment_update tickets.
   // RLS ensures the installer can only see snapshots for their own assigned tickets.
@@ -207,46 +177,45 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
     }
   }
 
-  return rows.map((r) => {
-    const buildingInfo = r.building_id ? buildingMap.get(r.building_id) : undefined;
-    const administration = buildingInfo?.administration_id
-      ? administrationMap.get(buildingInfo.administration_id)
-      : undefined;
-
-    return {
-      id: r.id,
-      // title maps to description (no separate title column in DB)
-      title: r.description,
-      description: r.description,
-      status: r.status as 'open' | 'in_progress',
-      category: r.category,
-      opened_at: r.opened_at,
-      building: buildingInfo
-        ? {
-            id: buildingInfo.id,
-            name: buildingInfo.name,
-            address: buildingInfo.address,
-            city: buildingInfo.city,
-            administration: administration ?? { id: '', company_name: '', address: null },
-          }
-        : {
-            id: '',
-            name: '',
-            address: null,
-            city: null,
-            administration: { id: '', company_name: '', address: null },
-          },
-      equipment_id: r.equipment_id,
-      equipmentUpdateSnapshot: r.category === 'equipment_update'
-        ? (snapshotMap.get(r.id) ?? null)
-        : undefined,
-      pending_new_serial: r.pending_new_serial,
-      pending_new_model: r.pending_new_model,
-      intended_product_name: r.technical_order_item_id
-        ? productNameByToiId.get(r.technical_order_item_id) ?? null
-        : null,
-    };
-  });
+  return rows.map((r) => ({
+    id: r.id,
+    // title maps to description (no separate title column in DB)
+    title: r.description,
+    description: r.description,
+    status: r.status as 'open' | 'in_progress',
+    category: r.category,
+    opened_at: r.opened_at,
+    building: r.building_id
+      ? {
+          id: r.building_id,
+          name: r.building_name ?? '',
+          address: r.building_address,
+          city: r.building_city,
+          administration: r.building_administration_id
+            ? {
+                id: r.building_administration_id,
+                company_name: r.administration_company_name ?? '',
+                address: r.administration_address,
+              }
+            : { id: '', company_name: '', address: null },
+        }
+      : {
+          id: '',
+          name: '',
+          address: null,
+          city: null,
+          administration: { id: '', company_name: '', address: null },
+        },
+    equipment_id: r.equipment_id,
+    equipmentUpdateSnapshot: r.category === 'equipment_update'
+      ? (snapshotMap.get(r.id) ?? null)
+      : undefined,
+    pending_new_serial: r.pending_new_serial,
+    pending_new_model: r.pending_new_model,
+    intended_product_name: r.technical_order_item_id
+      ? productNameByToiId.get(r.technical_order_item_id) ?? null
+      : null,
+  }));
 }
 
 // ---------------------------------------------------------------------------

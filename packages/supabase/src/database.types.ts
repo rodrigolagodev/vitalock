@@ -2143,6 +2143,13 @@ export type Database = {
             foreignKeyName: "equipment_updates_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: true
+            referencedRelation: "installer_tickets_with_context"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipment_updates_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
             referencedRelation: "tickets"
             referencedColumns: ["id"]
           },
@@ -2171,6 +2178,13 @@ export type Database = {
           ticket_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ticket_comments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "installer_tickets_with_context"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ticket_comments_ticket_id_fkey"
             columns: ["ticket_id"]
@@ -2266,7 +2280,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      installer_tickets_with_context: {
+        Row: {
+          administration_address: string | null
+          administration_company_name: string | null
+          administration_id: string | null
+          assigned_to_staff_id: string | null
+          building_address: string | null
+          building_administration_id: string | null
+          building_city: string | null
+          building_id: string | null
+          building_name: string | null
+          cancellation_reason: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          equipment_id: string | null
+          id: string | null
+          key_order_item_id: string | null
+          notes: string | null
+          opened_at: string | null
+          opened_by_staff_id: string | null
+          pending_new_model: string | null
+          pending_new_serial: string | null
+          related_bill_id: string | null
+          related_key_request_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by_staff_id: string | null
+          status: string | null
+          technical_order_item_id: string | null
+          ticket_number: string | null
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       gen_ticket_number: { Args: never; Returns: string }
