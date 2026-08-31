@@ -93,7 +93,8 @@ Total: ~910 LOC
 - [x] A.10 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build` from monorepo root.
   - Acceptance: all tests green; no reference to deleted files; installer build blocked by pre-existing TS errors in TaskDetailPage.test.tsx (not introduced by Slice A — confirmed via git stash).
 
-- [ ] A.11 **Delivery**: Commit `feat(shared): extract toastMutationError to @vitalock/shared [slice-A]`; push to PR A branch targeting `feat/logic-consolidation`.
+- [x] A.11 **Delivery**: Commit `feat(shared): extract toastMutationError to @vitalock/shared [slice-A]`; push to PR A branch targeting `feat/logic-consolidation`.
+  - Completed: commit 96e78b5 shipped to main.
 
 ---
 
@@ -128,7 +129,8 @@ Total: ~910 LOC
 - [x] B.9 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
   - Acceptance: all green except pre-existing installer TaskDetailPage.test.tsx TS errors (commit d915224, not introduced by Slice B).
 
-- [ ] B.10 **Delivery**: Commit `feat(shared): add createUseConfigureTechnicalTicketEquipment factory [slice-B]`; push to PR B branch targeting PR A branch.
+- [x] B.10 **Delivery**: Commit `feat(shared): add createUseConfigureTechnicalTicketEquipment factory [slice-B]`; push to PR B branch targeting PR A branch.
+  - Completed: commit ad3b7ac shipped to main.
 
 ---
 
@@ -166,7 +168,8 @@ Total: ~910 LOC
 
 - [x] C.11 **Verification**: `pnpm test` → 624/624 admin, all packages pass. `pnpm typecheck` and `pnpm build` — only pre-existing installer `TaskDetailPage.test.tsx` errors (commit d915224, unrelated to Slice C — same as noted for Slices A/B).
 
-- [ ] C.12 **Delivery**: Commit all files together as one atomic commit per ADR-8: `feat(db): atomic create_and_assign_equipment RPC [slice-C]`; push to PR C branch targeting PR B branch.
+- [x] C.12 **Delivery**: Commit all files together as one atomic commit per ADR-8: `feat(db): atomic create_and_assign_equipment RPC [slice-C]`; push to PR C branch targeting PR B branch.
+  - Completed: commit 65a8d4a shipped to main.
 
 ---
 
@@ -196,7 +199,8 @@ Total: ~910 LOC
 
 - [x] D.11 **Verification**: `pnpm test` → 626/626 admin (+2 from Slice C); typecheck + build clean for admin/shared/supabase/ui; installer TS errors pre-existing (commit d915224).
 
-- [ ] D.12 **Delivery**: Commit + push slice D directly to main per user directive (skipping design's PR chain).
+- [x] D.12 **Delivery**: Commit + push slice D directly to main per user directive (skipping design's PR chain).
+  - Completed: commit faa70fe shipped to main.
 
 ---
 
@@ -204,40 +208,41 @@ Total: ~910 LOC
 
 > Migration + typegen + hook rewrite + new vitest. Satisfies REQ-DB-COMPLETE-AUTH-1, REQ-CLIENT-AUTH-1, REQ-TYPEGEN-1. Depends on Slice A. Independent of D.
 
-- [ ] E.1 **Preflight**: Read `apps/installer/src/hooks/useCompleteAuthorizations.ts` lines 23–50; confirm two-step sequential UPDATE pattern targeting `operations.key_authorizations` per ADR-4; confirm `sync_state` column values (`pending_install`/`pending_removal`).
+- [x] E.1 **Preflight**: Read `apps/installer/src/hooks/useCompleteAuthorizations.ts` lines 23–50; confirm two-step sequential UPDATE pattern targeting `operations.key_authorizations` per ADR-4; confirm `sync_state` column values (`pending_install`/`pending_removal`).
   - Acceptance: table name, column name, and state values match ADR-4.
 
-- [ ] E.2 **Write vitest RED tests**: Create `apps/installer/src/hooks/__tests__/useCompleteAuthorizations.test.ts` with four cases per ADR-10: (1) install-only batch success; (2) remove-only batch success; (3) mixed batch success; (4) RPC failure → `mapMutationError` called. Mock `@vitalock/supabase/rpc/tickets` at module level.
+- [x] E.2 **Write vitest RED tests**: Create `apps/installer/src/hooks/__tests__/useCompleteAuthorizations.test.ts` with four cases per ADR-10: (1) install-only batch success; (2) remove-only batch success; (3) mixed batch success; (4) RPC failure → `mapMutationError` called. Mock `@vitalock/supabase/rpc/tickets` at module level.
   - Acceptance: tests fail (RED) because hook still uses two-step pattern.
 
-- [ ] E.3 **Write forward migration**: Create `supabase/migrations/<timestamp>_complete_authorizations.sql` with `CREATE OR REPLACE FUNCTION public.complete_authorizations(...)` body from the design data model section.
+- [x] E.3 **Write forward migration**: Create `supabase/migrations/<timestamp>_complete_authorizations.sql` with `CREATE OR REPLACE FUNCTION public.complete_authorizations(...)` body from the design data model section.
   - Acceptance: `supabase db reset` applies migration; function exists in `public` schema.
 
-- [ ] E.4 **Write rollback migration**: Create `supabase/migrations/<timestamp>_complete_authorizations_rollback.sql` per ADR-9.
+- [x] E.4 **Write rollback migration**: Create `supabase/migrations/<timestamp>_complete_authorizations_rollback.sql` per ADR-9.
   - Acceptance: rollback runs without error.
 
-- [ ] E.5 **Write pgTAP test file**: Create `supabase/tests/rpc/complete_authorizations.sql` covering all seven scenarios REQ-DB-COMPLETE-AUTH-1.1 through REQ-DB-COMPLETE-AUTH-1.7 (install-only, remove-only, mixed, empty no-op, RLS denied, terminal state raises, rollback on partial failure).
+- [x] E.5 **Write pgTAP test file**: Create `supabase/tests/rpc/complete_authorizations.sql` covering all seven scenarios REQ-DB-COMPLETE-AUTH-1.1 through REQ-DB-COMPLETE-AUTH-1.7 (install-only, remove-only, mixed, empty no-op, RLS denied, terminal state raises, rollback on partial failure).
   - Acceptance: `supabase test db` passes all plan lines.
 
-- [ ] E.6 **Regenerate types**: Run `pnpm --filter @vitalock/supabase typegen`; verify `Database['public']['Functions']['complete_authorizations']` is present.
+- [x] E.6 **Regenerate types**: Run `pnpm --filter @vitalock/supabase typegen`; verify `Database['public']['Functions']['complete_authorizations']` is present.
   - Acceptance: REQ-TYPEGEN-1 satisfied for slice E; `pnpm tsc --noEmit` passes.
 
-- [ ] E.7 **Add RPC wrapper**: Add `completeAuthorizations(input)` wrapper to `packages/supabase/src/rpc/tickets.ts` per design interface changes section.
+- [x] E.7 **Add RPC wrapper**: Add `completeAuthorizations(input)` wrapper to `packages/supabase/src/rpc/tickets.ts` per design interface changes section.
   - Acceptance: wrapper exported and typed.
 
-- [ ] E.8 **Add Slice E P0001 entry**: Add `complete_authorizations` substring and message to `packages/shared/src/errors/toastMutationError.ts` P0001 built-in list per ADR-5.
+- [x] E.8 **Add Slice E P0001 entry**: Add `complete_authorizations` substring and message to `packages/shared/src/errors/toastMutationError.ts` P0001 built-in list per ADR-5.
   - Acceptance: the new substring is present.
 
-- [ ] E.9 **Rewrite hook**: Rewrite `apps/installer/src/hooks/useCompleteAuthorizations.ts` to call `completeAuthorizations` RPC wrapper in a single mutation; remove two-step sequential UPDATEs.
+- [x] E.9 **Rewrite hook**: Rewrite `apps/installer/src/hooks/useCompleteAuthorizations.ts` to call `completeAuthorizations` RPC wrapper in a single mutation; remove two-step sequential UPDATEs.
   - Acceptance: hook makes exactly one RPC call (REQ-CLIENT-AUTH-1.1).
 
-- [ ] E.10 **Verify tests go GREEN**: Run `pnpm --filter @vitalock/installer test -- useCompleteAuthorizations`; all four E.2 cases must pass.
+- [x] E.10 **Verify tests go GREEN**: Run `pnpm --filter @vitalock/installer test -- useCompleteAuthorizations`; all four E.2 cases must pass.
   - Acceptance: tests pass (GREEN).
 
-- [ ] E.11 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
+- [x] E.11 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
   - Acceptance: all green.
 
-- [ ] E.12 **Delivery**: Commit all files atomically per ADR-8: `feat(db): atomic complete_authorizations RPC [slice-E]`; push to PR E branch targeting PR D branch.
+- [x] E.12 **Delivery**: Commit all files atomically per ADR-8: `feat(db): atomic complete_authorizations RPC [slice-E]`; push to PR E branch targeting PR D branch.
+  - Completed: commit 0461fd1 shipped to main.
 
 ---
 
@@ -245,37 +250,38 @@ Total: ~910 LOC
 
 > Migration + typegen + hook rewrites + test updates. Satisfies REQ-DB-TICKETS-VIEW-1, REQ-CLIENT-TICKETS-1, REQ-TYPEGEN-1. Independent of C/D/E beyond A.
 
-- [ ] F.1 **Preflight**: Read `apps/installer/src/hooks/useAssignedTickets.ts` and `apps/installer/src/hooks/useTicketHistory.ts`; confirm the 3–5 sequential query pattern + Realtime subscription target (`support.tickets`); document current result shape columns needed for both hooks.
+- [x] F.1 **Preflight**: Read `apps/installer/src/hooks/useAssignedTickets.ts` and `apps/installer/src/hooks/useTicketHistory.ts`; confirm the 3–5 sequential query pattern + Realtime subscription target (`support.tickets`); document current result shape columns needed for both hooks.
   - Acceptance: stitching pattern confirmed; subscription target is `support.tickets`; required column set for view SELECT list documented.
 
-- [ ] F.2 **Write forward migration**: Create `supabase/migrations/<timestamp>_installer_tickets_with_context.sql` with `CREATE OR REPLACE VIEW support.installer_tickets_with_context WITH (security_invoker = true) AS ...` body from design data model section.
+- [x] F.2 **Write forward migration**: Create `supabase/migrations/<timestamp>_installer_tickets_with_context.sql` with `CREATE OR REPLACE VIEW support.installer_tickets_with_context WITH (security_invoker = true) AS ...` body from design data model section.
   - Acceptance: `supabase db reset` applies migration; view is queryable via `supabase.schema('support').from('installer_tickets_with_context')`.
 
-- [ ] F.3 **Write rollback migration**: Create `supabase/migrations/<timestamp>_installer_tickets_with_context_rollback.sql` per ADR-9 (`DROP VIEW IF EXISTS support.installer_tickets_with_context;`).
+- [x] F.3 **Write rollback migration**: Create `supabase/migrations/<timestamp>_installer_tickets_with_context_rollback.sql` per ADR-9 (`DROP VIEW IF EXISTS support.installer_tickets_with_context;`).
   - Acceptance: rollback runs without error.
 
-- [ ] F.4 **Write pgTAP test file**: Create `supabase/tests/views/installer_tickets_with_context.sql` covering three spec scenarios (REQ-DB-TICKETS-VIEW-1.1 through REQ-DB-TICKETS-VIEW-1.3) plus one extra ADR-2 INVOKER evidence scenario (installer sees own tickets + joined building rows under INVOKER; if this scenario fails, escalate to DEFINER per ADR-2 and update the migration before merging).
+- [x] F.4 **Write pgTAP test file**: Create `supabase/tests/views/installer_tickets_with_context.sql` covering three spec scenarios (REQ-DB-TICKETS-VIEW-1.1 through REQ-DB-TICKETS-VIEW-1.3) plus one extra ADR-2 INVOKER evidence scenario (installer sees own tickets + joined building rows under INVOKER; if this scenario fails, escalate to DEFINER per ADR-2 and update the migration before merging).
   - Acceptance: all four pgTAP plan lines pass; if DEFINER escalation is needed, migration is updated with the hardcoded SELECT list and internal `auth.uid()` WHERE clause before this task closes.
 
-- [ ] F.5 **Regenerate types**: Run `pnpm --filter @vitalock/supabase typegen`; verify `Database['support']['Views']['installer_tickets_with_context']` is present and includes `building_name` and `administration_company_name`.
+- [x] F.5 **Regenerate types**: Run `pnpm --filter @vitalock/supabase typegen`; verify `Database['support']['Views']['installer_tickets_with_context']` is present and includes `building_name` and `administration_company_name`.
   - Acceptance: REQ-TYPEGEN-1 satisfied for slice F; `pnpm tsc --noEmit` passes.
 
-- [ ] F.6 **Rewrite `useAssignedTickets`**: Replace 3–5 query stitching with single query against `supabase.schema('support').from('installer_tickets_with_context')`; remove `.in('id', buildingIds)` and `.in('id', administrationIds)` batch fetches; keep Realtime subscription on `support.tickets` unchanged.
+- [x] F.6 **Rewrite `useAssignedTickets`**: Replace 3–5 query stitching with single query against `supabase.schema('support').from('installer_tickets_with_context')`; remove `.in('id', buildingIds)` and `.in('id', administrationIds)` batch fetches; keep Realtime subscription on `support.tickets` unchanged.
   - Acceptance: exactly one Supabase query issued (REQ-CLIENT-TICKETS-1.1); Realtime subscription still targets `support.tickets` (REQ-CLIENT-TICKETS-1.2).
 
-- [ ] F.7 **Rewrite `useTicketHistory`**: Same single-query rewrite for `useTicketHistory.ts`.
+- [x] F.7 **Rewrite `useTicketHistory`**: Same single-query rewrite for `useTicketHistory.ts`.
   - Acceptance: exactly one Supabase query issued (REQ-CLIENT-TICKETS-1.3).
 
-- [ ] F.8 **Update `useAssignedTickets.test.ts`**: Mock view-backed single query; drop stitching assertions; assert Realtime subscription is set up and cleaned up on unmount.
+- [x] F.8 **Update `useAssignedTickets.test.ts`**: Mock view-backed single query; drop stitching assertions; assert Realtime subscription is set up and cleaned up on unmount.
   - Acceptance: tests pass; no `.in('id', ...)` mock assertions remain.
 
-- [ ] F.9 **Update `useTicketHistory.test.ts`**: Mock view-backed single query; assert single query returns ticket + building + administration fields.
+- [x] F.9 **Update `useTicketHistory.test.ts`**: Mock view-backed single query; assert single query returns ticket + building + administration fields.
   - Acceptance: tests pass.
 
-- [ ] F.10 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
+- [x] F.10 **Verification**: Run `pnpm test`, `pnpm typecheck`, `pnpm build`.
   - Acceptance: all green.
 
-- [ ] F.11 **Delivery**: Commit all files atomically per ADR-8: `feat(db): installer_tickets_with_context cross-schema view [slice-F]`; push to PR F branch targeting PR E branch. After all PRs are reviewed and approved, merge the `feat/logic-consolidation` tracker to `main`.
+- [x] F.11 **Delivery**: Commit all files atomically per ADR-8: `feat(db): installer_tickets_with_context cross-schema view [slice-F]`; push to PR F branch targeting PR E branch. After all PRs are reviewed and approved, merge the `feat/logic-consolidation` tracker to `main`.
+  - Completed: commit 791fc07 shipped to main. Follow-up TS fix: commit 493f071 shipped to main.
 
 ---
 
