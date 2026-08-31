@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useAuthContext } from '@vitalock/shared';
-import { supabase } from '@/main';
+import { supabase } from '@/lib/supabase';
 
 export interface HistoricalTicket {
   id: string;

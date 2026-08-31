@@ -4,9 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
-import { addLogSink, consoleSink, loadClientEnv } from '@vitalock/shared';
-import { createSupabaseClient } from '@vitalock/supabase';
+import { addLogSink, consoleSink } from '@vitalock/shared';
 import { AuthProvider, ProtectedRoute, AuthErrorPage } from '@vitalock/shared';
+import { supabase } from './lib/supabase';
 
 addLogSink(consoleSink);
 import App from './App';
@@ -34,12 +34,6 @@ import ParticularesPage from './routes/particulares/ParticularesPage';
 import StockPage from './routes/stock/StockPage';
 import StockDetailPage from './routes/stock/StockDetailPage';
 import './styles/globals.css';
-
-const env = loadClientEnv(import.meta.env); // fail-fast at boot
-export const supabase = createSupabaseClient({
-  url: env.VITE_SUPABASE_URL,
-  anonKey: env.VITE_SUPABASE_ANON_KEY,
-});
 
 const queryClient = new QueryClient();
 
