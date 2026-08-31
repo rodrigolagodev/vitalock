@@ -80,50 +80,50 @@ Chain strategy: stacked-to-main
 
 > TS-only. No migration. No typegen. Satisfies REQ-SHARED-ORDER-LIST-FACTORY-1, REQ-SHARED-ORDER-LIST-INVALIDATION-1, REQ-CLIENT-KEY-ORDERS-LIST-1, REQ-CLIENT-TECHNICAL-ORDERS-LIST-1.
 
-- [ ] B.1 **Preflight — hooks side-by-side**: Read `apps/admin/src/hooks/useKeyOrders.ts` and `apps/admin/src/hooks/useTechnicalOrders.ts` together; document byte-for-byte identical lines (filter handling, ILIKE, embed, ordering, range) vs diverging lines (view name, items table, status union, return type, queryKeyFn reference, mapRow body).
+- [x] B.1 **Preflight — hooks side-by-side**: Read `apps/admin/src/hooks/useKeyOrders.ts` and `apps/admin/src/hooks/useTechnicalOrders.ts` together; document byte-for-byte identical lines (filter handling, ILIKE, embed, ordering, range) vs diverging lines (view name, items table, status union, return type, queryKeyFn reference, mapRow body).
   - Acceptance: divergence inventory matches ADR-3 (only 5 differences: view, itemsTable, status union, return type, queryKeyFn, mapRow).
 
-- [ ] B.2 **Write factory RED tests**: Create `packages/shared/src/hooks/__tests__/createUseOrderList.test.ts` with four cases: (1) filter → query translation for each filter combination (search, status, administrationId, buildingId, all-four, none); (2) snapshot on `queryKeyFn` invocation: `expect(queryKeyFn).toHaveBeenCalledWith(status, trimmedSearch, administrationId, buildingId)`; (3) `mapRow` called once per row with `(row, itemsField)`; (4) empty result → `mapRow` never called. Write tests before factory exists — RED.
+- [x] B.2 **Write factory RED tests**: Create `packages/shared/src/hooks/__tests__/createUseOrderList.test.ts` with four cases: (1) filter → query translation for each filter combination (search, status, administrationId, buildingId, all-four, none); (2) snapshot on `queryKeyFn` invocation: `expect(queryKeyFn).toHaveBeenCalledWith(status, trimmedSearch, administrationId, buildingId)`; (3) `mapRow` called once per row with `(row, itemsField)`; (4) empty result → `mapRow` never called. Write tests before factory exists — RED.
   - Acceptance: tests fail (RED) because the factory file does not yet exist.
 
-- [ ] B.3 **Write queryKey snapshot tests RED**: In `apps/admin/src/hooks/__tests__/useKeyOrders.test.ts` add `expect(keyOrdersKey('draft', 'foo', 'admin-1', 'bld-1')).toMatchInlineSnapshot(...)` (snapshot captured after B.6 rewrites the hook); same pattern in `useTechnicalOrders.test.ts` with `technicalOrdersKey`. Mark as RED until inline snapshot is recorded.
+- [x] B.3 **Write queryKey snapshot tests RED**: In `apps/admin/src/hooks/__tests__/useKeyOrders.test.ts` add `expect(keyOrdersKey('draft', 'foo', 'admin-1', 'bld-1')).toMatchInlineSnapshot(...)` (snapshot captured after B.6 rewrites the hook); same pattern in `useTechnicalOrders.test.ts` with `technicalOrdersKey`. Mark as RED until inline snapshot is recorded.
   - Acceptance: tests are present; snapshot values will be written by vitest `-u` in B.8.
 
-- [ ] B.4 **Implement factory**: Create `packages/shared/src/hooks/createUseOrderList.ts` with the exact signature from design ADR-3; implement filter handling (search ILIKE, status `.eq`, administrationId `.eq`, buildingId `!inner` embed vs plain embed), `created_at` desc ordering, `range()` pagination, `mapRow` invocation per row; use `queryKeyFn` by reference.
+- [x] B.4 **Implement factory**: Create `packages/shared/src/hooks/createUseOrderList.ts` with the exact signature from design ADR-3; implement filter handling (search ILIKE, status `.eq`, administrationId `.eq`, buildingId `!inner` embed vs plain embed), `created_at` desc ordering, `range()` pagination, `mapRow` invocation per row; use `queryKeyFn` by reference.
   - Acceptance: factory compiles; all four B.2 factory tests GREEN.
 
-- [ ] B.5 **Re-export factory**: Add `export * from './createUseOrderList';` to `packages/shared/src/hooks/index.ts`.
+- [x] B.5 **Re-export factory**: Add `export * from './createUseOrderList';` to `packages/shared/src/hooks/index.ts`.
   - Acceptance: `import { createUseOrderList } from '@vitalock/shared'` resolves.
 
-- [ ] B.6 **Rewrite `useKeyOrders`**: Collapse `apps/admin/src/hooks/useKeyOrders.ts` to `export const useKeyOrders = createUseOrderList<KeyOrderStatus, KeyOrderListRow>({ view: 'key_orders_summary', itemsTable: 'key_order_items', queryKeyFn: keyOrdersKey, mapRow: (row, itemsField) => ({ ... }) });`; preserve exported types `KeyOrderStatus`, `KeyOrderListRow`, `UseKeyOrdersFilters`.
+- [x] B.6 **Rewrite `useKeyOrders`**: Collapse `apps/admin/src/hooks/useKeyOrders.ts` to `export const useKeyOrders = createUseOrderList<KeyOrderStatus, KeyOrderListRow>({ view: 'key_orders_summary', itemsTable: 'key_order_items', queryKeyFn: keyOrdersKey, mapRow: (row, itemsField) => ({ ... }) });`; preserve exported types `KeyOrderStatus`, `KeyOrderListRow`, `UseKeyOrdersFilters`.
   - Acceptance: file ≤ 20 LOC; no `.ilike`, `.eq`, `.or`, `.range` calls remain; `pnpm --filter @vitalock/admin tsc --noEmit` passes.
 
-- [ ] B.7 **Rewrite `useTechnicalOrders`**: Same collapse for `useTechnicalOrders.ts` with `view: 'technical_orders_summary'`, `itemsTable: 'technical_order_items'`, `queryKeyFn: technicalOrdersKey`; preserve exported types.
+- [x] B.7 **Rewrite `useTechnicalOrders`**: Same collapse for `useTechnicalOrders.ts` with `view: 'technical_orders_summary'`, `itemsTable: 'technical_order_items'`, `queryKeyFn: technicalOrdersKey`; preserve exported types.
   - Acceptance: file ≤ 20 LOC; no duplicated filter logic.
 
-- [ ] B.8 **Update admin hook tests GREEN**: Update `useKeyOrders.test.ts` and `useTechnicalOrders.test.ts` to mock the factory-backed query (not the direct view query); record inline snapshots for query key shapes (`vitest -u`); verify all existing filter-parity assertions still cover search, status, administrationId, buildingId via the factory.
+- [x] B.8 **Update admin hook tests GREEN**: Update `useKeyOrders.test.ts` and `useTechnicalOrders.test.ts` to mock the factory-backed query (not the direct view query); record inline snapshots for query key shapes (`vitest -u`); verify all existing filter-parity assertions still cover search, status, administrationId, buildingId via the factory.
   - Acceptance: all tests in both files GREEN; snapshot values are committed inline.
 
-- [ ] B.9 **Verification**: `pnpm --filter @vitalock/shared test` GREEN; `pnpm --filter @vitalock/admin test -- useKeyOrders useTechnicalOrders` GREEN; `pnpm typecheck`; `pnpm build`.
+- [x] B.9 **Verification**: `pnpm --filter @vitalock/shared test` GREEN; `pnpm --filter @vitalock/admin test -- useKeyOrders useTechnicalOrders` GREEN; `pnpm typecheck`; `pnpm build`.
   - Acceptance: all pass; no regressions.
 
-- [ ] B.10 **Delivery**: Atomic commit in this order: (1) `createUseOrderList.ts`, (2) `packages/shared/src/hooks/index.ts`, (3) `createUseOrderList.test.ts`, (4) `useKeyOrders.ts`, (5) `useTechnicalOrders.ts`, (6) `useKeyOrders.test.ts`, (7) `useTechnicalOrders.test.ts`. Message: `feat(shared): createUseOrderList factory + admin hook rewrites`. Push to `origin/main`.
+- [x] B.10 **Delivery**: Atomic commit in this order: (1) `createUseOrderList.ts`, (2) `packages/shared/src/hooks/index.ts`, (3) `createUseOrderList.test.ts`, (4) `useKeyOrders.ts`, (5) `useTechnicalOrders.ts`, (6) `useKeyOrders.test.ts`, (7) `useTechnicalOrders.test.ts`. Message: `refactor(shared): extract createUseOrderList factory for admin order twins`. Commit SHA: 29b8ded.
   - Acceptance: `git log --oneline -1` shows the atomic commit.
 
 ---
 
 ## Cross-slice verification (after both slices land)
 
-- [ ] X.1 **Full monorepo vitest**: `pnpm test` from repo root → all packages GREEN.
-  - Acceptance: no regressions across admin, shared, installer, supabase packages.
+- [x] X.1 **Full monorepo vitest**: `pnpm test` from repo root → all packages GREEN.
+  - Acceptance: no regressions across admin, shared, installer, supabase packages. Verify: 858/858 GREEN across 120 files.
 
-- [ ] X.2 **Full monorepo typecheck**: `pnpm typecheck` from repo root → all packages pass.
-  - Acceptance: pre-existing `TaskDetailPage.test.tsx` TS errors (if still present) are the only permitted failures and are documented.
+- [x] X.2 **Full monorepo typecheck**: `pnpm typecheck` from repo root → all packages pass.
+  - Acceptance: pre-existing `TaskDetailPage.test.tsx` TS errors (if still present) are the only permitted failures and are documented. Verify: 5/5 packages clean.
 
-- [ ] X.3 **pgTAP full suite**: `supabase test db` → all plan lines pass including the new `technical_order_tickets.sql` file.
-  - Acceptance: no regression in existing pgTAP suite.
+- [x] X.3 **pgTAP full suite**: `supabase test db` → all plan lines pass including the new `technical_order_tickets.sql` file.
+  - Acceptance: no regression in existing pgTAP suite. Verify: 194/194 GREEN across 39 files (test_126: 4/4).
 
-- [ ] X.4 **Archive**: After both slices are on `origin/main`, commit `chore(sdd): archive consolidation-ap6-and-admin-order-twins` moving the openspec directory to `openspec/changes/archive/2026-08-30-consolidation-ap6-and-admin-order-twins/`.
+- [x] X.4 **Archive**: After both slices are on `origin/main`, commit `chore(sdd): archive consolidation-ap6-and-admin-order-twins` moving the openspec directory to `openspec/changes/archive/2026-08-30-consolidation-ap6-and-admin-order-twins/`.
   - Acceptance: `git log --oneline -1` shows the archive commit; openspec directory is absent from `openspec/changes/`.
 
 ---
