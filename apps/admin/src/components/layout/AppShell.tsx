@@ -1,8 +1,11 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { MobileSidebar } from './MobileSidebar';
+import { useSidebarCollapsed } from '../../hooks/useSidebarCollapsed';
 
 export function AppShell() {
+  const [collapsed, toggle] = useSidebarCollapsed();
+
   return (
     <div className="flex h-screen flex-col">
       {/* Mobile-only topbar: hamburger on the left (matches the desktop
@@ -26,7 +29,7 @@ export function AppShell() {
       </header>
 
       <div className="flex w-full min-h-0 flex-1">
-        <Sidebar />
+        <Sidebar collapsed={collapsed} onToggle={toggle} />
         <main className="min-w-0 flex-1 overflow-auto bg-content p-6">
           <Outlet />
         </main>

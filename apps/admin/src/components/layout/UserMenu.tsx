@@ -1,5 +1,5 @@
 import { ChevronsUpDown, LogOut } from 'lucide-react';
-import { Button } from '@vitalock/ui';
+import { Button, cn } from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
 import {
   Popover,
@@ -18,7 +18,7 @@ function initialsFromName(name: string): string {
     .toUpperCase();
 }
 
-export function UserMenu() {
+export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { staff, session, signOut } = useAuthContext();
 
   const name = staff?.full_name ?? 'Usuario';
@@ -36,7 +36,13 @@ export function UserMenu() {
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
             {initials}
           </span>
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div
+            className={cn(
+              'flex min-w-0 flex-1 flex-col transition-opacity duration-200',
+              collapsed && 'opacity-0',
+            )}
+            aria-hidden={collapsed}
+          >
             <span className="truncate text-sm font-medium">{name}</span>
             {email && (
               <span className="truncate text-xs text-muted-foreground">
@@ -45,7 +51,10 @@ export function UserMenu() {
             )}
           </div>
           <ChevronsUpDown
-            className="h-4 w-4 shrink-0 text-muted-foreground"
+            className={cn(
+              'h-4 w-4 shrink-0 text-muted-foreground transition-opacity duration-200',
+              collapsed && 'opacity-0',
+            )}
             aria-hidden="true"
           />
         </button>

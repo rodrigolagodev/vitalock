@@ -5,6 +5,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { AppShell } from '../AppShell';
 
+function clearStoredCollapsed() {
+  window.localStorage.removeItem('vitalock-sidebar-collapsed');
+}
+
 const { useAuthContextMock } = vi.hoisted(() => ({
   useAuthContextMock: vi.fn(),
 }));
@@ -27,6 +31,7 @@ beforeEach(() => {
     session: { user: { email: 'ana@vitalock.com' } },
     signOut: vi.fn(),
   });
+  clearStoredCollapsed();
 });
 
 describe('AppShell', () => {
@@ -73,5 +78,33 @@ describe('AppShell', () => {
     await user.click(screen.getByRole('button', { name: 'Abrir menú de usuario' }));
     await user.click(screen.getByRole('button', { name: /Salir/ }));
     expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders the desktop sidebar expanded by default', () => {
+    renderShell();
+    const aside = screen.getByRole('complementary');
+    expect(aside).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Administraciones' })).toBeInTheDocument();
+  });
+
+  it('collapses and expands when the toggle button is clicked', async () => {
+    const user = userEvent.setup();
+    renderShell();
+
+    // Expanded by default.
+    const aside = screen.getByRole('complementary');
+    expect(aside).toHaveAttribute('aria-expanded', 'true');
+    const label = screen.getByText('Administraciones');
+    expect(label).not.toHaveAttribute('aria-hidden', 'true');
+
+    // Collapse. Label stays in the DOM (stable layout) but becomes aria-hidden.
+    await user.click(screen.getByRole('button', { name: 'Toggle sidebar' }));
+    expect(aside).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Administraciones')).toHaveAttribute('aria-hidden', 'true');
+
+    // Expand again.
+    await user.click(screen.getByRole('button', { name: 'Toggle sidebar' }));
+    expect(aside).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Administraciones')).not.toHaveAttribute('aria-hidden', 'true');
   });
 });

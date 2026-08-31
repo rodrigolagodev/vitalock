@@ -84,6 +84,7 @@ export {
 } from './components/popover';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/ConfirmDialog';
 export { Switch } from './components/switch';
+export { Tooltip, type TooltipProps } from './components/tooltip';
 export { Textarea } from './components/textarea';
 export {
   SidebarGroup,

@@ -29,6 +29,30 @@ describe('SidebarGroup', () => {
     expect(screen.getByText('Tickets')).toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
+
+  it('hides the section label from assistive tech when collapsed', () => {
+    render(
+      <SidebarGroup label="Clientes" collapsed>
+        <a href="/clientes">Ver clientes</a>
+      </SidebarGroup>,
+    );
+    // Label remains in the DOM so the header slot keeps a constant height —
+    // otherwise nav items would jump vertically during the collapse animation.
+    // It is hidden from AT via aria-hidden and visually via opacity-0.
+    const label = screen.getByText('Clientes');
+    expect(label).toHaveAttribute('aria-hidden', 'true');
+    expect(label.className).toContain('opacity-0');
+    // Nav items remain visible (icon-only) when the label is hidden.
+    expect(screen.getByRole('link', { name: 'Ver clientes' })).toHaveAttribute(
+      'href',
+      '/clientes',
+    );
+  });
+
+  it('keeps the section label visible when not collapsed', () => {
+    render(<SidebarGroup label="Clientes" />);
+    expect(screen.getByText('Clientes')).toBeInTheDocument();
+  });
 });
 
 describe('SearchInput', () => {

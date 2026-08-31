@@ -14,11 +14,11 @@ const { useAuthContextMock } = vi.hoisted(() => ({
 
 vi.mock('@vitalock/shared', () => ({ useAuthContext: useAuthContextMock }));
 
-function renderSidebar() {
+function renderSidebar(props?: { collapsed?: boolean; onToggle?: () => void }) {
   return render(
     <ThemeProvider attribute="class">
       <MemoryRouter initialEntries={['/ordenes']}>
-        <Sidebar />
+        <Sidebar collapsed={props?.collapsed} onToggle={props?.onToggle} />
       </MemoryRouter>
     </ThemeProvider>,
   );
@@ -69,5 +69,61 @@ describe('Sidebar', () => {
   it('renders Órdenes link pointing to /ordenes', () => {
     renderSidebar();
     expect(screen.getByRole('link', { name: 'Órdenes' })).toHaveAttribute('href', '/ordenes');
+  });
+
+  it('expands by default with aria-expanded true and a toggle button not pressed', () => {
+    renderSidebar();
+    const aside = screen.getByRole('complementary');
+    expect(aside).toHaveAttribute('aria-expanded', 'true');
+    const toggle = screen.getByRole('button', { name: 'Toggle sidebar' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('collapses with aria-expanded false and a pressed toggle button', () => {
+    renderSidebar({ collapsed: true });
+    const aside = screen.getByRole('complementary');
+    expect(aside).toHaveAttribute('aria-expanded', 'false');
+    const toggle = screen.getByRole('button', { name: 'Toggle sidebar' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('hides nav labels and section labels from AT when collapsed', () => {
+    renderSidebar({ collapsed: true });
+    // Labels stay in the DOM to keep the sidebar layout stable during the
+    // collapse animation (icons must not jump). They are hidden from
+    // assistive tech via aria-hidden and visually via opacity-0.
+    const sectionLabel = screen.getByText('Clientes');
+    expect(sectionLabel).toHaveAttribute('aria-hidden', 'true');
+    expect(sectionLabel.className).toContain('opacity-0');
+
+    const adminLink = screen
+      .getAllByRole('link')
+      .find((a) => a.getAttribute('href') === '/administraciones');
+    expect(adminLink).toBeDefined();
+    // Link keeps its accessible name via aria-label, so it is still
+    // navigable with a screen reader even though the visible span is hidden.
+    expect(adminLink).toHaveAttribute('aria-label', 'Administraciones');
+  });
+
+  it('calls onToggle when the toggle button is clicked', async () => {
+    const onToggle = vi.fn();
+    const userEvent = (await import('@testing-library/user-event')).default;
+    renderSidebar({ onToggle });
+    await userEvent.click(screen.getByRole('button', { name: 'Toggle sidebar' }));
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows tooltip with label content when hovering a collapsed nav icon', async () => {
+    const userEvent = (await import('@testing-library/user-event')).default;
+    renderSidebar({ collapsed: true });
+    // The Administraciones link is wrapped in a tooltip with its label.
+    const link = screen
+      .getAllByRole('link')
+      .find((a) => a.getAttribute('href') === '/administraciones');
+    expect(link).toBeDefined();
+    await userEvent.hover(link as HTMLElement);
+    // Wait for the tooltip (Radix renders it with role="tooltip" in a portal).
+    const tooltip = await screen.findByRole('tooltip', {}, { timeout: 2000 });
+    expect(tooltip).toHaveTextContent('Administraciones');
   });
 });
