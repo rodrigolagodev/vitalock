@@ -1285,6 +1285,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      complete_authorizations: {
+        Args: {
+          p_install_ids: string[]
+          p_remove_ids: string[]
+          p_staff_id: string
+        }
+        Returns: undefined
+      }
       configure_key_order_item: {
         Args: {
           p_equipment_ids: string[]

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { completeAuthorizations as completeAuthorizationsRpc } from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@vitalock/shared';
 import { worklistKey } from '@/lib/queryKeys';
@@ -20,36 +21,14 @@ export function useCompleteAuthorizations() {
   const staffId = staff?.id ?? '';
 
   return useMutation({
-    mutationFn: async ({ items }: CompletePayload) => {
-      const now = new Date().toISOString();
-      const installIds = items.filter((i) => i.sync_state === 'pending_install').map((i) => i.id);
-      const removeIds = items.filter((i) => i.sync_state === 'pending_removal').map((i) => i.id);
-
-      if (installIds.length > 0) {
-        const { error } = await supabase
-          .schema('operations')
-          .from('key_authorizations')
-          .update({
-            sync_state: 'installed',
-            installed_by_staff_id: staffId,
-            installed_at: now,
-          })
-          .in('id', installIds);
-        if (error) throw error;
-      }
-
-      if (removeIds.length > 0) {
-        const { error } = await supabase
-          .schema('operations')
-          .from('key_authorizations')
-          .update({
-            sync_state: 'removed',
-            removed_by_staff_id: staffId,
-            removed_at: now,
-          })
-          .in('id', removeIds);
-        if (error) throw error;
-      }
+    mutationFn: ({ items }: CompletePayload) => {
+      const installIds = items
+        .filter((i) => i.sync_state === 'pending_install')
+        .map((i) => i.id);
+      const removeIds = items
+        .filter((i) => i.sync_state === 'pending_removal')
+        .map((i) => i.id);
+      return completeAuthorizationsRpc(supabase, { installIds, removeIds, staffId });
     },
     onSuccess: (_data, { items }) => {
       void queryClient.invalidateQueries({ queryKey: worklistKey(staffId) });

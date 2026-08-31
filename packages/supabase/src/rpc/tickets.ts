@@ -111,6 +111,31 @@ export async function createAndAssignEquipment(
   return data as string;
 }
 
+export interface CompleteAuthorizationsInput {
+  installIds: string[];
+  removeIds: string[];
+  staffId: string;
+}
+
+/**
+ * Atomic replacement for the two sequential UPDATEs the installer
+ * previously issued from useCompleteAuthorizations. Both branches (install
+ * and remove) commit or roll back together. `installed_at` / `removed_at`
+ * are auto-filled by operations.key_authorizations_sync_timestamps —
+ * they cannot be set by the installer role (see migration 20260817000062).
+ */
+export async function completeAuthorizations(
+  client: TypedSupabaseClient,
+  input: CompleteAuthorizationsInput,
+): Promise<void> {
+  const { error } = await client.rpc('complete_authorizations', {
+    p_install_ids: input.installIds,
+    p_remove_ids: input.removeIds,
+    p_staff_id: input.staffId,
+  });
+  if (error) throw error;
+}
+
 export interface ConfigureTechnicalTicketEquipmentInput {
   ticketId: string;
   newSerial: string;
