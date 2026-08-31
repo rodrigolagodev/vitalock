@@ -60,9 +60,9 @@ const {
     })),
     mockUseRfidKeyCodeMap: vi.fn<(ids: string[]) => Map<string, string>>(() => new Map()),
     mockUseTicketComments: vi.fn<(id: string) => { data: unknown[] }>(() => ({ data: [] })),
-    mockUseEquipmentById: vi.fn(() => ({ data: null, isLoading: false, isFetching: false })),
-    mockUseMaintenanceHistory: vi.fn(() => ({ data: [], isLoading: false, isFetching: false })),
-    mockUseEquipmentUpdateHistory: vi.fn(() => ({ data: [], isLoading: false, isFetching: false })),
+    mockUseEquipmentById: vi.fn<() => { data: unknown; isLoading: boolean; isFetching: boolean }>(() => ({ data: null, isLoading: false, isFetching: false })),
+    mockUseMaintenanceHistory: vi.fn<() => { data: unknown[]; isLoading: boolean; isFetching: boolean }>(() => ({ data: [], isLoading: false, isFetching: false })),
+    mockUseEquipmentUpdateHistory: vi.fn<() => { data: unknown[]; isLoading: boolean; isFetching: boolean }>(() => ({ data: [], isLoading: false, isFetching: false })),
   };
 });
 
