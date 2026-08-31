@@ -305,7 +305,7 @@ export default function TaskDetailPage() {
         </>
       )}
 
-      {(category === EQUIPMENT_INSTALLATION || category === EQUIPMENT_REPLACEMENT) && (
+      {(category === EQUIPMENT_INSTALLATION || category === EQUIPMENT_REPLACEMENT || category === 'installation') && (
         <section className="flex flex-col gap-4">
           {category === EQUIPMENT_REPLACEMENT && equipment && (
             <div className="rounded-md border bg-card p-4 flex flex-col gap-2">

@@ -114,11 +114,13 @@ const schema = baseSchema.superRefine((data, ctx) => {
         path: ['items', i, 'intended_equipment_id'],
       });
     }
-    // product_id (from stock) is required for equipment AND equipment_replacement.
-    // For replacement, this is the warehouse product picked at order time; the
-    // installer serializes it later when resolving the ticket.
+    // product_id (from stock) is required for equipment, equipment_replacement,
+    // and installation. For installation, this reserves the unit that will be
+    // physically installed (the installer serializes it at resolve time).
     if (
-      (item.item_type === 'equipment' || item.item_type === 'equipment_replacement') &&
+      (item.item_type === 'equipment' ||
+        item.item_type === 'equipment_replacement' ||
+        item.item_type === 'installation') &&
       !item.product_id
     ) {
       ctx.addIssue({
@@ -442,6 +444,11 @@ export function TechnicalOrderForm({
                         {errors.items[index]?.intended_equipment_id?.message}
                       </p>
                     )}
+                    {errors.items?.[index]?.product_id && (
+                      <p className="px-3 pb-2 text-xs text-destructive">
+                        {errors.items[index]?.product_id?.message}
+                      </p>
+                    )}
                   </>
                 )}
 
@@ -663,16 +670,11 @@ function TechnicalItemEquipmentField({
   const { data: stockProducts = [] } = useProducts({ category: 'equipment' });
 
   const isReplacement = itemType === 'equipment_replacement';
-  const isInstallation = itemType === 'equipment';
+  const isEquipmentWork = itemType === 'equipment';
+  const isInstallationWork = itemType === 'installation';
   const showTargetEquipment =
     itemType === 'maintenance' || itemType === 'equipment_replacement';
-  const showStockProduct = isInstallation || isReplacement;
-
-  // For 'installation' item_type there's neither a target equipment nor a
-  // stock product (it's an on-site service call). Nothing to render.
-  if (itemType === 'installation') {
-    return null;
-  }
+  const showStockProduct = isEquipmentWork || isReplacement || isInstallationWork;
 
   const targetLabel = isReplacement
     ? 'Equipo actual (a reemplazar) *'
@@ -680,7 +682,9 @@ function TechnicalItemEquipmentField({
 
   const stockLabel = isReplacement
     ? 'Equipo de reemplazo (del stock) *'
-    : 'Equipo a instalar (del stock) *';
+    : isInstallationWork
+      ? 'SKU del equipo a instalar (del stock) *'
+      : 'Equipo a instalar (del stock) *';
 
   return (
     <div className="flex flex-col gap-3">
@@ -771,8 +775,9 @@ function TechnicalItemEquipmentField({
             )}
           />
           <p className="text-xs text-muted-foreground">
-            El número de serie del equipo lo carga el instalador al resolver la
-            tarea (o el admin desde el panel de tareas).
+            {isInstallationWork
+              ? 'El SKU reserva stock. El número de serie del equipo lo carga el instalador al resolver la tarea.'
+              : 'El número de serie del equipo lo carga el instalador al resolver la tarea (o el admin desde el panel de tareas).'}
           </p>
           {errors.items?.[index]?.product_id && (
             <p className="text-xs text-destructive">

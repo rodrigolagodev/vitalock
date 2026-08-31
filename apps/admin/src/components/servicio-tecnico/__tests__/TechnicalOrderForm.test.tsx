@@ -370,12 +370,97 @@ describe('TechnicalOrderForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // T-14c-1k: installation item does NOT require equipment (optional)
-  it('allows installation item without equipment when assignee is set', async () => {
+  // 5.9a RED — item_type='installation' + product_id=null fails with product_id-scoped error
+  it('shows product_id error when installation item has no product_id', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    render(
+      <TechnicalOrderForm
+        mode="create"
+        initialValues={{
+          client_type: 'administration',
+          administration_id: 'adm-1',
+          particular_id: null,
+          particular_full_name: '',
+          particular_dni: '',
+          particular_phone: '',
+          particular_email: '',
+          notes: '',
+          items: [
+            {
+              item_type: 'installation',
+              quantity: 1,
+              description: '',
+              building_id: 'bld-1',
+              unit_price: null,
+              product_id: null,   // missing — should fail
+              intended_equipment_id: null,
+              intended_assignee_staff_id: 'staff-1',
+            },
+          ],
+        }}
+        onSubmit={onSubmit}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/elegí un equipo del stock/i)).toBeInTheDocument();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  // 5.9b RED — item_type='installation' + product_id=<uuid> passes validation
+  it('allows installation item with product_id set', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
-    const validValues: TechnicalOrderFormValues = {
+    render(
+      <TechnicalOrderForm
+        mode="create"
+        initialValues={{
+          client_type: 'administration',
+          administration_id: 'adm-1',
+          particular_id: null,
+          particular_full_name: '',
+          particular_dni: '',
+          particular_phone: '',
+          particular_email: '',
+          notes: '',
+          items: [
+            {
+              item_type: 'installation',
+              quantity: 1,
+              description: '',
+              building_id: 'bld-1',
+              unit_price: null,
+              product_id: 'prod-1',   // provided — should pass
+              intended_equipment_id: null,
+              intended_assignee_staff_id: 'staff-1',
+            },
+          ],
+        }}
+        onSubmit={onSubmit}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledOnce();
+    });
+  });
+
+  // T-14c-1k (updated): installation item requires product_id (after task 2.2)
+  it('requires product_id for installation item — assignee alone is not enough', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+
+    const values: TechnicalOrderFormValues = {
       client_type: 'administration',
       administration_id: 'adm-1',
       particular_id: null,
@@ -391,24 +476,24 @@ describe('TechnicalOrderForm', () => {
           description: '',
           building_id: 'bld-1',
           unit_price: null,
-          product_id: null,
-          intended_equipment_id: null,          // optional for installation
-          intended_assignee_staff_id: 'staff-1', // required for all types
+          product_id: null,                     // still missing
+          intended_equipment_id: null,
+          intended_assignee_staff_id: 'staff-1',
         },
       ],
     };
 
     render(
-      <TechnicalOrderForm mode="create" initialValues={validValues} onSubmit={onSubmit} />,
+      <TechnicalOrderForm mode="create" initialValues={values} onSubmit={onSubmit} />,
       { wrapper: makeWrapper() },
     );
 
-    const submitBtn = screen.getByRole('button', { name: /crear y confirmar orden/i });
-    await user.click(submitBtn);
+    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
 
     await waitFor(() => {
-      expect(onSubmit).toHaveBeenCalledOnce();
+      expect(screen.getByText(/elegí un equipo del stock/i)).toBeInTheDocument();
     });
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   // T-14c-1l: validation requires equipment for equipment_replacement

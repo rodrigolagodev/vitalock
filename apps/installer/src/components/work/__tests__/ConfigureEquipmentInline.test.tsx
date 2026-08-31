@@ -88,6 +88,47 @@ describe('ConfigureEquipmentInline — empty state', () => {
   });
 });
 
+// 5.3 RED — renders correct heading for category='installation'; no checkbox affordance shown
+describe('ConfigureEquipmentInline — installation category', () => {
+  it('renders heading for installation ticket', () => {
+    render(
+      <ConfigureEquipmentInline
+        ticket={makeTicket({ category: 'installation', title: 'Instalar equipo' })}
+      />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByText(/equipo a instalar/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/número de serie/i)).toBeInTheDocument();
+  });
+
+  it('submits configure payload for installation ticket', async () => {
+    const user = userEvent.setup();
+    render(
+      <ConfigureEquipmentInline
+        ticket={makeTicket({ category: 'installation' })}
+      />,
+      { wrapper: makeWrapper() },
+    );
+    await user.type(screen.getByLabelText(/número de serie/i), 'SN-INSTALL-01');
+    await user.click(screen.getByRole('button', { name: /guardar equipo/i }));
+    expect(configureMutate).toHaveBeenCalledWith(
+      { ticketId: 'ticket-1', newSerial: 'SN-INSTALL-01', newModel: null },
+      expect.any(Object),
+    );
+  });
+
+  it('does not show a checkbox affordance for installation tickets', () => {
+    render(
+      <ConfigureEquipmentInline
+        ticket={makeTicket({ category: 'installation' })}
+      />,
+      { wrapper: makeWrapper() },
+    );
+    // No checkbox inside the component itself (checkbox lives in TicketCard)
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+});
+
 describe('ConfigureEquipmentInline — configured state', () => {
   it('shows read-only serial/model with an "Editar" button', () => {
     render(

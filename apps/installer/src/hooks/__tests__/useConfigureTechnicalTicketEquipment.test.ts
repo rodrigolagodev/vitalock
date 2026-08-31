@@ -78,6 +78,34 @@ describe('useConfigureTechnicalTicketEquipment (installer)', () => {
     );
   });
 
+  // 5.7 — symmetric case for category='installation' through mocked RPC
+  it('passes correct payload for installation ticket without raising', async () => {
+    mockConfigureRpc.mockResolvedValue(undefined);
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useConfigureTechnicalTicketEquipment(), {
+      wrapper: Wrapper,
+    });
+
+    const input = { ticketId: 'ticket-install-i', newSerial: 'SN-INST-INS', newModel: null };
+
+    await act(async () => {
+      result.current.mutate(input);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    // Hook is category-agnostic: RPC is called with (supabase, input) regardless of category
+    expect(mockConfigureRpc).toHaveBeenCalledWith(
+      expect.anything(), // supabase client
+      expect.objectContaining({
+        ticketId: 'ticket-install-i',
+        newSerial: 'SN-INST-INS',
+        newModel: null,
+      }),
+    );
+  });
+
   it('on error → calls toastMutationError and does not invalidate queries', async () => {
     const rpcError = { code: 'P0001', message: 'ticket not found' };
     mockConfigureRpc.mockRejectedValue(rpcError);

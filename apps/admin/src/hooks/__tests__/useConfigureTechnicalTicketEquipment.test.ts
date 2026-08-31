@@ -70,6 +70,35 @@ describe('useConfigureTechnicalTicketEquipment (admin)', () => {
     );
   });
 
+  // 5.5 — hook called with category='installation' ticket passes correct payload to mocked RPC
+  it('passes correct ticketId + payload for installation ticket without raising', async () => {
+    mockConfigureRpc.mockResolvedValue(undefined);
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useConfigureTechnicalTicketEquipment(), {
+      wrapper: Wrapper,
+    });
+
+    // The hook is category-agnostic — it accepts any ticketId + serial + model
+    const input = { ticketId: 'ticket-install-1', newSerial: 'SN-INST-01', newModel: 'Model X' };
+
+    await act(async () => {
+      result.current.mutate(input);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    // configureTechnicalTicketEquipment(client, input) — mock receives (supabase, input)
+    expect(mockConfigureRpc).toHaveBeenCalledWith(
+      expect.anything(), // supabase client
+      expect.objectContaining({
+        ticketId: 'ticket-install-1',
+        newSerial: 'SN-INST-01',
+        newModel: 'Model X',
+      }),
+    );
+  });
+
   it('on error → calls toastMutationError and does not invalidate queries', async () => {
     const rpcError = { code: '42501', message: 'permission denied' };
     mockConfigureRpc.mockRejectedValue(rpcError);

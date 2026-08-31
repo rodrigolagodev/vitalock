@@ -107,6 +107,20 @@ describe('ConfigureEquipmentPanel — empty state', () => {
   });
 });
 
+// 5.1 RED — category='installation' renders panel heading without TS error
+describe('ConfigureEquipmentPanel — installation category', () => {
+  it('renders panel heading for installation ticket without error', () => {
+    render(
+      <ConfigureEquipmentPanel
+        tarea={makeTarea({ category: 'installation', description: 'Instalar equipo' })}
+      />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByText(/configurar equipo a instalar/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/número de serie/i)).toBeInTheDocument();
+  });
+});
+
 describe('ConfigureEquipmentPanel — configured state', () => {
   it('shows the stored serial and model in read-only view with an "Editar" button', () => {
     render(

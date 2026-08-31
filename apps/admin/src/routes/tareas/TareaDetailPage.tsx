@@ -25,6 +25,7 @@ import type { TareaRow } from '@/hooks/useTareas';
 const CATEGORIES_TWO_STEP_CONFIGURE = new Set<TareaRow['category']>([
   'equipment_installation',
   'equipment_replacement',
+  'installation',
 ]);
 
 const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string> = {

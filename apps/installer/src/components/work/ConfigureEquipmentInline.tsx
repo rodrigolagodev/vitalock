@@ -7,9 +7,10 @@ interface ConfigureEquipmentInlineProps {
   ticket: AssignedTicket;
 }
 
-const HEADINGS: Record<'equipment_installation' | 'equipment_replacement', string> = {
+const HEADINGS: Record<'equipment_installation' | 'equipment_replacement' | 'installation', string> = {
   equipment_installation: 'Equipo a instalar',
   equipment_replacement: 'Equipo de reemplazo',
+  installation: 'Equipo a instalar',
 };
 
 /**
@@ -20,7 +21,7 @@ const HEADINGS: Record<'equipment_installation' | 'equipment_replacement', strin
  * marks the task resolved through the batch "Marcar resueltos" flow.
  */
 export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlineProps) {
-  const category = ticket.category as 'equipment_installation' | 'equipment_replacement';
+  const category = ticket.category as 'equipment_installation' | 'equipment_replacement' | 'installation';
   const heading = HEADINGS[category];
   const configured = Boolean(ticket.pending_new_serial);
   const [editing, setEditing] = useState(false);
