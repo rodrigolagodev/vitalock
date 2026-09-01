@@ -46,7 +46,7 @@ export default function TechnicalOrderNuevaPage() {
   };
 
   return (
-    <div className="flex min-h-full flex-col gap-6 -mb-6">
+    <div className="flex min-h-full flex-col gap-6">
       <PageHeader
         title="Nueva orden de servicio técnico"
         subtitle="Completá los datos del cliente y las líneas de trabajo. La orden se confirma automáticamente al guardar."

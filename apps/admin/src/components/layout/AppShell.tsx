@@ -30,7 +30,7 @@ export function AppShell() {
 
       <div className="flex w-full min-h-0 flex-1">
         <Sidebar collapsed={collapsed} onToggle={toggle} />
-        <main className="min-w-0 flex-1 overflow-auto bg-content p-6">
+        <main className="min-w-0 flex-1 overflow-auto bg-content px-6 pt-6">
           <Outlet />
         </main>
       </div>
