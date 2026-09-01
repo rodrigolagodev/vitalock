@@ -57,6 +57,10 @@ const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'], string> = {
   update_equipment: '—',
 };
 
+function isTerminalTicket(status: string): boolean {
+  return status === 'resolved' || status === 'cancelled';
+}
+
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
@@ -118,7 +122,9 @@ export default function TareaDetailPage() {
         ]}
         titleAdornment={<TareaStatusBadge status={tarea.status} />}
       >
-        <Button onClick={() => setEditOpen(true)}>Editar</Button>
+        {!isTerminalTicket(tarea.status) && (
+          <Button onClick={() => setEditOpen(true)}>Editar</Button>
+        )}
       </PageHeader>
 
       <div className="grid grid-cols-1 gap-4 rounded-md border bg-card p-4 md:grid-cols-2">

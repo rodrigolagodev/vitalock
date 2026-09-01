@@ -158,7 +158,7 @@ export default function KeyOrderDetailPage() {
           items={order.key_order_items}
           orderId={order.id}
           orderStatus={order.status}
-          canRegisterPickup={isReadyForPickup}
+          canRegisterPickup={!isTerminal && isReadyForPickup}
           buyer={order.particulares}
           isFetching={isLoading}
         />
