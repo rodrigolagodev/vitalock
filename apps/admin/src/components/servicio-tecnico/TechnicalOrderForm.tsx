@@ -495,20 +495,16 @@ export function TechnicalOrderForm({
                         )}
                       </div>
 
-                      <div className="flex flex-col gap-1 sm:max-w-[200px]">
-                        <Label htmlFor={`items.${index}.quantity`}>Cantidad</Label>
-                        <Input
-                          id={`items.${index}.quantity`}
-                          type="number"
-                          min={1}
-                          {...register(`items.${index}.quantity`)}
-                        />
-                        {errors.items?.[index]?.quantity && (
-                          <p className="text-xs text-destructive">
-                            {errors.items[index]?.quantity?.message}
-                          </p>
-                        )}
-                      </div>
+                      {/*
+                        Quantity is always 1 per item — the DB CHECK enforces this.
+                        Multiple installations = multiple items (no equipment can host
+                        two simultaneous installations). Field stays as hidden input
+                        so the value is submitted; the visible control was removed.
+                      */}
+                      <input
+                        type="hidden"
+                        {...register(`items.${index}.quantity`, { value: 1 })}
+                      />
                     </div>
 
                     {/* Intended assignee — required for all types at confirm time */}
