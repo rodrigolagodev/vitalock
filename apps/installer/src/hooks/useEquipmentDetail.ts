@@ -84,7 +84,7 @@ export function useMaintenanceHistory(equipmentId: string | null) {
         .from('tickets')
         .select('id, description, status, category, opened_at, resolved_at, resolution_notes')
         .eq('equipment_id', equipmentId)
-        .eq('category', 'maintenance')
+        .eq('category', 'maintain_equipment')
         .in('status', ['resolved', 'cancelled'])
         .order('resolved_at', { ascending: false, nullsFirst: false });
 
