@@ -23,6 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@vitalock/ui';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@vitalock/ui';
+import { Plus, Trash2 } from 'lucide-react';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
 import { usePersonal } from '@/hooks/usePersonal';
@@ -379,96 +385,155 @@ export function TechnicalOrderForm({
           )}
         </section>
 
-        {/* ---- Section: Líneas de trabajo ---- */}
+        {/* ---- Section: Ítems (item cards inline, matching KeyOrderForm) ---- */}
         <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
-          <SectionHeading
-            title="Líneas de trabajo"
-            description="Cada línea es un ítem de servicio técnico."
-          />
+          <div className="flex items-center justify-between border-b pb-2">
+            <h2 className="text-base font-semibold">
+              Ítems{' '}
+              {fields.length > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  ({fields.length})
+                </span>
+              )}
+            </h2>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Agregar ítem
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 p-1">
+                {ITEM_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => appendItem(type)}
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-accent text-left"
+                  >
+                    <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                    {ITEM_TYPE_LABELS[type]}
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+          </div>
 
           {errors.items && !Array.isArray(errors.items) && (
             <p className="text-sm text-destructive">{errors.items.message}</p>
           )}
 
-          {fields.map((field, index) => {
-            const item = items[index];
-            const buildingId = item?.building_id ?? null;
-            const isOpen = openItemIndex === index;
-            const itemTypeLabel = ITEM_TYPE_LABELS[item?.item_type ?? 'maintain_equipment'];
+          <div className="flex flex-col gap-3" data-testid="technical-order-items">
+            {fields.map((field, index) => {
+              const item = items[index];
+              const buildingId = item?.building_id ?? null;
+              const isOpen = openItemIndex === index;
+              const itemTypeLabel = ITEM_TYPE_LABELS[item?.item_type ?? 'maintain_equipment'];
+              const building = buildings.find((b) => b.id === buildingId);
+              const itemErrors = errors.items?.[index];
+              const price = Number(item?.unit_price) || 0;
 
-            return (
-              <div
-                key={field.id}
-                className="flex flex-col gap-3 rounded-md border bg-muted/20"
-              >
-                {/* Collapsible header */}
-                <div className="flex items-center justify-between gap-2 p-3">
-                  <button
-                    type="button"
-                    onClick={() => setOpenItemIndex(isOpen ? null : index)}
-                    className="flex flex-1 items-center gap-3 text-left"
-                  >
-                    <span className="text-xs text-muted-foreground">
-                      {isOpen ? '▾' : '▸'}
-                    </span>
-                    <span className="text-xs font-medium text-muted-foreground shrink-0">
-                      Línea {index + 1}
-                    </span>
-                    {!isOpen && (
-                      <span className="truncate text-sm text-foreground">
-                        {itemTypeLabel}
+              return (
+                <div
+                  key={field.id}
+                  data-testid={`technical-order-item-${index}`}
+                  className="flex flex-col overflow-hidden rounded-md border bg-muted/20"
+                >
+                  {/* Header (always visible) */}
+                  <div className="flex items-center gap-3 p-3">
+                    <button
+                      type="button"
+                      onClick={() => setOpenItemIndex(isOpen ? null : index)}
+                      aria-label={
+                        isOpen
+                          ? `Colapsar ítem ${index + 1}`
+                          : `Expandir ítem ${index + 1}`
+                      }
+                      className="flex flex-1 min-w-0 items-center gap-3 text-left"
+                    >
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {isOpen ? '▾' : '▸'}
                       </span>
-                    )}
-                  </button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      remove(index);
-                      if (openItemIndex === index) setOpenItemIndex(null);
-                    }}
-                    className="h-6 px-2 text-xs text-destructive hover:text-destructive"
-                    aria-label={`Eliminar línea ${index + 1}`}
-                  >
-                    Eliminar
-                  </Button>
-                </div>
+                      <span className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-sm shrink-0">
+                          Ítem {index + 1}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 truncate max-w-[200px]">
+                          {itemTypeLabel}
+                        </span>
+                        {building && (
+                          <>
+                            <span className="text-xs text-muted-foreground">·</span>
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                              {building.name}
+                            </span>
+                          </>
+                        )}
+                        {price > 0 && (
+                          <>
+                            <span className="text-xs text-muted-foreground">·</span>
+                            <span className="text-xs font-medium tabular-nums">
+                              ${price.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 px-0 text-destructive hover:text-destructive"
+                      aria-label={`Eliminar ítem ${index + 1}`}
+                      onClick={() => {
+                        remove(index);
+                        if (openItemIndex === index) setOpenItemIndex(null);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-                {/* Item-level error summary — always visible even when collapsed */}
-                {!isOpen && (
-                  <>
-                    {errors.items?.[index]?.building_id && (
-                      <p className="px-3 pb-2 text-xs text-destructive">
-                        {errors.items[index]?.building_id?.message}
-                      </p>
-                    )}
-                    {errors.items?.[index]?.intended_assignee_staff_id && (
-                      <p className="px-3 pb-2 text-xs text-destructive">
-                        {errors.items[index]?.intended_assignee_staff_id?.message}
-                      </p>
-                    )}
-                    {errors.items?.[index]?.intended_equipment_id && (
-                      <p className="px-3 pb-2 text-xs text-destructive">
-                        {errors.items[index]?.intended_equipment_id?.message}
-                      </p>
-                    )}
-                    {errors.items?.[index]?.product_id && (
-                      <p className="px-3 pb-2 text-xs text-destructive">
-                        {errors.items[index]?.product_id?.message}
-                      </p>
-                    )}
-                  </>
-                )}
-
-                {isOpen && (
-                  <div className="flex flex-col gap-3 border-t px-4 pt-3 pb-4">
-                    {/* item_type — hidden, set when item is created via chip picker */}
-                    <input type="hidden" {...register(`items.${index}.item_type`)} />
-
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{itemTypeLabel}</Badge>
+                  {/* Error summary visible when collapsed */}
+                  {!isOpen && itemErrors && (
+                    <div className="px-3 pb-3 flex flex-col gap-1">
+                      {itemErrors.building_id && (
+                        <p className="text-xs text-destructive">
+                          {itemErrors.building_id.message}
+                        </p>
+                      )}
+                      {itemErrors.intended_assignee_staff_id && (
+                        <p className="text-xs text-destructive">
+                          {itemErrors.intended_assignee_staff_id.message}
+                        </p>
+                      )}
+                      {itemErrors.intended_equipment_id && (
+                        <p className="text-xs text-destructive">
+                          {itemErrors.intended_equipment_id.message}
+                        </p>
+                      )}
+                      {itemErrors.product_id && (
+                        <p className="text-xs text-destructive">
+                          {itemErrors.product_id.message}
+                        </p>
+                      )}
+                      {itemErrors.unit_price && (
+                        <p className="text-xs text-destructive">
+                          {itemErrors.unit_price.message}
+                        </p>
+                      )}
                     </div>
+                  )}
+
+                  {isOpen && (
+                    <div className="flex flex-col gap-3 border-t px-4 pt-3 pb-4 bg-card">
+                      {/* item_type — hidden, set when item is created via the "Agregar ítem" menu */}
+                      <input type="hidden" {...register(`items.${index}.item_type`)} />
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div className="flex flex-col gap-1">
@@ -584,25 +649,20 @@ export function TechnicalOrderForm({
                     </div>
                   </div>
                 )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
 
-          {/* Item type chip picker */}
-          <div className="flex flex-col gap-2">
-            <p className="text-xs text-muted-foreground">Agregar línea de trabajo:</p>
-            <div className="flex flex-wrap gap-2">
-              {ITEM_TYPES.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => appendItem(type)}
-                >
-                  <Badge variant="secondary" className="cursor-pointer">
-                    + {ITEM_TYPE_LABELS[type]}
-                  </Badge>
-                </button>
-              ))}
+            {/* Ghost slot: dashed placeholder that hints "there's room for
+                more". Visual only — the single entry point for adding items
+                is the "Agregar ítem" button in the section header. */}
+            <div
+              data-testid="technical-order-item-ghost"
+              className="rounded-md border-2 border-dashed border-border bg-muted/10 p-6 text-center text-sm text-muted-foreground"
+            >
+              {fields.length === 0
+                ? 'La orden todavía no tiene ítems. Agregá el primero desde “Agregar ítem”.'
+                : 'Hay lugar para más ítems.'}
             </div>
           </div>
         </section>

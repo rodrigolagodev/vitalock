@@ -150,7 +150,7 @@ describe('TechnicalOrderForm', () => {
       screen.getByRole('button', { name: /crear y confirmar orden/i }),
     ).toBeInTheDocument();
     expect(screen.getByText('Cliente')).toBeInTheDocument();
-    expect(screen.getByText('Líneas de trabajo')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /ítems/i })).toBeInTheDocument();
   });
 
   // T-14c-1b: edit mode renders correct submit label and pre-populates notes
@@ -174,7 +174,7 @@ describe('TechnicalOrderForm', () => {
       <TechnicalOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
       { wrapper: makeWrapper() },
     );
-    expect(screen.getByText('Línea 1')).toBeInTheDocument();
+    expect(screen.getByText('Ítem 1')).toBeInTheDocument();
   });
 
   // T-14c-1d: validation blocks submit when no items
@@ -194,18 +194,21 @@ describe('TechnicalOrderForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // T-14c-1e: adding an item works via item_type chip picker
-  it('adds an item card when an item-type chip is clicked', async () => {
+  // T-14c-1e: adding an item works via the "Agregar ítem" popover menu
+  it('adds an item card when a type is picked from the Agregar ítem menu', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<TechnicalOrderForm mode="create" onSubmit={onSubmit} />, {
       wrapper: makeWrapper(),
     });
 
-    expect(screen.queryByText('Línea 1')).not.toBeInTheDocument();
-    const maintenanceChip = screen.getByRole('button', { name: /mantenimiento/i });
-    await user.click(maintenanceChip);
-    expect(screen.getByText('Línea 1')).toBeInTheDocument();
+    expect(screen.queryByText('Ítem 1')).not.toBeInTheDocument();
+    // Open the popover, then click Mantenimiento
+    await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
+    await user.click(
+      await screen.findByRole('button', { name: /mantenimiento/i }),
+    );
+    expect(screen.getByText('Ítem 1')).toBeInTheDocument();
   });
 
   // T-14c-1f: removing an item works
@@ -217,10 +220,10 @@ describe('TechnicalOrderForm', () => {
       { wrapper: makeWrapper() },
     );
 
-    expect(screen.getByText('Línea 1')).toBeInTheDocument();
-    const removeBtn = screen.getByRole('button', { name: /eliminar línea 1/i });
+    expect(screen.getByText('Ítem 1')).toBeInTheDocument();
+    const removeBtn = screen.getByRole('button', { name: /eliminar ítem 1/i });
     await user.click(removeBtn);
-    expect(screen.queryByText('Línea 1')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ítem 1')).not.toBeInTheDocument();
   });
 
   // T-14c-1g: validation requires administration_id when client_type=administration
@@ -233,8 +236,10 @@ describe('TechnicalOrderForm', () => {
     });
 
     // Add one item so items validation passes
-    const maintenanceChip = screen.getByRole('button', { name: /mantenimiento/i });
-    await user.click(maintenanceChip);
+    await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
+    await user.click(
+      await screen.findByRole('button', { name: /mantenimiento/i }),
+    );
 
     const submitBtn = screen.getByRole('button', { name: /crear y confirmar orden/i });
     await user.click(submitBtn);
@@ -270,8 +275,11 @@ describe('TechnicalOrderForm', () => {
       { wrapper: makeWrapper() },
     );
 
-    // Add a maintenance item — auto-expands
-    await user.click(screen.getByRole('button', { name: /mantenimiento/i }));
+    // Add a maintenance item via the popover menu — auto-expands
+    await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
+    await user.click(
+      await screen.findByRole('button', { name: /mantenimiento/i }),
+    );
 
     // Submit without filling building_id
     await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
