@@ -682,8 +682,8 @@ export function KeyOrderForm({
           />
         </section>
 
-        {/* ---- Sticky action bar ---- */}
-        <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t p-4 flex items-center justify-end gap-3">
+        {/* ---- Sticky action bar (pinned to bottom of the scrolling main area) ---- */}
+        <div className="sticky bottom-0 -mx-6 px-6 z-40 bg-background/95 backdrop-blur border-t p-4 flex items-center justify-end gap-3">
           {onCancel && (
             <Button
               type="button"
