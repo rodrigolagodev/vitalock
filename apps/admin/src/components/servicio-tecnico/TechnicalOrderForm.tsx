@@ -300,7 +300,7 @@ export function TechnicalOrderForm({
     <>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-8"
+        className="flex flex-1 flex-col gap-8"
         id="technical-order-form"
       >
         {/* ---- Section: Cliente ---- */}
@@ -674,7 +674,7 @@ export function TechnicalOrderForm({
         </section>
 
         {/* ---- Sticky action bar ---- */}
-        <div className="sticky bottom-0 -mx-6 px-6 z-40 bg-background/95 backdrop-blur border-t p-4 flex items-center justify-end gap-3">
+        <div className="mt-auto sticky bottom-0 -mx-6 px-6 z-40 bg-background/95 backdrop-blur border-t p-4 flex items-center justify-end gap-3">
           {onCancel && (
             <Button
               type="button"
