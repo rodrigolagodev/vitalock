@@ -10,7 +10,9 @@ import { ParticularSelector } from '@/components/particulares/ParticularSelector
 import { ParticularFormSheet } from '@/components/particulares/ParticularFormSheet';
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
+import { AdministrationCombobox } from '@/components/administrations/AdministrationCombobox';
 import { Badge } from '@vitalock/ui';
+import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
@@ -311,27 +313,29 @@ export function TechnicalOrderForm({
               control={control}
               name="client_type"
               render={({ field }) => (
-                <div className="flex flex-wrap items-center gap-2">
+                <RadioGroup
+                  value={field.value}
+                  onValueChange={(v) =>
+                    field.onChange(v as 'administration' | 'particular')
+                  }
+                  aria-label="Tipo de cliente"
+                  className="grid w-full grid-cols-2"
+                >
                   {(
                     [
                       { value: 'administration', label: 'Administración' },
                       { value: 'particular', label: 'Particular' },
                     ] as const
                   ).map((opt) => (
-                    <button
+                    <RadioGroupItem
                       key={opt.value}
-                      type="button"
-                      onClick={() => field.onChange(opt.value)}
+                      value={opt.value}
+                      className="text-center"
                     >
-                      <Badge
-                        variant={field.value === opt.value ? 'default' : 'secondary'}
-                        className="cursor-pointer"
-                      >
-                        {opt.label}
-                      </Badge>
-                    </button>
+                      {opt.label}
+                    </RadioGroupItem>
                   ))}
-                </div>
+                </RadioGroup>
               )}
             />
           </div>
@@ -343,21 +347,13 @@ export function TechnicalOrderForm({
                 control={control}
                 name="administration_id"
                 render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(v) => field.onChange(v || null)}
-                  >
-                    <SelectTrigger id="administration_id">
-                      <SelectValue placeholder="Seleccioná una administración" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {administrations.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.company_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <AdministrationCombobox
+                    id="administration_id"
+                    administrations={administrations}
+                    value={field.value ?? null}
+                    onChange={(v) => field.onChange(v || null)}
+                    placeholder="Buscar por razón social o CUIT/CUIL"
+                  />
                 )}
               />
               {errors.administration_id && (
@@ -442,7 +438,7 @@ export function TechnicalOrderForm({
                 <div
                   key={field.id}
                   data-testid={`technical-order-item-${index}`}
-                  className="flex flex-col overflow-hidden rounded-md border bg-muted/20"
+                  className="flex flex-col rounded-md border bg-muted/20"
                 >
                   {/* Header (always visible) */}
                   <div className="flex items-center gap-3 p-3">

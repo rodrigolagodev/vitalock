@@ -415,7 +415,7 @@ export function KeyOrderForm({
                   <div
                     key={field.id}
                     data-testid={`key-order-item-${index}`}
-                    className="flex flex-col overflow-hidden rounded-md border bg-muted/20"
+                    className="flex flex-col rounded-md border bg-muted/20"
                   >
                     {/* Header (always visible) */}
                     <div className="flex items-center gap-3 p-3">
