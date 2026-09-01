@@ -350,6 +350,52 @@ export function KeyOrderForm({
       : {},
   );
 
+  // Outer submit intercept: if the user filled the "Nuevo ítem" draft but forgot
+  // to click "Agregar item", append it first (validating the draft), then submit
+  // the order. Prevents the confusing "Agregá al menos un ítem" error when the
+  // draft is visibly filled.
+  const submitOrder = handleSubmit(onSubmit);
+  const handleOuterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (draftForm.formState.isDirty) {
+      const appended = await new Promise<boolean>((resolve) => {
+        void draftForm.handleSubmit(
+          (values) => {
+            const nextItem = {
+              item_type: 'key' as const,
+              description: '',
+              quantity: values.quantity,
+              unit_price: values.unit_price,
+              building_id: values.building_id,
+              unit_id: values.unit_id,
+              pickup_particular_id:
+                draftParticular?.id ?? values.pickup_particular_id ?? null,
+              product_id: values.product_id,
+            };
+            append(nextItem as unknown as KeyOrderFormValues['items'][number]);
+            setPickupParticulars((prev) => ({
+              ...prev,
+              [items.length]: draftParticular,
+            }));
+            draftForm.reset({
+              product_id: values.product_id,
+              quantity: 1,
+              unit_price: null,
+              building_id: values.building_id,
+              unit_id: null,
+              pickup_particular_id: null,
+            });
+            setDraftParticular(null);
+            resolve(true);
+          },
+          () => resolve(false),
+        )();
+      });
+      if (!appended) return;
+    }
+    await submitOrder(e);
+  };
+
   const handleParticularChange = (p: ParticularRow | null) => {
     setParticular(p);
     setValue('particular_id', p?.id ?? null);
@@ -379,7 +425,7 @@ export function KeyOrderForm({
   return (
     <>
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleOuterSubmit}
         className="flex flex-col gap-8"
         id="key-order-form"
       >
@@ -786,12 +832,16 @@ function KeyItemUnitField({
           <Select
             value={value ?? ''}
             onValueChange={(v) => onChange(v || null)}
-            disabled={!buildingId}
+            disabled={!buildingId || units.length === 0}
           >
             <SelectTrigger id="draft-unit-id" aria-label="Unidad de la llave">
               <SelectValue
                 placeholder={
-                  buildingId ? 'Seleccioná una unidad' : 'Primero elegí edificio'
+                  !buildingId
+                    ? 'Primero elegí edificio'
+                    : units.length === 0
+                      ? 'Sin unidades — creá una con +'
+                      : 'Seleccioná una unidad'
                 }
               />
             </SelectTrigger>
