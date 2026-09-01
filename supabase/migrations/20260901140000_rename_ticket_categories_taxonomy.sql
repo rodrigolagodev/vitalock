@@ -53,7 +53,10 @@ END $$;
 -- Step 2: Disable triggers to bypass immutability guard during data rename
 -- ============================================================================
 
-ALTER TABLE support.tickets DISABLE TRIGGER ALL;
+-- Targeted disable: only the immutability guard needs bypass. Using
+-- DISABLE TRIGGER ALL would attempt to disable FK constraint triggers
+-- (RI_ConstraintTrigger_*) which are system-owned and reject the disable.
+ALTER TABLE support.tickets DISABLE TRIGGER tickets_validate;
 
 -- ============================================================================
 -- Step 3: Rename all 5 live category values to new names
@@ -77,7 +80,7 @@ UPDATE support.tickets
 -- Step 4: Re-enable triggers (restores immutability guard)
 -- ============================================================================
 
-ALTER TABLE support.tickets ENABLE TRIGGER ALL;
+ALTER TABLE support.tickets ENABLE TRIGGER tickets_validate;
 
 -- ============================================================================
 -- Step 5: Guard assertion — no row with old category values remains
