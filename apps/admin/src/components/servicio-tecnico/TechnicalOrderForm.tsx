@@ -32,10 +32,9 @@ import type { TechnicalOrderDetailRow } from '@/hooks/useTechnicalOrder';
 // ---- Zod schema ----
 
 const ITEM_TYPES = [
-  'equipment',
-  'maintenance',
-  'installation',
-  'equipment_replacement',
+  'install_equipment',
+  'replace_equipment',
+  'maintain_equipment',
 ] as const;
 
 type TechnicalItemType = (typeof ITEM_TYPES)[number];
@@ -103,9 +102,9 @@ const schema = baseSchema.superRefine((data, ctx) => {
         path: ['items', i, 'intended_assignee_staff_id'],
       });
     }
-    // equipment is required for maintenance and equipment_replacement (spec §2.7)
+    // equipment is required for maintain_equipment and replace_equipment (spec §2.7)
     if (
-      (item.item_type === 'maintenance' || item.item_type === 'equipment_replacement') &&
+      (item.item_type === 'maintain_equipment' || item.item_type === 'replace_equipment') &&
       !item.intended_equipment_id
     ) {
       ctx.addIssue({
@@ -114,19 +113,18 @@ const schema = baseSchema.superRefine((data, ctx) => {
         path: ['items', i, 'intended_equipment_id'],
       });
     }
-    // product_id (from stock) is required for equipment, equipment_replacement,
-    // and installation. For installation, this reserves the unit that will be
+    // product_id (from stock) is required for install_equipment and replace_equipment.
+    // For install_equipment, this reserves the unit that will be
     // physically installed (the installer serializes it at resolve time).
     if (
-      (item.item_type === 'equipment' ||
-        item.item_type === 'equipment_replacement' ||
-        item.item_type === 'installation') &&
+      (item.item_type === 'install_equipment' ||
+        item.item_type === 'replace_equipment') &&
       !item.product_id
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          item.item_type === 'equipment_replacement'
+          item.item_type === 'replace_equipment'
             ? 'Elegí un equipo del stock para el reemplazo'
             : 'Elegí un equipo del stock',
         path: ['items', i, 'product_id'],
@@ -191,10 +189,9 @@ function buildInitialValues(order: TechnicalOrderDetailRow): TechnicalOrderFormV
 // ---- Item type labels ----
 
 const ITEM_TYPE_LABELS: Record<TechnicalItemType, string> = {
-  equipment: 'Trabajo general',
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  equipment_replacement: 'Reemplazo de equipo',
+  install_equipment: 'Instalación de equipo',
+  replace_equipment: 'Reemplazo de equipo',
+  maintain_equipment: 'Mantenimiento',
 };
 
 export function TechnicalOrderForm({
@@ -385,7 +382,7 @@ export function TechnicalOrderForm({
             const item = items[index];
             const buildingId = item?.building_id ?? null;
             const isOpen = openItemIndex === index;
-            const itemTypeLabel = ITEM_TYPE_LABELS[item?.item_type ?? 'equipment'];
+            const itemTypeLabel = ITEM_TYPE_LABELS[item?.item_type ?? 'maintain_equipment'];
 
             return (
               <div
@@ -535,10 +532,10 @@ export function TechnicalOrderForm({
                       )}
                     </div>
 
-                    {/* Intended equipment — required for maintenance/equipment_replacement; optional for others */}
+                    {/* Intended equipment — required for maintain_equipment/replace_equipment; optional for others */}
                     <TechnicalItemEquipmentField
                       index={index}
-                      itemType={item?.item_type ?? 'equipment'}
+                      itemType={item?.item_type ?? 'maintain_equipment'}
                       buildingId={buildingId}
                       control={control}
                       errors={errors}
@@ -669,12 +666,11 @@ function TechnicalItemEquipmentField({
   // resolving the ticket; here we only reserve a unit of the product.
   const { data: stockProducts = [] } = useProducts({ category: 'equipment' });
 
-  const isReplacement = itemType === 'equipment_replacement';
-  const isEquipmentWork = itemType === 'equipment';
-  const isInstallationWork = itemType === 'installation';
+  const isReplacement = itemType === 'replace_equipment';
+  const isInstallationWork = itemType === 'install_equipment';
   const showTargetEquipment =
-    itemType === 'maintenance' || itemType === 'equipment_replacement';
-  const showStockProduct = isEquipmentWork || isReplacement || isInstallationWork;
+    itemType === 'maintain_equipment' || itemType === 'replace_equipment';
+  const showStockProduct = isReplacement || isInstallationWork;
 
   const targetLabel = isReplacement
     ? 'Equipo actual (a reemplazar) *'
@@ -682,9 +678,7 @@ function TechnicalItemEquipmentField({
 
   const stockLabel = isReplacement
     ? 'Equipo de reemplazo (del stock) *'
-    : isInstallationWork
-      ? 'SKU del equipo a instalar (del stock) *'
-      : 'Equipo a instalar (del stock) *';
+    : 'SKU del equipo a instalar (del stock) *';
 
   return (
     <div className="flex flex-col gap-3">

@@ -23,25 +23,21 @@ import type { TareaRow } from '@/hooks/useTareas';
 // is bypassed for these; ConfigureEquipmentPanel captures the serial and
 // resolve_ticket handles the finalize.
 const CATEGORIES_TWO_STEP_CONFIGURE = new Set<TareaRow['category']>([
-  'equipment_installation',
-  'equipment_replacement',
-  'installation',
+  'install_equipment',
+  'replace_equipment',
 ]);
 
-const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string> = {
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  key_configuration: 'Configuración de llave',
-  key_installation: 'Instalación de llave', // Retained for display of cancelled historical tickets.
-  equipment_installation: 'Instalación de equipo',
-  equipment_replacement: 'Cambio de equipo',
+const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
+  install_equipment: 'Instalación de equipo',
+  replace_equipment: 'Cambio de equipo',
+  update_equipment: 'Actualización de equipo',
+  maintain_equipment: 'Mantenimiento',
 };
 
 const CATEGORIES_REQUIRING_EQUIPMENT = new Set<TareaRow['category']>([
-  'maintenance',
-  'installation',
-  'equipment_installation',
-  'equipment_replacement',
+  'maintain_equipment',
+  'install_equipment',
+  'replace_equipment',
 ]);
 
 const ACCESS_TYPE_LABELS: Record<string, string> = {
@@ -54,13 +50,11 @@ const ACCESS_TYPE_LABELS: Record<string, string> = {
   otro: 'Otro',
 };
 
-const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'] | 'key_installation', string> = {
-  maintenance: 'Asignar equipo existente',
-  installation: 'Registrar equipo instalado',
-  key_configuration: '—',
-  key_installation: '—', // Retained for display of cancelled historical tickets.
-  equipment_installation: 'Registrar equipo instalado',
-  equipment_replacement: 'Reemplazar equipo',
+const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'], string> = {
+  maintain_equipment: 'Asignar equipo existente',
+  install_equipment: 'Registrar equipo instalado',
+  replace_equipment: 'Reemplazar equipo',
+  update_equipment: '—',
 };
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -153,14 +147,14 @@ export default function TareaDetailPage() {
       </div>
 
       {CATEGORIES_REQUIRING_EQUIPMENT.has(tarea.category) &&
-        // For 'installation' the equipment is created at resolve time — hide
+        // For 'install_equipment' the equipment is created at resolve time — hide
         // the section pre-resolve so the empty state doesn't sit above the
         // configure panel. Post-resolve (equipment != null) it shows normally.
-        (tarea.category !== 'installation' || tarea.equipment != null) && (
+        (tarea.category !== 'install_equipment' || tarea.equipment != null) && (
         <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
           <SectionHeading
             title={
-              tarea.category === 'equipment_replacement' ? 'Equipo actual' : 'Equipo'
+              tarea.category === 'replace_equipment' ? 'Equipo actual' : 'Equipo'
             }
             variant="secondary"
           >
@@ -203,7 +197,7 @@ export default function TareaDetailPage() {
           ) : (
             <EmptyState
               message={
-                tarea.category === 'equipment_installation'
+                tarea.category === 'install_equipment'
                   ? 'Todavía no hay equipo instalado. Cargá abajo el serie del equipo que se va a instalar.'
                   : 'Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.'
               }

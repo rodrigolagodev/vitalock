@@ -22,10 +22,9 @@ const ITEM_STATUS_TONES: Record<string, StatusTone> = {
 
 // item_type domain for technical_order_items (spec #220).
 const ITEM_TYPE_LABELS: Record<string, string> = {
-  equipment: 'Trabajo general',
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  equipment_replacement: 'Reemplazo de equipo',
+  install_equipment: 'Instalación de equipo',
+  replace_equipment: 'Reemplazo de equipo',
+  maintain_equipment: 'Mantenimiento',
 };
 
 interface TechnicalOrderItemsTableProps {
@@ -100,7 +99,7 @@ export function TechnicalOrderItemsTable({
               ? productMap?.get(item.product_id)?.name ?? item.product_id
               : null;
 
-            if (item.item_type === 'equipment_replacement') {
+            if (item.item_type === 'replace_equipment') {
               return (
                 <div className="flex flex-col">
                   <span>Actual: {current}</span>
@@ -108,7 +107,7 @@ export function TechnicalOrderItemsTable({
                 </div>
               );
             }
-            if (item.item_type === 'equipment') {
+            if (item.item_type === 'install_equipment') {
               return productName ?? '—';
             }
             return current;

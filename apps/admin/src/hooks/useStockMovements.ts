@@ -22,7 +22,7 @@ export function useStockMovements(productId: string | undefined) {
       const { data, error } = await supabase
         .from('stock_movements')
         .select(
-          'id, product_id, type, quantity, unit_cost, note, order_id, order_item_id, ticket_id, staff_id, created_by, created_at',
+          'id, product_id, type, quantity, unit_cost, note, order_id, order_item_id, order_kind, ticket_id, staff_id, created_by, created_at',
         )
         .eq('product_id', productId)
         .order('created_at', { ascending: false });

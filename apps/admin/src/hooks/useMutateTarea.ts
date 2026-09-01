@@ -6,11 +6,7 @@ import { toastMutationError } from '@/lib/errors/toast';
 export interface CreateTareaInput {
   administration_id: string;
   building_id: string;
-  category:
-    | 'maintenance'
-    | 'installation'
-    | 'key_configuration'
-    | 'equipment_installation';
+  category: 'maintain_equipment';
   description: string;
   unit_id?: string | null;
   equipment_id?: string | null;
@@ -29,20 +25,16 @@ export interface UpdateTareaInput {
 }
 
 export const categoryLabels: Record<
-  | 'maintenance'
-  | 'installation'
-  | 'key_configuration'
-  | 'equipment_installation'
-  | 'equipment_replacement'
-  | 'equipment_update',
+  | 'install_equipment'
+  | 'replace_equipment'
+  | 'update_equipment'
+  | 'maintain_equipment',
   string
 > = {
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  key_configuration: 'Configuración de llave',
-  equipment_installation: 'Instalación de equipo',
-  equipment_replacement: 'Cambio de equipo',
-  equipment_update: 'Actualización de equipo',
+  install_equipment: 'Instalación de equipo',
+  replace_equipment: 'Cambio de equipo',
+  update_equipment: 'Actualización de equipo',
+  maintain_equipment: 'Mantenimiento',
 };
 
 export function useMutateTarea() {
@@ -54,12 +46,6 @@ export function useMutateTarea() {
 
   const createTarea = useMutation({
     mutationFn: async (input: CreateTareaInput) => {
-      if ((input.category as string) === 'equipment_update') {
-        throw new Error(
-          'equipment_update tickets must be created through the EquipmentUpdateFormSheet flow.',
-        );
-      }
-
       const { data, error } = await supabase
         .schema('support')
         .from('tickets')

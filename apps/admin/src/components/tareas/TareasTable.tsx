@@ -11,13 +11,11 @@ interface TareasTableProps {
   onEdit?: (tarea: TareaRow) => void;
 }
 
-const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string> = {
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  key_configuration: 'Configuración de llave',
-  key_installation: 'Instalación de llave', // Retained for display of cancelled historical tickets.
-  equipment_installation: 'Instalación de equipo',
-  equipment_replacement: 'Cambio de equipo',
+const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
+  install_equipment: 'Instalación de equipo',
+  replace_equipment: 'Cambio de equipo',
+  update_equipment: 'Actualización de equipo',
+  maintain_equipment: 'Mantenimiento',
 };
 
 export function TareasTable({

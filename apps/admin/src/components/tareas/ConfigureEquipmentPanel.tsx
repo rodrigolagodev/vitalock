@@ -16,19 +16,16 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-const CATEGORY_HEADINGS: Record<'equipment_installation' | 'equipment_replacement' | 'installation', string> = {
-  equipment_installation: 'Equipo a instalar',
-  equipment_replacement: 'Equipo de reemplazo',
-  installation: 'Configurar equipo a instalar',
+const CATEGORY_HEADINGS: Record<'install_equipment' | 'replace_equipment', string> = {
+  install_equipment: 'Configurar equipo a instalar',
+  replace_equipment: 'Equipo de reemplazo',
 };
 
-const EMPTY_HELP: Record<'equipment_installation' | 'equipment_replacement' | 'installation', string> = {
-  equipment_installation:
+const EMPTY_HELP: Record<'install_equipment' | 'replace_equipment', string> = {
+  install_equipment:
     'Cargá el número de serie del equipo que se va a instalar. La tarea pasa a "En curso" y queda lista para finalizar.',
-  equipment_replacement:
+  replace_equipment:
     'Cargá el número de serie del equipo nuevo que reemplaza al actual. La tarea pasa a "En curso" y queda lista para finalizar.',
-  installation:
-    'Cargá el número de serie del equipo a instalar. La tarea pasa a "En curso" y queda lista para finalizar.',
 };
 
 /**
@@ -38,7 +35,7 @@ const EMPTY_HELP: Record<'equipment_installation' | 'equipment_replacement' | 'i
  * resolve_ticket. Hidden once the ticket is resolved/cancelled.
  */
 export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps) {
-  const category = tarea.category as 'equipment_installation' | 'equipment_replacement' | 'installation';
+  const category = tarea.category as 'install_equipment' | 'replace_equipment';
   const heading = CATEGORY_HEADINGS[category];
   const help = EMPTY_HELP[category];
 

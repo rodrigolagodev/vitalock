@@ -45,7 +45,7 @@ vi.mock('@/components/servicio-tecnico/TechnicalOrderForm', () => ({
             notes: '',
             items: [
               {
-                item_type: 'maintenance',
+                item_type: 'maintain_equipment',
                 quantity: 1,
                 description: '',
                 building_id: 'bld-1',

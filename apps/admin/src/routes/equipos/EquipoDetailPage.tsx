@@ -15,10 +15,9 @@ import { EquipmentKeySnapshotPanel } from '@/components/equipment/EquipmentKeySn
 import { EquipmentUpdateHistoryPanel } from '@/components/equipment/EquipmentUpdateHistoryPanel';
 
 const ITEM_TYPE_LABEL: Record<string, string> = {
-  equipment: 'Equipo',
-  installation: 'Instalación',
-  maintenance: 'Mantenimiento',
-  equipment_replacement: 'Reemplazo',
+  install_equipment: 'Instalación',
+  replace_equipment: 'Reemplazo',
+  maintain_equipment: 'Mantenimiento',
 };
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {

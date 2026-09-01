@@ -18,10 +18,9 @@ export interface TechnicalOrderPayload {
 }
 
 export type TechnicalOrderItemType =
-  | 'equipment'
-  | 'maintenance'
-  | 'installation'
-  | 'equipment_replacement';
+  | 'install_equipment'
+  | 'replace_equipment'
+  | 'maintain_equipment';
 
 export interface TechnicalOrderItemPayload {
   item_type: TechnicalOrderItemType;

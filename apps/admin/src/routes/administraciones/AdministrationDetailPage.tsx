@@ -96,22 +96,23 @@ export default function AdministrationDetailPage() {
         title={administration.company_name}
         subtitle={subtitle}
         breadcrumbs={[{ label: 'Administraciones', to: '/administraciones' }]}
+        titleAdornment={
+          <StatusBadge tone={administrationStatusTone(administration.status)}>
+            {administrationStatusLabel(administration.status)}
+          </StatusBadge>
+        }
       >
-        <StatusBadge tone={administrationStatusTone(administration.status)}>
-          {administrationStatusLabel(administration.status)}
-        </StatusBadge>
-        <Button variant="outline" size="sm" onClick={() => setEditSheetOpen(true)}>
+        <Button variant="outline" onClick={() => setEditSheetOpen(true)}>
           Editar
+        </Button>
+        <Button onClick={() => setBuildingSheetOpen(true)}>
+          Nuevo edificio
         </Button>
       </PageHeader>
 
       {/* Buildings section */}
       <div className="flex flex-col gap-4">
-        <SectionHeading title="Edificios" variant="secondary">
-          <Button size="sm" onClick={() => setBuildingSheetOpen(true)}>
-            Nuevo edificio
-          </Button>
-        </SectionHeading>
+        <SectionHeading title="Edificios" variant="secondary" />
         <SearchInput
           placeholder="Buscar edificios por nombre o dirección..."
           value={buildingSearch}

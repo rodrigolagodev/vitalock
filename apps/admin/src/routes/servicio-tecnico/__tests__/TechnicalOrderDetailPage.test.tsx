@@ -64,7 +64,7 @@ function makeOrder(overrides: Partial<TechnicalOrderDetailRow> = {}): TechnicalO
       {
         id: 'item-1',
         order_id: 'to-1',
-        item_type: 'maintenance',
+        item_type: 'maintain_equipment',
         quantity: 1,
         description: 'Revision sistema',
         status: 'pending',

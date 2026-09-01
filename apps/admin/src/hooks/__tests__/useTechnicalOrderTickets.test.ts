@@ -36,7 +36,7 @@ const fakeTickets = [
   {
     id: 'tkt-1',
     ticket_number: 'TKT-001',
-    category: 'maintenance',
+    category: 'maintain_equipment',
     status: 'open',
     description: 'First ticket',
     technical_order_item_id: 'item-1',
@@ -48,7 +48,7 @@ const fakeTickets = [
   {
     id: 'tkt-2',
     ticket_number: 'TKT-002',
-    category: 'installation',
+    category: 'install_equipment',
     status: 'resolved',
     description: 'Second ticket',
     technical_order_item_id: 'item-2',

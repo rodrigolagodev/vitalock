@@ -33,7 +33,7 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     title: 'Reemplazar equipo',
     description: 'Reemplazar equipo',
     status: 'open',
-    category: 'equipment_replacement',
+    category: 'replace_equipment',
     opened_at: '2026-08-26T00:00:00Z',
     building: {
       id: 'b-1',
@@ -88,12 +88,12 @@ describe('ConfigureEquipmentInline — empty state', () => {
   });
 });
 
-// 5.3 RED — renders correct heading for category='installation'; no checkbox affordance shown
-describe('ConfigureEquipmentInline — installation category', () => {
+// 5.3 RED — renders correct heading for category='install_equipment'; no checkbox affordance shown
+describe('ConfigureEquipmentInline — install_equipment category', () => {
   it('renders heading for installation ticket', () => {
     render(
       <ConfigureEquipmentInline
-        ticket={makeTicket({ category: 'installation', title: 'Instalar equipo' })}
+        ticket={makeTicket({ category: 'install_equipment', title: 'Instalar equipo' })}
       />,
       { wrapper: makeWrapper() },
     );
@@ -105,7 +105,7 @@ describe('ConfigureEquipmentInline — installation category', () => {
     const user = userEvent.setup();
     render(
       <ConfigureEquipmentInline
-        ticket={makeTicket({ category: 'installation' })}
+        ticket={makeTicket({ category: 'install_equipment' })}
       />,
       { wrapper: makeWrapper() },
     );
@@ -120,7 +120,7 @@ describe('ConfigureEquipmentInline — installation category', () => {
   it('does not show a checkbox affordance for installation tickets', () => {
     render(
       <ConfigureEquipmentInline
-        ticket={makeTicket({ category: 'installation' })}
+        ticket={makeTicket({ category: 'install_equipment' })}
       />,
       { wrapper: makeWrapper() },
     );

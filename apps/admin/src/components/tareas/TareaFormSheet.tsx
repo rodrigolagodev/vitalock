@@ -33,7 +33,7 @@ const schema = z
     mode: z.enum(['create', 'edit']),
     administration_id: z.string().optional(),
     building_id: z.string().optional(),
-    category: z.enum(['maintenance', 'installation']).optional(),
+    category: z.literal('maintain_equipment').optional(),
     description: z.string().min(1, 'La descripción es obligatoria'),
     unit_id: z.string().optional().nullable(),
     equipment_id: z.string().optional().nullable(),
@@ -94,23 +94,17 @@ type FormValues = z.infer<typeof schema>;
 
 // ---- Labels ----
 
-const CATEGORY_LABELS: Record<TareaRow['category'] | 'key_installation', string> = {
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
-  key_configuration: 'Configuración de llave',
-  key_installation: 'Instalación de llave', // Retained for display of cancelled historical tickets.
-  equipment_installation: 'Instalación de equipo',
-  equipment_replacement: 'Cambio de equipo',
+const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
+  install_equipment: 'Instalación de equipo',
+  replace_equipment: 'Cambio de equipo',
+  update_equipment: 'Actualización de equipo',
+  maintain_equipment: 'Mantenimiento',
 };
 
-// System-created categories (key_configuration, equipment_installation) are
-// only produced by order/workflow triggers, never manually, so the create
-// dropdown stays limited to the manual categories.
-// key_installation is no longer a supported category (retired by
-// unify-work-tracking-model); historical cancelled rows remain visible.
+// Only maintain_equipment can be created standalone; install/replace/update
+// tickets require a technical order and are created via confirm_technical_order.
 const CREATE_CATEGORY_LABELS: Partial<Record<TareaRow['category'], string>> = {
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
+  maintain_equipment: 'Mantenimiento',
 };
 
 const STATUS_LABELS: Record<TareaRow['status'], string> = {
@@ -165,7 +159,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
           mode: 'create',
           administration_id: '',
           building_id: '',
-          category: 'maintenance',
+          category: 'maintain_equipment',
           description: '',
           unit_id: null,
           equipment_id: null,
@@ -204,7 +198,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
         mode: 'create',
         administration_id: '',
         building_id: '',
-        category: 'maintenance',
+        category: 'maintain_equipment',
         description: '',
         unit_id: null,
         equipment_id: null,
@@ -234,7 +228,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
         await createTarea.mutateAsync({
           administration_id: values.administration_id ?? '',
           building_id: values.building_id ?? '',
-          category: values.category ?? 'maintenance',
+          category: values.category ?? 'maintain_equipment',
           description: values.description,
           unit_id: values.unit_id ?? null,
           equipment_id: values.equipment_id ?? null,
@@ -429,7 +423,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
                 control={control}
                 name="category"
                 render={({ field }) => (
-                  <Select value={field.value ?? 'maintenance'} onValueChange={field.onChange}>
+                  <Select value={field.value ?? 'maintain_equipment'} onValueChange={field.onChange}>
                     <SelectTrigger id="category">
                       <SelectValue />
                     </SelectTrigger>

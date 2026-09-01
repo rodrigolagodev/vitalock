@@ -5,7 +5,7 @@ import { technicalOrderKey } from '@/lib/queryKeys';
 export interface TechnicalOrderItemRow {
   id: string;
   order_id: string;
-  item_type: 'equipment' | 'maintenance' | 'installation' | 'equipment_replacement';
+  item_type: 'install_equipment' | 'replace_equipment' | 'maintain_equipment';
   quantity: number;
   description: string | null;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';

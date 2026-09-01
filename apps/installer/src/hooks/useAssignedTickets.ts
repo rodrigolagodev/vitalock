@@ -25,7 +25,7 @@ export interface AssignedTicket {
   title: string;
   description: string | null;
   status: 'open' | 'in_progress';
-  category: 'maintenance' | 'installation' | 'equipment_installation' | 'equipment_replacement' | 'equipment_update' | string;
+  category: 'install_equipment' | 'replace_equipment' | 'update_equipment' | 'maintain_equipment' | string;
   opened_at: string;
   building: {
     id: string;
@@ -34,12 +34,12 @@ export interface AssignedTicket {
     city: string | null;
     administration: { id: string; company_name: string; address?: string | null };
   };
-  /** The equipment this ticket targets, when it has one (maintenance, replacement, etc.). */
+  /** The equipment this ticket targets, when it has one (maintain_equipment, replace_equipment, etc.). */
   equipment_id?: string | null;
-  /** Only present when category === 'equipment_update'. */
+  /** Only present when category === 'update_equipment'. */
   equipmentUpdateSnapshot?: EquipmentUpdateSnapshot | null;
   /**
-   * Two-step configure flow (equipment_installation, equipment_replacement).
+   * Two-step configure flow (install_equipment, replace_equipment).
    * pending_new_serial null while the installer/admin has not loaded the
    * serial yet; once set, the ticket is ready to be resolved via the standard
    * "Finalizar tarea" flow.
@@ -107,10 +107,10 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
   // stitching — they hydrate category-specific side data and cannot be
   // inlined into the same view without over-fetching for the common case.
 
-  // Batch-fetch equipment_update snapshots for equipment_update tickets.
+  // Batch-fetch update_equipment snapshots for update_equipment tickets.
   // RLS ensures the installer can only see snapshots for their own assigned tickets.
   const equipmentUpdateTicketIds = rows
-    .filter((r) => r.category === 'equipment_update')
+    .filter((r) => r.category === 'update_equipment')
     .map((r) => r.id);
 
   const snapshotMap = new Map<string, EquipmentUpdateSnapshot>();
@@ -207,7 +207,7 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
           administration: { id: '', company_name: '', address: null },
         },
     equipment_id: r.equipment_id,
-    equipmentUpdateSnapshot: r.category === 'equipment_update'
+    equipmentUpdateSnapshot: r.category === 'update_equipment'
       ? (snapshotMap.get(r.id) ?? null)
       : undefined,
     pending_new_serial: r.pending_new_serial,

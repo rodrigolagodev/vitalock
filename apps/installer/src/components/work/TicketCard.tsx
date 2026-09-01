@@ -26,9 +26,8 @@ const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> =
 };
 
 const TWO_STEP_CATEGORIES: readonly string[] = [
-  'equipment_installation',
-  'equipment_replacement',
-  'installation',
+  'install_equipment',
+  'replace_equipment',
 ];
 
 export function TicketCard({ ticket, selected, onToggle }: TicketCardProps) {

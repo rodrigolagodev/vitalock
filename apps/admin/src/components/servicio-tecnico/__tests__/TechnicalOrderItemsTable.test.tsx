@@ -37,7 +37,7 @@ function makeItem(overrides: Partial<TechnicalOrderItemRow> = {}): TechnicalOrde
   return {
     id: 'item-1',
     order_id: 'to-1',
-    item_type: 'maintenance',
+    item_type: 'maintain_equipment',
     quantity: 1,
     description: 'Revision de sistema',
     status: 'pending',
@@ -81,7 +81,7 @@ describe('TechnicalOrderItemsTable — row rendering', () => {
 describe('TechnicalOrderItemsTable — item_type badge', () => {
   it('renders badge for maintenance item type', () => {
     render(
-      <TechnicalOrderItemsTable items={[makeItem({ item_type: 'maintenance' })]} />,
+      <TechnicalOrderItemsTable items={[makeItem({ item_type: 'maintain_equipment' })]} />,
       { wrapper: makeWrapper() },
     );
     expect(screen.getByText(/mantenimiento/i)).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('TechnicalOrderItemsTable — item_type badge', () => {
 
   it('renders badge for installation item type', () => {
     render(
-      <TechnicalOrderItemsTable items={[makeItem({ item_type: 'installation' })]} />,
+      <TechnicalOrderItemsTable items={[makeItem({ item_type: 'install_equipment' })]} />,
       { wrapper: makeWrapper() },
     );
     expect(screen.getByText(/instalación/i)).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe('TechnicalOrderItemsTable — item_type badge', () => {
 
   it('renders badge for equipment_replacement item type', () => {
     render(
-      <TechnicalOrderItemsTable items={[makeItem({ item_type: 'equipment_replacement' })]} />,
+      <TechnicalOrderItemsTable items={[makeItem({ item_type: 'replace_equipment' })]} />,
       { wrapper: makeWrapper() },
     );
     expect(screen.getByText('Reemplazo de equipo')).toBeInTheDocument();

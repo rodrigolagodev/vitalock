@@ -16,7 +16,7 @@ function makeTicket(id: string, overrides: Partial<AssignedTicket> = {}): Assign
     title: `Tarea ${id}`,
     description: `Tarea ${id}`,
     status: 'open',
-    category: 'equipment_update',
+    category: 'update_equipment',
     opened_at: '2026-08-20T10:00:00Z',
     building: {
       id: 'b1',

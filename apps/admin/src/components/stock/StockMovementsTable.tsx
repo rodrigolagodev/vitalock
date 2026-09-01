@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { DataTable } from '@vitalock/ui';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import type { MovementType, StockMovementRow } from '@/types/stock';
@@ -24,10 +25,49 @@ function formatQuantity(qty: number): string {
   return qty > 0 ? `+${qty}` : String(qty);
 }
 
-function formatReference(row: StockMovementRow): string {
-  if (row.ticket_number) return row.ticket_number;
-  if (row.order_id) return `Orden ${row.order_id.slice(0, 8)}…`;
-  return '—';
+const REFERENCE_LINK_CLASS = 'text-primary underline-offset-2 hover:underline';
+
+/**
+ * Renders the "Referencia" cell as a navigation link so someone tracing a case
+ * can jump from a movement straight to the linked ticket (tarea) or order.
+ * Order routes are disambiguated by `order_kind` ('key' -> key orders,
+ * 'technical' -> technical orders). When the linkage target cannot be resolved
+ * (no id, or order_kind unknown), the plain label is kept as text.
+ */
+function ReferenceCell({ row }: { row: StockMovementRow }) {
+  if (row.ticket_id) {
+    return (
+      <Link to={`/tareas/${row.ticket_id}`} className={REFERENCE_LINK_CLASS}>
+        {row.ticket_number ?? row.ticket_id.slice(0, 8)}
+      </Link>
+    );
+  }
+  // A ticket number can exist historically even when the ticket id is missing.
+  if (row.ticket_number) {
+    return <span>{row.ticket_number}</span>;
+  }
+
+  if (row.order_id) {
+    const label = `Orden ${row.order_id.slice(0, 8)}…`;
+    if (row.order_kind === 'key') {
+      return (
+        <Link to={`/llaves/${row.order_id}`} className={REFERENCE_LINK_CLASS}>
+          {label}
+        </Link>
+      );
+    }
+    if (row.order_kind === 'technical') {
+      return (
+        <Link to={`/servicio-tecnico/${row.order_id}`} className={REFERENCE_LINK_CLASS}>
+          {label}
+        </Link>
+      );
+    }
+    // Order kind unavailable — cannot resolve the detail route.
+    return <span>{label}</span>;
+  }
+
+  return <span>—</span>;
 }
 
 export function StockMovementsTable({
@@ -78,7 +118,7 @@ export function StockMovementsTable({
         {
           header: 'Referencia',
           className: 'text-muted-foreground',
-          cell: (m) => formatReference(m),
+          cell: (m) => <ReferenceCell row={m} />,
         },
         {
           header: 'Notas',

@@ -29,7 +29,7 @@ vi.mock('@/lib/supabase', () => {
       id: 'ticket-1',
       description: 'Cambio de cerradura',
       status: 'open',
-      category: 'maintenance',
+      category: 'maintain_equipment',
       opened_at: '2026-08-09T09:00:00Z',
       building_id: 'bld-1',
       building_name: 'Torre Callao',

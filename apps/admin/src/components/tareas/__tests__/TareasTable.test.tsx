@@ -14,7 +14,7 @@ import { TareasTable } from '../TareasTable';
 const tareaAbierta: TareaRow = {
   id: 't-1',
   ticket_number: 'T-0001',
-  category: 'key_configuration',
+  category: 'maintain_equipment',
   description: 'Cambiar cilindro de la puerta principal',
   status: 'open',
   building_id: 'b-1',
@@ -38,7 +38,7 @@ const tareaAbierta: TareaRow = {
 const tareaSinDatos: TareaRow = {
   id: 't-2',
   ticket_number: 'T-0002',
-  category: 'maintenance',
+  category: 'maintain_equipment',
   description: 'Revisar portero eléctrico',
   status: 'cancelled',
   building_id: 'b-2',
@@ -96,7 +96,7 @@ describe('TareasTable', () => {
     expect(screen.getByText('Torre Norte')).toBeInTheDocument();
     expect(screen.getByText('Admin García S.A.')).toBeInTheDocument();
     expect(screen.getByText('Ana Gómez')).toBeInTheDocument();
-    expect(screen.getByText('Configuración de llave')).toBeInTheDocument();
+    expect(screen.getAllByText('Mantenimiento').length).toBeGreaterThanOrEqual(1);
     const cells = screen.getAllByRole('cell').map((cell) => cell.textContent);
     expect(cells).toContain('Pendiente');
     expect(cells).toContain('Cancelada');

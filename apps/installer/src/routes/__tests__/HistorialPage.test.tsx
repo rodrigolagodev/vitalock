@@ -18,7 +18,7 @@ function makeHistorical(
     id,
     title: `Tarea ${id}`,
     status: 'resolved',
-    category: 'maintenance',
+    category: 'maintain_equipment',
     opened_at: '2026-08-20T10:00:00Z',
     closed_at: '2026-08-25T15:00:00Z',
     resolution_notes: null,

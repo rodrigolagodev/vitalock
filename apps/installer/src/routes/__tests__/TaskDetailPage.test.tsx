@@ -136,7 +136,7 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     title: 'Actualización SN-001',
     description: 'Actualización SN-001',
     status: 'open',
-    category: 'equipment_update',
+    category: 'update_equipment',
     opened_at: '2026-08-17T00:00:00Z',
     building: {
       id: 'bld-001',
@@ -273,12 +273,12 @@ describe('TaskDetailPage', () => {
     expect(screen.getByText(/No se encontró la tarea/)).toBeInTheDocument();
   });
 
-  describe('equipment_installation category', () => {
+  describe('install_equipment category', () => {
     it('shows configure equipment inline and Finalizar tarea button', () => {
       mockUseAssignedTickets.mockReturnValue({
         data: [
           makeTicket({
-            category: 'equipment_installation',
+            category: 'install_equipment',
             title: 'Instalación SN-002',
             equipment_id: 'equip-new-001',
             pending_new_serial: null,
@@ -297,12 +297,12 @@ describe('TaskDetailPage', () => {
     });
   });
 
-  describe('equipment_replacement category', () => {
+  describe('replace_equipment category', () => {
     it('shows old equipment details, configure equipment inline, and Finalizar tarea button', () => {
       mockUseAssignedTickets.mockReturnValue({
         data: [
           makeTicket({
-            category: 'equipment_replacement',
+            category: 'replace_equipment',
             title: 'Reemplazo SN-003',
             equipment_id: 'equip-old-001',
             pending_new_serial: null,
@@ -328,12 +328,12 @@ describe('TaskDetailPage', () => {
     });
   });
 
-  describe('maintenance category', () => {
+  describe('maintain_equipment category', () => {
     it('shows equipment details and Finalizar tarea button', () => {
       mockUseAssignedTickets.mockReturnValue({
         data: [
           makeTicket({
-            category: 'maintenance',
+            category: 'maintain_equipment',
             title: 'Mantenimiento SN-004',
             equipment_id: 'equip-maint-001',
           }),
@@ -359,7 +359,7 @@ describe('TaskDetailPage', () => {
       mockUseAssignedTickets.mockReturnValue({
         data: [
           makeTicket({
-            category: 'maintenance',
+            category: 'maintain_equipment',
             title: 'Mantenimiento SN-004',
             equipment_id: 'equip-maint-001',
           }),
@@ -374,7 +374,7 @@ describe('TaskDetailPage', () => {
       });
       mockUseMaintenanceHistory.mockReturnValue({
         data: [
-          { id: 't-prev', title: 'Mantenimiento previo', status: 'resolved', category: 'maintenance', opened_at: '2026-01-01T00:00:00Z', resolved_at: '2026-01-05T00:00:00Z', resolution_notes: 'Todo ok' },
+          { id: 't-prev', title: 'Mantenimiento previo', status: 'resolved', category: 'maintain_equipment', opened_at: '2026-01-01T00:00:00Z', resolved_at: '2026-01-05T00:00:00Z', resolution_notes: 'Todo ok' },
         ],
         isLoading: false,
         isFetching: false,
@@ -386,12 +386,12 @@ describe('TaskDetailPage', () => {
     });
   });
 
-  describe('equipment_update without snapshot', () => {
+  describe('update_equipment without snapshot', () => {
     it('shows the not-found error message', () => {
       mockUseAssignedTickets.mockReturnValue({
         data: [
           makeTicket({
-            category: 'equipment_update',
+            category: 'update_equipment',
             title: 'Actualización sin snapshot',
             equipmentUpdateSnapshot: undefined,
           }),

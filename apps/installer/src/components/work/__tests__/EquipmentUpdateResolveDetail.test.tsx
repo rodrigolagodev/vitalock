@@ -106,7 +106,7 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     title: 'Actualización SN-001',
     description: 'Actualización SN-001',
     status: 'open',
-    category: 'equipment_update',
+    category: 'update_equipment',
     opened_at: '2026-08-17T00:00:00Z',
     building: {
       id: 'bld-001',

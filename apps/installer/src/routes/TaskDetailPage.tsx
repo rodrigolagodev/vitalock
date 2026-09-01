@@ -25,23 +25,21 @@ const statusVariant: Record<string, 'default' | 'secondary'> = {
 };
 
 const categorySubtitle: Record<string, string> = {
-  equipment_update: 'Actualización de equipo',
-  equipment_installation: 'Instalación de equipo',
-  equipment_replacement: 'Reemplazo de equipo',
-  maintenance: 'Mantenimiento',
-  installation: 'Instalación',
+  update_equipment: 'Actualización de equipo',
+  install_equipment: 'Instalación de equipo',
+  replace_equipment: 'Reemplazo de equipo',
+  maintain_equipment: 'Mantenimiento',
 };
 
-const EQUIPMENT_UPDATE = 'equipment_update';
-const EQUIPMENT_INSTALLATION = 'equipment_installation';
-const EQUIPMENT_REPLACEMENT = 'equipment_replacement';
-const MAINTENANCE = 'maintenance';
+const EQUIPMENT_UPDATE = 'update_equipment';
+const EQUIPMENT_INSTALLATION = 'install_equipment';
+const EQUIPMENT_REPLACEMENT = 'replace_equipment';
+const MAINTENANCE = 'maintain_equipment';
 /** Categories the installer finalizes through the generic resolve_ticket flow. */
 const GENERIC_RESOLVE_CATEGORIES: readonly string[] = [
   EQUIPMENT_INSTALLATION,
   EQUIPMENT_REPLACEMENT,
   MAINTENANCE,
-  'installation',
 ];
 
 function fmt(iso: string | null | undefined): string {

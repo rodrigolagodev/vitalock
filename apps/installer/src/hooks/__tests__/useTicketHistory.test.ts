@@ -9,19 +9,20 @@ vi.mock('@vitalock/shared', () => ({
   useAuthContext: () => ({
     staff: { id: mockStaffId, full_name: 'Bruno', role: 'installer', status: 'active' },
   }),
+  logger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
 const { fromCalls } = vi.hoisted(() => ({
   fromCalls: [] as Array<{ schema: string | null; from: string }>,
 }));
 
-vi.mock('@/main', () => {
+vi.mock('@/lib/supabase', () => {
   const mockViewRows = [
     {
       id: 'ticket-hist-1',
       description: 'Reemplazo terminado',
       status: 'resolved',
-      category: 'equipment_replacement',
+      category: 'replace_equipment',
       opened_at: '2026-07-01T10:00:00Z',
       updated_at: '2026-07-02T12:00:00Z',
       resolved_at: '2026-07-02T12:00:00Z',

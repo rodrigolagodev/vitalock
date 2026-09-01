@@ -122,14 +122,12 @@ export default function BuildingDetailPage() {
               }
             : { label: 'Sin administración' },
         ]}
-      >
-        <StatusBadge
-          tone={buildingStatusTone(building.status)}
-          className="shrink-0"
-        >
-          {buildingStatusLabel(building.status)}
-        </StatusBadge>
-      </PageHeader>
+        titleAdornment={
+          <StatusBadge tone={buildingStatusTone(building.status)}>
+            {buildingStatusLabel(building.status)}
+          </StatusBadge>
+        }
+      />
 
       {/* Section selector */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>

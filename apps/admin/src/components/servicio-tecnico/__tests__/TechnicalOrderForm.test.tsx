@@ -119,7 +119,7 @@ function makeInitialOrder(overrides: Partial<TechnicalOrderDetailRow> = {}): Tec
       {
         id: 'item-1',
         order_id: 'to-1',
-        item_type: 'maintenance',
+        item_type: 'maintain_equipment',
         quantity: 1,
         description: 'Mantenimiento general',
         status: 'pending',
@@ -301,7 +301,7 @@ describe('TechnicalOrderForm', () => {
           notes: '',
           items: [
             {
-              item_type: 'installation',
+              item_type: 'install_equipment',
               quantity: 1,
               description: '',
               building_id: 'bld-1',
@@ -345,7 +345,7 @@ describe('TechnicalOrderForm', () => {
           notes: '',
           items: [
             {
-              item_type: 'maintenance',
+              item_type: 'maintain_equipment',
               quantity: 1,
               description: '',
               building_id: 'bld-1',
@@ -389,7 +389,7 @@ describe('TechnicalOrderForm', () => {
           notes: '',
           items: [
             {
-              item_type: 'installation',
+              item_type: 'install_equipment',
               quantity: 1,
               description: '',
               building_id: 'bld-1',
@@ -432,7 +432,7 @@ describe('TechnicalOrderForm', () => {
           notes: '',
           items: [
             {
-              item_type: 'installation',
+              item_type: 'install_equipment',
               quantity: 1,
               description: '',
               building_id: 'bld-1',
@@ -471,7 +471,7 @@ describe('TechnicalOrderForm', () => {
       notes: '',
       items: [
         {
-          item_type: 'installation',
+          item_type: 'install_equipment',
           quantity: 1,
           description: '',
           building_id: 'bld-1',
@@ -515,13 +515,13 @@ describe('TechnicalOrderForm', () => {
           notes: '',
           items: [
             {
-              item_type: 'equipment_replacement',
+              item_type: 'replace_equipment',
               quantity: 1,
               description: '',
               building_id: 'bld-1',
               unit_price: null,
               product_id: null,
-              intended_equipment_id: null,        // required for equipment_replacement
+              intended_equipment_id: null,        // required for replace_equipment
               intended_assignee_staff_id: 'staff-1',
             },
           ],
@@ -556,7 +556,7 @@ describe('TechnicalOrderForm', () => {
       notes: '',
       items: [
         {
-          item_type: 'maintenance',
+          item_type: 'maintain_equipment',
           quantity: 2,
           description: 'Descripción de prueba',
           building_id: 'bld-1',
@@ -583,7 +583,7 @@ describe('TechnicalOrderForm', () => {
     expect(calledWith.client_type).toBe('administration');
     expect(calledWith.administration_id).toBe('adm-1');
     expect(calledWith.items).toHaveLength(1);
-    expect(calledWith.items[0]!.item_type).toBe('maintenance');
+    expect(calledWith.items[0]!.item_type).toBe('maintain_equipment');
     expect(calledWith.items[0]!.intended_equipment_id).toBe('equip-1');
     expect(calledWith.items[0]!.intended_assignee_staff_id).toBe('staff-1');
   });

@@ -31,7 +31,7 @@ function makeTarea(overrides: Partial<TareaDetailRow> = {}): TareaDetailRow {
   return {
     id: 'ticket-1',
     ticket_number: 'TKT-1',
-    category: 'equipment_replacement',
+    category: 'replace_equipment',
     description: 'Reemplazar equipo',
     status: 'open',
     building_id: 'b-1',
@@ -112,7 +112,7 @@ describe('ConfigureEquipmentPanel — installation category', () => {
   it('renders panel heading for installation ticket without error', () => {
     render(
       <ConfigureEquipmentPanel
-        tarea={makeTarea({ category: 'installation', description: 'Instalar equipo' })}
+        tarea={makeTarea({ category: 'install_equipment', description: 'Instalar equipo' })}
       />,
       { wrapper: makeWrapper() },
     );

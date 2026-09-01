@@ -22,15 +22,15 @@ const statusOrder: Record<AssignedTicket['status'], number> = {
 
 /**
  * Ticket categories excluded from the installer's batch-resolve toolbar.
- * equipment_update has its own dedicated resolve card (EquipmentUpdateResolveCard).
- * equipment_installation / equipment_replacement participate in the batch
+ * update_equipment has its own dedicated resolve card (EquipmentUpdateResolveCard).
+ * install_equipment / replace_equipment participate in the batch
  * resolve once the installer has configured pending_new_serial; TicketCard
  * disables the checkbox until then.
  */
-const EXCLUDED_FOR_BATCH: readonly string[] = ['equipment_update'];
+const EXCLUDED_FOR_BATCH: readonly string[] = ['update_equipment'];
 
 /** Categories the installer resolves individually (not admin-only). */
-const INSTALLER_RESOLVE_CATEGORIES: readonly string[] = ['equipment_update'];
+const INSTALLER_RESOLVE_CATEGORIES: readonly string[] = ['update_equipment'];
 
 export function TicketsSection({ tickets }: TicketsSectionProps) {
   const [open, setOpen] = useState(true);

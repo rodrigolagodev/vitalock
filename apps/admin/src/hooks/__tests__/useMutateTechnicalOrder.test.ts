@@ -39,7 +39,7 @@ const sampleOrder = {
 };
 const sampleItems = [
   {
-    item_type: 'maintenance' as const,
+    item_type: 'maintain_equipment' as const,
     quantity: 1,
     building_id: 'b-1',
     unit_price: 200,
@@ -275,7 +275,7 @@ describe('useMutateTechnicalOrder', () => {
     const items = [
       {
         id: 'toi-1',
-        item_type: 'maintenance' as const,
+        item_type: 'maintain_equipment' as const,
         quantity: 1,
         building_id: 'b-1',
         unit_price: 200,

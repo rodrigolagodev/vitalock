@@ -7,11 +7,10 @@ export interface TareaRow {
   id: string;
   ticket_number: string;
   category:
-    | 'maintenance'
-    | 'installation'
-    | 'key_configuration'
-    | 'equipment_installation'
-    | 'equipment_replacement';
+    | 'install_equipment'
+    | 'replace_equipment'
+    | 'update_equipment'
+    | 'maintain_equipment';
   description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'cancelled';
   building_id: string;

@@ -101,7 +101,7 @@ describe('useStockMovements', () => {
 
     expect(mockFrom).toHaveBeenCalledWith('stock_movements');
     expect(mockMovementsSelect).toHaveBeenCalledWith(
-      'id, product_id, type, quantity, unit_cost, note, order_id, order_item_id, ticket_id, staff_id, created_by, created_at',
+      'id, product_id, type, quantity, unit_cost, note, order_id, order_item_id, order_kind, ticket_id, staff_id, created_by, created_at',
     );
     expect(mockEq).toHaveBeenCalledWith('product_id', 'p-1');
   });

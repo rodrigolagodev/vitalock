@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import type { ReactNode } from 'react';
 
@@ -25,7 +26,7 @@ const entrada: StockMovementRow = {
   staff_name: 'Ana Gómez',
 };
 
-const egreso: StockMovementRow = {
+const egresoKey: StockMovementRow = {
   id: 'm-2',
   created_at: '2026-07-02T11:30:00Z',
   created_by: null,
@@ -43,6 +44,25 @@ const egreso: StockMovementRow = {
   staff_name: null,
 };
 
+const egresoTech: StockMovementRow = {
+  ...egresoKey,
+  id: 'm-3',
+  order_id: 'technical-order-1',
+  order_kind: 'technical',
+  type: 'egreso_instalacion',
+  quantity: -1,
+};
+
+const ticketEntry: StockMovementRow = {
+  ...entrada,
+  id: 'm-4',
+  ticket_id: 't-1',
+  ticket_number: 'T-0101',
+  type: 'egreso_grabacion',
+  quantity: -3,
+  note: null,
+};
+
 function makeRows(count: number): StockMovementRow[] {
   return Array.from({ length: count }, (_, i) => ({
     ...entrada,
@@ -56,7 +76,11 @@ function makeWrapper() {
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
-    return React.createElement(QueryClientProvider, { client: queryClient }, children);
+    return React.createElement(
+      MemoryRouter,
+      null,
+      React.createElement(QueryClientProvider, { client: queryClient }, children),
+    );
   };
 }
 
@@ -67,7 +91,7 @@ describe('StockMovementsTable', () => {
 
   it('renders movement rows with labels, quantities, cost, staff and reference', () => {
     render(
-      <StockMovementsTable rows={[entrada, egreso]} isFetching={false} />,
+      <StockMovementsTable rows={[entrada, egresoKey]} isFetching={false} />,
       { wrapper: makeWrapper() },
     );
 
@@ -80,6 +104,52 @@ describe('StockMovementsTable', () => {
     expect(screen.getByText('T-0001')).toBeInTheDocument();
     expect(screen.getByText('Orden abcdef12…')).toBeInTheDocument();
     expect(screen.getByText('Reposición inicial')).toBeInTheDocument();
+  });
+
+  it('links the reference to the related tarea (support ticket)', () => {
+    render(<StockMovementsTable rows={[ticketEntry]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByText('T-0101')).toHaveAttribute('href', '/tareas/t-1');
+  });
+
+  it('links the reference to the key order detail', () => {
+    render(<StockMovementsTable rows={[egresoKey]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByText('Orden abcdef12…')).toHaveAttribute(
+      'href',
+      '/llaves/abcdef1234567890',
+    );
+  });
+
+  it('links the reference to the technical order detail', () => {
+    render(<StockMovementsTable rows={[egresoTech]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByText('Orden technica…')).toHaveAttribute(
+      'href',
+      '/servicio-tecnico/technical-order-1',
+    );
+  });
+
+  it('keeps a reference without a resolvable target as plain text', () => {
+    const noTarget: StockMovementRow = {
+      ...entrada,
+      order_id: 'unknown-kind-order',
+      order_kind: null,
+      ticket_id: null,
+      ticket_number: null,
+    };
+    render(<StockMovementsTable rows={[noTarget]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const cell = screen.getByText('Orden unknown-…');
+    expect(cell.closest('a')).toBeNull();
   });
 
   it('renders the loading skeleton while fetching', () => {

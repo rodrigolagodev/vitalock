@@ -36,7 +36,7 @@ function makeTicket(overrides: Partial<TechnicalOrderTicketRow> = {}): Technical
   return {
     id: 'ticket-1',
     ticket_number: 'TKT-001',
-    category: 'maintenance',
+    category: 'maintain_equipment',
     status: 'open',
     description: 'Revisar equipo',
     technical_order_item_id: 'item-1',
