@@ -11,16 +11,24 @@ export interface EquipmentRow {
   building_id: string;
 }
 
-export function useEquipment(buildingId: string) {
+export function useEquipment(
+  buildingId: string,
+  { activeOnly = false }: { activeOnly?: boolean } = {},
+) {
   return useQuery({
-    queryKey: equipmentKey(buildingId),
+    queryKey: [...equipmentKey(buildingId), activeOnly ? 'active' : 'all'],
     queryFn: async (): Promise<EquipmentRow[]> => {
-      const { data, error } = await supabase
+      let query = supabase
         .schema('operations')
         .from('equipment')
         .select('id, model, serial_number, status, installed_at, building_id')
-        .eq('building_id', buildingId)
-        .order('serial_number');
+        .eq('building_id', buildingId);
+
+      if (activeOnly) {
+        query = query.eq('status', 'active');
+      }
+
+      const { data, error } = await query.order('serial_number');
 
       if (error) throw error;
       return data ?? [];

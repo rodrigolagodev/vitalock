@@ -89,7 +89,7 @@ export function AssignEquipmentDialog({
   category,
 }: AssignEquipmentDialogProps) {
   const mode = modeForCategory(category);
-  const { data: equipment = [] } = useEquipment(buildingId);
+  const { data: equipment = [] } = useEquipment(buildingId, { activeOnly: true });
   const { data: equipmentProducts = [] } = useProducts({ category: 'equipment' });
   const { assignExistingEquipment, createAndAssignEquipment } =
     useMutateTicketEquipment(buildingId);

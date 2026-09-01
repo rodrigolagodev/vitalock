@@ -9,15 +9,23 @@ export interface EquipmentByBuildingRow {
   building_id: string;
 }
 
-export function useEquipmentByBuilding(buildingId?: string) {
+export function useEquipmentByBuilding(
+  buildingId?: string,
+  { activeOnly = false }: { activeOnly?: boolean } = {},
+) {
   return useQuery({
-    queryKey: equipmentByBuildingKey(buildingId),
+    queryKey: [...equipmentByBuildingKey(buildingId), activeOnly ? 'active' : 'all'],
     queryFn: async (): Promise<EquipmentByBuildingRow[]> => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('equipment_inventory')
-        .select('id, serial_number, model, building_id')
-        .eq('building_id', buildingId!)
-        .order('serial_number', { ascending: true });
+        .select('id, serial_number, model, building_id, status')
+        .eq('building_id', buildingId!);
+
+      if (activeOnly) {
+        query = query.eq('status', 'active');
+      }
+
+      const { data, error } = await query.order('serial_number', { ascending: true });
 
       if (error) throw error;
 

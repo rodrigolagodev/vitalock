@@ -82,7 +82,7 @@ export default function InventarioPage() {
 
   const { data: admins = [] } = useAdministrations();
   const { data: buildings = [] } = useBuildings();
-  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId);
+  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId, { activeOnly: true });
 
   const { data: rows = [], isFetching, isError } = useKeysInventory({
     administrationId: cascadeValue.administrationId,

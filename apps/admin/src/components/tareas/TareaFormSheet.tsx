@@ -179,7 +179,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
 
   // Units and equipment are only meaningful once a building is chosen.
   const { data: units = [] } = useUnits(buildingId ?? '');
-  const { data: equipment = [] } = useEquipment(buildingId ?? '');
+  const { data: equipment = [] } = useEquipment(buildingId ?? '', { activeOnly: true });
 
   useEffect(() => {
     if (!open) return;

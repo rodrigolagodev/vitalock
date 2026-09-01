@@ -670,7 +670,7 @@ function TechnicalItemEquipmentField({
   control,
   errors,
 }: TechnicalItemEquipmentFieldProps) {
-  const { data: equipment = [] } = useEquipment(buildingId ?? '');
+  const { data: equipment = [] } = useEquipment(buildingId ?? '', { activeOnly: true });
   // Stock catalog of equipment products — the "warehouse" pool used for
   // installations and replacements. The installer types the serial when
   // resolving the ticket; here we only reserve a unit of the product.

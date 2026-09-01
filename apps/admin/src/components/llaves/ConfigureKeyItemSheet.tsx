@@ -55,7 +55,7 @@ export function ConfigureKeyItemSheet({
 
   const { configureKeyOrderItem } = useMutateKeyOrder();
   const { data: units = [] } = useUnits(buildingId);
-  const { data: equipment = [] } = useEquipment(buildingId);
+  const { data: equipment = [] } = useEquipment(buildingId, { activeOnly: true });
 
   // Only active readers can be assigned to a new key.
   const activeEquipment = equipment.filter((eq) => eq.status === 'active');

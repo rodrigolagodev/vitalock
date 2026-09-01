@@ -32,7 +32,7 @@ export default function EquiposPage() {
 
   const { data: admins = [] } = useAdministrations();
   const { data: buildings = [] } = useBuildings();
-  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId);
+  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId, { activeOnly: true });
 
   const { data: rows = [], isFetching, isError } = useEquipmentInventory({
     administrationId: cascadeValue.administrationId,
