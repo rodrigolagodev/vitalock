@@ -43,8 +43,16 @@ export function ParticularSelector({
   const showInputValue = !searching;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
+    const next = e.target.value;
+    setQuery(next);
     setOpen(true);
+    // If the user clears the input while a particular is bound, treat the
+    // empty text as an intent to unbind. Without this, `showInputValue`
+    // flips back to true (query === '') and the selected name reappears —
+    // trapping the user until they click the X clear button.
+    if (next === '' && value) {
+      onChange(null);
+    }
   };
 
   const handleSelect = (particular: ParticularRow) => {
