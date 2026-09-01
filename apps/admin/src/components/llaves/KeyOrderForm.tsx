@@ -395,21 +395,7 @@ export function KeyOrderForm({
             <p className="text-sm text-destructive">{errors.items.message}</p>
           )}
 
-          {fields.length === 0 ? (
-            <div
-              data-testid="key-order-items-empty"
-              className="flex flex-col items-center gap-3 rounded-md border-2 border-dashed border-border bg-muted/10 p-8 text-center"
-            >
-              <p className="text-sm text-muted-foreground">
-                La orden todavía no tiene ítems. Agregá al menos uno para poder crearla.
-              </p>
-              <Button type="button" onClick={appendItem} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Agregar primer ítem
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3" data-testid="key-order-items">
+          <div className="flex flex-col gap-3" data-testid="key-order-items">
               {fields.map((field, index) => {
                 const item = items[index];
                 const isOpen = openItemIndex === index;
@@ -652,8 +638,19 @@ export function KeyOrderForm({
                   </div>
                 );
               })}
+
+              {/* Ghost slot: dashed placeholder that hints "there's room for
+                  more". Visual only — the single entry point for adding an
+                  item is the "Agregar ítem" button in the section header. */}
+              <div
+                data-testid="key-order-item-ghost"
+                className="rounded-md border-2 border-dashed border-border bg-muted/10 p-6 text-center text-sm text-muted-foreground"
+              >
+                {fields.length === 0
+                  ? 'La orden todavía no tiene ítems. Agregá el primero desde “Agregar ítem”.'
+                  : 'Hay lugar para más ítems.'}
+              </div>
             </div>
-          )}
 
           {/* Totals — always visible below the item list */}
           {fields.length > 0 && (

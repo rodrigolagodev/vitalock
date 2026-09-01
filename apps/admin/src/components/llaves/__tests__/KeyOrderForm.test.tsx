@@ -218,26 +218,39 @@ describe('KeyOrderForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // T-13c-1e: clicking "Agregar ítem" appends a new item card, expanded by default
-  it('appends a new item card when "Agregar ítem" is clicked', async () => {
+  // T-13c-1e: clicking "Agregar ítem" (header button) appends a new item card
+  it('appends a new item card when the header "Agregar ítem" is clicked', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
       wrapper: makeWrapper(),
     });
 
-    // Empty state visible; no item cards yet
+    // Empty state: no item cards; ghost slot present as the only affordance
+    // for adding an item alongside the header button.
     expect(screen.queryByTestId('key-order-item-0')).not.toBeInTheDocument();
-    expect(screen.getByTestId('key-order-items-empty')).toBeInTheDocument();
+    expect(screen.getByTestId('key-order-item-ghost')).toBeInTheDocument();
 
-    // "Agregar primer ítem" (in empty state) appends and expands the first card
-    await user.click(screen.getByRole('button', { name: /agregar primer ítem/i }));
+    await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
 
     expect(screen.getByTestId('key-order-item-0')).toBeInTheDocument();
     expect(screen.getByText('Ítem 1')).toBeInTheDocument();
-    // Fields are visible (card is expanded by default)
+    // Fields visible — card is expanded by default
     expect(screen.getByLabelText(/cantidad de llaves/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/precio unitario/i)).toBeInTheDocument();
+  });
+
+  // T-13c-1e2: the ghost slot is visual-only (not clickable) — the section
+  // header button is the single entry point for adding items.
+  it('ghost slot is visual-only (not a button/link)', () => {
+    const onSubmit = vi.fn();
+    render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const ghost = screen.getByTestId('key-order-item-ghost');
+    expect(ghost).toBeInTheDocument();
+    expect(ghost.tagName).toBe('DIV');
   });
 
   // T-13c-1f: removing an item works
@@ -253,7 +266,8 @@ describe('KeyOrderForm', () => {
     const removeBtn = screen.getByRole('button', { name: /eliminar ítem 1/i });
     await user.click(removeBtn);
     expect(screen.queryByText('Ítem 1')).not.toBeInTheDocument();
-    expect(screen.getByTestId('key-order-items-empty')).toBeInTheDocument();
+    // Ghost slot remains as the empty-state hint
+    expect(screen.getByTestId('key-order-item-ghost')).toBeInTheDocument();
   });
 
   // Totals footer shows live totals (visibility of system status).
