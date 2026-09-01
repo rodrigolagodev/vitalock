@@ -85,7 +85,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
   },
-  plugins: [react(), cspPlugin(), sriPlugin()],
+  // sriPlugin disabled: post-build modifications by Vite/Rollup (source map
+  // comment, module preload transforms) cause hash mismatches at runtime,
+  // breaking script loading on GitHub Pages. CSP remains the primary defense.
+  plugins: [react(), cspPlugin()],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },
