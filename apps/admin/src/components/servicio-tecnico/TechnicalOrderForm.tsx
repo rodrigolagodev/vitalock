@@ -130,6 +130,18 @@ const schema = baseSchema.superRefine((data, ctx) => {
         path: ['items', i, 'product_id'],
       });
     }
+    // Price policy: maintain_equipment allows 0 (monthly plan covers it).
+    // install/replace require unit_price > 0.
+    if (
+      item.item_type !== 'maintain_equipment' &&
+      (item.unit_price == null || item.unit_price <= 0)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El precio unitario es obligatorio y debe ser mayor a 0',
+        path: ['items', i, 'unit_price'],
+      });
+    }
   });
 });
 
@@ -553,10 +565,12 @@ export function TechnicalOrderForm({
                       />
                     </div>
 
-                    {/* Unit price — optional per spec */}
+                    {/* Unit price — required for install/replace; may be 0 for maintenance (monthly plan) */}
                     <div className="flex flex-col gap-1 sm:max-w-[200px]">
                       <Label htmlFor={`items.${index}.unit_price`}>
-                        Precio unitario (opcional)
+                        {item?.item_type === 'maintain_equipment'
+                          ? 'Precio unitario (0 = plan mensual)'
+                          : 'Precio unitario *'}
                       </Label>
                       <Input
                         id={`items.${index}.unit_price`}

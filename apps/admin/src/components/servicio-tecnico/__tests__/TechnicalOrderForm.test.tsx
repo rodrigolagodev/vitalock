@@ -436,7 +436,7 @@ describe('TechnicalOrderForm', () => {
               quantity: 1,
               description: '',
               building_id: 'bld-1',
-              unit_price: null,
+              unit_price: 100,   // required for install_equipment (billable)
               product_id: 'prod-1',   // provided — should pass
               intended_equipment_id: null,
               intended_assignee_staff_id: 'staff-1',
