@@ -1,96 +1,63 @@
-# Delta for Installer Ticket Detail
+# Installer Ticket Detail
 
-**Change**: technical-installation-stock-lifecycle
-**Date**: 2026-08-31
+**Changes**:
+- technical-installation-stock-lifecycle (2026-08-31)
+- ticket-taxonomy-cleanup (2026-09-01)
 
 ---
 
 ## MODIFIED Requirements
 
-### Requirement: TWO_STEP_CATEGORIES in TicketCard Includes 'installation'
+### Requirement: TWO_STEP_CATEGORIES in TicketCard (Installer) — Collapsed
 
-`TicketCard` MUST include `'installation'` in the `TWO_STEP_CATEGORIES` array. Previously this array contained only `'equipment_installation'` and `'equipment_replacement'`.
-
-After this change:
+`TicketCard` in the installer app MUST update `TWO_STEP_CATEGORIES` to reference the new category names:
 
 ```ts
-const TWO_STEP_CATEGORIES = ['equipment_installation', 'equipment_replacement', 'installation']
+const TWO_STEP_CATEGORIES = ['install_equipment', 'replace_equipment']
 ```
 
-When a ticket's `category` is `'installation'`, `TicketCard` MUST render the two-step configure/resolve affordance (not the plain batch-pool affordance). Concretely:
+When a ticket's `category` is `'install_equipment'` or `'replace_equipment'`, `TicketCard` MUST render the two-step configure/resolve affordance and the card MUST NOT be selectable for batch resolution.
 
-- The card MUST surface the configure step UI when `pending_new_serial` is not yet set.
-- The card MUST surface the resolve step UI when `pending_new_serial` is set and the ticket is not yet resolved.
-- The card MUST NOT be selectable for batch resolution via the "Marcar resueltos" batch toolbar when the ticket requires the two-step flow.
+#### Scenario: TicketCard renders two-step affordance for install_equipment ticket
 
-#### Scenario: TicketCard renders two-step affordance for installation ticket
-
-- GIVEN a `support.tickets` row T with `category='installation'` assigned to the logged-in installer
-- AND `T.pending_new_serial` is null (configure step not yet done)
+- GIVEN a `support.tickets` row T with `category='install_equipment'` assigned to the logged-in installer
+- AND `T.pending_new_serial` is null
 - WHEN `TicketCard` renders T
-- THEN the configure affordance is displayed (serial/model entry or link to configure flow)
+- THEN the configure affordance is displayed
 - AND T is NOT selectable in the batch toolbar
 
-#### Scenario: TicketCard renders resolve affordance for installation ticket after configure
+#### Scenario: TicketCard renders batch-eligible affordance for maintain_equipment ticket
 
-- GIVEN a ticket T with `category='installation'` and `pending_new_serial` is already set
+- GIVEN a ticket T with `category='maintain_equipment'`
 - WHEN `TicketCard` renders T
-- THEN the resolve affordance is displayed
-- AND T is NOT selectable in the batch toolbar (it must be resolved individually through the two-step flow)
+- THEN T is selectable in the batch toolbar
 
-#### Scenario: equipment_installation and equipment_replacement remain unchanged
+### Requirement: TaskDetailPage ConfigureEquipmentInline Gate Uses install_equipment
 
-- GIVEN a ticket T with `category='equipment_installation'`
-- WHEN `TicketCard` renders T
-- THEN the two-step affordance is rendered (behaviour unchanged)
+`TaskDetailPage` MUST extend the `ConfigureEquipmentInline` gate to use `'install_equipment'` (and `'replace_equipment'`). `ConfigureEquipmentInline` MUST accept both values in its TypeScript category prop type.
 
----
+#### Scenario: TaskDetailPage renders ConfigureEquipmentInline for install_equipment ticket
 
-### Requirement: TaskDetailPage ConfigureEquipmentInline Gate Includes 'installation'
-
-`TaskDetailPage` MUST extend the `ConfigureEquipmentInline` category gate to include `'installation'`. The gate previously checked only for `'equipment_installation'` (via a constant such as `EQUIPMENT_INSTALLATION` or an explicit category comparison).
-
-After this change, when `TaskDetailPage` receives a ticket with `category='installation'`, it MUST render `ConfigureEquipmentInline` with the same props and behaviour as for `equipment_installation`.
-
-`ConfigureEquipmentInline` MUST:
-
-- Accept `'installation'` in its TypeScript category prop type without raising a compile error.
-- Call `public.configure_technical_ticket_equipment` when the installer submits the configure step.
-- Call `public.resolve_ticket` when the installer submits the resolve step (providing serial, model, description, building_id, access_type, and note).
-
-#### Scenario: TaskDetailPage renders ConfigureEquipmentInline for installation ticket
-
-- GIVEN the installer navigates to the detail page of a ticket T with `category='installation'`
+- GIVEN the installer navigates to the detail page of a ticket T with `category='install_equipment'`
 - WHEN `TaskDetailPage` renders
 - THEN `ConfigureEquipmentInline` is rendered for T
-- AND the installer sees the configure serial/model fields (or the resolve panel if already configured)
 
-#### Scenario: ConfigureEquipmentInline configure step for installation ticket
+### Requirement: AssignEquipmentDialog modeForCategory Switch Uses New Names
 
-- GIVEN `ConfigureEquipmentInline` is rendered for a ticket T with `category='installation'` and `pending_new_serial=null`
-- WHEN the installer fills in serial and model and submits
-- THEN `public.configure_technical_ticket_equipment(T.id, serial, model, actor_id)` is called
-- AND on success, `T.pending_new_serial` and `T.pending_new_model` are populated
-- AND the UI transitions to the resolve step
+`AssignEquipmentDialog.modeForCategory()` MUST reference `'install_equipment'` and `'replace_equipment'`. The two former branches for `'installation'` and `'equipment_installation'` MUST collapse into a single `'install_equipment'` branch.
 
-#### Scenario: ConfigureEquipmentInline resolve step for installation ticket
+#### Scenario: modeForCategory returns correct mode for install_equipment
 
-- GIVEN `ConfigureEquipmentInline` is rendered for a ticket T with `category='installation'` and `pending_new_serial` already set
-- WHEN the installer fills in description, building, access_type, and optional note and resolves
-- THEN `public.resolve_ticket(T.id, serial, model, description, building_id, access_type, note, actor_id)` is called
-- AND on success the ticket is `resolved`
-- AND `operations.equipment` contains a new row with the provided serial
-- AND stock movements `egreso_instalacion` and `liberacion_reserva` are emitted (if `product_id` was set on the order item)
-- AND `technical_order_items.intended_equipment_id` is updated to the new equipment UUID
+- GIVEN the updated switch is deployed
+- WHEN `modeForCategory('install_equipment')` is called
+- THEN it returns the same mode previously returned for `'equipment_installation'`
 
-#### Scenario: TypeScript compile — no type error for 'installation' category in ConfigureEquipmentInline
+### Requirement: EXCLUDED_FOR_BATCH in TicketsSection (Installer) Uses update_equipment
 
-- GIVEN the component's category prop type is updated to include `'installation'`
-- WHEN TypeScript compiles the installer app
-- THEN no type error is raised when passing `category='installation'` to `ConfigureEquipmentInline`
+`TicketsSection` MUST update `EXCLUDED_FOR_BATCH` to reference `'update_equipment'` instead of `'equipment_update'`.
 
-## Key Learnings
+#### Scenario: update_equipment tickets are excluded from batch resolve
 
-1. `TicketCard` and `TaskDetailPage` are the two installer surfaces that need updating — the configure/resolve logic itself lives in the shared `ConfigureEquipmentInline` component, so the bulk of the behaviour comes for free by extending the gate.
-2. The installer should NOT route `installation` tickets through the batch "Marcar resueltos" flow — those tickets require serial capture, which is not part of the batch flow.
-3. `access_type` remains nullable and is entered by the installer at resolve time (not pre-configured by the admin), matching the existing `equipment_installation` flow — no `pending_access_type` column is added.
+- GIVEN a list of installer tickets including one with `category='update_equipment'`
+- WHEN `TicketsSection` renders the batch resolve toolbar
+- THEN the `update_equipment` ticket is NOT included in the selectable batch pool

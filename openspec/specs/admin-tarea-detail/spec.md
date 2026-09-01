@@ -1,17 +1,16 @@
-# Delta for Admin Tarea Detail
+# Admin Tarea Detail
 
-**Change**: technical-installation-stock-lifecycle
-**Date**: 2026-08-31
+**Changes**:
+- technical-installation-stock-lifecycle (2026-08-31)
+- ticket-taxonomy-cleanup (2026-09-01)
 
 ---
 
 ## MODIFIED Requirements
 
-### Requirement: CATEGORIES_TWO_STEP_CONFIGURE Includes 'installation'
+### Requirement: CATEGORIES_TWO_STEP_CONFIGURE in TareaDetailPage — Collapsed to Two Values
 
-`TareaDetailPage` MUST include `'installation'` in the `CATEGORIES_TWO_STEP_CONFIGURE` set. Previously this set contained only `'equipment_installation'` and `'equipment_replacement'`.
-
-After this change:
+`TareaDetailPage` MUST update `CATEGORIES_TWO_STEP_CONFIGURE` to reference the new category names. The prior value was:
 
 ```ts
 const CATEGORIES_TWO_STEP_CONFIGURE = new Set([
@@ -21,62 +20,74 @@ const CATEGORIES_TWO_STEP_CONFIGURE = new Set([
 ])
 ```
 
-When a ticket's `support.tickets.category` is `'installation'`, `TareaDetailPage` MUST render `ConfigureEquipmentPanel` (the two-step configure/resolve panel) instead of `AssignEquipmentDialog` in `create` mode.
+After this change it MUST be:
 
-The previous fallback path via `AssignEquipmentDialog` (`createAndAssignEquipment` RPC) MUST NOT be invoked for `installation` tickets once this change is applied, because that path:
-- Links `tickets.equipment_id` but never writes `technical_order_items.intended_equipment_id`.
-- Does not emit stock movements.
-- Does not resolve the ticket through the correct state machine.
+```ts
+const CATEGORIES_TWO_STEP_CONFIGURE = new Set([
+  'install_equipment',
+  'replace_equipment',
+])
+```
 
-#### Scenario: TareaDetailPage renders ConfigureEquipmentPanel for installation ticket
+`'installation'` and `'equipment_installation'` are fused into `'install_equipment'`. `'equipment_replacement'` becomes `'replace_equipment'`. The set shrinks from three values to two.
 
-- GIVEN a `support.tickets` row T with `category='installation'` is open
+#### Scenario: TareaDetailPage renders ConfigureEquipmentPanel for install_equipment ticket
+
+- GIVEN a `support.tickets` row T with `category='install_equipment'` and `status='open'`
 - WHEN an admin opens the tarea detail view for T
 - THEN `ConfigureEquipmentPanel` is rendered
-- AND `AssignEquipmentDialog` in `create` mode is NOT rendered
 
-#### Scenario: TareaDetailPage still renders ConfigureEquipmentPanel for equipment_installation
+#### Scenario: TareaDetailPage renders ConfigureEquipmentPanel for replace_equipment ticket
 
-- GIVEN a `support.tickets` row T with `category='equipment_installation'`
+- GIVEN a `support.tickets` row T with `category='replace_equipment'`
 - WHEN an admin opens the tarea detail view for T
-- THEN `ConfigureEquipmentPanel` is rendered (behaviour unchanged)
+- THEN `ConfigureEquipmentPanel` is rendered
 
-#### Scenario: TareaDetailPage uses AssignEquipmentDialog for non-two-step categories
+#### Scenario: TareaDetailPage uses non-two-step path for maintain_equipment and update_equipment tickets
 
-- GIVEN a `support.tickets` row T with `category='maintenance'`
+- GIVEN a `support.tickets` row T with `category='maintain_equipment'`
 - WHEN an admin opens the tarea detail view for T
-- THEN `ConfigureEquipmentPanel` is NOT rendered (behaviour unchanged for non-two-step categories)
+- THEN `ConfigureEquipmentPanel` is NOT rendered
+- AND the same applies to `category='update_equipment'`
 
----
+### Requirement: ConfigureEquipmentPanel TypeScript Union and Label Maps — Updated
 
-### Requirement: ConfigureEquipmentPanel Accepts and Displays 'installation' Category
+`ConfigureEquipmentPanel` MUST accept `'install_equipment'` and `'replace_equipment'` in its TypeScript category prop union. Any references to `'equipment_installation'`, `'equipment_replacement'`, or `'installation'` in the component's type annotations, heading maps, or help-copy maps MUST be replaced with the new names.
 
-`ConfigureEquipmentPanel` MUST accept `'installation'` in its TypeScript category union type (wherever `'equipment_installation' | 'equipment_replacement'` is currently used). The component MUST also include `'installation'` in its heading and help-copy maps so that it renders appropriate labels when the ticket category is `'installation'`.
+#### Scenario: ConfigureEquipmentPanel renders with correct heading for install_equipment ticket
 
-Functionally the panel MUST behave identically to its `equipment_installation` path: it captures serial and model, calls `configure_technical_ticket_equipment`, and surfaces a resolve button that calls `resolve_ticket`.
-
-#### Scenario: ConfigureEquipmentPanel renders with correct heading for installation ticket
-
-- GIVEN a ticket T with `category='installation'`
+- GIVEN a ticket T with `category='install_equipment'`
 - WHEN `ConfigureEquipmentPanel` renders with T
-- THEN the panel heading reflects the installation category (e.g. "Configurar equipo a instalar")
+- THEN the panel heading reflects the install category
 - AND the serial and model fields are displayed
 
-#### Scenario: ConfigureEquipmentPanel calls configure RPC for installation ticket
+#### Scenario: ConfigureEquipmentPanel renders with correct heading for replace_equipment ticket
 
-- GIVEN a ticket T with `category='installation'` rendered in `ConfigureEquipmentPanel`
-- WHEN the admin fills in serial and model and submits the configure step
-- THEN `public.configure_technical_ticket_equipment(T.id, serial, model, actor_id)` is called
-- AND on success, `T.pending_new_serial` and `T.pending_new_model` are populated
+- GIVEN a ticket T with `category='replace_equipment'`
+- WHEN `ConfigureEquipmentPanel` renders with T
+- THEN the panel heading reflects the replacement category
+- AND the serial and model fields are displayed
 
-#### Scenario: ConfigureEquipmentPanel TypeScript union does not raise a compile error for 'installation'
+### Requirement: CATEGORY_LABELS in TareasTable and TareaFormSheet — Updated
 
-- GIVEN the component's prop type for `category` is updated to include `'installation'`
-- WHEN TypeScript compiles the admin app
-- THEN no type error is raised when passing `category='installation'` to `ConfigureEquipmentPanel`
+`TareasTable` and `TareaFormSheet` MUST update their `CATEGORY_LABELS` maps to use the four new category names as keys. The old keys MUST be removed.
 
-## Key Learnings
+The new map MUST contain exactly:
 
-1. The `AssignEquipmentDialog` / `createAndAssignEquipment` fallback path is a distinct bug from missing stock movements: it links `tickets.equipment_id` but not `technical_order_items.intended_equipment_id`. Removing it from the `installation` path is intentional and correct.
-2. `ConfigureEquipmentPanel` heading/help copy maps must be extended — failing to add `'installation'` there would cause the panel to render with missing or incorrect labels even if the category gate passes.
-3. No new RPC is introduced in the admin UI. Both configure and resolve calls for `installation` tickets route through the same RPCs as `equipment_installation`.
+```ts
+const CATEGORY_LABELS = {
+  install_equipment:  '...',
+  replace_equipment:  '...',
+  update_equipment:   '...',
+  maintain_equipment: '...',
+}
+```
+
+Label copy is at the designer's discretion; the structural constraint is that every key corresponds 1-to-1 with a value from the new 4-value domain, with no old keys present.
+
+#### Scenario: TareasTable renders all four new category labels without errors
+
+- GIVEN the updated CATEGORY_LABELS map is in place
+- WHEN a `support.tickets` row with `category='install_equipment'` is rendered
+- THEN the correct label string is displayed
+- AND the same succeeds for each of `replace_equipment`, `update_equipment`, `maintain_equipment`
