@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@vitalock/ui';
 import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { formatCurrencyARS } from '@/lib/format';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -109,27 +109,6 @@ const schema = baseSchema.superRefine((data, ctx) => {
 
 export type KeyOrderFormValues = z.infer<typeof schema>;
 
-// ---- Draft line schema (focused load panel) ----
-// The panel validates ONE line in isolation before it joins the order list.
-// Confirmed lines live in the parent form's items array for the final submit.
-const draftItemSchema = z.object({
-  product_id: z.string().min(1, 'Seleccioná una llave (stock)'),
-  quantity: z.coerce
-    .number({ invalid_type_error: 'La cantidad debe ser un número' })
-    .int()
-    .min(1, 'Mínimo 1'),
-  unit_price: z.coerce
-    .number({ invalid_type_error: 'El precio debe ser un número' })
-    .nullable()
-    .refine((v) => v !== null && v > 0, {
-      message: 'El precio debe ser mayor a 0',
-    }),
-  building_id: z.string().min(1, 'El edificio es obligatorio para ítems de tipo llave'),
-  unit_id: z.string().nullable().optional(),
-  pickup_particular_id: z.string().nullable().optional(),
-});
-type DraftItem = z.infer<typeof draftItemSchema>;
-
 // ---- Empty defaults ----
 
 const EMPTY_DEFAULTS: KeyOrderFormValues = {
@@ -207,7 +186,7 @@ export function KeyOrderForm({
     defaultValues,
   });
 
-  const { fields, append, remove, update } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
   const { data: keyProducts = [] } = useProducts({ category: 'rfid_key' });
   const defaultKeyProductId = keyProducts.length === 1 ? keyProducts[0]!.id : null;
@@ -233,53 +212,25 @@ export function KeyOrderForm({
     0,
   );
 
-  // ---- Focused line draft (list + load panel) ----
-  // The panel edits a single draft line; confirmed lines go into the parent
-  // form's `items`. After confirming, model and building are inherited so the
-  // next line starts almost complete (Nielsen efficiency + recognition).
-  const emptyDraft = (): DraftItem => ({
-    product_id: defaultKeyProductId ?? '',
+  // ---- Item cards (list-first, one card per item) ----
+  // Each item in `items` is rendered as an expandable card. Adding an item
+  // pushes a new empty row and auto-expands it. No hidden draft state.
+  const [openItemIndex, setOpenItemIndex] = useState<number | null>(null);
+
+  const emptyItem = (): KeyOrderFormValues['items'][number] => ({
+    item_type: 'key' as const,
+    description: '',
     quantity: 1,
     unit_price: null,
-    building_id: '',
+    building_id: null,
     unit_id: null,
     pickup_particular_id: null,
+    product_id: defaultKeyProductId,
   });
 
-  const draftForm = useForm<DraftItem>({
-    resolver: zodResolver(draftItemSchema),
-    defaultValues: emptyDraft(),
-    mode: 'onTouched',
-    reValidateMode: 'onChange',
-  });
-  const draftControl = draftForm.control;
-  const draftErrors = draftForm.formState.errors;
-  const draftBuilding = draftForm.watch('building_id');
-  const draftUnit = draftForm.watch('unit_id');
-  const draftQuantity = draftForm.watch('quantity');
-
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [draftParticular, setDraftParticular] = useState<ParticularRow | null>(null);
-
-  const startEdit = (index: number) => {
-    const item = items[index];
-    if (!item) return;
-    draftForm.reset({
-      product_id: item.product_id ?? '',
-      quantity: item.quantity ?? 1,
-      unit_price: item.unit_price ?? null,
-      building_id: item.building_id ?? '',
-      unit_id: item.unit_id ?? null,
-      pickup_particular_id: item.pickup_particular_id ?? null,
-    });
-    setDraftParticular(pickupParticulars[index] ?? null);
-    setEditingIndex(index);
-  };
-
-  const cancelEdit = () => {
-    setEditingIndex(null);
-    setDraftParticular(null);
-    draftForm.reset(emptyDraft());
+  const appendItem = () => {
+    append(emptyItem());
+    setOpenItemIndex(fields.length);
   };
 
   const deleteItem = (index: number) => {
@@ -289,59 +240,14 @@ export function KeyOrderForm({
       delete next[index];
       return next;
     });
-    if (editingIndex === index) {
-      cancelEdit();
-    }
+    if (openItemIndex === index) setOpenItemIndex(null);
   };
 
-  const submitDraft = () => {
-    void draftForm.handleSubmit((values) => {
-      const editingIdx = editingIndex;
-      const editing = editingIdx !== null;
-      const existing = editing
-        ? (items[editingIdx] as
-            | (KeyOrderFormValues['items'][number] & { _id?: string })
-            | undefined)
-        : undefined;
-      const nextItem = {
-        item_type: 'key' as const,
-        description: existing?.description ?? '',
-        quantity: values.quantity,
-        unit_price: values.unit_price,
-        building_id: values.building_id,
-        unit_id: values.unit_id,
-        pickup_particular_id:
-          draftParticular?.id ?? values.pickup_particular_id ?? null,
-        product_id: values.product_id,
-        ...(existing?._id ? { _id: existing._id } : {}),
-      };
-
-      if (editing && editingIdx !== null) {
-        update(editingIdx, nextItem as unknown as KeyOrderFormValues['items'][number]);
-        setPickupParticulars((prev) => ({
-          ...prev,
-          [editingIdx]: draftParticular,
-        }));
-      } else {
-        append(nextItem as unknown as KeyOrderFormValues['items'][number]);
-        setPickupParticulars((prev) => ({
-          ...prev,
-          [items.length]: draftParticular,
-        }));
-      }
-
-      // Inheritance: keep model + building; reset the rest for the next line.
-      draftForm.reset({
-        product_id: values.product_id,
-        quantity: 1,
-        unit_price: null,
-        building_id: values.building_id,
-        unit_id: null,
-        pickup_particular_id: null,
-      });
-      setDraftParticular(null);
-      setEditingIndex(null);
-    })();
+  const setItemPickupParticular = (index: number, p: ParticularRow | null) => {
+    setPickupParticulars((prev) => ({ ...prev, [index]: p }));
+    setValue(`items.${index}.pickup_particular_id`, p?.id ?? null, {
+      shouldValidate: true,
+    });
   };
 
   const { data: buildings = [] } = useBuildings(
@@ -350,51 +256,6 @@ export function KeyOrderForm({
       : {},
   );
 
-  // Outer submit intercept: if the user filled the "Nuevo ítem" draft but forgot
-  // to click "Agregar item", append it first (validating the draft), then submit
-  // the order. Prevents the confusing "Agregá al menos un ítem" error when the
-  // draft is visibly filled.
-  const submitOrder = handleSubmit(onSubmit);
-  const handleOuterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (draftForm.formState.isDirty) {
-      const appended = await new Promise<boolean>((resolve) => {
-        void draftForm.handleSubmit(
-          (values) => {
-            const nextItem = {
-              item_type: 'key' as const,
-              description: '',
-              quantity: values.quantity,
-              unit_price: values.unit_price,
-              building_id: values.building_id,
-              unit_id: values.unit_id,
-              pickup_particular_id:
-                draftParticular?.id ?? values.pickup_particular_id ?? null,
-              product_id: values.product_id,
-            };
-            append(nextItem as unknown as KeyOrderFormValues['items'][number]);
-            setPickupParticulars((prev) => ({
-              ...prev,
-              [items.length]: draftParticular,
-            }));
-            draftForm.reset({
-              product_id: values.product_id,
-              quantity: 1,
-              unit_price: null,
-              building_id: values.building_id,
-              unit_id: null,
-              pickup_particular_id: null,
-            });
-            setDraftParticular(null);
-            resolve(true);
-          },
-          () => resolve(false),
-        )();
-      });
-      if (!appended) return;
-    }
-    await submitOrder(e);
-  };
 
   const handleParticularChange = (p: ParticularRow | null) => {
     setParticular(p);
@@ -425,7 +286,7 @@ export function KeyOrderForm({
   return (
     <>
       <form
-        onSubmit={handleOuterSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col gap-8"
         id="key-order-form"
       >
@@ -507,264 +368,311 @@ export function KeyOrderForm({
           )}
         </section>
 
-        {/* ---- Section: Items (each item is a pack of keys) ---- */}
+        {/* ---- Section: Ítems (item cards inline) ---- */}
         <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
-          <SectionHeading
-            title="Lista de items"
-            description="Cada item es un pack de llaves del mismo modelo, edificio y precio. Cargalo en el panel de abajo y quedará listado arriba; el modelo y el edificio se recuerdan para el siguiente item."
-          />
+          <div className="flex items-center justify-between border-b pb-2">
+            <h2 className="text-base font-semibold">
+              Ítems{' '}
+              {fields.length > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  ({fields.length})
+                </span>
+              )}
+            </h2>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={appendItem}
+            >
+              <Plus className="h-4 w-4" />
+              Agregar ítem
+            </Button>
+          </div>
 
           {errors.items && !Array.isArray(errors.items) && (
             <p className="text-sm text-destructive">{errors.items.message}</p>
           )}
 
-          {/* Confirmed lines summary: compact, one line each, no horizontal scrolling. */}
-          {fields.length > 0 && (
-            <div className="flex flex-col gap-3" data-testid="key-order-lines">
+          {fields.length === 0 ? (
+            <div
+              data-testid="key-order-items-empty"
+              className="flex flex-col items-center gap-3 rounded-md border-2 border-dashed border-border bg-muted/10 p-8 text-center"
+            >
+              <p className="text-sm text-muted-foreground">
+                La orden todavía no tiene ítems. Agregá al menos uno para poder crearla.
+              </p>
+              <Button type="button" onClick={appendItem} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Agregar primer ítem
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3" data-testid="key-order-items">
               {fields.map((field, index) => {
                 const item = items[index];
+                const isOpen = openItemIndex === index;
                 const product = keyProducts.find(
                   (p) => p.id === item?.product_id,
                 );
                 const building = buildings.find(
                   (b) => b.id === item?.building_id,
                 );
+                const buildingId = item?.building_id ?? null;
                 const lineTotal =
                   (Number(item?.quantity) || 0) *
                   (Number(item?.unit_price) || 0);
+                const itemErrors = errors.items?.[index];
 
                 return (
                   <div
                     key={field.id}
-                    data-testid={`key-order-line-${index}`}
-                    className={[
-                      'flex items-center justify-between gap-3 rounded-md border px-4 py-3',
-                      editingIndex === index ? 'ring-1 ring-primary' : '',
-                    ].join(' ')}
+                    data-testid={`key-order-item-${index}`}
+                    className="flex flex-col overflow-hidden rounded-md border bg-muted/20"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-2 text-sm">
-                        <span className="font-medium text-muted-foreground">
-                          Item {index + 1}
-                        </span>
-                        <span className="truncate font-medium">
-                          {product?.name ?? 'Sin modelo'}
-                        </span>
-                        <span className="shrink-0 text-muted-foreground">
-                          × {item?.quantity ?? 1}
-                        </span>
-                      </p>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
-                        {building?.name ?? 'Sin edificio'} ·{' '}
-                        {formatCurrencyARS(lineTotal)}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Button
+                    {/* Header (always visible) */}
+                    <div className="flex items-center gap-3 p-3">
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 px-0"
-                        aria-label={`Editar item ${index + 1}`}
-                        onClick={() => startEdit(index)}
+                        onClick={() =>
+                          setOpenItemIndex(isOpen ? null : index)
+                        }
+                        aria-label={
+                          isOpen
+                            ? `Colapsar ítem ${index + 1}`
+                            : `Expandir ítem ${index + 1}`
+                        }
+                        className="flex flex-1 min-w-0 items-center gap-3 text-left"
                       >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {isOpen ? '▾' : '▸'}
+                        </span>
+                        <span className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-sm shrink-0">
+                            Ítem {index + 1}
+                          </span>
+                          {product && (
+                            <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 truncate max-w-[200px]">
+                              {product.name}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            ×{item?.quantity ?? 1}
+                          </span>
+                          {building && (
+                            <>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                {building.name}
+                              </span>
+                            </>
+                          )}
+                          {(Number(item?.unit_price) || 0) > 0 && (
+                            <>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <span className="text-xs font-medium tabular-nums">
+                                {formatCurrencyARS(lineTotal)}
+                              </span>
+                            </>
+                          )}
+                        </span>
+                      </button>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 px-0 text-destructive hover:text-destructive"
-                        aria-label={`Eliminar item ${index + 1}`}
+                        aria-label={`Eliminar ítem ${index + 1}`}
                         onClick={() => deleteItem(index)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
+
+                    {/* Error summary visible even when collapsed */}
+                    {!isOpen && itemErrors && (
+                      <div className="px-3 pb-3 flex flex-col gap-1">
+                        {itemErrors.product_id && (
+                          <p className="text-xs text-destructive">
+                            {itemErrors.product_id.message}
+                          </p>
+                        )}
+                        {itemErrors.building_id && (
+                          <p className="text-xs text-destructive">
+                            {itemErrors.building_id.message}
+                          </p>
+                        )}
+                        {itemErrors.unit_price && (
+                          <p className="text-xs text-destructive">
+                            {itemErrors.unit_price.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Body (expanded) */}
+                    {isOpen && (
+                      <div className="p-4 border-t bg-card grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {/* Producto */}
+                        <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
+                          <Label htmlFor={`items.${index}.product_id`}>
+                            Llave *
+                          </Label>
+                          <Controller
+                            control={control}
+                            name={`items.${index}.product_id`}
+                            render={({ field: f }) => (
+                              <Select
+                                value={f.value ?? ''}
+                                onValueChange={(v) => f.onChange(v || null)}
+                              >
+                                <SelectTrigger
+                                  id={`items.${index}.product_id`}
+                                  aria-label="Llave"
+                                >
+                                  <SelectValue placeholder="Seleccioná un modelo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {keyProducts.map((p) => (
+                                    <SelectItem key={p.id} value={p.id}>
+                                      {p.name} — disponible: {p.stock_disponible}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {itemErrors?.product_id && (
+                            <p className="text-xs text-destructive">
+                              {itemErrors.product_id.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Cantidad */}
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <Label htmlFor={`items.${index}.quantity`}>
+                            Cantidad *
+                          </Label>
+                          <Input
+                            id={`items.${index}.quantity`}
+                            type="number"
+                            min={1}
+                            aria-label="Cantidad de llaves"
+                            {...register(`items.${index}.quantity`)}
+                          />
+                          {itemErrors?.quantity && (
+                            <p className="text-xs text-destructive">
+                              {itemErrors.quantity.message}
+                            </p>
+                          )}
+                          {(Number(item?.quantity) || 0) > 1 && (
+                            <p className="text-xs text-muted-foreground">
+                              Se dividirá en {item?.quantity} llaves individuales.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Precio unitario */}
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <Label htmlFor={`items.${index}.unit_price`}>
+                            Precio unitario *
+                          </Label>
+                          <Input
+                            id={`items.${index}.unit_price`}
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            placeholder="0.00"
+                            aria-label="Precio unitario"
+                            {...register(`items.${index}.unit_price`)}
+                          />
+                          {itemErrors?.unit_price && (
+                            <p className="text-xs text-destructive">
+                              {itemErrors.unit_price.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Edificio */}
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <Label>Edificio *</Label>
+                          <Controller
+                            control={control}
+                            name={`items.${index}.building_id`}
+                            render={({ field: f }) => (
+                              <BuildingCombobox
+                                id={`items.${index}.building_id`}
+                                buildings={buildings}
+                                value={f.value ?? ''}
+                                onChange={(v) => {
+                                  f.onChange(v ?? null);
+                                  // Clear unit when building changes; the previously
+                                  // selected unit belongs to a different building.
+                                  setValue(`items.${index}.unit_id`, null);
+                                }}
+                                placeholder="Buscar por nombre o dirección"
+                              />
+                            )}
+                          />
+                          {itemErrors?.building_id && (
+                            <p className="text-xs text-destructive">
+                              {itemErrors.building_id.message}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Unidad */}
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <Label>Unidad</Label>
+                          <KeyItemUnitField
+                            buildingId={buildingId}
+                            value={item?.unit_id ?? null}
+                            onChange={(v) =>
+                              setValue(`items.${index}.unit_id`, v)
+                            }
+                            error={itemErrors?.unit_id?.message}
+                          />
+                        </div>
+
+                        {/* Autorizado a retirar */}
+                        <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
+                          <Label>Autorizado a retirar</Label>
+                          <ParticularSelector
+                            value={pickupParticulars[index] ?? null}
+                            onChange={(p) =>
+                              setItemPickupParticular(index, p)
+                            }
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           )}
 
-          {/* Focused load panel: one line at a time; model + building inherit from the previous line. */}
-          <div className="flex flex-col gap-4 rounded-md border bg-muted/30 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium">
-                {editingIndex !== null
-                  ? `Editar item ${editingIndex + 1}`
-                  : 'Nuevo item'}
-              </p>
-              {editingIndex !== null && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={cancelEdit}
-                >
-                  Cancelar
-                </Button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Modelo */}
-              <div className="flex min-w-0 flex-col gap-2">
-                <Label htmlFor="draft-product-id">Llave *</Label>
-                <Controller
-                  control={draftControl}
-                  name="product_id"
-                  render={({ field: f }) => (
-                    <Select
-                      value={f.value ?? ''}
-                      onValueChange={(v) => f.onChange(v || null)}
-                    >
-                      <SelectTrigger
-                        id="draft-product-id"
-                        aria-label="Llave"
-                      >
-                        <SelectValue placeholder="Seleccioná un modelo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {keyProducts.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name} — disponible: {p.stock_disponible}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {draftErrors.product_id && (
-                  <p className="text-xs text-destructive">
-                    {draftErrors.product_id.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Cantidad + Precio: short inputs, side by side to save a row */}
-              <div className="flex min-w-0 flex-col gap-2">
-                <div className="grid grid-cols-2 items-start gap-4">
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <Label htmlFor="draft-quantity">Cantidad *</Label>
-                    <Input
-                      id="draft-quantity"
-                      type="number"
-                      min={1}
-                      aria-label="Cantidad de llaves"
-                      {...draftForm.register('quantity')}
-                    />
-                    {draftErrors.quantity && (
-                      <p className="text-xs text-destructive">
-                        {draftErrors.quantity.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <Label htmlFor="draft-unit-price">Precio unitario *</Label>
-                    <Input
-                      id="draft-unit-price"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      placeholder="0.00"
-                      aria-label="Precio unitario"
-                      {...draftForm.register('unit_price')}
-                    />
-                    {draftErrors.unit_price && (
-                      <p className="text-xs text-destructive">
-                        {draftErrors.unit_price.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {(draftQuantity ?? 1) > 1 && (
-                  <p className="text-xs text-muted-foreground">
-                    Se dividirá en {draftQuantity} llaves individuales.
-                  </p>
-                )}
-              </div>
-
-              {/* Edificio */}
-              <div className="flex min-w-0 flex-col gap-2">
-                <Label>Edificio *</Label>
-                <BuildingCombobox
-                  id="draft-building-id"
-                  buildings={buildings}
-                  value={draftBuilding ?? ''}
-                  onChange={(v) => {
-                    draftForm.setValue('building_id', v ?? '', {
-                      shouldValidate: true,
-                    });
-                    draftForm.setValue('unit_id', null);
-                  }}
-                  placeholder="Buscar por nombre o dirección"
-                />
-                {draftErrors.building_id && (
-                  <p className="text-xs text-destructive">
-                    {draftErrors.building_id.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Unidad */}
-              <div className="flex min-w-0 flex-col gap-2">
-                <Label>Unidad</Label>
-                <KeyItemUnitField
-                  buildingId={draftBuilding || null}
-                  value={draftUnit ?? null}
-                  onChange={(v) => draftForm.setValue('unit_id', v)}
-                  error={draftErrors.unit_id?.message}
-                />
-              </div>
-
-              {/* Autorizado a retirar */}
-              <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
-                <Label>Autorizado a retirar</Label>
-                <ParticularSelector
-                  value={draftParticular}
-                  onChange={(p) =>
-                    setDraftParticular(p as ParticularRow | null)
-                  }
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <div className="flex">
-              <Button
-                type="button"
-                className="w-full gap-2"
-                onClick={submitDraft}
-              >
-                {editingIndex !== null ? (
-                  'Guardar cambios'
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4" />
-                    Agregar item
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Totals live OUTSIDE the scroll container: always visible on any screen. */}
-          <div
-            data-testid="lines-totals"
-            className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-4 py-3 text-sm"
-          >
-            <span className="text-muted-foreground">
-              {items.length} {items.length === 1 ? 'item' : 'items'} ·{' '}
-              {keysCount} {keysCount === 1 ? 'llave' : 'llaves'}
-            </span>
-            <span className="font-medium">
-              Total:{' '}
-              <span className="tabular-nums">
-                {formatCurrencyARS(totalPrice)}
+          {/* Totals — always visible below the item list */}
+          {fields.length > 0 && (
+            <div
+              data-testid="lines-totals"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-4 py-3 text-sm"
+            >
+              <span className="text-muted-foreground">
+                {items.length} {items.length === 1 ? 'ítem' : 'ítems'} ·{' '}
+                {keysCount} {keysCount === 1 ? 'llave' : 'llaves'}
               </span>
-            </span>
-          </div>
+              <span className="font-medium">
+                Total:{' '}
+                <span className="tabular-nums">
+                  {formatCurrencyARS(totalPrice)}
+                </span>
+              </span>
+            </div>
+          )}
         </section>
 
         {/* ---- Section: Notas ---- */}
