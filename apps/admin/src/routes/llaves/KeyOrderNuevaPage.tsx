@@ -45,7 +45,7 @@ export default function KeyOrderNuevaPage() {
   };
 
   return (
-    <div className="flex min-h-full flex-col gap-6">
+    <div className="flex min-h-full flex-col gap-6 -mb-6">
       <PageHeader
         title="Nueva orden de llaves"
         subtitle="Completá los datos del cliente y las llaves. La orden se confirma automáticamente al guardar."
