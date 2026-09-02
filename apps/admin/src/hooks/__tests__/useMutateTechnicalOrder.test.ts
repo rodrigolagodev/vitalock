@@ -413,6 +413,45 @@ describe('useMutateTechnicalOrder', () => {
   });
 
   // ──────────────────────────────────────────────────────────────────────────
+  // Terminal immutability — trigger enforcement via P0001
+  // ──────────────────────────────────────────────────────────────────────────
+
+  it('cancelTechnicalOrder against invoiced order → DB returns P0001 → surfaces via toastMutationError', async () => {
+    // The trigger rejects UPDATE on invoiced rows
+    const dbError = { code: 'P0001', message: 'TECHNICAL_ORDER_TERMINAL: cannot modify technical_orders row (status: invoiced)' };
+    mockRpc.mockResolvedValueOnce({ data: null, error: dbError });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateTechnicalOrder(), { wrapper: Wrapper });
+
+    await act(async () => {
+      try {
+        await result.current.cancelTechnicalOrder.mutateAsync({ id: 'to-invoiced' });
+      } catch { /* expected */ }
+    });
+
+    await waitFor(() => expect(result.current.cancelTechnicalOrder.isError).toBe(true));
+    const calls = (toastMutationError as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0]![0]).toEqual(dbError);
+  });
+
+  it('markTechnicalOrderInvoiced on completed order → succeeds (completed is NOT terminal)', async () => {
+    // completed → invoiced is a valid transition; the trigger should NOT block
+    mockRpc.mockResolvedValueOnce({ data: null, error: null });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateTechnicalOrder(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.markTechnicalOrderInvoiced.mutateAsync({ id: 'to-completed' });
+    });
+
+    await waitFor(() => expect(result.current.markTechnicalOrderInvoiced.isSuccess).toBe(true));
+    expect(mockRpc).toHaveBeenCalledWith('mark_technical_order_invoiced', { p_order_id: 'to-completed' });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
   // recomputeTechnicalOrderStatus
   // ──────────────────────────────────────────────────────────────────────────
 

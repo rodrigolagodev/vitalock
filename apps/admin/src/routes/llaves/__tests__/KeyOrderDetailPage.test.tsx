@@ -17,9 +17,13 @@ vi.mock('@/hooks/useMutateKeyOrder', () => ({
   useMutateKeyOrder: useMutateKeyOrderMock,
 }));
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
-// Stub items table to avoid deep dependency chain in detail page tests
+// Stub items table — captures canRegisterPickup for terminal guard assertions
+const itemsTableProps: { canRegisterPickup?: boolean } = {};
 vi.mock('@/components/llaves/KeyOrderItemsTable', () => ({
-  KeyOrderItemsTable: () => <div data-testid="items-table" />,
+  KeyOrderItemsTable: (props: { canRegisterPickup?: boolean }) => {
+    itemsTableProps.canRegisterPickup = props.canRegisterPickup;
+    return <div data-testid="items-table" />;
+  },
 }));
 
 import KeyOrderDetailPage from '../KeyOrderDetailPage';
@@ -205,6 +209,78 @@ describe('KeyOrderDetailPage — items table', () => {
   it('renders the items section heading', () => {
     renderPage();
     expect(screen.getByRole('heading', { name: /ítems/i })).toBeInTheDocument();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// isTerminalOrder guard — invoiced/cancelled only (NOT completed)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('KeyOrderDetailPage — isTerminalOrder terminal guard', () => {
+  beforeEach(() => {
+    itemsTableProps.canRegisterPickup = undefined;
+  });
+
+  it('hides cancel button when status is invoiced (terminal)', () => {
+    useKeyOrderMock.mockReturnValue({
+      data: makeOrder({ status: 'invoiced' }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+    expect(screen.queryByRole('button', { name: /cancelar/i })).not.toBeInTheDocument();
+  });
+
+  it('hides cancel button when status is cancelled (terminal)', () => {
+    useKeyOrderMock.mockReturnValue({
+      data: makeOrder({ status: 'cancelled' }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+    expect(screen.queryByRole('button', { name: /cancelar/i })).not.toBeInTheDocument();
+  });
+
+  it('shows cancel button when status is completed (NOT terminal for key orders)', () => {
+    useKeyOrderMock.mockReturnValue({
+      data: makeOrder({ status: 'completed' }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+    expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
+  });
+
+  it('canRegisterPickup is false when status is invoiced (terminal)', () => {
+    useKeyOrderMock.mockReturnValue({
+      data: makeOrder({ status: 'invoiced' }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+    expect(itemsTableProps.canRegisterPickup).toBe(false);
+  });
+
+  it('canRegisterPickup is false when status is cancelled (terminal)', () => {
+    useKeyOrderMock.mockReturnValue({
+      data: makeOrder({ status: 'cancelled' }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+    expect(itemsTableProps.canRegisterPickup).toBe(false);
+  });
+
+  it('canRegisterPickup is false when status is ready_for_pickup but completed (terminal would block — but completed is not terminal)', () => {
+    // completed status: isTerminalOrder = false, isReadyForPickup = false → canRegisterPickup = false
+    useKeyOrderMock.mockReturnValue({
+      data: makeOrder({ status: 'completed' }),
+      isLoading: false,
+      isError: false,
+    });
+    renderPage();
+    // completed is not ready_for_pickup → canRegisterPickup false regardless
+    expect(itemsTableProps.canRegisterPickup).toBe(false);
   });
 });
 

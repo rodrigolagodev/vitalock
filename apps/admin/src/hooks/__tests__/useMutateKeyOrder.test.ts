@@ -487,6 +487,45 @@ describe('useMutateKeyOrder', () => {
   });
 
   // ──────────────────────────────────────────────────────────────────────────
+  // Terminal immutability — trigger enforcement via P0001
+  // ──────────────────────────────────────────────────────────────────────────
+
+  it('cancelKeyOrder against invoiced order → DB returns P0001 → surfaces via toastMutationError', async () => {
+    // The trigger rejects UPDATE on invoiced rows
+    const dbError = { code: 'P0001', message: 'KEY_ORDER_TERMINAL: cannot modify key_orders row (status: invoiced)' };
+    mockRpc.mockResolvedValueOnce({ data: null, error: dbError });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateKeyOrder(), { wrapper: Wrapper });
+
+    await act(async () => {
+      try {
+        await result.current.cancelKeyOrder.mutateAsync({ id: 'ko-invoiced' });
+      } catch { /* expected */ }
+    });
+
+    await waitFor(() => expect(result.current.cancelKeyOrder.isError).toBe(true));
+    const calls = (toastMutationError as ReturnType<typeof vi.fn>).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0]![0]).toEqual(dbError);
+  });
+
+  it('markKeyOrderInvoiced on completed order → succeeds (completed is NOT terminal)', async () => {
+    // completed → invoiced is a valid transition; the trigger should NOT block
+    mockRpc.mockResolvedValueOnce({ data: null, error: null });
+
+    const { Wrapper } = makeWrapper();
+    const { result } = renderHook(() => useMutateKeyOrder(), { wrapper: Wrapper });
+
+    await act(async () => {
+      await result.current.markKeyOrderInvoiced.mutateAsync({ id: 'ko-completed' });
+    });
+
+    await waitFor(() => expect(result.current.markKeyOrderInvoiced.isSuccess).toBe(true));
+    expect(mockRpc).toHaveBeenCalledWith('mark_key_order_invoiced', { p_order_id: 'ko-completed' });
+  });
+
+  // ──────────────────────────────────────────────────────────────────────────
   // configureKeyOrderItem
   // ──────────────────────────────────────────────────────────────────────────
 

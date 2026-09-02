@@ -14,7 +14,9 @@ import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { KeyOrderStatusBadge } from '@/components/llaves/KeyOrderStatusBadge';
 import { KeyOrderItemsTable } from '@/components/llaves/KeyOrderItemsTable';
 
-const TERMINAL_STATUSES = new Set(['completed', 'invoiced', 'cancelled']);
+function isTerminalOrder(status: string): boolean {
+  return status === 'invoiced' || status === 'cancelled';
+}
 
 export default function KeyOrderDetailPage() {
   const { keyOrderId } = useParams<{ keyOrderId: string }>();
@@ -61,7 +63,7 @@ export default function KeyOrderDetailPage() {
     );
   }
 
-  const isTerminal = TERMINAL_STATUSES.has(order.status);
+  const isTerminal = isTerminalOrder(order.status);
   const isDraft = order.status === 'draft';
   const isCompleted = order.status === 'completed';
   const isReadyForPickup = order.status === 'ready_for_pickup';
