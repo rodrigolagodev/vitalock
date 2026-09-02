@@ -57,16 +57,11 @@ export interface RecordPickupInput {
  */
 export function useMutateKey(buildingId: string | undefined) {
   const queryClient = useQueryClient();
-  const invalidateKeys = () =>
-    queryClient.invalidateQueries({ queryKey: keysKey(buildingId) });
+  const invalidateKeys = () => queryClient.invalidateQueries({ queryKey: keysKey(buildingId) });
 
   const createKey = useMutation({
     mutationFn: async (input: CreateKeyInput) => {
-      const { data, error } = await supabase
-        .from('rfid_keys')
-        .insert(input)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('rfid_keys').insert(input).select().single();
       if (error) throw error;
       return data;
     },
@@ -91,9 +86,7 @@ export function useMutateKey(buildingId: string | undefined) {
     onSuccess: (_data, vars) => {
       void invalidateKeys();
       void queryClient.invalidateQueries({ queryKey: keyEventsKey(vars.id) });
-      toast.success(
-        vars.status === 'active' ? 'Llave activada.' : 'Llave dada de baja.',
-      );
+      toast.success(vars.status === 'active' ? 'Llave activada.' : 'Llave dada de baja.');
     },
     onError: toastMutationError,
   });
@@ -132,7 +125,7 @@ export function useMutateKey(buildingId: string | undefined) {
 
   const recordPickup = useMutation({
     mutationFn: async ({
-      order_id,
+      order_id: _order_id,
       key_id,
       picked_up_by_name,
       picked_up_by_surname,

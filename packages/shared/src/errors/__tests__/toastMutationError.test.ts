@@ -132,18 +132,21 @@ describe('toastMutationError', () => {
 
   // REQ-SHARED-ERROR-1.9 — extraHandlers extensibility — exactly matching handler fires
   it('extraHandlers with two keys — only matching handler fires', () => {
-    let firedKeys: string[] = [];
+    const firedKeys: string[] = [];
     const handlers = {
-      '23505': (e: { code: string }) => {
+      '23505': (_e: { code: string }) => {
         firedKeys.push('23505');
         return 'Matched 23505';
       },
-      '23514': (e: { code: string }) => {
+      '23514': (_e: { code: string }) => {
         firedKeys.push('23514');
         return 'Matched 23514';
       },
     };
-    const result = toastMutationError({ code: '23505', message: 'dup key' }, { extraHandlers: handlers });
+    const result = toastMutationError(
+      { code: '23505', message: 'dup key' },
+      { extraHandlers: handlers },
+    );
     expect(result).toBe('Matched 23505');
     expect(firedKeys).toEqual(['23505']);
     expect(firedKeys).not.toContain('23514');

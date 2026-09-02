@@ -8,10 +8,6 @@ import type { ReactNode } from 'react';
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockEqFn = vi.fn();
-const mockSelectActivate = vi.fn();
-const mockSelectDisable = vi.fn();
-const mockSelectUnchanged = vi.fn();
 const mockFromPublic = vi.fn();
 const mockFromOperations = vi.fn();
 const mockSchema = vi.fn();
@@ -42,12 +38,8 @@ const toActivateRows = [
   { id: 'key-act-1', rfid_code: 'RFID-ACT-1', unit_id: 'unit-1' },
   { id: 'key-act-2', rfid_code: 'RFID-ACT-2', unit_id: 'unit-2' },
 ];
-const toDisableRows = [
-  { id: 'key-dis-1', rfid_code: 'RFID-DIS-1', unit_id: 'unit-3' },
-];
-const unchangedRows = [
-  { id: 'key-unc-1', rfid_code: 'RFID-UNC-1', unit_id: 'unit-4' },
-];
+const toDisableRows = [{ id: 'key-dis-1', rfid_code: 'RFID-DIS-1', unit_id: 'unit-3' }];
+const unchangedRows = [{ id: 'key-unc-1', rfid_code: 'RFID-UNC-1', unit_id: 'unit-4' }];
 const unitRows = [
   { id: 'unit-1', number: '1A' },
   { id: 'unit-2', number: '2B' },
@@ -74,12 +66,8 @@ describe('usePendingKeysForEquipment', () => {
     // operations.key_authorizations join for unchanged keys
     // units lookup
 
-    // We set up the schema/from chain based on call order
-    let schemaCallCount = 0;
-    let publicFromCallCount = 0;
-
-    mockSchema.mockImplementation((schema: string) => {
-      if (schema === 'operations') {
+    mockSchema.mockImplementation((_schema: string) => {
+      if (_schema === 'operations') {
         return { from: mockFromOperations };
       }
       return { from: mockFromPublic };
@@ -96,9 +84,6 @@ describe('usePendingKeysForEquipment', () => {
     //               (6) rfid_keys WHERE id IN (unchanged ids),
     //               (7) units WHERE id IN (all unit ids)
 
-    const mockInActivateKeys = vi.fn().mockResolvedValue({ data: toActivateRows, error: null });
-    const mockInDisableKeys = vi.fn().mockResolvedValue({ data: toDisableRows, error: null });
-    const mockInUnchangedKeys = vi.fn().mockResolvedValue({ data: unchangedRows, error: null });
     const mockInUnits = vi.fn().mockResolvedValue({ data: unitRows, error: null });
 
     const mockIntendedEquipSelect = vi.fn().mockReturnValue({
@@ -117,17 +102,6 @@ describe('usePendingKeysForEquipment', () => {
       }),
     });
 
-    const mockUnchangedAuthSelect = vi.fn().mockReturnValue({
-      eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          is: vi.fn().mockResolvedValue({
-            data: [{ rfid_key_id: 'key-unc-1' }],
-            error: null,
-          }),
-        }),
-      }),
-    });
-
     mockFrom.mockImplementation((table: string) => {
       if (table === 'rfid_key_intended_equipment') {
         return { select: mockIntendedEquipSelect };
@@ -135,7 +109,16 @@ describe('usePendingKeysForEquipment', () => {
       if (table === 'rfid_keys') {
         // Return different data depending on what IDs are requested
         return {
-          select: vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ data: [...toActivateRows, ...toDisableRows, ...unchangedRows], error: null }) }),
+          select: vi
+            .fn()
+            .mockReturnValue({
+              in: vi
+                .fn()
+                .mockResolvedValue({
+                  data: [...toActivateRows, ...toDisableRows, ...unchangedRows],
+                  error: null,
+                }),
+            }),
         };
       }
       if (table === 'units') {
@@ -171,7 +154,11 @@ describe('usePendingKeysForEquipment', () => {
         return { select: vi.fn().mockReturnValue({ eq: mockEq1 }) };
       }
       if (table === 'units') {
-        return { select: vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ data: [], error: null }) }) };
+        return {
+          select: vi
+            .fn()
+            .mockReturnValue({ in: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+        };
       }
       return { select: vi.fn().mockReturnThis() };
     });
@@ -212,11 +199,15 @@ describe('usePendingKeysForEquipment', () => {
         };
       }
       if (table === 'units') {
-        return { select: vi.fn().mockReturnValue({ in: vi.fn().mockResolvedValue({ data: [], error: null }) }) };
+        return {
+          select: vi
+            .fn()
+            .mockReturnValue({ in: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+        };
       }
       return { select: vi.fn().mockReturnThis() };
     });
-    mockSchema.mockImplementation((schema: string) => {
+    mockSchema.mockImplementation((_schema: string) => {
       return {
         from: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({

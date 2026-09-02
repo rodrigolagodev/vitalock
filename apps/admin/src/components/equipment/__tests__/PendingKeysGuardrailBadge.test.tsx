@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -17,10 +17,7 @@ import { PendingKeysGuardrailBadge } from '../PendingKeysGuardrailBadge';
 import type { KeyRow } from '@/hooks/useKeys';
 import type { EquipmentUpdateRow } from '@/hooks/useEquipmentUpdates';
 
-function makeKey(
-  id: string,
-  status: KeyRow['status'],
-): KeyRow {
+function makeKey(id: string, status: KeyRow['status']): KeyRow {
   return {
     id,
     rfid_code: `K-${id}`,
@@ -34,7 +31,13 @@ function makeKey(
     picked_up_by_dni: null,
     delivered_by_staff_id: null,
     unit_id: `u-${id}`,
-    unit: { id: `u-${id}`, number: `${id}A`, unit_type: null, is_administrative: false, status: 'active' },
+    unit: {
+      id: `u-${id}`,
+      number: `${id}A`,
+      unit_type: null,
+      is_administrative: false,
+      status: 'active',
+    },
   };
 }
 
@@ -64,27 +67,20 @@ describe('PendingKeysGuardrailBadge', () => {
     const keys: KeyRow[] = [makeKey('1', 'pending_installation')];
     const updates: EquipmentUpdateRow[] = [];
 
-    render(
-      <PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText('1')).toBeInTheDocument();
   });
 
   it('hides badge when all pending keys are covered by an active (open) train', () => {
-    const keys: KeyRow[] = [
-      makeKey('1', 'pending_installation'),
-      makeKey('2', 'pending_disable'),
-    ];
-    const updates: EquipmentUpdateRow[] = [
-      makeUpdate('u1', 'open', ['1'], ['2']),
-    ];
+    const keys: KeyRow[] = [makeKey('1', 'pending_installation'), makeKey('2', 'pending_disable')];
+    const updates: EquipmentUpdateRow[] = [makeUpdate('u1', 'open', ['1'], ['2'])];
 
-    render(
-      <PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.queryByText('1')).not.toBeInTheDocument();
     expect(screen.queryByText('2')).not.toBeInTheDocument();
@@ -94,10 +90,9 @@ describe('PendingKeysGuardrailBadge', () => {
     const keys: KeyRow[] = [makeKey('1', 'active'), makeKey('2', 'disabled')];
     const updates: EquipmentUpdateRow[] = [];
 
-    render(
-      <PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.queryByRole('generic', { name: /\d+/ })).not.toBeInTheDocument();
   });
@@ -108,14 +103,11 @@ describe('PendingKeysGuardrailBadge', () => {
       makeKey('2', 'pending_disable'),
       makeKey('3', 'pending_installation'),
     ];
-    const updates: EquipmentUpdateRow[] = [
-      makeUpdate('u1', 'in_progress', ['1'], ['2']),
-    ];
+    const updates: EquipmentUpdateRow[] = [makeUpdate('u1', 'in_progress', ['1'], ['2'])];
 
-    render(
-      <PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<PendingKeysGuardrailBadge keys={keys} equipmentUpdates={updates} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText('1')).toBeInTheDocument();
   });

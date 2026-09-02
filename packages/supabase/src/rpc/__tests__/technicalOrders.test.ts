@@ -21,7 +21,7 @@ const sampleOrder = {
 };
 const sampleItems = [
   {
-    item_type: 'maintenance' as const,
+    item_type: 'maintain_equipment' as const,
     quantity: 1,
     building_id: 'b-2',
     unit_price: 200,

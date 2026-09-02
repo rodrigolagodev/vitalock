@@ -36,6 +36,9 @@ export interface OrderListSupabaseClient {
   };
 }
 
+// TStatus is part of the public factory API (documents allowed status values
+// for consumers); intentionally unused inside this file's implementation.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface CreateUseOrderListOptions<TStatus extends string, TRow> {
   /** View name in the public schema (e.g. 'key_orders_summary'). */
   view: string;
@@ -77,9 +80,7 @@ export function createUseOrderList<TStatus extends string, TRow>(
 ): (filters?: OrderListFilters<TStatus>) => UseQueryResult<TRow[]> {
   const { view, itemsTable, supabase, queryKeyFn, mapRow } = options;
 
-  return function useOrderList(
-    filters?: OrderListFilters<TStatus>,
-  ): UseQueryResult<TRow[]> {
+  return function useOrderList(filters?: OrderListFilters<TStatus>): UseQueryResult<TRow[]> {
     const { search, status, administrationId, buildingId } = filters ?? {};
     const trimmed = search?.trim() ?? '';
     const scopedByBuilding = Boolean(buildingId && buildingId !== 'all');

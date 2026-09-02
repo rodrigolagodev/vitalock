@@ -1,0 +1,46 @@
+name: admin-checks
+
+on:
+  pull_request:
+    paths:
+      - 'apps/admin/**'
+      - 'packages/ui/**'
+      - 'packages/shared/**'
+      - 'packages/config-eslint/**'
+      - 'packages/config-typescript/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'tsconfig.json'
+      - '.github/workflows/admin-checks.yml'
+
+concurrency:
+  group: admin-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm --filter @vitalock/admin lint
+
+      - name: Typecheck
+        run: pnpm --filter @vitalock/admin typecheck
+
+      - name: Test
+        run: pnpm --filter @vitalock/admin test

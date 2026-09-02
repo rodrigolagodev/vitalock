@@ -37,7 +37,9 @@ export function usePendingKeysForEquipment(equipmentId: string) {
 
       if (intendedErr) throw intendedErr;
 
-      const activateKeyIds = (intendedLinks ?? []).map((r) => (r as { rfid_key_id: string }).rfid_key_id);
+      const activateKeyIds = (intendedLinks ?? []).map(
+        (r) => (r as { rfid_key_id: string }).rfid_key_id,
+      );
 
       // -----------------------------------------------------------------------
       // (2) toDisable: keys with status='pending_disable' whose key_authorization
@@ -55,7 +57,9 @@ export function usePendingKeysForEquipment(equipmentId: string) {
 
       if (disableErr) throw disableErr;
 
-      const disableKeyIds = (disableAuths ?? []).map((r) => (r as { rfid_key_id: string }).rfid_key_id);
+      const disableKeyIds = (disableAuths ?? []).map(
+        (r) => (r as { rfid_key_id: string }).rfid_key_id,
+      );
 
       // -----------------------------------------------------------------------
       // (3) unchanged: keys with sync_state='installed' and removed_at=null
@@ -71,14 +75,19 @@ export function usePendingKeysForEquipment(equipmentId: string) {
 
       if (unchangedErr) throw unchangedErr;
 
-      const unchangedKeyIds = (unchangedAuths ?? []).map((r) => (r as { rfid_key_id: string }).rfid_key_id);
+      const unchangedKeyIds = (unchangedAuths ?? []).map(
+        (r) => (r as { rfid_key_id: string }).rfid_key_id,
+      );
 
       // -----------------------------------------------------------------------
       // Batch-fetch all rfid_keys
       // -----------------------------------------------------------------------
       const allKeyIds = [...new Set([...activateKeyIds, ...disableKeyIds, ...unchangedKeyIds])];
 
-      let keyMap = new Map<string, { id: string; rfid_code: string; unit_id: string | null; status: string }>();
+      const keyMap = new Map<
+        string,
+        { id: string; rfid_code: string; unit_id: string | null; status: string }
+      >();
       if (allKeyIds.length > 0) {
         const { data: keys, error: keysErr } = await supabase
           .from('rfid_keys')
@@ -88,7 +97,12 @@ export function usePendingKeysForEquipment(equipmentId: string) {
         if (keysErr) throw keysErr;
 
         for (const k of keys ?? []) {
-          const key = k as { id: string; rfid_code: string; unit_id: string | null; status: string };
+          const key = k as {
+            id: string;
+            rfid_code: string;
+            unit_id: string | null;
+            status: string;
+          };
           keyMap.set(key.id, key);
         }
       }
@@ -98,9 +112,7 @@ export function usePendingKeysForEquipment(equipmentId: string) {
       // -----------------------------------------------------------------------
       const allUnitIds = [
         ...new Set(
-          [...keyMap.values()]
-            .map((k) => k.unit_id)
-            .filter((id): id is string => Boolean(id)),
+          [...keyMap.values()].map((k) => k.unit_id).filter((id): id is string => Boolean(id)),
         ),
       ];
 
@@ -134,11 +146,15 @@ export function usePendingKeysForEquipment(equipmentId: string) {
 
       const toActivate = activateKeyIds
         .map(toKey)
-        .filter((k): k is PendingKey => k !== null && keyMap.get(k.id)?.status === 'pending_installation');
+        .filter(
+          (k): k is PendingKey => k !== null && keyMap.get(k.id)?.status === 'pending_installation',
+        );
 
       const toDisable = disableKeyIds
         .map(toKey)
-        .filter((k): k is PendingKey => k !== null && keyMap.get(k.id)?.status === 'pending_disable');
+        .filter(
+          (k): k is PendingKey => k !== null && keyMap.get(k.id)?.status === 'pending_disable',
+        );
 
       const unchanged = unchangedKeyIds
         .map(toKey)

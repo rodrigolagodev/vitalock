@@ -44,7 +44,7 @@ function KeyTable({ keys, emptyMessage }: { keys: PendingKey[]; emptyMessage: st
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+          <tr className="text-muted-foreground border-b text-left text-xs uppercase">
             <th className="pb-2 pr-4 font-medium">RFID</th>
             <th className="pb-2 font-medium">Unidad</th>
           </tr>
@@ -55,7 +55,7 @@ function KeyTable({ keys, emptyMessage }: { keys: PendingKey[]; emptyMessage: st
               <td className="py-2 pr-4">
                 <span className="font-mono text-sm">{k.rfid_code}</span>
               </td>
-              <td className="py-2 text-muted-foreground">{k.unit_number ?? '—'}</td>
+              <td className="text-muted-foreground py-2">{k.unit_number ?? '—'}</td>
             </tr>
           ))}
         </tbody>
@@ -83,9 +83,9 @@ export function EquipmentKeySnapshotPanel({
   const [copied, setCopied] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const toActivate = data?.toActivate ?? [];
-  const toDisable = data?.toDisable ?? [];
-  const unchanged = data?.unchanged ?? [];
+  const toActivate = useMemo(() => data?.toActivate ?? [], [data?.toActivate]);
+  const toDisable = useMemo(() => data?.toDisable ?? [], [data?.toDisable]);
+  const unchanged = useMemo(() => data?.unchanged ?? [], [data?.unchanged]);
 
   const activeTrain = updates.find(
     (u) => u.ticket_status === 'open' || u.ticket_status === 'in_progress',
@@ -93,14 +93,8 @@ export function EquipmentKeySnapshotPanel({
 
   // Filter the building-scoped keys down to just the ones in the snapshot,
   // so the create sheet receives fully-shaped KeyRow objects (with unit).
-  const activateIdSet = useMemo(
-    () => new Set(toActivate.map((k) => k.id)),
-    [toActivate],
-  );
-  const disableIdSet = useMemo(
-    () => new Set(toDisable.map((k) => k.id)),
-    [toDisable],
-  );
+  const activateIdSet = useMemo(() => new Set(toActivate.map((k) => k.id)), [toActivate]);
+  const disableIdSet = useMemo(() => new Set(toDisable.map((k) => k.id)), [toDisable]);
   const pendingActivateRows = useMemo(
     () => buildingKeys.filter((k) => activateIdSet.has(k.id)),
     [buildingKeys, activateIdSet],
@@ -113,17 +107,14 @@ export function EquipmentKeySnapshotPanel({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-6">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <ErrorState
-        message="No se pudo cargar el estado de llaves pendientes."
-        className="py-4"
-      />
+      <ErrorState message="No se pudo cargar el estado de llaves pendientes." className="py-4" />
     );
   }
 
@@ -156,7 +147,7 @@ export function EquipmentKeySnapshotPanel({
             <TabsTrigger value="activate">
               A activar
               {toActivate.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-semibold text-primary">
+                <span className="bg-primary/10 text-primary ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold">
                   {toActivate.length}
                 </span>
               )}
@@ -164,7 +155,7 @@ export function EquipmentKeySnapshotPanel({
             <TabsTrigger value="disable">
               A dar de baja
               {toDisable.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
+                <span className="bg-destructive/10 text-destructive ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold">
                   {toDisable.length}
                 </span>
               )}
@@ -172,7 +163,7 @@ export function EquipmentKeySnapshotPanel({
             <TabsTrigger value="unchanged">
               Sin cambios
               {unchanged.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                <span className="bg-muted text-muted-foreground ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold">
                   {unchanged.length}
                 </span>
               )}
@@ -183,7 +174,7 @@ export function EquipmentKeySnapshotPanel({
               {copied ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
               {copied ? 'Copiado' : 'Copiar snapshot'}
             </Button>
-            {(buildingId && administrationId) && (
+            {buildingId && administrationId && (
               <Button
                 size="sm"
                 onClick={() => setCreateOpen(true)}
@@ -207,7 +198,10 @@ export function EquipmentKeySnapshotPanel({
         </TabsContent>
 
         <TabsContent value="unchanged">
-          <KeyTable keys={unchanged} emptyMessage="No hay llaves activas sin cambios programados." />
+          <KeyTable
+            keys={unchanged}
+            emptyMessage="No hay llaves activas sin cambios programados."
+          />
         </TabsContent>
       </Tabs>
 

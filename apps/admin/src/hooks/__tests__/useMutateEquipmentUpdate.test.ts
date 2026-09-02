@@ -84,7 +84,9 @@ describe('useMutateEquipmentUpdate', () => {
           file: bigFile,
           actorStaffId: 'staff-1',
         });
-      } catch { /* expected */ }
+      } catch {
+        /* expected */
+      }
     });
 
     await waitFor(() => expect(result.current.createEquipmentUpdate.isError).toBe(true));
@@ -98,10 +100,15 @@ describe('useMutateEquipmentUpdate', () => {
       callOrder.push('upload');
       return { data: { path: `${TICKET_ID}/db.mdb` }, error: null };
     });
-    mockCreateEquipmentUpdateRpc.mockImplementationOnce(async (_client: unknown, input: { equipmentId: string; keysToActivate: string[]; keysToDisable: string[] }) => {
-      callOrder.push('rpc');
-      return 'new-task-id';
-    });
+    mockCreateEquipmentUpdateRpc.mockImplementationOnce(
+      async (
+        _client: unknown,
+        _input: { equipmentId: string; keysToActivate: string[]; keysToDisable: string[] },
+      ) => {
+        callOrder.push('rpc');
+        return 'new-task-id';
+      },
+    );
 
     const { Wrapper } = makeWrapper();
     const { result } = renderHook(() => useMutateEquipmentUpdate(), { wrapper: Wrapper });
@@ -157,7 +164,9 @@ describe('useMutateEquipmentUpdate', () => {
           file,
           actorStaffId: null,
         });
-      } catch { /* expected */ }
+      } catch {
+        /* expected */
+      }
     });
 
     await waitFor(() => expect(result.current.createEquipmentUpdate.isError).toBe(true));
@@ -185,7 +194,9 @@ describe('useMutateEquipmentUpdate', () => {
           file,
           actorStaffId: null,
         });
-      } catch { /* expected */ }
+      } catch {
+        /* expected */
+      }
     });
 
     await waitFor(() => expect(result.current.createEquipmentUpdate.isError).toBe(true));

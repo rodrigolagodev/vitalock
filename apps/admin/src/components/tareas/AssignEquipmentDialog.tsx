@@ -58,16 +58,6 @@ const replaceSchema = z.object({
 });
 type ReplaceValues = z.infer<typeof replaceSchema>;
 
-const ACCESS_TYPE_OPTIONS = [
-  { value: 'principal', label: 'Principal' },
-  { value: 'servicio', label: 'Servicio' },
-  { value: 'cochera', label: 'Cochera' },
-  { value: 'puerta_2', label: 'Puerta 2' },
-  { value: 'puerta_3', label: 'Puerta 3' },
-  { value: 'puerta_4', label: 'Puerta 4' },
-  { value: 'otro', label: 'Otro' },
-];
-
 function modeForCategory(category: TareaRow['category']): Mode {
   switch (category) {
     case 'maintain_equipment':
@@ -91,8 +81,7 @@ export function AssignEquipmentDialog({
   const mode = modeForCategory(category);
   const { data: equipment = [] } = useEquipment(buildingId, { activeOnly: true });
   const { data: equipmentProducts = [] } = useProducts({ category: 'equipment' });
-  const { assignExistingEquipment, createAndAssignEquipment } =
-    useMutateTicketEquipment(buildingId);
+  const { assignExistingEquipment } = useMutateTicketEquipment(buildingId);
   const resolveEquipmentInstallation = useResolveEquipmentInstallation(buildingId);
   const resolveEquipmentReplacement = useResolveEquipmentReplacement(buildingId);
 
@@ -235,24 +224,19 @@ export function AssignEquipmentDialog({
                 )}
               />
               {selectForm.formState.errors.equipment_id && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {selectForm.formState.errors.equipment_id.message}
                 </p>
               )}
               {equipment.length === 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   No hay equipos registrados en el edificio.
                 </p>
               )}
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={submitting}
-              >
+              <Button type="button" variant="outline" onClick={handleClose} disabled={submitting}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={submitting || equipment.length === 0}>
@@ -278,20 +262,14 @@ export function AssignEquipmentDialog({
                 {...createForm.register('serial_number')}
               />
               {createForm.formState.errors.serial_number && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {createForm.formState.errors.serial_number.message}
                 </p>
               )}
             </div>
 
-
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={submitting}
-              >
+              <Button type="button" variant="outline" onClick={handleClose} disabled={submitting}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={submitting}>
@@ -331,7 +309,7 @@ export function AssignEquipmentDialog({
                 )}
               />
               {replaceForm.formState.errors.old_equipment_id && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {replaceForm.formState.errors.old_equipment_id.message}
                 </p>
               )}
@@ -345,7 +323,7 @@ export function AssignEquipmentDialog({
                 {...replaceForm.register('new_serial_number')}
               />
               {replaceForm.formState.errors.new_serial_number && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {replaceForm.formState.errors.new_serial_number.message}
                 </p>
               )}
@@ -372,12 +350,12 @@ export function AssignEquipmentDialog({
                 )}
               />
               {replaceForm.formState.errors.new_model && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {replaceForm.formState.errors.new_model.message}
                 </p>
               )}
               {equipmentProducts.length === 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   No hay productos categoría "equipo" en el stock. Cargá uno antes.
                 </p>
               )}
@@ -393,12 +371,7 @@ export function AssignEquipmentDialog({
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={submitting}
-              >
+              <Button type="button" variant="outline" onClick={handleClose} disabled={submitting}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={submitting || activeEquipment.length === 0}>

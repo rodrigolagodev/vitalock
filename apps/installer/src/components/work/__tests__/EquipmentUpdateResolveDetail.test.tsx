@@ -13,16 +13,11 @@ const {
   mockCreateSignedUrl,
   mockFrom,
   mockStorageFrom,
-  mockSelect,
   mockIn,
-  mockRfidKeysQuery,
   mockResolveEquipmentUpdateRpc,
   mockToastSuccess,
   mockToastWarning,
   mockSupportSchema,
-  mockPriorUpdatesSelect,
-  mockPriorUpdatesEq,
-  mockPriorUpdatesNot,
   mockPriorUpdatesOrder,
 } = vi.hoisted(() => {
   const mockIn = vi.fn();
@@ -156,7 +151,9 @@ describe('EquipmentUpdateResolveDetail', () => {
 
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),
@@ -180,18 +177,22 @@ describe('EquipmentUpdateResolveDetail', () => {
       // Spy on document.createElement to intercept the anchor creation
       const originalCreateElement = document.createElement.bind(document);
       const anchors: HTMLAnchorElement[] = [];
-      const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-        const el = originalCreateElement(tag);
-        if (tag === 'a') {
-          const clickSpy = vi.spyOn(el as HTMLAnchorElement, 'click').mockImplementation(() => {});
-          anchors.push(el as HTMLAnchorElement);
-        }
-        return el;
-      });
+      const createElementSpy = vi
+        .spyOn(document, 'createElement')
+        .mockImplementation((tag: string) => {
+          const el = originalCreateElement(tag);
+          if (tag === 'a') {
+            vi.spyOn(el as HTMLAnchorElement, 'click').mockImplementation(() => {});
+            anchors.push(el as HTMLAnchorElement);
+          }
+          return el;
+        });
 
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),
@@ -221,7 +222,9 @@ describe('EquipmentUpdateResolveDetail', () => {
 
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),
@@ -247,7 +250,9 @@ describe('EquipmentUpdateResolveDetail', () => {
     it('renders rfid_code instead of UUID slice when codes are loaded', async () => {
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),
@@ -271,7 +276,9 @@ describe('EquipmentUpdateResolveDetail', () => {
 
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),
@@ -303,7 +310,9 @@ describe('EquipmentUpdateResolveDetail', () => {
 
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),
@@ -335,7 +344,9 @@ describe('EquipmentUpdateResolveDetail', () => {
 
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),
@@ -345,9 +356,7 @@ describe('EquipmentUpdateResolveDetail', () => {
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/desincronizará la base de datos/i),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/desincronizará la base de datos/i)).toBeInTheDocument();
       });
     });
 
@@ -370,7 +379,9 @@ describe('EquipmentUpdateResolveDetail', () => {
 
       const Wrapper = makeWrapper();
       render(
-        React.createElement(Wrapper, null,
+        React.createElement(
+          Wrapper,
+          null,
           React.createElement(EquipmentUpdateResolveDetail, {
             open: true,
             onOpenChange: vi.fn(),

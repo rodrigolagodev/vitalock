@@ -46,22 +46,11 @@ const resolvedRow = {
   keys_to_disable: ['key-3'],
 };
 
-const unresolvedRow = {
-  id: 'update-002',
-  created_at: '2026-08-21T10:00:00Z',
-  resolved_at: null,
-  resolved_by_staff_id: null,
-  mdb_storage_path: 'update-002/db.mdb',
-  keys_to_activate: ['key-4'],
-  keys_to_disable: [],
-};
-
 // ---------------------------------------------------------------------------
 // Import under test (after mocks)
 // ---------------------------------------------------------------------------
 
 import { useEquipmentUpdateHistory } from '../useEquipmentUpdateHistory';
-import type { EquipmentUpdateHistoryRow } from '../useEquipmentUpdateHistory';
 
 // ---------------------------------------------------------------------------
 // Tests

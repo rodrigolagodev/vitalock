@@ -3,7 +3,6 @@ import { render, screen, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
-import type { ReactNode } from 'react';
 import type { ProductRow } from '@/types/stock';
 
 const { useProductsMock } = vi.hoisted(() => ({ useProductsMock: vi.fn() }));

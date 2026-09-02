@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import {
-  useForm,
-  useFieldArray,
-  Controller,
-} from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ParticularSelector } from '@/components/particulares/ParticularSelector';
@@ -11,25 +7,14 @@ import { ParticularFormSheet } from '@/components/particulares/ParticularFormShe
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
 import { AdministrationCombobox } from '@/components/administrations/AdministrationCombobox';
-import { Badge } from '@vitalock/ui';
 import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { Popover, PopoverContent, PopoverTrigger } from '@vitalock/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -39,11 +24,7 @@ import type { TechnicalOrderDetailRow } from '@/hooks/useTechnicalOrder';
 
 // ---- Zod schema ----
 
-const ITEM_TYPES = [
-  'install_equipment',
-  'replace_equipment',
-  'maintain_equipment',
-] as const;
+const ITEM_TYPES = ['install_equipment', 'replace_equipment', 'maintain_equipment'] as const;
 
 type TechnicalItemType = (typeof ITEM_TYPES)[number];
 
@@ -125,8 +106,7 @@ const schema = baseSchema.superRefine((data, ctx) => {
     // For install_equipment, this reserves the unit that will be
     // physically installed (the installer serializes it at resolve time).
     if (
-      (item.item_type === 'install_equipment' ||
-        item.item_type === 'replace_equipment') &&
+      (item.item_type === 'install_equipment' || item.item_type === 'replace_equipment') &&
       !item.product_id
     ) {
       ctx.addIssue({
@@ -222,7 +202,8 @@ export function TechnicalOrderForm({
   onCancel,
   isPending = false,
 }: TechnicalOrderFormProps) {
-  const defaultValues = initialValues ?? (initialOrder ? buildInitialValues(initialOrder) : EMPTY_DEFAULTS);
+  const defaultValues =
+    initialValues ?? (initialOrder ? buildInitialValues(initialOrder) : EMPTY_DEFAULTS);
 
   const { data: administrations = [] } = useAdministrations({ status: 'active' });
 
@@ -249,9 +230,7 @@ export function TechnicalOrderForm({
   const items = watch('items');
 
   const { data: buildings = [] } = useBuildings(
-    clientType === 'administration' && administrationId
-      ? { administrationId }
-      : {},
+    clientType === 'administration' && administrationId ? { administrationId } : {},
   );
 
   const { data: staffList = [] } = usePersonal();
@@ -304,7 +283,7 @@ export function TechnicalOrderForm({
         id="technical-order-form"
       >
         {/* ---- Section: Cliente ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
+        <section className="bg-card flex flex-col gap-4 rounded-md border p-5">
           <SectionHeading title="Cliente" />
 
           <div className="flex flex-col gap-2">
@@ -315,9 +294,7 @@ export function TechnicalOrderForm({
               render={({ field }) => (
                 <RadioGroup
                   value={field.value}
-                  onValueChange={(v) =>
-                    field.onChange(v as 'administration' | 'particular')
-                  }
+                  onValueChange={(v) => field.onChange(v as 'administration' | 'particular')}
                   aria-label="Tipo de cliente"
                   className="grid w-full grid-cols-2"
                 >
@@ -327,11 +304,7 @@ export function TechnicalOrderForm({
                       { value: 'particular', label: 'Particular' },
                     ] as const
                   ).map((opt) => (
-                    <RadioGroupItem
-                      key={opt.value}
-                      value={opt.value}
-                      className="text-center"
-                    >
+                    <RadioGroupItem key={opt.value} value={opt.value} className="text-center">
                       {opt.label}
                     </RadioGroupItem>
                   ))}
@@ -357,9 +330,7 @@ export function TechnicalOrderForm({
                 )}
               />
               {errors.administration_id && (
-                <p className="text-sm text-destructive">
-                  {errors.administration_id.message}
-                </p>
+                <p className="text-destructive text-sm">{errors.administration_id.message}</p>
               )}
             </div>
           )}
@@ -373,33 +344,24 @@ export function TechnicalOrderForm({
                 onEdit={() => setEditParticularOpen(true)}
               />
               {errors.particular_id && (
-                <p className="text-sm text-destructive">
-                  {errors.particular_id.message}
-                </p>
+                <p className="text-destructive text-sm">{errors.particular_id.message}</p>
               )}
             </div>
           )}
         </section>
 
         {/* ---- Section: Ítems (item cards inline, matching KeyOrderForm) ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
+        <section className="bg-card flex flex-col gap-4 rounded-md border p-5">
           <div className="flex items-center justify-between border-b pb-2">
             <h2 className="text-base font-semibold">
               Ítems{' '}
               {fields.length > 0 && (
-                <span className="text-muted-foreground font-normal">
-                  ({fields.length})
-                </span>
+                <span className="text-muted-foreground font-normal">({fields.length})</span>
               )}
             </h2>
             <Popover>
               <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                >
+                <Button type="button" variant="outline" size="sm" className="gap-2">
                   <Plus className="h-4 w-4" />
                   Agregar ítem
                 </Button>
@@ -410,9 +372,9 @@ export function TechnicalOrderForm({
                     key={type}
                     type="button"
                     onClick={() => appendItem(type)}
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-sm hover:bg-accent text-left"
+                    className="hover:bg-accent flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm"
                   >
-                    <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Plus className="text-muted-foreground h-3.5 w-3.5" />
                     {ITEM_TYPE_LABELS[type]}
                   </button>
                 ))}
@@ -421,7 +383,7 @@ export function TechnicalOrderForm({
           </div>
 
           {errors.items && !Array.isArray(errors.items) && (
-            <p className="text-sm text-destructive">{errors.items.message}</p>
+            <p className="text-destructive text-sm">{errors.items.message}</p>
           )}
 
           <div className="flex flex-col gap-3" data-testid="technical-order-items">
@@ -438,7 +400,7 @@ export function TechnicalOrderForm({
                 <div
                   key={field.id}
                   data-testid={`technical-order-item-${index}`}
-                  className="flex flex-col rounded-md border bg-muted/20"
+                  className="bg-muted/20 flex flex-col rounded-md border"
                 >
                   {/* Header (always visible) */}
                   <div className="flex items-center gap-3 p-3">
@@ -446,33 +408,29 @@ export function TechnicalOrderForm({
                       type="button"
                       onClick={() => setOpenItemIndex(isOpen ? null : index)}
                       aria-label={
-                        isOpen
-                          ? `Colapsar ítem ${index + 1}`
-                          : `Expandir ítem ${index + 1}`
+                        isOpen ? `Colapsar ítem ${index + 1}` : `Expandir ítem ${index + 1}`
                       }
-                      className="flex flex-1 min-w-0 items-center gap-3 text-left"
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     >
-                      <span className="shrink-0 text-xs text-muted-foreground">
+                      <span className="text-muted-foreground shrink-0 text-xs">
                         {isOpen ? '▾' : '▸'}
                       </span>
-                      <span className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-sm shrink-0">
-                          Ítem {index + 1}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 truncate max-w-[200px]">
+                      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                        <span className="shrink-0 text-sm font-medium">Ítem {index + 1}</span>
+                        <span className="max-w-[200px] truncate rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
                           {itemTypeLabel}
                         </span>
                         {building && (
                           <>
-                            <span className="text-xs text-muted-foreground">·</span>
-                            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                            <span className="text-muted-foreground text-xs">·</span>
+                            <span className="text-muted-foreground max-w-[200px] truncate text-xs">
                               {building.name}
                             </span>
                           </>
                         )}
                         {price > 0 && (
                           <>
-                            <span className="text-xs text-muted-foreground">·</span>
+                            <span className="text-muted-foreground text-xs">·</span>
                             <span className="text-xs font-medium tabular-nums">
                               ${price.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                             </span>
@@ -484,7 +442,7 @@ export function TechnicalOrderForm({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 px-0 text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive h-8 w-8 px-0"
                       aria-label={`Eliminar ítem ${index + 1}`}
                       onClick={() => {
                         remove(index);
@@ -497,154 +455,144 @@ export function TechnicalOrderForm({
 
                   {/* Error summary visible when collapsed */}
                   {!isOpen && itemErrors && (
-                    <div className="px-3 pb-3 flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 px-3 pb-3">
                       {itemErrors.building_id && (
-                        <p className="text-xs text-destructive">
-                          {itemErrors.building_id.message}
-                        </p>
+                        <p className="text-destructive text-xs">{itemErrors.building_id.message}</p>
                       )}
                       {itemErrors.intended_assignee_staff_id && (
-                        <p className="text-xs text-destructive">
+                        <p className="text-destructive text-xs">
                           {itemErrors.intended_assignee_staff_id.message}
                         </p>
                       )}
                       {itemErrors.intended_equipment_id && (
-                        <p className="text-xs text-destructive">
+                        <p className="text-destructive text-xs">
                           {itemErrors.intended_equipment_id.message}
                         </p>
                       )}
                       {itemErrors.product_id && (
-                        <p className="text-xs text-destructive">
-                          {itemErrors.product_id.message}
-                        </p>
+                        <p className="text-destructive text-xs">{itemErrors.product_id.message}</p>
                       )}
                       {itemErrors.unit_price && (
-                        <p className="text-xs text-destructive">
-                          {itemErrors.unit_price.message}
-                        </p>
+                        <p className="text-destructive text-xs">{itemErrors.unit_price.message}</p>
                       )}
                     </div>
                   )}
 
                   {isOpen && (
-                    <div className="flex flex-col gap-3 border-t px-4 pt-3 pb-4 bg-card">
+                    <div className="bg-card flex flex-col gap-3 border-t px-4 pb-4 pt-3">
                       {/* item_type — hidden, set when item is created via the "Agregar ítem" menu */}
                       <input type="hidden" {...register(`items.${index}.item_type`)} />
 
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div className="flex flex-col gap-1">
-                        <Label htmlFor={`items.${index}.building_id`}>
-                          Edificio *
-                        </Label>
-                        <Controller
-                          control={control}
-                          name={`items.${index}.building_id`}
-                          render={({ field: f }) => (
-                            <BuildingCombobox
-                              id={`items.${index}.building_id`}
-                              buildings={buildings}
-                              value={f.value}
-                              onChange={(v) => f.onChange(v)}
-                              placeholder="Buscar por nombre o dirección"
-                            />
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="flex flex-col gap-1">
+                          <Label htmlFor={`items.${index}.building_id`}>Edificio *</Label>
+                          <Controller
+                            control={control}
+                            name={`items.${index}.building_id`}
+                            render={({ field: f }) => (
+                              <BuildingCombobox
+                                id={`items.${index}.building_id`}
+                                buildings={buildings}
+                                value={f.value}
+                                onChange={(v) => f.onChange(v)}
+                                placeholder="Buscar por nombre o dirección"
+                              />
+                            )}
+                          />
+                          {errors.items?.[index]?.building_id && (
+                            <p className="text-destructive text-xs">
+                              {errors.items[index]?.building_id?.message}
+                            </p>
                           )}
-                        />
-                        {errors.items?.[index]?.building_id && (
-                          <p className="text-xs text-destructive">
-                            {errors.items[index]?.building_id?.message}
-                          </p>
-                        )}
-                      </div>
+                        </div>
 
-                      {/*
+                        {/*
                         Quantity is always 1 per item — the DB CHECK enforces this.
                         Multiple installations = multiple items (no equipment can host
                         two simultaneous installations). Field stays as hidden input
                         so the value is submitted; the visible control was removed.
                       */}
-                      <input
-                        type="hidden"
-                        {...register(`items.${index}.quantity`, { value: 1 })}
-                      />
-                    </div>
+                        <input
+                          type="hidden"
+                          {...register(`items.${index}.quantity`, { value: 1 })}
+                        />
+                      </div>
 
-                    {/* Intended assignee — required for all types at confirm time */}
-                    <div className="flex flex-col gap-1">
-                      <Label htmlFor={`items.${index}.intended_assignee_staff_id`}>
-                        Responsable *
-                      </Label>
-                      <Controller
-                        control={control}
-                        name={`items.${index}.intended_assignee_staff_id`}
-                        render={({ field: f }) => (
-                          <Select
-                            value={f.value ?? ''}
-                            onValueChange={(v) => f.onChange(v || null)}
-                          >
-                            <SelectTrigger id={`items.${index}.intended_assignee_staff_id`}>
-                              <SelectValue placeholder="Seleccioná un responsable" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {staffList.map((s) => (
-                                <SelectItem key={s.id} value={s.id}>
-                                  {s.full_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      {/* Intended assignee — required for all types at confirm time */}
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor={`items.${index}.intended_assignee_staff_id`}>
+                          Responsable *
+                        </Label>
+                        <Controller
+                          control={control}
+                          name={`items.${index}.intended_assignee_staff_id`}
+                          render={({ field: f }) => (
+                            <Select
+                              value={f.value ?? ''}
+                              onValueChange={(v) => f.onChange(v || null)}
+                            >
+                              <SelectTrigger id={`items.${index}.intended_assignee_staff_id`}>
+                                <SelectValue placeholder="Seleccioná un responsable" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {staffList.map((s) => (
+                                  <SelectItem key={s.id} value={s.id}>
+                                    {s.full_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {errors.items?.[index]?.intended_assignee_staff_id && (
+                          <p className="text-destructive text-xs">
+                            {errors.items[index]?.intended_assignee_staff_id?.message}
+                          </p>
                         )}
-                      />
-                      {errors.items?.[index]?.intended_assignee_staff_id && (
-                        <p className="text-xs text-destructive">
-                          {errors.items[index]?.intended_assignee_staff_id?.message}
-                        </p>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* Intended equipment — required for maintain_equipment/replace_equipment; optional for others */}
-                    <TechnicalItemEquipmentField
-                      index={index}
-                      itemType={item?.item_type ?? 'maintain_equipment'}
-                      buildingId={buildingId}
-                      control={control}
-                      errors={errors}
-                    />
-
-                    {/* Description */}
-                    <div className="flex flex-col gap-1">
-                      <Label htmlFor={`items.${index}.description`}>
-                        Descripción (opcional)
-                      </Label>
-                      <Input
-                        id={`items.${index}.description`}
-                        placeholder="Detalle del trabajo..."
-                        {...register(`items.${index}.description`)}
+                      {/* Intended equipment — required for maintain_equipment/replace_equipment; optional for others */}
+                      <TechnicalItemEquipmentField
+                        index={index}
+                        itemType={item?.item_type ?? 'maintain_equipment'}
+                        buildingId={buildingId}
+                        control={control}
+                        errors={errors}
                       />
-                    </div>
 
-                    {/* Unit price — required for install/replace; may be 0 for maintenance (monthly plan) */}
-                    <div className="flex flex-col gap-1 sm:max-w-[200px]">
-                      <Label htmlFor={`items.${index}.unit_price`}>
-                        {item?.item_type === 'maintain_equipment'
-                          ? 'Precio unitario (0 = plan mensual)'
-                          : 'Precio unitario *'}
-                      </Label>
-                      <Input
-                        id={`items.${index}.unit_price`}
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        placeholder="0.00"
-                        {...register(`items.${index}.unit_price`)}
-                      />
-                      {errors.items?.[index]?.unit_price && (
-                        <p className="text-xs text-destructive">
-                          {errors.items[index]?.unit_price?.message}
-                        </p>
-                      )}
+                      {/* Description */}
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor={`items.${index}.description`}>Descripción (opcional)</Label>
+                        <Input
+                          id={`items.${index}.description`}
+                          placeholder="Detalle del trabajo..."
+                          {...register(`items.${index}.description`)}
+                        />
+                      </div>
+
+                      {/* Unit price — required for install/replace; may be 0 for maintenance (monthly plan) */}
+                      <div className="flex flex-col gap-1 sm:max-w-[200px]">
+                        <Label htmlFor={`items.${index}.unit_price`}>
+                          {item?.item_type === 'maintain_equipment'
+                            ? 'Precio unitario (0 = plan mensual)'
+                            : 'Precio unitario *'}
+                        </Label>
+                        <Input
+                          id={`items.${index}.unit_price`}
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          placeholder="0.00"
+                          {...register(`items.${index}.unit_price`)}
+                        />
+                        {errors.items?.[index]?.unit_price && (
+                          <p className="text-destructive text-xs">
+                            {errors.items[index]?.unit_price?.message}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
                 </div>
               );
             })}
@@ -654,7 +602,7 @@ export function TechnicalOrderForm({
                 is the "Agregar ítem" button in the section header. */}
             <div
               data-testid="technical-order-item-ghost"
-              className="rounded-md border-2 border-dashed border-border bg-muted/10 p-6 text-center text-sm text-muted-foreground"
+              className="border-border bg-muted/10 text-muted-foreground rounded-md border-2 border-dashed p-6 text-center text-sm"
             >
               {fields.length === 0
                 ? 'La orden todavía no tiene ítems. Agregá el primero desde “Agregar ítem”.'
@@ -664,24 +612,15 @@ export function TechnicalOrderForm({
         </section>
 
         {/* ---- Section: Notas ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
+        <section className="bg-card flex flex-col gap-4 rounded-md border p-5">
           <SectionHeading title="Notas" />
-          <Textarea
-            id="notes"
-            placeholder="Observaciones adicionales..."
-            {...register('notes')}
-          />
+          <Textarea id="notes" placeholder="Observaciones adicionales..." {...register('notes')} />
         </section>
 
         {/* ---- Sticky action bar ---- */}
-        <div className="mt-auto sticky bottom-0 -mx-6 px-6 z-40 bg-background/95 backdrop-blur border-t p-4 flex items-center justify-end gap-3">
+        <div className="bg-background/95 sticky bottom-0 z-40 -mx-6 mt-auto flex items-center justify-end gap-3 border-t p-4 px-6 backdrop-blur">
           {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isFormPending}
-            >
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isFormPending}>
               Cancelar
             </Button>
           )}
@@ -734,13 +673,10 @@ function TechnicalItemEquipmentField({
 
   const isReplacement = itemType === 'replace_equipment';
   const isInstallationWork = itemType === 'install_equipment';
-  const showTargetEquipment =
-    itemType === 'maintain_equipment' || itemType === 'replace_equipment';
+  const showTargetEquipment = itemType === 'maintain_equipment' || itemType === 'replace_equipment';
   const showStockProduct = isReplacement || isInstallationWork;
 
-  const targetLabel = isReplacement
-    ? 'Equipo actual (a reemplazar) *'
-    : 'Equipo *';
+  const targetLabel = isReplacement ? 'Equipo actual (a reemplazar) *' : 'Equipo *';
 
   const stockLabel = isReplacement
     ? 'Equipo de reemplazo (del stock) *'
@@ -750,9 +686,7 @@ function TechnicalItemEquipmentField({
     <div className="flex flex-col gap-3">
       {showTargetEquipment && (
         <div className="flex flex-col gap-1">
-          <Label htmlFor={`items.${index}.intended_equipment_id`}>
-            {targetLabel}
-          </Label>
+          <Label htmlFor={`items.${index}.intended_equipment_id`}>{targetLabel}</Label>
           <Controller
             control={control}
             name={`items.${index}.intended_equipment_id`}
@@ -764,16 +698,12 @@ function TechnicalItemEquipmentField({
               >
                 <SelectTrigger id={`items.${index}.intended_equipment_id`}>
                   <SelectValue
-                    placeholder={
-                      buildingId
-                        ? 'Seleccioná un equipo'
-                        : 'Primero elegí un edificio'
-                    }
+                    placeholder={buildingId ? 'Seleccioná un equipo' : 'Primero elegí un edificio'}
                   />
                 </SelectTrigger>
                 <SelectContent>
                   {equipment.length === 0 ? (
-                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground px-2 py-1.5 text-xs">
                       {buildingId
                         ? 'No hay equipos instalados en este edificio.'
                         : 'Primero elegí un edificio.'}
@@ -790,7 +720,7 @@ function TechnicalItemEquipmentField({
             )}
           />
           {errors.items?.[index]?.intended_equipment_id && (
-            <p className="text-xs text-destructive">
+            <p className="text-destructive text-xs">
               {errors.items[index]?.intended_equipment_id?.message}
             </p>
           )}
@@ -804,27 +734,20 @@ function TechnicalItemEquipmentField({
             control={control}
             name={`items.${index}.product_id`}
             render={({ field: f }) => (
-              <Select
-                value={f.value ?? ''}
-                onValueChange={(v) => f.onChange(v || null)}
-              >
+              <Select value={f.value ?? ''} onValueChange={(v) => f.onChange(v || null)}>
                 <SelectTrigger id={`items.${index}.product_id`}>
                   <SelectValue placeholder="Seleccioná un modelo del stock" />
                 </SelectTrigger>
                 <SelectContent>
                   {stockProducts.length === 0 ? (
-                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground px-2 py-1.5 text-xs">
                       No hay productos de tipo equipo cargados en el stock.
                     </div>
                   ) : (
                     stockProducts.map((p) => {
                       const outOfStock = p.stock_disponible <= 0;
                       return (
-                        <SelectItem
-                          key={p.id}
-                          value={p.id}
-                          disabled={outOfStock}
-                        >
+                        <SelectItem key={p.id} value={p.id} disabled={outOfStock}>
                           {p.name} · {p.stock_disponible} disp.
                         </SelectItem>
                       );
@@ -834,15 +757,13 @@ function TechnicalItemEquipmentField({
               </Select>
             )}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {isInstallationWork
               ? 'El SKU reserva stock. El número de serie del equipo lo carga el instalador al resolver la tarea.'
               : 'El número de serie del equipo lo carga el instalador al resolver la tarea (o el admin desde el panel de tareas).'}
           </p>
           {errors.items?.[index]?.product_id && (
-            <p className="text-xs text-destructive">
-              {errors.items[index]?.product_id?.message}
-            </p>
+            <p className="text-destructive text-xs">{errors.items[index]?.product_id?.message}</p>
           )}
         </div>
       )}

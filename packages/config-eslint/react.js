@@ -22,4 +22,10 @@ export default [
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  {
+    files: ['public/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.browser },
+    },
+  },
 ];

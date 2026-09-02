@@ -5,6 +5,10 @@ import { Label } from '@vitalock/ui';
 import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import type { ProductCategory } from '@/types/stock';
 
+// Co-located label map — read by ProductsTable and StockDetailPage. Keeping it
+// alongside the form fields keeps the source of truth in one place; suppresses
+// the react-refresh warning about mixed exports.
+// eslint-disable-next-line react-refresh/only-export-components
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   rfid_key: 'Llave RFID',
   equipment: 'Equipo',
@@ -55,9 +59,7 @@ export function ProductFormFields<T extends FieldValues>({
             />
           )}
         />
-        {message(name) && (
-          <p className="text-sm text-destructive">{message(name)}</p>
-        )}
+        {message(name) && <p className="text-destructive text-sm">{message(name)}</p>}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -74,11 +76,7 @@ export function ProductFormFields<T extends FieldValues>({
               className="grid w-full max-w-md grid-cols-2"
             >
               {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                <RadioGroupItem
-                  key={val}
-                  value={val}
-                  className="text-center"
-                >
+                <RadioGroupItem key={val} value={val} className="text-center">
                   {label}
                 </RadioGroupItem>
               ))}
@@ -86,7 +84,7 @@ export function ProductFormFields<T extends FieldValues>({
           )}
         />
         {message(categoryName) && (
-          <p className="text-sm text-destructive">{message(categoryName)}</p>
+          <p className="text-destructive text-sm">{message(categoryName)}</p>
         )}
       </div>
 
@@ -112,7 +110,7 @@ export function ProductFormFields<T extends FieldValues>({
             )}
           />
           {message(costPriceName) && (
-            <p className="text-sm text-destructive">{message(costPriceName)}</p>
+            <p className="text-destructive text-sm">{message(costPriceName)}</p>
           )}
         </div>
       )}
