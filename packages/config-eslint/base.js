@@ -1,3 +1,7 @@
+// Shared ESLint flat-config base for every workspace. Extended by
+// `./react.js` (which layers React/JSX plugins and browser globals for
+// `**/*.{ts,tsx}` and `public/**/*.js`). Non-React packages import this
+// module directly.
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
