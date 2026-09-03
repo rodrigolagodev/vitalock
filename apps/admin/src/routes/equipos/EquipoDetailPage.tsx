@@ -4,10 +4,7 @@ import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Section } from '@/components/common/Section';
 import { useEquipmentById } from '@/hooks/useEquipmentById';
-import {
-  equipmentStatusLabel,
-  equipmentStatusTone,
-} from '@/lib/status/equipmentStatus';
+import { equipmentStatusLabel, equipmentStatusTone } from '@/lib/status/equipmentStatus';
 import { keyOrderStatusLabel } from '@/lib/status/keyOrderStatus';
 import { keyItemStatusLabel } from '@/lib/status/keyItemStatus';
 import { accessTypeLabel } from '@/lib/status/accessType';
@@ -29,13 +26,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function EquipmentLabel({
-  serial_number,
-  model,
-}: {
-  serial_number: string;
-  model: string | null;
-}) {
+function EquipmentLabel({ serial_number, model }: { serial_number: string; model: string | null }) {
   return (
     <>
       {model ? `${model} · ` : ''}
@@ -51,17 +42,14 @@ export default function EquipoDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     );
   }
 
   if (isError || !equipment) {
     return (
-      <ErrorState
-        message="No se pudo cargar la información del equipo."
-        className="gap-4 py-16"
-      >
+      <ErrorState message="No se pudo cargar la información del equipo." className="gap-4 py-16">
         <Button asChild variant="outline" size="sm">
           <Link to="/equipos">Volver al inventario</Link>
         </Button>
@@ -116,7 +104,7 @@ export default function EquipoDetailPage() {
       />
 
       {equipment.status === 'maintenance' && (
-        <p className="rounded bg-warning/10 px-3 py-2 text-sm text-warning dark:bg-warning/10 dark:text-warning">
+        <p className="bg-warning/10 text-warning dark:bg-warning/10 dark:text-warning rounded px-3 py-2 text-sm">
           Este equipo está en mantenimiento.
         </p>
       )}
@@ -156,10 +144,7 @@ export default function EquipoDetailPage() {
           />
           <Row label="Descripción" value={equipment.description} />
           {equipment.access_type && (
-            <Row
-              label="Tipo de acceso"
-              value={accessTypeLabel(equipment.access_type)}
-            />
+            <Row label="Tipo de acceso" value={accessTypeLabel(equipment.access_type)} />
           )}
         </Section>
 
@@ -200,14 +185,23 @@ export default function EquipoDetailPage() {
           </Section>
         )}
 
-        <Section title="Ciclo de vida">
-          <Row label="Instalado" value={formatDateTime(equipment.installed_at)} />
-          {equipment.decommissioned_at && (
-            <Row label="Dado de baja" value={formatDateTime(equipment.decommissioned_at)} />
-          )}
-          {equipment.decommission_reason && (
-            <Row label="Motivo de baja" value={equipment.decommission_reason} />
-          )}
+        <Section title="Historial">
+          <div className="flex flex-col gap-3 text-sm">
+            {timeline.map((e, i) => (
+              <div key={`${e.label}-${i}`} className="flex gap-3">
+                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${e.tone}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex justify-between gap-2">
+                    <span className="font-medium">{e.label}</span>
+                    <span className="text-muted-foreground text-xs">{formatDateTime(e.at)}</span>
+                  </div>
+                  {e.note && (
+                    <p className="text-muted-foreground whitespace-pre-wrap text-xs">{e.note}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </Section>
       </div>
 
@@ -217,16 +211,14 @@ export default function EquipoDetailPage() {
             (k) => k.sync_state === 'installed' && k.removed_at === null,
           );
           if (activeKeys.length === 0) {
-            return (
-              <EmptyState message="No hay llaves activas en este equipo." />
-            );
+            return <EmptyState message="No hay llaves activas en este equipo." />;
           }
           return (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                    <tr className="text-muted-foreground border-b text-left text-xs uppercase">
                       <th className="pb-2 pr-4 font-medium">RFID</th>
                       <th className="pb-2 pr-4 font-medium">Unidad</th>
                       <th className="pb-2 font-medium">Instalada</th>
@@ -238,13 +230,13 @@ export default function EquipoDetailPage() {
                         <td className="py-2 pr-4">
                           <Link
                             to={`/llaves/inventario/${k.key_id}`}
-                            className="font-mono text-primary underline-offset-2 hover:underline"
+                            className="text-primary font-mono underline-offset-2 hover:underline"
                           >
                             {k.rfid_code}
                           </Link>
                         </td>
                         <td className="py-2 pr-4">{k.unit_number ?? '—'}</td>
-                        <td className="py-2 text-muted-foreground">
+                        <td className="text-muted-foreground py-2">
                           {formatDateTime(k.installed_at)}
                         </td>
                       </tr>
@@ -265,7 +257,7 @@ export default function EquipoDetailPage() {
                         equipmentId: equipment.id,
                       }).toString(),
                     }}
-                    className="text-sm text-primary underline-offset-2 hover:underline"
+                    className="text-primary text-sm underline-offset-2 hover:underline"
                   >
                     Ver todas ({activeKeys.length}) en el inventario →
                   </Link>
@@ -284,32 +276,28 @@ export default function EquipoDetailPage() {
             {equipment.associated_orders.map((o) => (
               <li
                 key={`${o.technical_order_id}-${o.role}`}
-                className="flex flex-col gap-1 border-b border-border/60 pb-3 last:border-b-0 last:pb-0"
+                className="border-border/60 flex flex-col gap-1 border-b pb-3 last:border-b-0 last:pb-0"
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <Link
                     to={`/servicio-tecnico/${o.technical_order_id}`}
-                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    className="text-primary font-medium underline-offset-2 hover:underline"
                   >
                     {o.order_number}
                   </Link>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {formatDateTime(o.order_created_at)}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex flex-wrap gap-2 text-xs">
                   <span>
                     Tipo: {ITEM_TYPE_LABEL[o.item_type] ?? o.item_type}
                     {o.role === 'replacement' ? ' (como reemplazo)' : ''}
                   </span>
                   <span>·</span>
-                  <span>
-                    Orden: {keyOrderStatusLabel(o.order_status)}
-                  </span>
+                  <span>Orden: {keyOrderStatusLabel(o.order_status)}</span>
                   <span>·</span>
-                  <span>
-                    Ítem: {keyItemStatusLabel(o.item_status)}
-                  </span>
+                  <span>Ítem: {keyItemStatusLabel(o.item_status)}</span>
                 </div>
               </li>
             ))}
@@ -329,27 +317,6 @@ export default function EquipoDetailPage() {
 
       <Section title="Historial de actualizaciones de firmware">
         <EquipmentUpdateHistoryPanel equipmentId={equipment.id} />
-      </Section>
-
-      <Section title="Historial">
-        <div className="flex flex-col gap-3 text-sm">
-          {timeline.map((e, i) => (
-            <div key={`${e.label}-${i}`} className="flex gap-3">
-              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${e.tone}`} />
-              <div className="min-w-0 flex-1">
-                <div className="flex justify-between gap-2">
-                  <span className="font-medium">{e.label}</span>
-                  <span className="text-xs text-muted-foreground">{formatDateTime(e.at)}</span>
-                </div>
-                {e.note && (
-                  <p className="whitespace-pre-wrap text-xs text-muted-foreground">
-                    {e.note}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       </Section>
 
       {equipment.notes && (
