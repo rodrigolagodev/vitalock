@@ -103,12 +103,9 @@ describe('ConfigureEquipmentInline — install_equipment category', () => {
 
   it('submits configure payload for installation ticket', async () => {
     const user = userEvent.setup();
-    render(
-      <ConfigureEquipmentInline
-        ticket={makeTicket({ category: 'install_equipment' })}
-      />,
-      { wrapper: makeWrapper() },
-    );
+    render(<ConfigureEquipmentInline ticket={makeTicket({ category: 'install_equipment' })} />, {
+      wrapper: makeWrapper(),
+    });
     await user.type(screen.getByLabelText(/número de serie/i), 'SN-INSTALL-01');
     await user.click(screen.getByRole('button', { name: /guardar equipo/i }));
     expect(configureMutate).toHaveBeenCalledWith(
@@ -118,13 +115,9 @@ describe('ConfigureEquipmentInline — install_equipment category', () => {
   });
 
   it('does not show a checkbox affordance for installation tickets', () => {
-    render(
-      <ConfigureEquipmentInline
-        ticket={makeTicket({ category: 'install_equipment' })}
-      />,
-      { wrapper: makeWrapper() },
-    );
-    // No checkbox inside the component itself (checkbox lives in TicketCard)
+    render(<ConfigureEquipmentInline ticket={makeTicket({ category: 'install_equipment' })} />, {
+      wrapper: makeWrapper(),
+    });
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 });

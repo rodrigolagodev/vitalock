@@ -13,8 +13,8 @@ const HEADINGS: Record<'install_equipment' | 'replace_equipment', string> = {
 };
 
 /**
- * Inline configure form shown inside TicketCard for the two-step equipment
- * task flow. Loads pending_new_serial + pending_new_model into the ticket via
+ * Inline configure form for the two-step equipment task flow. Loads
+ * pending_new_serial + pending_new_model into the ticket via
  * configure_technical_ticket_equipment. Physical work (create/replace
  * equipment, key transfer, stock movements) happens when the installer later
  * marks the task resolved through the batch "Marcar resueltos" flow.
@@ -62,11 +62,9 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
   const modelPlaceholder = ticket.intended_product_name ?? 'Modelo (opcional)';
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3">
+    <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase text-muted-foreground">
-          {heading}
-        </span>
+        <span className="text-muted-foreground text-xs font-semibold uppercase">{heading}</span>
         {configured && !editing && (
           <Button
             type="button"
@@ -95,7 +93,7 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
       {showForm && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-2">
           {!configured && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Cargá el serie del nuevo equipo. Después vas a poder finalizar la tarea.
             </p>
           )}
@@ -113,7 +111,7 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
             disabled={isPending}
             aria-label="Modelo"
           />
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <p className="text-destructive text-sm">{error}</p>}
           <div className="flex justify-end gap-2">
             {configured && editing && (
               <Button
