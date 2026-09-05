@@ -1,17 +1,13 @@
 import { useMemo, useState } from 'react';
 import { CheckCircle2, Eye, Settings2, UserCheck } from 'lucide-react';
-import {
-  DataTable,
-  StatusBadge,
-  type DataTableAction,
-} from '@vitalock/ui';
+import { DataTable, type DataTableAction } from '@vitalock/ui';
 import { ConfigureKeyItemSheet } from './ConfigureKeyItemSheet';
 import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
 import { KeyItemDetailsDialog } from './KeyItemDetailsDialog';
 import { useBuildingsByIds } from '@/hooks/useBuildingsByIds';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
 import { formatCurrencyARS } from '@/lib/format';
-import { keyItemStatusLabel, keyItemStatusTone } from '@/lib/status/keyItemStatus';
+import { keyItemStatus } from '@/lib/status/keyItemStatus';
 import type { KeyOrderItemRow, KeyOrderDetailRow } from '@/hooks/useKeyOrder';
 
 interface KeyOrderItemsTableProps {
@@ -64,8 +60,7 @@ export function KeyOrderItemsTable({
       label: () => 'Configurar llave',
       onClick: (item) => setConfigureItem(item),
       show: (item) =>
-        item.status === 'pending' &&
-        (orderStatus === 'confirmed' || orderStatus === 'in_progress'),
+        item.status === 'pending' && (orderStatus === 'confirmed' || orderStatus === 'in_progress'),
     },
     {
       icon: CheckCircle2,
@@ -113,7 +108,7 @@ export function KeyOrderItemsTable({
             header: 'Edificio',
             cell: (item) =>
               item.building_id
-                ? buildingsMap?.get(item.building_id)?.name ?? item.building_id
+                ? (buildingsMap?.get(item.building_id)?.name ?? item.building_id)
                 : '—',
             className: 'text-muted-foreground',
           },
@@ -124,11 +119,7 @@ export function KeyOrderItemsTable({
           },
           {
             header: 'Estado',
-            cell: (item) => (
-              <StatusBadge tone={keyItemStatusTone(item.status)}>
-                {keyItemStatusLabel(item.status)}
-              </StatusBadge>
-            ),
+            cell: (item) => <keyItemStatus.Badge status={item.status} />,
           },
           {
             header: 'Retira',
@@ -137,9 +128,7 @@ export function KeyOrderItemsTable({
               return authorized ? (
                 <div className="flex flex-col">
                   <span className="font-medium">{authorized.full_name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    DNI {authorized.dni}
-                  </span>
+                  <span className="text-muted-foreground text-xs">DNI {authorized.dni}</span>
                 </div>
               ) : (
                 <span className="text-muted-foreground">—</span>

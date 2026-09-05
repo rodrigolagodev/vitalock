@@ -1,6 +1,5 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
-import { equipmentStatusLabel } from '@/lib/status/equipmentStatus';
-import type { EquipmentStatus } from '@/lib/status/equipmentStatus';
+import { equipmentStatus, type EquipmentStatus } from '@/lib/status/equipmentStatus';
 
 interface EquipmentStatusSelectProps {
   value: EquipmentStatus;
@@ -36,7 +35,7 @@ export function EquipmentStatusSelect({
   return (
     <Select value={value} onValueChange={handleValueChange} disabled={isDisabled}>
       <SelectTrigger>
-        <SelectValue>{equipmentStatusLabel(value)}</SelectValue>
+        <SelectValue>{equipmentStatus.label(value)}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="active">Activo</SelectItem>

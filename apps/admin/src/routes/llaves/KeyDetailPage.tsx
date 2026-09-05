@@ -1,13 +1,13 @@
 import { Link, useParams } from 'react-router-dom';
-import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Section } from '@/components/common/Section';
 import { useKeyById } from '@/hooks/useKeyById';
 import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';
-import { keyStatusLabel, keyStatusTone } from '@/lib/status/keyStatus';
-import { keyOrderStatusLabel } from '@/lib/status/keyOrderStatus';
-import { keyItemStatusLabel } from '@/lib/status/keyItemStatus';
+import { keyStatus } from '@/lib/status/keyStatus';
+import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
+import { keyItemStatus } from '@/lib/status/keyItemStatus';
 
 const EVENT_LABEL: Record<KeyEventRow['event_type'], string> = {
   activated: 'Activada',
@@ -48,17 +48,14 @@ export default function KeyDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     );
   }
 
   if (isError || !keyDetail) {
     return (
-      <ErrorState
-        message="No se pudo cargar la información de la llave."
-        className="gap-4 py-16"
-      >
+      <ErrorState message="No se pudo cargar la información de la llave." className="gap-4 py-16">
         <Button asChild variant="outline" size="sm">
           <Link to="/llaves/inventario">Volver al inventario</Link>
         </Button>
@@ -66,10 +63,7 @@ export default function KeyDetailPage() {
     );
   }
 
-  const pickedUpFullName = [
-    keyDetail.picked_up_by_name,
-    keyDetail.picked_up_by_surname,
-  ]
+  const pickedUpFullName = [keyDetail.picked_up_by_name, keyDetail.picked_up_by_surname]
     .filter(Boolean)
     .join(' ');
 
@@ -82,8 +76,7 @@ export default function KeyDetailPage() {
     .join(' · ');
 
   const isInformational =
-    keyDetail.status === 'pending_creation' ||
-    keyDetail.status === 'pending_installation';
+    keyDetail.status === 'pending_creation' || keyDetail.status === 'pending_installation';
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,16 +87,12 @@ export default function KeyDetailPage() {
           { label: 'Inventario de llaves', to: '/llaves/inventario' },
           { label: keyDetail.rfid_code },
         ]}
-        titleAdornment={
-          <StatusBadge tone={keyStatusTone(keyDetail.status)}>
-            {keyStatusLabel(keyDetail.status)}
-          </StatusBadge>
-        }
+        titleAdornment={<keyStatus.Badge status={keyDetail.status} />}
       />
 
       {/* Contextual notes */}
       {isInformational && (
-        <p className="rounded bg-muted px-3 py-2 text-sm text-muted-foreground">
+        <p className="bg-muted text-muted-foreground rounded px-3 py-2 text-sm">
           {keyDetail.status === 'pending_creation'
             ? 'Esta llave está siendo configurada. Podrá instalarse una vez lista.'
             : 'Esta llave está lista para instalarse en el equipo.'}
@@ -111,8 +100,9 @@ export default function KeyDetailPage() {
       )}
 
       {keyDetail.status === 'pending_disable' && (
-        <p className="rounded bg-warning/10 px-3 py-2 text-sm text-warning dark:bg-warning/10 dark:text-warning">
-          Se solicitó la baja de esta llave. Puede cancelarse antes de que el técnico resuelva la tarea.
+        <p className="bg-warning/10 text-warning dark:bg-warning/10 dark:text-warning rounded px-3 py-2 text-sm">
+          Se solicitó la baja de esta llave. Puede cancelarse antes de que el técnico resuelva la
+          tarea.
         </p>
       )}
 
@@ -155,20 +145,14 @@ export default function KeyDetailPage() {
         <Section title="Custodia">
           <Row
             label="Retirada por"
-            value={
-              pickedUpFullName || (
-                <span className="text-muted-foreground">Sin retirar</span>
-              )
-            }
+            value={pickedUpFullName || <span className="text-muted-foreground">Sin retirar</span>}
           />
           <Row label="DNI" value={keyDetail.picked_up_by_dni ?? '—'} />
           <Row label="Fecha de retiro" value={formatDateTime(keyDetail.picked_up_at)} />
           <Row
             label="Entregada por"
             value={
-              keyDetail.delivered_by?.full_name ?? (
-                <span className="text-muted-foreground">—</span>
-              )
+              keyDetail.delivered_by?.full_name ?? <span className="text-muted-foreground">—</span>
             }
           />
         </Section>
@@ -210,27 +194,23 @@ export default function KeyDetailPage() {
             {keyDetail.associated_orders.map((o) => (
               <li
                 key={o.key_order_id}
-                className="flex flex-col gap-1 border-b border-border/60 pb-3 last:border-b-0 last:pb-0"
+                className="border-border/60 flex flex-col gap-1 border-b pb-3 last:border-b-0 last:pb-0"
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <Link
                     to={`/llaves/${o.key_order_id}`}
-                    className="font-medium text-primary underline-offset-2 hover:underline"
+                    className="text-primary font-medium underline-offset-2 hover:underline"
                   >
                     {o.order_number}
                   </Link>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {formatDateTime(o.order_created_at)}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                  <span>
-                    Orden: {keyOrderStatusLabel(o.order_status)}
-                  </span>
+                <div className="text-muted-foreground flex flex-wrap gap-2 text-xs">
+                  <span>Orden: {keyOrderStatus.label(o.order_status)}</span>
                   <span>·</span>
-                  <span>
-                    Ítem: {keyItemStatusLabel(o.item_status)}
-                  </span>
+                  <span>Ítem: {keyItemStatus.label(o.item_status)}</span>
                 </div>
               </li>
             ))}
@@ -241,26 +221,21 @@ export default function KeyDetailPage() {
       <Section title="Historial">
         <div className="flex flex-col gap-3 text-sm">
           <div className="flex gap-3">
-            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+            <span className="bg-primary mt-1.5 h-2 w-2 shrink-0 rounded-full" />
             <div className="min-w-0 flex-1">
               <div className="flex justify-between gap-2">
                 <span className="font-medium">Creada</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {formatDateTime(keyDetail.activated_at)}
                 </span>
               </div>
             </div>
           </div>
 
-          {eventsLoading && (
-            <p className="text-xs text-muted-foreground">Cargando eventos…</p>
-          )}
+          {eventsLoading && <p className="text-muted-foreground text-xs">Cargando eventos…</p>}
 
           {!eventsLoading && events.length === 0 && (
-            <EmptyState
-              message="Sin cambios de estado registrados."
-              className="pl-5 text-xs"
-            />
+            <EmptyState message="Sin cambios de estado registrados." className="pl-5 text-xs" />
           )}
 
           {events.map((e) => (
@@ -270,20 +245,14 @@ export default function KeyDetailPage() {
               />
               <div className="min-w-0 flex-1">
                 <div className="flex justify-between gap-2">
-                  <span className="font-medium">
-                    {EVENT_LABEL[e.event_type]}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="font-medium">{EVENT_LABEL[e.event_type]}</span>
+                  <span className="text-muted-foreground text-xs">
                     {formatDateTime(e.occurred_at)}
                   </span>
                 </div>
-                <p className="whitespace-pre-wrap text-xs text-muted-foreground">
-                  {e.note}
-                </p>
+                <p className="text-muted-foreground whitespace-pre-wrap text-xs">{e.note}</p>
                 {e.actor_name && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Por {e.actor_name}
-                  </p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">Por {e.actor_name}</p>
                 )}
               </div>
             </div>

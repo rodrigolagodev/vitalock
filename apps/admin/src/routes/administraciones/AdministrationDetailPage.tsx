@@ -7,12 +7,8 @@ import {
   SearchInput,
   SectionHeading,
   Skeleton,
-  StatusBadge,
 } from '@vitalock/ui';
-import {
-  administrationStatusLabel,
-  administrationStatusTone,
-} from '@/lib/status/administrationStatus';
+import { administrationStatus } from '@/lib/status/administrationStatus';
 import { useAdministration } from '@/hooks/useAdministration';
 import { useBuildings } from '@/hooks/useBuildings';
 import { BuildingsTable } from '@/components/buildings/BuildingsTable';
@@ -85,8 +81,7 @@ export default function AdministrationDetailPage() {
     const q = buildingSearch.trim().toLowerCase();
     if (q === '') return true;
     return (
-      b.name.toLowerCase().includes(q) ||
-      (b.address != null && b.address.toLowerCase().includes(q))
+      b.name.toLowerCase().includes(q) || (b.address != null && b.address.toLowerCase().includes(q))
     );
   });
 
@@ -96,18 +91,12 @@ export default function AdministrationDetailPage() {
         title={administration.company_name}
         subtitle={subtitle}
         breadcrumbs={[{ label: 'Administraciones', to: '/administraciones' }]}
-        titleAdornment={
-          <StatusBadge tone={administrationStatusTone(administration.status)}>
-            {administrationStatusLabel(administration.status)}
-          </StatusBadge>
-        }
+        titleAdornment={<administrationStatus.Badge status={administration.status} />}
       >
         <Button variant="outline" onClick={() => setEditSheetOpen(true)}>
           Editar
         </Button>
-        <Button onClick={() => setBuildingSheetOpen(true)}>
-          Nuevo edificio
-        </Button>
+        <Button onClick={() => setBuildingSheetOpen(true)}>Nuevo edificio</Button>
       </PageHeader>
 
       {/* Buildings section */}

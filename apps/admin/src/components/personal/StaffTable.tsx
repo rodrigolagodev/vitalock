@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Trash2, PencilLine } from 'lucide-react';
 import {
   DataTable,
-  StatusBadge,
   Button,
   type DataTableAction,
   Dialog,
@@ -12,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@vitalock/ui';
-import { staffRoleLabel, staffRoleTone } from '@/lib/status/staffRole';
+import { staffRole } from '@/lib/status/staffRole';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
 import type { StaffRow } from '@/hooks/usePersonal';
 
@@ -23,12 +22,7 @@ interface StaffTableProps {
   onEdit?: (staff: StaffRow) => void;
 }
 
-export function StaffTable({
-  rows,
-  isFetching,
-  hasFilters = false,
-  onEdit,
-}: StaffTableProps) {
+export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: StaffTableProps) {
   const [deactivating, setDeactivating] = useState<StaffRow | null>(null);
   const { deactivateStaff } = useMutateStaff();
 
@@ -76,11 +70,7 @@ export function StaffTable({
           },
           {
             header: 'Rol',
-            cell: (staff) => (
-              <StatusBadge tone={staffRoleTone(staff.role)}>
-                {staffRoleLabel(staff.role)}
-              </StatusBadge>
-            ),
+            cell: (staff) => <staffRole.Badge status={staff.role} />,
           },
         ]}
         rowKey={(staff) => staff.id}

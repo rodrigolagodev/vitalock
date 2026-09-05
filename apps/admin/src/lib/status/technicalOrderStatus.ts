@@ -1,4 +1,4 @@
-import type { StatusTone } from '@vitalock/ui';
+import { createStatusHelpers } from '@vitalock/ui';
 
 /**
  * Technical work-order status. Labels qualify "la orden": feminine for the
@@ -14,23 +14,11 @@ export type TechnicalOrderStatus =
   | 'invoiced'
   | 'cancelled';
 
-const TECHNICAL_ORDER_STATUS_META: Record<
-  TechnicalOrderStatus,
-  { label: string; tone: StatusTone }
-> = {
+export const technicalOrderStatus = createStatusHelpers<TechnicalOrderStatus>({
   draft: { label: 'Borrador', tone: 'neutral' },
   confirmed: { label: 'Confirmada', tone: 'brand' },
   in_progress: { label: 'En proceso', tone: 'warning' },
   completed: { label: 'Lista para facturar', tone: 'success' },
   invoiced: { label: 'Facturado', tone: 'neutral' },
   cancelled: { label: 'Cancelado', tone: 'danger' },
-};
-
-export function technicalOrderStatusLabel(status: string | null | undefined): string {
-  if (status == null) return '—';
-  return TECHNICAL_ORDER_STATUS_META[status as TechnicalOrderStatus]?.label ?? status;
-}
-
-export function technicalOrderStatusTone(status: string | null | undefined): StatusTone {
-  return TECHNICAL_ORDER_STATUS_META[status as TechnicalOrderStatus]?.tone ?? 'neutral';
-}
+});

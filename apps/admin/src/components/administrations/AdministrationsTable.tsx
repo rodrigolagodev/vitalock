@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { PencilLine } from 'lucide-react';
-import { DataTable, StatusBadge, IconButton } from '@vitalock/ui';
-import {
-  administrationStatusLabel,
-  administrationStatusTone,
-} from '@/lib/status/administrationStatus';
+import { DataTable, IconButton } from '@vitalock/ui';
+import { administrationStatus } from '@/lib/status/administrationStatus';
 import { AdministrationFormSheet } from './AdministrationFormSheet';
 import { AdministrationStatusToggle } from './AdministrationStatusToggle';
 import type { AdministrationRow } from '@/hooks/useAdministrations';
@@ -31,18 +28,12 @@ export function AdministrationsTable({
           { header: 'Razón social', cell: (admin) => admin.company_name },
           {
             header: 'CUIT/CUIL',
-            cell: (admin) => (
-              <span className="text-muted-foreground">{admin.tax_id ?? '—'}</span>
-            ),
+            cell: (admin) => <span className="text-muted-foreground">{admin.tax_id ?? '—'}</span>,
             hideBelow: 'md',
           },
           {
             header: 'Estado',
-            cell: (admin) => (
-              <StatusBadge tone={administrationStatusTone(admin.status)}>
-                {administrationStatusLabel(admin.status)}
-              </StatusBadge>
-            ),
+            cell: (admin) => <administrationStatus.Badge status={admin.status} />,
           },
         ]}
         rowKey={(admin) => admin.id}

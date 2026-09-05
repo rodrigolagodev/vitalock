@@ -1,7 +1,7 @@
 import { PencilLine } from 'lucide-react';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { TareaStatusBadge } from './TareaStatusBadge';
+import { tareaStatus } from '@/lib/status/tareaStatus';
 import type { TareaRow } from '@/hooks/useTareas';
 
 interface TareasTableProps {
@@ -18,12 +18,7 @@ const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
   maintain_equipment: 'Mantenimiento',
 };
 
-export function TareasTable({
-  rows,
-  isFetching,
-  hasFilters,
-  onEdit,
-}: TareasTableProps) {
+export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTableProps) {
   const actions: DataTableAction<TareaRow>[] | undefined = onEdit
     ? [
         {
@@ -43,9 +38,7 @@ export function TareasTable({
         {
           header: 'Descripción',
           cell: (tarea) => (
-            <p className="line-clamp-1 text-sm text-muted-foreground">
-              {tarea.description}
-            </p>
+            <p className="text-muted-foreground line-clamp-1 text-sm">{tarea.description}</p>
           ),
           hideBelow: 'lg',
         },
@@ -55,7 +48,7 @@ export function TareasTable({
             <div className="flex flex-col">
               <span className="text-sm">{tarea.building?.name ?? '—'}</span>
               {tarea.building?.administration?.company_name != null && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {tarea.building.administration.company_name}
                 </span>
               )}
@@ -77,7 +70,7 @@ export function TareasTable({
         },
         {
           header: 'Estado',
-          cell: (tarea) => <TareaStatusBadge status={tarea.status} />,
+          cell: (tarea) => <tareaStatus.Badge status={tarea.status} />,
         },
         {
           header: 'Abierta',

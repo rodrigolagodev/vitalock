@@ -1,6 +1,6 @@
 import { DataTable } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { KeyOrderStatusBadge } from './KeyOrderStatusBadge';
+import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
 import type { KeyOrderListRow } from '@/hooks/useKeyOrders';
 
 interface LlavesTableProps {
@@ -16,11 +16,7 @@ function clientLabel(row: KeyOrderListRow): string {
   return row.particular_full_name ?? '—';
 }
 
-export function LlavesTable({
-  rows,
-  isFetching,
-  hasFilters = false,
-}: LlavesTableProps) {
+export function LlavesTable({ rows, isFetching, hasFilters = false }: LlavesTableProps) {
   return (
     <DataTable<KeyOrderListRow>
       rows={rows}
@@ -41,7 +37,7 @@ export function LlavesTable({
         },
         {
           header: 'Estado',
-          cell: (row) => <KeyOrderStatusBadge status={row.status} />,
+          cell: (row) => <keyOrderStatus.Badge status={row.status} />,
         },
         {
           header: 'Fecha',

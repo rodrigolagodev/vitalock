@@ -1,17 +1,12 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button, ConfirmDialog } from '@vitalock/ui';
-import {
-  ErrorState,
-  NotFoundState,
-  SectionHeading,
-  Skeleton,
-} from '@vitalock/ui';
+import { ErrorState, NotFoundState, SectionHeading, Skeleton } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useKeyOrder } from '@/hooks/useKeyOrder';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
-import { KeyOrderStatusBadge } from '@/components/llaves/KeyOrderStatusBadge';
+import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
 import { KeyOrderItemsTable } from '@/components/llaves/KeyOrderItemsTable';
 
 function isTerminalOrder(status: string): boolean {
@@ -21,10 +16,7 @@ function isTerminalOrder(status: string): boolean {
 export default function KeyOrderDetailPage() {
   const { keyOrderId } = useParams<{ keyOrderId: string }>();
   const { data: order, isLoading, isError } = useKeyOrder(keyOrderId);
-  const {
-    cancelKeyOrder,
-    markKeyOrderInvoiced,
-  } = useMutateKeyOrder();
+  const { cancelKeyOrder, markKeyOrderInvoiced } = useMutateKeyOrder();
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   if (!keyOrderId) {
@@ -71,7 +63,7 @@ export default function KeyOrderDetailPage() {
   const clientLabel =
     order.client_type === 'administration'
       ? (order.administrations?.company_name ?? '—')
-      : order.particular_full_name ?? '—';
+      : (order.particular_full_name ?? '—');
 
   const clientDetail =
     order.client_type === 'particular' && order.particular_dni
@@ -79,9 +71,12 @@ export default function KeyOrderDetailPage() {
       : null;
 
   const handleCancel = () => {
-    cancelKeyOrder.mutate({ id: order.id }, {
-      onSettled: () => setCancelConfirmOpen(false),
-    });
+    cancelKeyOrder.mutate(
+      { id: order.id },
+      {
+        onSettled: () => setCancelConfirmOpen(false),
+      },
+    );
   };
 
   const handleMarkInvoiced = () => {
@@ -92,18 +87,15 @@ export default function KeyOrderDetailPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={order.order_number}
-        breadcrumbs={[
-          { label: 'Llaves', to: '/llaves' },
-          { label: order.order_number },
-        ]}
-        titleAdornment={<KeyOrderStatusBadge status={order.status} />}
+        breadcrumbs={[{ label: 'Llaves', to: '/llaves' }, { label: order.order_number }]}
+        titleAdornment={<keyOrderStatus.Badge status={order.status} />}
         subtitle={
           <div className="flex flex-col gap-0.5">
             {order.client_type === 'administration' ? (
               order.administration_id ? (
                 <Link
                   to={`/administraciones/${order.administration_id}`}
-                  className="hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                  className="hover:text-foreground underline-offset-4 transition-colors hover:underline"
                 >
                   {clientLabel}
                 </Link>
@@ -123,9 +115,7 @@ export default function KeyOrderDetailPage() {
               </>
             )}
             <span className="text-xs">Creada el {formatDate(order.created_at)}</span>
-            {order.notes && (
-              <span className="mt-2 max-w-lg">{order.notes}</span>
-            )}
+            {order.notes && <span className="mt-2 max-w-lg">{order.notes}</span>}
           </div>
         }
       >
@@ -135,10 +125,7 @@ export default function KeyOrderDetailPage() {
           </Button>
         )}
         {isCompleted && (
-          <Button
-            onClick={handleMarkInvoiced}
-            disabled={markKeyOrderInvoiced.isPending}
-          >
+          <Button onClick={handleMarkInvoiced} disabled={markKeyOrderInvoiced.isPending}>
             {markKeyOrderInvoiced.isPending ? 'Marcando...' : 'Marcar facturada'}
           </Button>
         )}

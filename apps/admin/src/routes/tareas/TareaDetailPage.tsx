@@ -7,14 +7,13 @@ import {
   NotFoundState,
   SectionHeading,
   Skeleton,
-  StatusBadge,
 } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useTarea } from '@/hooks/useTarea';
-import { equipmentStatusLabel, equipmentStatusTone } from '@/lib/status/equipmentStatus';
+import { equipmentStatus } from '@/lib/status/equipmentStatus';
 import { accessTypeLabel } from '@/lib/status/accessType';
-import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
+import { tareaStatus } from '@/lib/status/tareaStatus';
 import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
 import { AssignEquipmentDialog } from '@/components/tareas/AssignEquipmentDialog';
 import { ConfigureEquipmentPanel } from '@/components/tareas/ConfigureEquipmentPanel';
@@ -108,7 +107,7 @@ export default function TareaDetailPage() {
         title={tarea.ticket_number}
         subtitle={CATEGORY_LABELS[tarea.category] ?? tarea.category}
         breadcrumbs={[{ label: 'Tareas', to: '/tareas' }, { label: tarea.ticket_number }]}
-        titleAdornment={<TareaStatusBadge status={tarea.status} />}
+        titleAdornment={<tareaStatus.Badge status={tarea.status} />}
       >
         {!isTerminalTicket(tarea.status) && (
           <Button onClick={() => setEditOpen(true)}>Editar</Button>
@@ -167,11 +166,7 @@ export default function TareaDetailPage() {
                 <Row label="Tipo de acceso" value={accessTypeLabel(tarea.equipment.access_type)} />
                 <Row
                   label="Estado"
-                  value={
-                    <StatusBadge tone={equipmentStatusTone(tarea.equipment.status)}>
-                      {equipmentStatusLabel(tarea.equipment.status)}
-                    </StatusBadge>
-                  }
+                  value={<equipmentStatus.Badge status={tarea.equipment.status} />}
                 />
               </div>
             ) : (

@@ -1,6 +1,6 @@
 import { DataTable } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { TechnicalOrderStatusBadge } from './TechnicalOrderStatusBadge';
+import { technicalOrderStatus } from '@/lib/status/technicalOrderStatus';
 import type { TechnicalOrderListRow } from '@/hooks/useTechnicalOrders';
 
 interface ServicioTecnicoTableProps {
@@ -41,7 +41,7 @@ export function ServicioTecnicoTable({
         },
         {
           header: 'Estado',
-          cell: (row) => <TechnicalOrderStatusBadge status={row.status} />,
+          cell: (row) => <technicalOrderStatus.Badge status={row.status} />,
         },
         {
           header: 'Fecha',

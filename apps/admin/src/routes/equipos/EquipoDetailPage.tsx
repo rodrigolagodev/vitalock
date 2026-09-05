@@ -4,9 +4,9 @@ import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Section } from '@/components/common/Section';
 import { useEquipmentById } from '@/hooks/useEquipmentById';
-import { equipmentStatusLabel, equipmentStatusTone } from '@/lib/status/equipmentStatus';
-import { keyOrderStatusLabel } from '@/lib/status/keyOrderStatus';
-import { keyItemStatusLabel } from '@/lib/status/keyItemStatus';
+import { equipmentStatus } from '@/lib/status/equipmentStatus';
+import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
+import { keyItemStatus } from '@/lib/status/keyItemStatus';
 import { accessTypeLabel } from '@/lib/status/accessType';
 import { EquipmentKeySnapshotPanel } from '@/components/equipment/EquipmentKeySnapshotPanel';
 import { EquipmentUpdateHistoryPanel } from '@/components/equipment/EquipmentUpdateHistoryPanel';
@@ -95,11 +95,7 @@ export default function EquipoDetailPage() {
           { label: 'Inventario de equipos', to: '/equipos' },
           { label: equipment.model ?? equipment.serial_number },
         ]}
-        titleAdornment={
-          <StatusBadge tone={equipmentStatusTone(equipment.status)}>
-            {equipmentStatusLabel(equipment.status)}
-          </StatusBadge>
-        }
+        titleAdornment={<equipmentStatus.Badge status={equipment.status} />}
         subtitle={<span className="font-mono">{equipment.serial_number}</span>}
       />
 
@@ -295,9 +291,9 @@ export default function EquipoDetailPage() {
                     {o.role === 'replacement' ? ' (como reemplazo)' : ''}
                   </span>
                   <span>·</span>
-                  <span>Orden: {keyOrderStatusLabel(o.order_status)}</span>
+                  <span>Orden: {keyOrderStatus.label(o.order_status)}</span>
                   <span>·</span>
-                  <span>Ítem: {keyItemStatusLabel(o.item_status)}</span>
+                  <span>Ítem: {keyItemStatus.label(o.item_status)}</span>
                 </div>
               </li>
             ))}

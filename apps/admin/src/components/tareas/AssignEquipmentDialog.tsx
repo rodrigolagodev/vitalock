@@ -23,7 +23,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { useMutateTicketEquipment } from '@/hooks/useMutateTicketEquipment';
 import { useResolveEquipmentInstallation } from '@/hooks/useResolveEquipmentInstallation';
 import { useResolveEquipmentReplacement } from '@/hooks/useResolveEquipmentReplacement';
-import { equipmentStatusLabel } from '@/lib/status/equipmentStatus';
+import { equipmentStatus } from '@/lib/status/equipmentStatus';
 import type { TareaRow } from '@/hooks/useTareas';
 
 type Mode = 'select' | 'create' | 'replace';
@@ -216,7 +216,7 @@ export function AssignEquipmentDialog({
                         <SelectItem key={eq.id} value={eq.id}>
                           {eq.serial_number}
                           {eq.model ? ` — ${eq.model}` : ''}
-                          {eq.status !== 'active' ? ` (${equipmentStatusLabel(eq.status)})` : ''}
+                          {eq.status !== 'active' ? ` (${equipmentStatus.label(eq.status)})` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -2,26 +2,14 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { STAFF_ROLE_META } from '@/lib/status/staffRole';
+import { staffRole } from '@/lib/status/staffRole';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
 import { toastMutationError } from '@/lib/errors/toast';
 import type { StaffRole } from '@/hooks/useMutateStaff';
@@ -138,13 +126,9 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="full_name">Nombre *</Label>
-            <Input
-              id="full_name"
-              {...register('full_name')}
-              placeholder="Ej. Juan Pérez"
-            />
+            <Input id="full_name" {...register('full_name')} placeholder="Ej. Juan Pérez" />
             {errors.full_name && (
-              <p className="text-sm text-destructive">{errors.full_name.message}</p>
+              <p className="text-destructive text-sm">{errors.full_name.message}</p>
             )}
           </div>
 
@@ -156,18 +140,12 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
               {...register('email')}
               placeholder="Ej. juan@vitalock.com"
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Teléfono</Label>
-            <Input
-              id="phone"
-              {...register('phone')}
-              placeholder="Ej. +54 11 1234-5678"
-            />
+            <Input id="phone" {...register('phone')} placeholder="Ej. +54 11 1234-5678" />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -181,7 +159,7 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
                     <SelectValue placeholder="Seleccioná un rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(STAFF_ROLE_META).map(([val, meta]) => (
+                    {Object.entries(staffRole.meta).map(([val, meta]) => (
                       <SelectItem key={val} value={val}>
                         {meta.label}
                       </SelectItem>
@@ -190,9 +168,7 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
                 </Select>
               )}
             />
-            {errors.role && (
-              <p className="text-sm text-destructive">{errors.role.message}</p>
-            )}
+            {errors.role && <p className="text-destructive text-sm">{errors.role.message}</p>}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -205,7 +181,7 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
             />
           </div>
 
-          <SheetFooter className="mt-auto pt-4 pb-6">
+          <SheetFooter className="mt-auto pb-6 pt-4">
             <Button
               type="button"
               variant="outline"

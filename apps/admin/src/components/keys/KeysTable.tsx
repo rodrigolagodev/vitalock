@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Power } from 'lucide-react';
-import { StatusBadge } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
 import type { KeyRow } from '@/hooks/useKeys';
-import { keyStatusLabel, keyStatusTone } from '@/lib/status/keyStatus';
+import { keyStatus } from '@/lib/status/keyStatus';
 
 interface KeysTableProps {
   keys: KeyRow[];
@@ -62,7 +61,7 @@ export function KeysTable({
               <div className="flex items-center gap-2">
                 <span>{k.unit.number}</span>
                 {k.unit.unit_type && (
-                  <span className="text-xs text-muted-foreground">· {k.unit.unit_type}</span>
+                  <span className="text-muted-foreground text-xs">· {k.unit.unit_type}</span>
                 )}
                 {k.unit.is_administrative && (
                   <Badge variant="secondary" className="text-xs">
@@ -74,11 +73,7 @@ export function KeysTable({
           },
           {
             header: 'Estado',
-            cell: (k) => (
-              <StatusBadge tone={keyStatusTone(k.status)}>
-                {keyStatusLabel(k.status)}
-              </StatusBadge>
-            ),
+            cell: (k) => <keyStatus.Badge status={k.status} />,
           },
           {
             header: 'Activada',

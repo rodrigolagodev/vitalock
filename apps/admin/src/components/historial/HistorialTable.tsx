@@ -1,11 +1,8 @@
 import { DataTable, StatusBadge } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { keyOrderStatusLabel, keyOrderStatusTone } from '@/lib/status/keyOrderStatus';
-import {
-  technicalOrderStatusLabel,
-  technicalOrderStatusTone,
-} from '@/lib/status/technicalOrderStatus';
+import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
+import { technicalOrderStatus } from '@/lib/status/technicalOrderStatus';
 import type { AllOrderRow } from '@/hooks/useAllOrders';
 
 interface HistorialTableProps {
@@ -22,15 +19,8 @@ function OrderKindBadge({ kind }: { kind: AllOrderRow['order_kind'] }) {
 }
 
 function AllOrderStatusBadge({ row }: { row: AllOrderRow }) {
-  const tone =
-    row.order_kind === 'key'
-      ? keyOrderStatusTone(row.status)
-      : technicalOrderStatusTone(row.status);
-  const label =
-    row.order_kind === 'key'
-      ? keyOrderStatusLabel(row.status)
-      : technicalOrderStatusLabel(row.status);
-  return <StatusBadge tone={tone}>{label}</StatusBadge>;
+  const helpers = row.order_kind === 'key' ? keyOrderStatus : technicalOrderStatus;
+  return <StatusBadge tone={helpers.tone(row.status)}>{helpers.label(row.status)}</StatusBadge>;
 }
 
 export function HistorialTable({ orders, isFetching, hasFilters = false }: HistorialTableProps) {

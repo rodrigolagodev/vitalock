@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilLine, RefreshCw } from 'lucide-react';
-import { StatusBadge } from '@vitalock/ui';
 import { DataTable, type DataTableAction } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import type { EquipmentRow } from '@/hooks/useEquipment';
-import {
-  equipmentStatusLabel,
-  equipmentStatusTone,
-} from '@/lib/status/equipmentStatus';
+import { equipmentStatus } from '@/lib/status/equipmentStatus';
 import { EquipmentFormSheet } from './EquipmentFormSheet';
 import { ReplaceEquipmentDialog } from './ReplaceEquipmentDialog';
 
@@ -18,11 +14,7 @@ interface EquipmentTableProps {
   isFetching?: boolean;
 }
 
-export function EquipmentTable({
-  buildingId,
-  equipment,
-  isFetching = false,
-}: EquipmentTableProps) {
+export function EquipmentTable({ buildingId, equipment, isFetching = false }: EquipmentTableProps) {
   const navigate = useNavigate();
   const [editingEquipment, setEditingEquipment] = useState<EquipmentRow | null>(null);
   const [replacingEquipment, setReplacingEquipment] = useState<EquipmentRow | null>(null);
@@ -59,11 +51,7 @@ export function EquipmentTable({
           },
           {
             header: 'Estado',
-            cell: (i) => (
-              <StatusBadge tone={equipmentStatusTone(i.status)}>
-                {equipmentStatusLabel(i.status)}
-              </StatusBadge>
-            ),
+            cell: (i) => <equipmentStatus.Badge status={i.status} />,
           },
           {
             header: 'Instalado',

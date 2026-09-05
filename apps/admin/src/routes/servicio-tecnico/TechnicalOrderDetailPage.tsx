@@ -1,18 +1,13 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button, ConfirmDialog } from '@vitalock/ui';
-import {
-  ErrorState,
-  NotFoundState,
-  SectionHeading,
-  Skeleton,
-} from '@vitalock/ui';
+import { ErrorState, NotFoundState, SectionHeading, Skeleton } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
 import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';
-import { TechnicalOrderStatusBadge } from '@/components/servicio-tecnico/TechnicalOrderStatusBadge';
+import { technicalOrderStatus } from '@/lib/status/technicalOrderStatus';
 import { TechnicalOrderItemsTable } from '@/components/servicio-tecnico/TechnicalOrderItemsTable';
 import { LinkedTicketsTable } from '@/components/servicio-tecnico/LinkedTicketsTable';
 
@@ -21,10 +16,7 @@ const TERMINAL_STATUSES = new Set(['invoiced', 'cancelled']);
 export default function TechnicalOrderDetailPage() {
   const { techOrderId } = useParams<{ techOrderId: string }>();
   const { data: order, isLoading, isError } = useTechnicalOrder(techOrderId);
-  const {
-    cancelTechnicalOrder,
-    markTechnicalOrderInvoiced,
-  } = useMutateTechnicalOrder();
+  const { cancelTechnicalOrder, markTechnicalOrderInvoiced } = useMutateTechnicalOrder();
   const { data: tickets = [], isLoading: ticketsLoading } = useTechnicalOrderTickets(techOrderId);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
@@ -71,7 +63,7 @@ export default function TechnicalOrderDetailPage() {
   const clientLabel =
     order.client_type === 'administration'
       ? (order.administrations?.company_name ?? '—')
-      : order.particular_full_name ?? '—';
+      : (order.particular_full_name ?? '—');
 
   const clientDetail =
     order.client_type === 'particular' && order.particular_dni
@@ -79,9 +71,12 @@ export default function TechnicalOrderDetailPage() {
       : null;
 
   const handleCancel = () => {
-    cancelTechnicalOrder.mutate({ id: order.id }, {
-      onSettled: () => setCancelConfirmOpen(false),
-    });
+    cancelTechnicalOrder.mutate(
+      { id: order.id },
+      {
+        onSettled: () => setCancelConfirmOpen(false),
+      },
+    );
   };
 
   const handleMarkInvoiced = () => {
@@ -96,14 +91,14 @@ export default function TechnicalOrderDetailPage() {
           { label: 'Servicio técnico', to: '/servicio-tecnico' },
           { label: order.order_number },
         ]}
-        titleAdornment={<TechnicalOrderStatusBadge status={order.status} />}
+        titleAdornment={<technicalOrderStatus.Badge status={order.status} />}
         subtitle={
           <div className="flex flex-col gap-0.5">
             {order.client_type === 'administration' ? (
               order.administration_id ? (
                 <Link
                   to={`/administraciones/${order.administration_id}`}
-                  className="hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                  className="hover:text-foreground underline-offset-4 transition-colors hover:underline"
                 >
                   {clientLabel}
                 </Link>
@@ -123,9 +118,7 @@ export default function TechnicalOrderDetailPage() {
               </>
             )}
             <span className="text-xs">Creada el {formatDate(order.created_at)}</span>
-            {order.notes && (
-              <span className="mt-2 max-w-lg">{order.notes}</span>
-            )}
+            {order.notes && <span className="mt-2 max-w-lg">{order.notes}</span>}
           </div>
         }
       >
@@ -135,10 +128,7 @@ export default function TechnicalOrderDetailPage() {
           </Button>
         )}
         {isCompleted && (
-          <Button
-            onClick={handleMarkInvoiced}
-            disabled={markTechnicalOrderInvoiced.isPending}
-          >
+          <Button onClick={handleMarkInvoiced} disabled={markTechnicalOrderInvoiced.isPending}>
             {markTechnicalOrderInvoiced.isPending ? 'Marcando...' : 'Marcar facturada'}
           </Button>
         )}
@@ -156,19 +146,13 @@ export default function TechnicalOrderDetailPage() {
       {/* Items table */}
       <div className="flex flex-col gap-3">
         <SectionHeading title="Ítems" variant="secondary" />
-        <TechnicalOrderItemsTable
-          items={order.technical_order_items}
-          isFetching={isLoading}
-        />
+        <TechnicalOrderItemsTable items={order.technical_order_items} isFetching={isLoading} />
       </div>
 
       {/* Linked tickets */}
       <div className="flex flex-col gap-3">
         <SectionHeading title="Tareas relacionadas" variant="secondary" />
-        <LinkedTicketsTable
-          tickets={tickets}
-          isLoading={ticketsLoading}
-        />
+        <LinkedTicketsTable tickets={tickets} isLoading={ticketsLoading} />
       </div>
 
       <ConfirmDialog

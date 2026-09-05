@@ -1,29 +1,9 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@vitalock/ui';
-import {
-  ErrorState,
-  NotFoundState,
-  SearchInput,
-  SectionHeading,
-  Skeleton,
-  StatusBadge,
-} from '@vitalock/ui';
-import {
-  buildingStatusLabel,
-  buildingStatusTone,
-} from '@/lib/status/buildingStatus';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { Tabs, TabsList, TabsTrigger } from '@vitalock/ui';
+import { ErrorState, NotFoundState, SearchInput, SectionHeading, Skeleton } from '@vitalock/ui';
+import { buildingStatus } from '@/lib/status/buildingStatus';
 import type { KeyRow } from '@/hooks/useKeys';
 import { useBuilding } from '@/hooks/useBuilding';
 import { useAdministration } from '@/hooks/useAdministration';
@@ -43,9 +23,7 @@ export default function BuildingDetailPage() {
   const activeTab = searchParams.get('tab') ?? 'equipos';
 
   const { data: building, isLoading, isError } = useBuilding(buildingId ?? '');
-  const { data: administration } = useAdministration(
-    building?.administration_id ?? '',
-  );
+  const { data: administration } = useAdministration(building?.administration_id ?? '');
   const { data: equipment = [], isFetching: equipmentFetching } = useEquipment(buildingId ?? '');
   const { data: keys = [], isFetching: keysFetching } = useKeys(buildingId);
 
@@ -93,10 +71,7 @@ export default function BuildingDetailPage() {
     if (llavesStatus !== 'all' && k.status !== llavesStatus) return false;
     const q = llavesSearch.trim().toLowerCase();
     if (q === '') return true;
-    return (
-      k.rfid_code.toLowerCase().includes(q) ||
-      k.unit.number.toLowerCase().includes(q)
-    );
+    return k.rfid_code.toLowerCase().includes(q) || k.unit.number.toLowerCase().includes(q);
   });
 
   const filteredEquipment = equipment.filter((e) => {
@@ -122,11 +97,7 @@ export default function BuildingDetailPage() {
               }
             : { label: 'Sin administración' },
         ]}
-        titleAdornment={
-          <StatusBadge tone={buildingStatusTone(building.status)}>
-            {buildingStatusLabel(building.status)}
-          </StatusBadge>
-        }
+        titleAdornment={<buildingStatus.Badge status={building.status} />}
       />
 
       {/* Section selector */}
@@ -137,8 +108,8 @@ export default function BuildingDetailPage() {
         </TabsList>
       </Tabs>
 
-        {activeTab === 'llaves' && (
-          <div className="mt-4 space-y-4">
+      {activeTab === 'llaves' && (
+        <div className="mt-4 space-y-4">
           <SectionHeading title="Llaves" variant="secondary" />
           <div className="flex flex-wrap items-center gap-2">
             <SearchInput
@@ -171,10 +142,10 @@ export default function BuildingDetailPage() {
             hasFilters={llavesSearch.trim() !== '' || llavesStatus !== 'all'}
           />
         </div>
-        )}
+      )}
 
-        {activeTab === 'equipos' && (
-          <div className="mt-4 space-y-4">
+      {activeTab === 'equipos' && (
+        <div className="mt-4 space-y-4">
           <SectionHeading title="Equipos" variant="secondary" />
           <SearchInput
             placeholder="Buscar equipos por serie o modelo..."
@@ -188,7 +159,7 @@ export default function BuildingDetailPage() {
             isFetching={equipmentFetching}
           />
         </div>
-        )}
+      )}
     </div>
   );
 }

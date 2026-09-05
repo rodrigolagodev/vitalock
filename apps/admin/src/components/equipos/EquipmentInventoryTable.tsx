@@ -1,10 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { DataTable, StatusBadge } from '@vitalock/ui';
+import { DataTable } from '@vitalock/ui';
 import type { EquipmentInventoryRow } from '@/hooks/useEquipmentInventory';
-import {
-  equipmentStatusLabel,
-  equipmentStatusTone,
-} from '@/lib/status/equipmentStatus';
+import { equipmentStatus } from '@/lib/status/equipmentStatus';
 
 interface EquipmentInventoryTableProps {
   rows: EquipmentInventoryRow[];
@@ -30,9 +27,7 @@ export function EquipmentInventoryTable({
       columns={[
         {
           header: 'Número de serie',
-          cell: (r) => (
-            <span className="font-mono text-sm">{r.serial_number ?? '—'}</span>
-          ),
+          cell: (r) => <span className="font-mono text-sm">{r.serial_number ?? '—'}</span>,
         },
         {
           header: 'Modelo',
@@ -40,11 +35,7 @@ export function EquipmentInventoryTable({
         },
         {
           header: 'Estado',
-          cell: (r) => (
-            <StatusBadge tone={equipmentStatusTone(r.status)}>
-              {equipmentStatusLabel(r.status)}
-            </StatusBadge>
-          ),
+          cell: (r) => <equipmentStatus.Badge status={r.status} />,
         },
         {
           header: 'Edificio',

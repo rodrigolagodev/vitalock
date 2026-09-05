@@ -1,6 +1,6 @@
-import { DataTable, StatusBadge } from '@vitalock/ui';
+import { DataTable } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { tareaStatusLabel, tareaStatusTone } from '@/lib/status/tareaStatus';
+import { tareaStatus } from '@/lib/status/tareaStatus';
 import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 import { useStaffByIds } from '@/hooks/useStaffByIds';
 
@@ -29,9 +29,9 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <div className="h-8 w-full animate-pulse rounded-md bg-muted" />
-        <div className="h-8 w-full animate-pulse rounded-md bg-muted" />
-        <div className="h-8 w-full animate-pulse rounded-md bg-muted" />
+        <div className="bg-muted h-8 w-full animate-pulse rounded-md" />
+        <div className="bg-muted h-8 w-full animate-pulse rounded-md" />
+        <div className="bg-muted h-8 w-full animate-pulse rounded-md" />
       </div>
     );
   }
@@ -68,11 +68,7 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
         },
         {
           header: 'Estado',
-          cell: (t) => (
-            <StatusBadge tone={tareaStatusTone(t.status)}>
-              {tareaStatusLabel(t.status)}
-            </StatusBadge>
-          ),
+          cell: (t) => <tareaStatus.Badge status={t.status} />,
         },
         {
           header: 'Creado',
