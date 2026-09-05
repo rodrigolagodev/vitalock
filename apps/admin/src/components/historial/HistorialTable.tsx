@@ -1,6 +1,11 @@
-import { DataTable } from '@vitalock/ui';
+import { DataTable, StatusBadge } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
+import { keyOrderStatusLabel, keyOrderStatusTone } from '@/lib/status/keyOrderStatus';
+import {
+  technicalOrderStatusLabel,
+  technicalOrderStatusTone,
+} from '@/lib/status/technicalOrderStatus';
 import type { AllOrderRow } from '@/hooks/useAllOrders';
 
 interface HistorialTableProps {
@@ -16,11 +21,19 @@ function OrderKindBadge({ kind }: { kind: AllOrderRow['order_kind'] }) {
   return <Badge variant="secondary">Servicio técnico</Badge>;
 }
 
-export function HistorialTable({
-  orders,
-  isFetching,
-  hasFilters = false,
-}: HistorialTableProps) {
+function AllOrderStatusBadge({ row }: { row: AllOrderRow }) {
+  const tone =
+    row.order_kind === 'key'
+      ? keyOrderStatusTone(row.status)
+      : technicalOrderStatusTone(row.status);
+  const label =
+    row.order_kind === 'key'
+      ? keyOrderStatusLabel(row.status)
+      : technicalOrderStatusLabel(row.status);
+  return <StatusBadge tone={tone}>{label}</StatusBadge>;
+}
+
+export function HistorialTable({ orders, isFetching, hasFilters = false }: HistorialTableProps) {
   return (
     <DataTable<AllOrderRow>
       rows={orders}
@@ -33,8 +46,7 @@ export function HistorialTable({
         },
         {
           header: 'Estado',
-          cell: (row) => row.status,
-          className: 'text-muted-foreground',
+          cell: (row) => <AllOrderStatusBadge row={row} />,
         },
         {
           header: 'Fecha',
