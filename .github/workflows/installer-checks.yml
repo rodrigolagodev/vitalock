@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
+  installer-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
