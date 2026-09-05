@@ -18,7 +18,7 @@ export interface HistoricalTicket {
   };
 }
 
-export function historicalTicketsKey(staffId: string) {
+function historicalTicketsKey(staffId: string) {
   return ['installer', 'ticket-history', staffId] as const;
 }
 
@@ -29,7 +29,8 @@ async function fetchHistoricalTickets(staffId: string): Promise<HistoricalTicket
   const { data, error } = await supabase
     .schema('support')
     .from('installer_tickets_with_context')
-    .select(`
+    .select(
+      `
       id,
       description,
       status,
@@ -43,7 +44,8 @@ async function fetchHistoricalTickets(staffId: string): Promise<HistoricalTicket
       building_name,
       building_administration_id,
       administration_company_name
-    `)
+    `,
+    )
     .eq('assigned_to_staff_id', staffId)
     .in('status', ['resolved', 'cancelled'])
     .order('updated_at', { ascending: false });

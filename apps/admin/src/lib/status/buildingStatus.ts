@@ -3,10 +3,7 @@ import type { StatusTone } from '@vitalock/ui';
 /** Building lifecycle status. Labels are MASCULINE ("el edificio"). */
 export type BuildingStatus = 'active' | 'inactive';
 
-export const BUILDING_STATUS_META: Record<
-  BuildingStatus,
-  { label: string; tone: StatusTone }
-> = {
+const BUILDING_STATUS_META: Record<BuildingStatus, { label: string; tone: StatusTone }> = {
   active: { label: 'Activo', tone: 'success' },
   inactive: { label: 'Inactivo', tone: 'neutral' },
 };

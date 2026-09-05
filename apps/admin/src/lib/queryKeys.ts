@@ -1,7 +1,6 @@
 export const administrationsKey = (status?: string, search?: string) =>
   ['admin', 'administrations', status ?? 'all', search ?? ''] as const;
-export const administrationKey = (id: string) =>
-  ['admin', 'administration', id] as const;
+export const administrationKey = (id: string) => ['admin', 'administration', id] as const;
 export const buildingsKey = (administrationId?: string) =>
   administrationId
     ? (['admin', 'buildings', administrationId] as const)
@@ -108,18 +107,14 @@ export const keysInventoryKey = (
     workflowStatus ?? 'all',
   ] as const;
 
-export const equipmentInventoryKey = (
-  adminId?: string,
-  buildingId?: string,
-  status?: string,
-) =>
-  [
-    'admin',
-    'equipment-inventory',
-    adminId ?? 'all',
-    buildingId ?? 'all',
-    status ?? 'all',
-  ] as const;
+export const equipmentInventoryKey = (adminId?: string, buildingId?: string, status?: string) =>
+  ['admin', 'equipment-inventory', adminId ?? 'all', buildingId ?? 'all', status ?? 'all'] as const;
 
 export const equipmentByBuildingKey = (buildingId?: string) =>
   ['admin', 'equipment-by-building', buildingId ?? 'none'] as const;
+
+export const equipmentUpdatesKey = (equipmentId: string) =>
+  ['admin', 'equipment-updates', equipmentId] as const;
+
+export const keyEventsKey = (keyId: string | undefined) =>
+  ['admin', 'key-events', keyId ?? 'none'] as const;

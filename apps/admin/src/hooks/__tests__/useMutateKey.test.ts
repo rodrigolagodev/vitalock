@@ -43,7 +43,7 @@ function makeWrapper() {
 }
 
 import { useMutateKey } from '../useMutateKey';
-import { keyEventsKey } from '../useKeyEvents';
+import { keyEventsKey } from '@/lib/queryKeys';
 
 const createdKey = {
   id: 'k-1',
@@ -175,7 +175,9 @@ describe('useMutateKey', () => {
           picked_up_by_surname: 'García',
           picked_up_by_dni: '30111222',
         });
-      } catch { /* expected */ }
+      } catch {
+        /* expected */
+      }
     });
 
     await waitFor(() => expect(result.current.recordPickup.isError).toBe(true));

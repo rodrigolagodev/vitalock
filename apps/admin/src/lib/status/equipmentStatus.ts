@@ -3,10 +3,7 @@ import type { StatusTone } from '@vitalock/ui';
 /** Physical equipment lifecycle status. */
 export type EquipmentStatus = 'active' | 'maintenance' | 'dead';
 
-export const EQUIPMENT_STATUS_META: Record<
-  EquipmentStatus,
-  { label: string; tone: StatusTone }
-> = {
+const EQUIPMENT_STATUS_META: Record<EquipmentStatus, { label: string; tone: StatusTone }> = {
   active: { label: 'Activo', tone: 'success' },
   maintenance: { label: 'Mantenimiento', tone: 'warning' },
   dead: { label: 'Dado de baja', tone: 'danger' },

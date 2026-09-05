@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { toastMutationError } from '@/lib/errors/toast';
 import { createEquipmentUpdate } from '@vitalock/supabase';
-import { equipmentUpdatesKey } from './useEquipmentUpdates';
+import { equipmentUpdatesKey } from '@/lib/queryKeys';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -52,9 +52,7 @@ export function useMutateEquipmentUpdate() {
         });
         return taskId;
       } catch (rpcError) {
-        await supabase.storage
-          .from('equipment-updates-mdb')
-          .remove([storagePath]);
+        await supabase.storage.from('equipment-updates-mdb').remove([storagePath]);
         throw rpcError;
       }
     },

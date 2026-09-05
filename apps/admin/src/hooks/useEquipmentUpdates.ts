@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { equipmentUpdatesKey } from '@/lib/queryKeys';
 
 export interface EquipmentUpdateRow {
   id: string;
@@ -14,9 +15,6 @@ export interface EquipmentUpdateRow {
   resolved_by_staff_id: string | null;
   ticket_status: 'open' | 'in_progress' | 'resolved' | 'cancelled';
 }
-
-export const equipmentUpdatesKey = (equipmentId: string) =>
-  ['admin', 'equipment-updates', equipmentId] as const;
 
 export function useEquipmentUpdates(equipmentId: string | undefined) {
   return useQuery({

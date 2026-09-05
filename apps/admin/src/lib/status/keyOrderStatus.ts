@@ -11,10 +11,7 @@ export type KeyOrderStatus =
   | 'invoiced'
   | 'cancelled';
 
-export const KEY_ORDER_STATUS_META: Record<
-  KeyOrderStatus,
-  { label: string; tone: StatusTone }
-> = {
+const KEY_ORDER_STATUS_META: Record<KeyOrderStatus, { label: string; tone: StatusTone }> = {
   draft: { label: 'Borrador', tone: 'neutral' },
   confirmed: { label: 'Confirmada', tone: 'brand' },
   in_progress: { label: 'En proceso', tone: 'warning' },

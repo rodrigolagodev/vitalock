@@ -24,19 +24,6 @@ export interface UpdateTareaInput {
   cancellation_reason?: string | null;
 }
 
-export const categoryLabels: Record<
-  | 'install_equipment'
-  | 'replace_equipment'
-  | 'update_equipment'
-  | 'maintain_equipment',
-  string
-> = {
-  install_equipment: 'Instalación de equipo',
-  replace_equipment: 'Cambio de equipo',
-  update_equipment: 'Actualización de equipo',
-  maintain_equipment: 'Mantenimiento',
-};
-
 export function useMutateTarea() {
   const queryClient = useQueryClient();
 

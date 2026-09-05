@@ -3,7 +3,7 @@ import type { StatusTone } from '@vitalock/ui';
 /** Administration lifecycle status. Labels are FEMININE ("la administración"). */
 export type AdministrationStatus = 'active' | 'inactive';
 
-export const ADMINISTRATION_STATUS_META: Record<
+const ADMINISTRATION_STATUS_META: Record<
   AdministrationStatus,
   { label: string; tone: StatusTone }
 > = {
@@ -11,15 +11,11 @@ export const ADMINISTRATION_STATUS_META: Record<
   inactive: { label: 'Inactiva', tone: 'neutral' },
 };
 
-export function administrationStatusLabel(
-  status: string | null | undefined,
-): string {
+export function administrationStatusLabel(status: string | null | undefined): string {
   if (status == null) return '—';
   return ADMINISTRATION_STATUS_META[status as AdministrationStatus]?.label ?? status;
 }
 
-export function administrationStatusTone(
-  status: string | null | undefined,
-): StatusTone {
+export function administrationStatusTone(status: string | null | undefined): StatusTone {
   return ADMINISTRATION_STATUS_META[status as AdministrationStatus]?.tone ?? 'neutral';
 }

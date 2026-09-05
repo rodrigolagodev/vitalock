@@ -11,7 +11,7 @@ export interface EquipmentUpdateHistoryRow {
   keys_to_disable: string[];
 }
 
-export const equipmentUpdateHistoryKey = (equipmentId: string) =>
+const equipmentUpdateHistoryKey = (equipmentId: string) =>
   ['admin', 'equipment-update-history', equipmentId] as const;
 
 /**

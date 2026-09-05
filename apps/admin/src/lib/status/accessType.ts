@@ -36,16 +36,6 @@ export const ACCESS_TYPE_LABELS: Record<string, string> = {
   amenities: 'Amenities',
 };
 
-/** Canonical access-type keys that should be used when storing new values. */
-export const ACCESS_TYPE_KEYS = [
-  'service',
-  'cochera',
-  'puerta_2',
-  'puerta_3',
-  'puerta_4',
-  'otro',
-] as const;
-
 export function accessTypeLabel(key: string | null | undefined): string {
   if (key == null) return '—';
   return ACCESS_TYPE_LABELS[key] ?? key;

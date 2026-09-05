@@ -3,10 +3,7 @@ import type { StatusTone } from '@vitalock/ui';
 /** Status of a single line item within a key order. */
 export type KeyItemStatus = 'pending' | 'configured' | 'installed' | 'cancelled';
 
-export const KEY_ITEM_STATUS_META: Record<
-  KeyItemStatus,
-  { label: string; tone: StatusTone }
-> = {
+const KEY_ITEM_STATUS_META: Record<KeyItemStatus, { label: string; tone: StatusTone }> = {
   pending: { label: 'Pendiente', tone: 'neutral' },
   configured: { label: 'Configurada', tone: 'brand' },
   installed: { label: 'Instalada', tone: 'info' },

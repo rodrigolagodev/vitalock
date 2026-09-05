@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { keyEventsKey } from '@/lib/queryKeys';
 
 export interface KeyEventRow {
   id: string;
@@ -19,9 +20,6 @@ export interface KeyEventRow {
   occurred_at: string;
 }
 
-export const keyEventsKey = (keyId: string | undefined) =>
-  ['admin', 'key-events', keyId ?? 'none'] as const;
-
 export function useKeyEvents(keyId: string | undefined) {
   return useQuery({
     queryKey: keyEventsKey(keyId),
@@ -36,7 +34,11 @@ export function useKeyEvents(keyId: string | undefined) {
         .order('occurred_at', { ascending: false });
       if (error) throw error;
 
-      const staffIds = [...new Set((events ?? []).map((e) => e.actor_staff_id).filter((v): v is string => Boolean(v)))];
+      const staffIds = [
+        ...new Set(
+          (events ?? []).map((e) => e.actor_staff_id).filter((v): v is string => Boolean(v)),
+        ),
+      ];
       const staffMap = new Map<string, string>();
       if (staffIds.length > 0) {
         const { data: staff } = await supabase
@@ -50,7 +52,7 @@ export function useKeyEvents(keyId: string | undefined) {
       return (events ?? []).map((e) => ({
         ...e,
         event_type: e.event_type as KeyEventRow['event_type'],
-        actor_name: e.actor_staff_id ? staffMap.get(e.actor_staff_id) ?? null : null,
+        actor_name: e.actor_staff_id ? (staffMap.get(e.actor_staff_id) ?? null) : null,
       }));
     },
   });

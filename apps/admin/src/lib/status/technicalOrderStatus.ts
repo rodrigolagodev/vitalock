@@ -14,7 +14,7 @@ export type TechnicalOrderStatus =
   | 'invoiced'
   | 'cancelled';
 
-export const TECHNICAL_ORDER_STATUS_META: Record<
+const TECHNICAL_ORDER_STATUS_META: Record<
   TechnicalOrderStatus,
   { label: string; tone: StatusTone }
 > = {
@@ -26,15 +26,11 @@ export const TECHNICAL_ORDER_STATUS_META: Record<
   cancelled: { label: 'Cancelado', tone: 'danger' },
 };
 
-export function technicalOrderStatusLabel(
-  status: string | null | undefined,
-): string {
+export function technicalOrderStatusLabel(status: string | null | undefined): string {
   if (status == null) return '—';
   return TECHNICAL_ORDER_STATUS_META[status as TechnicalOrderStatus]?.label ?? status;
 }
 
-export function technicalOrderStatusTone(
-  status: string | null | undefined,
-): StatusTone {
+export function technicalOrderStatusTone(status: string | null | undefined): StatusTone {
   return TECHNICAL_ORDER_STATUS_META[status as TechnicalOrderStatus]?.tone ?? 'neutral';
 }

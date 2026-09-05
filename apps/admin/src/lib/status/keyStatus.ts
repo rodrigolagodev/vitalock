@@ -8,7 +8,7 @@ export type KeyStatus =
   | 'pending_disable'
   | 'disabled';
 
-export const KEY_STATUS_META: Record<KeyStatus, { label: string; tone: StatusTone }> = {
+const KEY_STATUS_META: Record<KeyStatus, { label: string; tone: StatusTone }> = {
   pending_creation: { label: 'En creación', tone: 'neutral' },
   pending_installation: { label: 'Pendiente de instalación', tone: 'warning' },
   active: { label: 'Activa', tone: 'success' },

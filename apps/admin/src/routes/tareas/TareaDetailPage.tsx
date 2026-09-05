@@ -13,6 +13,7 @@ import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useTarea } from '@/hooks/useTarea';
 import { equipmentStatusLabel, equipmentStatusTone } from '@/lib/status/equipmentStatus';
+import { accessTypeLabel } from '@/lib/status/accessType';
 import { TareaStatusBadge } from '@/components/tareas/TareaStatusBadge';
 import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
 import { AssignEquipmentDialog } from '@/components/tareas/AssignEquipmentDialog';
@@ -40,16 +41,6 @@ const CATEGORIES_REQUIRING_EQUIPMENT = new Set<TareaRow['category']>([
   'replace_equipment',
 ]);
 
-const ACCESS_TYPE_LABELS: Record<string, string> = {
-  principal: 'Principal',
-  servicio: 'Servicio',
-  cochera: 'Cochera',
-  puerta_2: 'Puerta 2',
-  puerta_3: 'Puerta 3',
-  puerta_4: 'Puerta 4',
-  otro: 'Otro',
-};
-
 const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'], string> = {
   maintain_equipment: 'Asignar equipo existente',
   install_equipment: 'Registrar equipo instalado',
@@ -64,7 +55,7 @@ function isTerminalTicket(status: string): boolean {
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs uppercase text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-xs uppercase">{label}</span>
       <span className="text-sm">{value}</span>
     </div>
   );
@@ -116,10 +107,7 @@ export default function TareaDetailPage() {
       <PageHeader
         title={tarea.ticket_number}
         subtitle={CATEGORY_LABELS[tarea.category] ?? tarea.category}
-        breadcrumbs={[
-          { label: 'Tareas', to: '/tareas' },
-          { label: tarea.ticket_number },
-        ]}
+        breadcrumbs={[{ label: 'Tareas', to: '/tareas' }, { label: tarea.ticket_number }]}
         titleAdornment={<TareaStatusBadge status={tarea.status} />}
       >
         {!isTerminalTicket(tarea.status) && (
@@ -127,7 +115,7 @@ export default function TareaDetailPage() {
         )}
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-4 rounded-md border bg-card p-4 md:grid-cols-2">
+      <div className="bg-card grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2">
         <Row label="Descripción" value={tarea.description || '—'} />
         <Row
           label="Edificio"
@@ -157,72 +145,52 @@ export default function TareaDetailPage() {
         // the section pre-resolve so the empty state doesn't sit above the
         // configure panel. Post-resolve (equipment != null) it shows normally.
         (tarea.category !== 'install_equipment' || tarea.equipment != null) && (
-        <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
-          <SectionHeading
-            title={
-              tarea.category === 'replace_equipment' ? 'Equipo actual' : 'Equipo'
-            }
-            variant="secondary"
-          >
-            {tarea.building_id &&
-              tarea.status !== 'resolved' &&
-              tarea.status !== 'cancelled' &&
-              !CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAssignOpen(true)}
-                >
-                  {tarea.equipment
-                    ? 'Cambiar asignación'
-                    : ASSIGN_BUTTON_LABEL[tarea.category]}
-                </Button>
-              )}
-          </SectionHeading>
+          <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
+            <SectionHeading
+              title={tarea.category === 'replace_equipment' ? 'Equipo actual' : 'Equipo'}
+              variant="secondary"
+            >
+              {tarea.building_id &&
+                tarea.status !== 'resolved' &&
+                tarea.status !== 'cancelled' &&
+                !CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) && (
+                  <Button variant="outline" size="sm" onClick={() => setAssignOpen(true)}>
+                    {tarea.equipment ? 'Cambiar asignación' : ASSIGN_BUTTON_LABEL[tarea.category]}
+                  </Button>
+                )}
+            </SectionHeading>
 
-          {tarea.equipment ? (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <Row label="Serie" value={tarea.equipment.serial_number} />
-              <Row label="Modelo" value={tarea.equipment.model ?? '—'} />
-              <Row
-                label="Tipo de acceso"
-                value={
-                  ACCESS_TYPE_LABELS[tarea.equipment.access_type] ??
-                  tarea.equipment.access_type
+            {tarea.equipment ? (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Row label="Serie" value={tarea.equipment.serial_number} />
+                <Row label="Modelo" value={tarea.equipment.model ?? '—'} />
+                <Row label="Tipo de acceso" value={accessTypeLabel(tarea.equipment.access_type)} />
+                <Row
+                  label="Estado"
+                  value={
+                    <StatusBadge tone={equipmentStatusTone(tarea.equipment.status)}>
+                      {equipmentStatusLabel(tarea.equipment.status)}
+                    </StatusBadge>
+                  }
+                />
+              </div>
+            ) : (
+              <EmptyState
+                message={
+                  tarea.category === 'install_equipment'
+                    ? 'Todavía no hay equipo instalado. Cargá abajo el serie del equipo que se va a instalar.'
+                    : 'Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.'
                 }
               />
-              <Row
-                label="Estado"
-                value={
-                  <StatusBadge tone={equipmentStatusTone(tarea.equipment.status)}>
-                    {equipmentStatusLabel(tarea.equipment.status)}
-                  </StatusBadge>
-                }
-              />
-            </div>
-          ) : (
-            <EmptyState
-              message={
-                tarea.category === 'install_equipment'
-                  ? 'Todavía no hay equipo instalado. Cargá abajo el serie del equipo que se va a instalar.'
-                  : 'Sin equipo asignado. Se requiere asignar uno para poder resolver la tarea.'
-              }
-            />
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
       {CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) &&
         tarea.status !== 'resolved' &&
-        tarea.status !== 'cancelled' && (
-          <ConfigureEquipmentPanel tarea={tarea} />
-        )}
+        tarea.status !== 'cancelled' && <ConfigureEquipmentPanel tarea={tarea} />}
 
-      <TareaFormSheet
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        tarea={tarea}
-      />
+      <TareaFormSheet open={editOpen} onOpenChange={setEditOpen} tarea={tarea} />
 
       {tarea.building_id && !CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) && (
         <AssignEquipmentDialog

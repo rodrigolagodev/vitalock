@@ -1,8 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { keysKey, keyOrderKey } from '@/lib/queryKeys';
-import { keyEventsKey } from './useKeyEvents';
+import { keysKey, keyOrderKey, keyEventsKey } from '@/lib/queryKeys';
 import { toastMutationError } from '@/lib/errors/toast';
 import { requestKeyDisable, cancelKeyDisable } from '@vitalock/supabase';
 
