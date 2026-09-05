@@ -1,14 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import type { KeyStatus } from '@/lib/status/keyStatus';
 
-export type KeyStatus =
-  | 'pending_creation'
-  | 'pending_installation'
-  | 'active'
-  | 'pending_disable'
-  | 'disabled';
-
-export interface KeyDetailAuthorizedEquipment {
+interface KeyDetailAuthorizedEquipment {
   authorization_id: string;
   equipment_id: string;
   serial_number: string;
@@ -16,7 +10,7 @@ export interface KeyDetailAuthorizedEquipment {
   building_id: string;
 }
 
-export interface KeyDetailAssociatedOrder {
+interface KeyDetailAssociatedOrder {
   key_order_id: string;
   order_number: string;
   order_status: string;
@@ -140,9 +134,7 @@ export function useKeyById(keyId: string | null | undefined) {
         supabase
           .schema('operations')
           .from('key_authorizations')
-          .select(
-            `id, equipment:equipment_id ( id, serial_number, model, building_id )`,
-          )
+          .select(`id, equipment:equipment_id ( id, serial_number, model, building_id )`)
           .eq('rfid_key_id', id),
         supabase
           .from('key_order_items')

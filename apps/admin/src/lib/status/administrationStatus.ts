@@ -1,7 +1,7 @@
 import type { StatusTone } from '@vitalock/ui';
 
 /** Administration lifecycle status. Labels are FEMININE ("la administración"). */
-export type AdministrationStatus = 'active' | 'inactive';
+type AdministrationStatus = 'active' | 'inactive';
 
 const ADMINISTRATION_STATUS_META: Record<
   AdministrationStatus,

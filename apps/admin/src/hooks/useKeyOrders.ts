@@ -24,7 +24,7 @@ export interface KeyOrderListRow {
   key_order_items: { id: string }[];
 }
 
-export type UseKeyOrdersFilters = Parameters<typeof useKeyOrders>[0];
+type UseKeyOrdersFilters = Parameters<typeof useKeyOrders>[0];
 
 export const useKeyOrders = createUseOrderList<KeyOrderStatus, KeyOrderListRow>({
   view: 'key_orders_summary',

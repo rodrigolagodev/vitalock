@@ -1,13 +1,6 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { equipmentStatusLabel } from '@/lib/status/equipmentStatus';
-
-export type EquipmentStatus = 'active' | 'maintenance' | 'dead';
+import type { EquipmentStatus } from '@/lib/status/equipmentStatus';
 
 interface EquipmentStatusSelectProps {
   value: EquipmentStatus;

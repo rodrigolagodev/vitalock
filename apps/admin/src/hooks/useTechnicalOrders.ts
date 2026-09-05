@@ -22,7 +22,7 @@ export interface TechnicalOrderListRow {
   technical_order_items: { id: string }[];
 }
 
-export type UseTechnicalOrdersFilters = Parameters<typeof useTechnicalOrders>[0];
+type UseTechnicalOrdersFilters = Parameters<typeof useTechnicalOrders>[0];
 
 export const useTechnicalOrders = createUseOrderList<TechnicalOrderStatus, TechnicalOrderListRow>({
   view: 'technical_orders_summary',

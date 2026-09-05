@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { TareaRow } from './useTareas';
 
-export interface AssignedEquipment {
+interface AssignedEquipment {
   id: string;
   serial_number: string;
   model: string | null;
@@ -76,8 +76,9 @@ export function useTarea(id: string | undefined) {
         }
       }
 
-      const staffIds = [row.assigned_to_staff_id, row.opened_by_staff_id]
-        .filter((v): v is string => Boolean(v));
+      const staffIds = [row.assigned_to_staff_id, row.opened_by_staff_id].filter((v): v is string =>
+        Boolean(v),
+      );
       const staffMap = new Map<string, string>();
       if (staffIds.length > 0) {
         const { data: staff } = await supabase
@@ -124,10 +125,10 @@ export function useTarea(id: string | undefined) {
         ...row,
         building,
         assigned_to_name: row.assigned_to_staff_id
-          ? staffMap.get(row.assigned_to_staff_id) ?? null
+          ? (staffMap.get(row.assigned_to_staff_id) ?? null)
           : null,
         opened_by_name: row.opened_by_staff_id
-          ? staffMap.get(row.opened_by_staff_id) ?? null
+          ? (staffMap.get(row.opened_by_staff_id) ?? null)
           : null,
         equipment,
         intended_product_name,

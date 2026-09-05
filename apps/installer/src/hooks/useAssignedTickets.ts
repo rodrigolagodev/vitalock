@@ -10,7 +10,7 @@ const log = logger('useAssignedTickets');
 // Types
 // ---------------------------------------------------------------------------
 
-export interface EquipmentUpdateSnapshot {
+interface EquipmentUpdateSnapshot {
   /** support.equipment_updates.id */
   task_id: string;
   /** public.equipment.id — used to fetch prior resolved updates for rollback. */
@@ -25,7 +25,12 @@ export interface AssignedTicket {
   title: string;
   description: string | null;
   status: 'open' | 'in_progress';
-  category: 'install_equipment' | 'replace_equipment' | 'update_equipment' | 'maintain_equipment' | string;
+  category:
+    | 'install_equipment'
+    | 'replace_equipment'
+    | 'update_equipment'
+    | 'maintain_equipment'
+    | string;
   opened_at: string;
   building: {
     id: string;
@@ -61,7 +66,8 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
   const { data, error } = await supabase
     .schema('support')
     .from('installer_tickets_with_context')
-    .select(`
+    .select(
+      `
       id,
       description,
       status,
@@ -78,7 +84,8 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       pending_new_model,
       technical_order_item_id,
       equipment_id
-    `)
+    `,
+    )
     .eq('assigned_to_staff_id', staffId)
     .in('status', ['open', 'in_progress']);
 
@@ -142,11 +149,7 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
   // Batch-fetch product names for tickets that link to a technical_order_item —
   // used as the model placeholder when the operator leaves it blank.
   const toiIds = [
-    ...new Set(
-      rows
-        .map((r) => r.technical_order_item_id)
-        .filter((v): v is string => Boolean(v)),
-    ),
+    ...new Set(rows.map((r) => r.technical_order_item_id).filter((v): v is string => Boolean(v))),
   ];
   const productNameByToiId = new Map<string, string>();
   if (toiIds.length > 0) {
@@ -155,11 +158,7 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
       .select('id, product_id')
       .in('id', toiIds);
     const productIds = [
-      ...new Set(
-        (items ?? [])
-          .map((i) => i.product_id)
-          .filter((v): v is string => Boolean(v)),
-      ),
+      ...new Set((items ?? []).map((i) => i.product_id).filter((v): v is string => Boolean(v))),
     ];
     const productNameById = new Map<string, string>();
     if (productIds.length > 0) {
@@ -207,13 +206,12 @@ async function fetchAssignedTickets(staffId: string): Promise<AssignedTicket[]> 
           administration: { id: '', company_name: '', address: null },
         },
     equipment_id: r.equipment_id,
-    equipmentUpdateSnapshot: r.category === 'update_equipment'
-      ? (snapshotMap.get(r.id) ?? null)
-      : undefined,
+    equipmentUpdateSnapshot:
+      r.category === 'update_equipment' ? (snapshotMap.get(r.id) ?? null) : undefined,
     pending_new_serial: r.pending_new_serial,
     pending_new_model: r.pending_new_model,
     intended_product_name: r.technical_order_item_id
-      ? productNameByToiId.get(r.technical_order_item_id) ?? null
+      ? (productNameByToiId.get(r.technical_order_item_id) ?? null)
       : null,
   }));
 }
@@ -236,20 +234,18 @@ export function useAssignedTickets(): UseQueryResult<AssignedTicket[]> {
   useEffect(() => {
     if (!staffId) return;
 
-    let channel = supabase
-      .channel(`assigned-tickets-${staffId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'support',
-          table: 'tickets',
-          filter: `assigned_to_staff_id=eq.${staffId}`,
-        },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
-        },
-      );
+    let channel = supabase.channel(`assigned-tickets-${staffId}`).on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'support',
+        table: 'tickets',
+        filter: `assigned_to_staff_id=eq.${staffId}`,
+      },
+      () => {
+        void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
+      },
+    );
 
     channel.subscribe((status, err) => {
       if (status === 'CHANNEL_ERROR') {
@@ -259,13 +255,9 @@ export function useAssignedTickets(): UseQueryResult<AssignedTicket[]> {
         // Re-subscribe without filter; query's own WHERE clause scopes the data
         channel = supabase
           .channel(`assigned-tickets-filterless-${staffId}`)
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'support', table: 'tickets' },
-            () => {
-              void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
-            },
-          )
+          .on('postgres_changes', { event: '*', schema: 'support', table: 'tickets' }, () => {
+            void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
+          })
           .subscribe();
       }
     });

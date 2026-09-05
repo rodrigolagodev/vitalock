@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import type { EquipmentStatus } from '@/lib/status/equipmentStatus';
 
-export type EquipmentStatus = 'active' | 'maintenance' | 'dead';
-
-export type AuthorizationSyncState =
-  | 'pending_install'
-  | 'installed'
-  | 'pending_removal'
-  | 'removed';
+type AuthorizationSyncState = 'pending_install' | 'installed' | 'pending_removal' | 'removed';
 
 export interface EquipmentDetailAuthorizedKey {
   authorization_id: string;
@@ -20,7 +15,7 @@ export interface EquipmentDetailAuthorizedKey {
   unit_number: string | null;
 }
 
-export interface EquipmentDetailReplacementLink {
+interface EquipmentDetailReplacementLink {
   id: string;
   serial_number: string;
   model: string | null;
@@ -144,47 +139,42 @@ export function useEquipmentById(equipmentId: string | null | undefined) {
       const id = equipmentId as string;
 
       // Round 1: equipment + independent-lookup queries (no dependency on equipment fields).
-      const [
-        equipmentRes,
-        authsRes,
-        successorRes,
-        targetItemsRes,
-        replacementItemsRes,
-      ] = await Promise.all([
-        supabase
-          .schema('operations')
-          .from('equipment')
-          .select(
-            `id, serial_number, model, description, access_type, status,
+      const [equipmentRes, authsRes, successorRes, targetItemsRes, replacementItemsRes] =
+        await Promise.all([
+          supabase
+            .schema('operations')
+            .from('equipment')
+            .select(
+              `id, serial_number, model, description, access_type, status,
              replaces_equipment_id, installed_at, decommissioned_at,
              decommission_reason, notes, building_id`,
-          )
-          .eq('id', id)
-          .maybeSingle(),
-        supabase
-          .schema('operations')
-          .from('key_authorizations')
-          .select('id, sync_state, installed_at, removed_at, rfid_key_id')
-          .eq('equipment_id', id),
-        supabase
-          .schema('operations')
-          .from('equipment')
-          .select('id, serial_number, model')
-          .eq('replaces_equipment_id', id)
-          .maybeSingle(),
-        supabase
-          .from('technical_order_items')
-          .select(
-            'order_id, item_type, status, intended_equipment_id, intended_replacement_equipment_id',
-          )
-          .eq('intended_equipment_id', id),
-        supabase
-          .from('technical_order_items')
-          .select(
-            'order_id, item_type, status, intended_equipment_id, intended_replacement_equipment_id',
-          )
-          .eq('intended_replacement_equipment_id', id),
-      ]);
+            )
+            .eq('id', id)
+            .maybeSingle(),
+          supabase
+            .schema('operations')
+            .from('key_authorizations')
+            .select('id, sync_state, installed_at, removed_at, rfid_key_id')
+            .eq('equipment_id', id),
+          supabase
+            .schema('operations')
+            .from('equipment')
+            .select('id, serial_number, model')
+            .eq('replaces_equipment_id', id)
+            .maybeSingle(),
+          supabase
+            .from('technical_order_items')
+            .select(
+              'order_id, item_type, status, intended_equipment_id, intended_replacement_equipment_id',
+            )
+            .eq('intended_equipment_id', id),
+          supabase
+            .from('technical_order_items')
+            .select(
+              'order_id, item_type, status, intended_equipment_id, intended_replacement_equipment_id',
+            )
+            .eq('intended_replacement_equipment_id', id),
+        ]);
 
       if (equipmentRes.error) throw equipmentRes.error;
       if (!equipmentRes.data) return null;
@@ -204,12 +194,7 @@ export function useEquipmentById(equipmentId: string | null | undefined) {
         new Set([...targetItems, ...replacementItems].map((i) => i.order_id)),
       );
 
-      const [
-        buildingRes,
-        predecessorRes,
-        keysRes,
-        ordersRes,
-      ] = await Promise.all([
+      const [buildingRes, predecessorRes, keysRes, ordersRes] = await Promise.all([
         supabase
           .from('buildings')
           .select('id, name, administration_id')
@@ -224,10 +209,7 @@ export function useEquipmentById(equipmentId: string | null | undefined) {
               .maybeSingle()
           : Promise.resolve({ data: null as RawReplacementRef | null, error: null }),
         keyIds.length > 0
-          ? supabase
-              .from('rfid_keys')
-              .select('id, rfid_code, status, unit_id')
-              .in('id', keyIds)
+          ? supabase.from('rfid_keys').select('id, rfid_code, status, unit_id').in('id', keyIds)
           : Promise.resolve({ data: [] as RawKey[], error: null }),
         orderIds.length > 0
           ? supabase
@@ -326,17 +308,11 @@ export function useEquipmentById(equipmentId: string | null | undefined) {
           ? {
               id: rawBuilding.id,
               name: rawBuilding.name,
-              administration: admin
-                ? { id: admin.id, company_name: admin.company_name }
-                : null,
+              administration: admin ? { id: admin.id, company_name: admin.company_name } : null,
             }
           : null,
-        replaces: predecessorRes.data
-          ? (predecessorRes.data as RawReplacementRef)
-          : null,
-        replaced_by: successorRes.data
-          ? (successorRes.data as RawReplacementRef)
-          : null,
+        replaces: predecessorRes.data ? (predecessorRes.data as RawReplacementRef) : null,
+        replaced_by: successorRes.data ? (successorRes.data as RawReplacementRef) : null,
         authorized_keys: authorizedKeys,
         associated_orders: associatedOrders,
       };

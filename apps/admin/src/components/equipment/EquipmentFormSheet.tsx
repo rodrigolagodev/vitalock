@@ -2,20 +2,14 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { useMutateEquipment } from '@/hooks/useMutateEquipment';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import { EquipmentStatusSelect } from './EquipmentStatusSelect';
-import type { EquipmentStatus } from './EquipmentStatusSelect';
+import type { EquipmentStatus } from '@/lib/status/equipmentStatus';
 import { DecommissionDialog } from './DecommissionDialog';
 
 // Create schema: model + serial_number + installed_at required
@@ -103,8 +97,7 @@ export function EquipmentFormSheet({
   const onEditSubmit = async (values: EditFormValues) => {
     if (!equipment) return;
     const modelChanged = values.model !== (equipment.model ?? '');
-    const statusChanged =
-      currentStatus !== equipment.status && currentStatus !== 'dead';
+    const statusChanged = currentStatus !== equipment.status && currentStatus !== 'dead';
 
     if (modelChanged) {
       await updateEquipment.mutateAsync({ id: equipment.id, model: values.model });
@@ -143,9 +136,7 @@ export function EquipmentFormSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-md">
           <SheetHeader className="p-6 pb-4">
-            <SheetTitle>
-              {isEdit ? 'Editar equipo' : 'Nuevo equipo'}
-            </SheetTitle>
+            <SheetTitle>{isEdit ? 'Editar equipo' : 'Nuevo equipo'}</SheetTitle>
           </SheetHeader>
 
           {isEdit && equipment ? (
@@ -157,13 +148,9 @@ export function EquipmentFormSheet({
               {/* Mutable: model */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="edit-model">Modelo</Label>
-                <Input
-                  id="edit-model"
-                  disabled={isDead}
-                  {...editForm.register('model')}
-                />
+                <Input id="edit-model" disabled={isDead} {...editForm.register('model')} />
                 {editForm.formState.errors.model && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-destructive text-sm">
                     {editForm.formState.errors.model.message}
                   </p>
                 )}
@@ -214,7 +201,7 @@ export function EquipmentFormSheet({
                 />
               </div>
 
-              <SheetFooter className="mt-auto pt-4 pb-6">
+              <SheetFooter className="mt-auto pb-6 pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -227,9 +214,7 @@ export function EquipmentFormSheet({
                   type="submit"
                   disabled={isDead || isEditPending || editForm.formState.isSubmitting}
                 >
-                  {isEditPending || editForm.formState.isSubmitting
-                    ? 'Guardando...'
-                    : 'Guardar'}
+                  {isEditPending || editForm.formState.isSubmitting ? 'Guardando...' : 'Guardar'}
                 </Button>
               </SheetFooter>
             </form>
@@ -247,7 +232,7 @@ export function EquipmentFormSheet({
                   {...createForm.register('model')}
                 />
                 {createForm.formState.errors.model && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-destructive text-sm">
                     {createForm.formState.errors.model.message}
                   </p>
                 )}
@@ -261,7 +246,7 @@ export function EquipmentFormSheet({
                   {...createForm.register('serial_number')}
                 />
                 {createForm.formState.errors.serial_number && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-destructive text-sm">
                     {createForm.formState.errors.serial_number.message}
                   </p>
                 )}
@@ -275,7 +260,7 @@ export function EquipmentFormSheet({
                   {...createForm.register('installed_at')}
                 />
                 {createForm.formState.errors.installed_at && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-destructive text-sm">
                     {createForm.formState.errors.installed_at.message}
                   </p>
                 )}
@@ -283,7 +268,7 @@ export function EquipmentFormSheet({
 
               {/* building_id is intentionally hidden — passed as prop, never user-editable */}
 
-              <SheetFooter className="mt-auto pt-4 pb-6">
+              <SheetFooter className="mt-auto pb-6 pt-4">
                 <Button
                   type="button"
                   variant="outline"
