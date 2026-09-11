@@ -9,18 +9,38 @@ const basePath = process.env.VITE_BASE_PATH ?? '/';
 
 // CSP is only injected in production builds. In dev, Vite's HMR needs
 // eval + ws://localhost which would be blocked by a strict policy.
+/**
+ * connect-src is derived from the Supabase URL this bundle is built for, so the
+ * policy allows exactly that backend and its realtime websocket instead of a
+ * wildcard. A plain-http origin (the local stack under Playwright) also drops
+ * `upgrade-insecure-requests`, which would otherwise rewrite it to https.
+ */
+function supabaseCsp(): { connectSrc: string; upgradeInsecure: boolean } {
+  const raw = process.env.VITE_SUPABASE_URL;
+  if (!raw)
+    return { connectSrc: 'https://*.supabase.co wss://*.supabase.co', upgradeInsecure: true };
+  const url = new URL(raw);
+  const ws = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  return {
+    connectSrc: `${url.origin} ${ws}//${url.host}`,
+    upgradeInsecure: url.protocol === 'https:',
+  };
+}
+
+const { connectSrc, upgradeInsecure } = supabaseCsp();
+
 const PROD_CSP = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  `connect-src 'self' ${connectSrc}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  'upgrade-insecure-requests',
+  ...(upgradeInsecure ? ['upgrade-insecure-requests'] : []),
 ].join('; ');
 
 function cspPlugin(): Plugin {

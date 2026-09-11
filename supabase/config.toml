@@ -68,7 +68,10 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# seed-users.sql creates admin@vitalock.local / installer@vitalock.local for
+# local dev and the Playwright journeys. Local stack only: `db push` never
+# runs seeds, so this cannot reach the linked project.
+sql_paths = ["./seed-users.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.
