@@ -74,3 +74,11 @@ jobs:
       # actually checked, because every step filtered to the app alone.
       - name: Lint, typecheck and test
         run: pnpm exec turbo run lint typecheck test --filter=@vitalock/admin... --cache-dir=.turbo/cache
+
+      # Production build + bundle budget (apps/admin/bundle-budget.json). A size
+      # regression fails the PR instead of surfacing weeks later in Lighthouse.
+      - name: Build and check bundle budget
+        env:
+          VITE_SUPABASE_URL: https://ci.invalid.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+        run: pnpm exec turbo run size --filter=@vitalock/admin --cache-dir=.turbo/cache

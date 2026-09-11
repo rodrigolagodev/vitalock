@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -83,8 +84,34 @@ export function sriPlugin(): Plugin {
   };
 }
 
+/**
+ * Vendor chunking. Route pages are already split by React.lazy (see
+ * src/routes/lazy.ts); this splits the shared vendor bundle by update cadence
+ * so a bump in one library does not invalidate the browser cache for all of
+ * them. pnpm stores packages under node_modules/.pnpm/<name>@<ver>/node_modules/<name>/,
+ * so we match on the inner `/node_modules/<name>/` segment.
+ */
+function vendorChunk(id: string): string | undefined {
+  if (!id.includes('node_modules')) return undefined;
+  const inner = id.split('node_modules/').pop() ?? '';
+  if (/^(react|react-dom|scheduler|react-router|react-router-dom|@remix-run)\//.test(inner))
+    return 'vendor-react';
+  if (inner.startsWith('@radix-ui/')) return 'vendor-radix';
+  if (inner.startsWith('@tanstack/')) return 'vendor-query';
+  if (inner.startsWith('@supabase/')) return 'vendor-supabase';
+  if (/^(react-hook-form|@hookform|zod)\//.test(inner)) return 'vendor-forms';
+  if (inner.startsWith('lucide-react/')) return 'vendor-icons';
+  return 'vendor';
+}
+
 export default defineConfig({
   base: basePath,
+  build: {
+    // Hidden: emitted as build artifacts for an error reporter, never
+    // referenced from the bundle. pages.yml strips *.map before publishing.
+    sourcemap: 'hidden',
+    rollupOptions: { output: { manualChunks: vendorChunk } },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -124,6 +151,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globIgnores: ['**/*.map', 'stats.html'],
+        // Anything above this is a bug, not something to precache on a phone.
+        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
       },
@@ -132,6 +162,8 @@ export default defineConfig({
     // sriPlugin disabled: post-build modifications by Vite/Rollup (source map
     // comment, module preload transforms) cause hash mismatches at runtime,
     // breaking script loading on GitHub Pages. CSP remains the primary defense.
+    // ANALYZE=1 pnpm --filter @vitalock/installer build → dist/stats.html
+    ...(process.env.ANALYZE ? [visualizer({ filename: 'dist/stats.html', gzipSize: true })] : []),
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
