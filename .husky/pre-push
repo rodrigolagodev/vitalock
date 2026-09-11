@@ -1,0 +1,4 @@
+# Cheap local gate before CI: typecheck + lint on the packages affected by the
+# commits being pushed. Tests stay in CI (and in `pnpm test`) to keep pushes fast.
+# Bypass with `git push --no-verify` only when you know CI will catch it anyway.
+pnpm exec turbo run typecheck lint --filter='...[origin/main]' --output-logs=errors-only

@@ -6,7 +6,7 @@ Vitalock is a monorepo hosting the **admin SPA**, **mobile installer PWA**, shar
 
 ## Prerequisites
 
-- **Node 20+** (managed via `.nvmrc`; use `nvm use` or `fnm use`)
+- **Node 22+** (managed via `.nvmrc`; use `nvm use` or `fnm use`)
 - **pnpm 9+** — `corepack enable && corepack prepare pnpm@9.12.0 --activate`
 - **Supabase CLI** (optional) — for local dev and type generation: <https://supabase.com/docs/guides/cli>
 
@@ -51,27 +51,29 @@ Vitalock/
 
 ## Common commands
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start all apps in dev mode (Turbo) |
-| `pnpm build` | Production build for all apps |
-| `pnpm test` | Run all Vitest suites |
-| `pnpm lint` | ESLint across all workspaces |
-| `pnpm typecheck` | TypeScript check across all workspaces |
-| `pnpm format` | Prettier format all files |
-| `pnpm gen:types` | Generate Supabase database types |
-| `pnpm test:sql` | Run every `supabase/tests-sql/*.sql` against the local stack (uses `DATABASE_URL` env, defaults to local) |
+| Command          | Description                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`       | Start all apps in dev mode (Turbo)                                                                        |
+| `pnpm build`     | Production build for all apps                                                                             |
+| `pnpm test`      | Run all Vitest suites                                                                                     |
+| `pnpm lint`      | ESLint across all workspaces                                                                              |
+| `pnpm typecheck` | TypeScript check across all workspaces                                                                    |
+| `pnpm format`    | Prettier format all files                                                                                 |
+| `pnpm gen:types` | Generate Supabase database types                                                                          |
+| `pnpm test:sql`  | Run every `supabase/tests-sql/*.sql` against the local stack (uses `DATABASE_URL` env, defaults to local) |
 
 ---
 
 ## Environment variables
 
-| Variable | Scope | Description |
-|---|---|---|
-| `VITE_SUPABASE_URL` | Client (Vite apps) | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Client (Vite apps) | Supabase anon/public key |
-| `SUPABASE_URL` | Server | Supabase project URL (no Vite prefix) |
-| `SUPABASE_ANON_KEY` | Server | Supabase anon key (no Vite prefix) |
+| Variable                        | Scope                        | Description                                                                                             |
+| ------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | Client (Vite apps)           | Supabase project URL                                                                                    |
+| `VITE_SUPABASE_ANON_KEY`        | Client (Vite apps)           | Supabase anon/public key                                                                                |
+| `SUPABASE_URL`                  | Server                       | Supabase project URL (no Vite prefix)                                                                   |
+| `SUPABASE_ANON_KEY`             | Server                       | Supabase anon key (no Vite prefix)                                                                      |
+| `VITE_BASE_PATH`                | Client (Vite apps), optional | Base path the SPA is served from (e.g. `/admin/`). Defaults to `/`; GitHub Pages sets it in `pages.yml` |
+| `VITE_ERROR_REPORTING_ENDPOINT` | Client (Vite apps), optional | URL that receives batched error reports from the reporting log sink. Unset → reporting is a no-op       |
 
 > **Fail-fast**: the Zod env loader (`@vitalock/shared`) throws an `EnvValidationError` at boot if any required variable is absent or malformed. The error message names the missing field explicitly.
 

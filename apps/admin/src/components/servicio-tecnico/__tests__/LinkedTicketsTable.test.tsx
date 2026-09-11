@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import React from 'react';
 import type { ReactNode } from 'react';
 import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 
@@ -57,10 +56,7 @@ describe('LinkedTicketsTable — row rendering', () => {
       makeTicket({ id: 'ticket-1', ticket_number: 'TKT-001' }),
       makeTicket({ id: 'ticket-2', ticket_number: 'TKT-002' }),
     ];
-    render(
-      <LinkedTicketsTable tickets={tickets} isLoading={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<LinkedTicketsTable tickets={tickets} isLoading={false} />, { wrapper: makeWrapper() });
     const rows = screen.getAllByRole('row');
     expect(rows.length).toBeGreaterThanOrEqual(3);
   });
@@ -75,7 +71,10 @@ describe('LinkedTicketsTable — row rendering', () => {
 
   it('renders assigned staff full name instead of the raw id', () => {
     render(
-      <LinkedTicketsTable tickets={[makeTicket({ assigned_to_staff_id: 'staff-1' })]} isLoading={false} />,
+      <LinkedTicketsTable
+        tickets={[makeTicket({ assigned_to_staff_id: 'staff-1' })]}
+        isLoading={false}
+      />,
       { wrapper: makeWrapper() },
     );
     expect(screen.getByText('López Juan')).toBeInTheDocument();
@@ -84,7 +83,10 @@ describe('LinkedTicketsTable — row rendering', () => {
 
   it('renders a dash when the ticket has no assignee', () => {
     render(
-      <LinkedTicketsTable tickets={[makeTicket({ assigned_to_staff_id: null })]} isLoading={false} />,
+      <LinkedTicketsTable
+        tickets={[makeTicket({ assigned_to_staff_id: null })]}
+        isLoading={false}
+      />,
       { wrapper: makeWrapper() },
     );
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
@@ -93,20 +95,16 @@ describe('LinkedTicketsTable — row rendering', () => {
 
 describe('LinkedTicketsTable — empty state', () => {
   it('shows empty message when no tickets', () => {
-    render(
-      <LinkedTicketsTable tickets={[]} isLoading={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<LinkedTicketsTable tickets={[]} isLoading={false} />, { wrapper: makeWrapper() });
     expect(screen.getByText(/sin tareas/i)).toBeInTheDocument();
   });
 });
 
 describe('LinkedTicketsTable — status badge', () => {
   it('shows open status badge', () => {
-    render(
-      <LinkedTicketsTable tickets={[makeTicket({ status: 'open' })]} isLoading={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<LinkedTicketsTable tickets={[makeTicket({ status: 'open' })]} isLoading={false} />, {
+      wrapper: makeWrapper(),
+    });
     expect(screen.getByText(/pendiente/i)).toBeInTheDocument();
   });
 
@@ -124,10 +122,9 @@ describe('LinkedTicketsTable — status badge', () => {
 
 describe('LinkedTicketsTable — loading state', () => {
   it('renders loading skeleton when isLoading is true', () => {
-    const { container } = render(
-      <LinkedTicketsTable tickets={[]} isLoading={true} />,
-      { wrapper: makeWrapper() },
-    );
+    const { container } = render(<LinkedTicketsTable tickets={[]} isLoading={true} />, {
+      wrapper: makeWrapper(),
+    });
     expect(container.querySelector('.animate-pulse')).not.toBeNull();
   });
 });

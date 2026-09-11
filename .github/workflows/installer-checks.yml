@@ -7,6 +7,9 @@ concurrency:
   group: installer-checks-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
 jobs:
   # Required status checks must report on every PR. Filtering happens here
   # instead of on the trigger: a job skipped by `if:` still reports Success,
@@ -26,6 +29,7 @@ jobs:
               - 'apps/installer/**'
               - 'packages/ui/**'
               - 'packages/shared/**'
+              - 'packages/supabase/**'
               - 'packages/config-eslint/**'
               - 'packages/config-typescript/**'
               - 'package.json'
@@ -33,6 +37,7 @@ jobs:
               - 'pnpm-workspace.yaml'
               - 'turbo.json'
               - 'tsconfig.json'
+              - 'vitest.config.ts'
               - '.github/workflows/installer-checks.yml'
 
   installer-checks:
@@ -53,11 +58,17 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm --filter @vitalock/installer lint
+      # Local Turborepo cache persisted through the GitHub Actions cache. No
+      # Vercel remote cache / TURBO_TOKEN required.
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-installer-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-installer-
 
-      - name: Typecheck
-        run: pnpm --filter @vitalock/installer typecheck
-
-      - name: Test
-        run: pnpm --filter @vitalock/installer test
+      # `@vitalock/installer...` means installer AND its workspace
+      # dependencies (@vitalock/ui, @vitalock/shared, @vitalock/supabase).
+      - name: Lint, typecheck and test
+        run: pnpm exec turbo run lint typecheck test --filter=@vitalock/installer... --cache-dir=.turbo/cache

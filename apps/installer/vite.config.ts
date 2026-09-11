@@ -38,8 +38,8 @@ function cspPlugin(): Plugin {
 // Inject Subresource Integrity hashes on the built script/link tags so a
 // tampered CDN/Pages layer cannot silently swap the bundle.
 // Currently disabled (see commit a3a3157) — kept for future re-enable.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function sriPlugin(): Plugin {
+// Exported (not wired) so it stays type-checked and ready to re-enable.
+export function sriPlugin(): Plugin {
   return {
     name: 'inject-sri',
     apply: 'build',

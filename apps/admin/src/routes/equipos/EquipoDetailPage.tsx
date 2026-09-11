@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Button, EmptyState, ErrorState, StatusBadge } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Section } from '@/components/common/Section';

@@ -1,0 +1,8 @@
+# Default owner for everything. Refine per area as the team grows.
+* @rodrigolagodev
+
+# Security-sensitive surfaces: any change here should get a deliberate review.
+/supabase/migrations/            @rodrigolagodev
+/supabase/tests-sql/             @rodrigolagodev
+/packages/shared/src/auth/       @rodrigolagodev
+/.github/workflows/              @rodrigolagodev

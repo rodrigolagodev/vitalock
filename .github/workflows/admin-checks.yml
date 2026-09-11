@@ -7,6 +7,9 @@ concurrency:
   group: admin-checks-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
 jobs:
   # Required status checks must report on every PR. Filtering happens here
   # instead of on the trigger: a job skipped by `if:` still reports Success,
@@ -26,6 +29,7 @@ jobs:
               - 'apps/admin/**'
               - 'packages/ui/**'
               - 'packages/shared/**'
+              - 'packages/supabase/**'
               - 'packages/config-eslint/**'
               - 'packages/config-typescript/**'
               - 'package.json'
@@ -33,6 +37,7 @@ jobs:
               - 'pnpm-workspace.yaml'
               - 'turbo.json'
               - 'tsconfig.json'
+              - 'vitest.config.ts'
               - '.github/workflows/admin-checks.yml'
 
   admin-checks:
@@ -53,11 +58,19 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm --filter @vitalock/admin lint
+      # Local Turborepo cache persisted through the GitHub Actions cache. No
+      # Vercel remote cache / TURBO_TOKEN required.
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-admin-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-admin-
 
-      - name: Typecheck
-        run: pnpm --filter @vitalock/admin typecheck
-
-      - name: Test
-        run: pnpm --filter @vitalock/admin test
+      # `@vitalock/admin...` means admin AND its workspace dependencies
+      # (@vitalock/ui, @vitalock/shared, @vitalock/supabase). Those packages
+      # already triggered this workflow through `paths:` but were never
+      # actually checked, because every step filtered to the app alone.
+      - name: Lint, typecheck and test
+        run: pnpm exec turbo run lint typecheck test --filter=@vitalock/admin... --cache-dir=.turbo/cache

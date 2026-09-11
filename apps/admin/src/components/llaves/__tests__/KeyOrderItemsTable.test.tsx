@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import React from 'react';
 import type { ReactNode } from 'react';
 import type { KeyOrderItemRow } from '@/hooks/useKeyOrder';
 
@@ -68,10 +67,9 @@ beforeEach(() => {
 describe('KeyOrderItemsTable — row rendering', () => {
   it('renders a row for each item', () => {
     const items = [makeItem({ id: 'item-1' }), makeItem({ id: 'item-2' })];
-    render(
-      <KeyOrderItemsTable items={items} orderId="ko-1" orderStatus="confirmed" />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderItemsTable items={items} orderId="ko-1" orderStatus="confirmed" />, {
+      wrapper: makeWrapper(),
+    });
     // Table should have 2 rows (one per item; DataTable renders tr per row)
     const rows = screen.getAllByRole('row');
     // Header row + 2 data rows
@@ -79,18 +77,16 @@ describe('KeyOrderItemsTable — row rendering', () => {
   });
 
   it('shows "pending" status badge label', () => {
-    render(
-      <KeyOrderItemsTable items={[makeItem()]} orderId="ko-1" orderStatus="confirmed" />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderItemsTable items={[makeItem()]} orderId="ko-1" orderStatus="confirmed" />, {
+      wrapper: makeWrapper(),
+    });
     expect(screen.getByText('Pendiente')).toBeInTheDocument();
   });
 
   it('shows empty state when no items', () => {
-    render(
-      <KeyOrderItemsTable items={[]} orderId="ko-1" orderStatus="confirmed" />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderItemsTable items={[]} orderId="ko-1" orderStatus="confirmed" />, {
+      wrapper: makeWrapper(),
+    });
     expect(screen.getByText(/sin ítems/i)).toBeInTheDocument();
   });
 });

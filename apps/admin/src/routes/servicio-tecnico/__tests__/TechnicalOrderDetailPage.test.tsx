@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import React from 'react';
 import type { TechnicalOrderDetailRow } from '@/hooks/useTechnicalOrder';
 
 // Hoist mocks for vi.mock hoisting requirement
-const { useTechnicalOrderMock, useMutateTechnicalOrderMock, useTechnicalOrderTicketsMock } = vi.hoisted(() => ({
-  useTechnicalOrderMock: vi.fn(),
-  useMutateTechnicalOrderMock: vi.fn(),
-  useTechnicalOrderTicketsMock: vi.fn(),
-}));
+const { useTechnicalOrderMock, useMutateTechnicalOrderMock, useTechnicalOrderTicketsMock } =
+  vi.hoisted(() => ({
+    useTechnicalOrderMock: vi.fn(),
+    useMutateTechnicalOrderMock: vi.fn(),
+    useTechnicalOrderTicketsMock: vi.fn(),
+  }));
 
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 vi.mock('@/hooks/useTechnicalOrder', () => ({ useTechnicalOrder: useTechnicalOrderMock }));

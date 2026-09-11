@@ -22,8 +22,6 @@ export interface TechnicalOrderListRow {
   technical_order_items: { id: string }[];
 }
 
-type UseTechnicalOrdersFilters = Parameters<typeof useTechnicalOrders>[0];
-
 export const useTechnicalOrders = createUseOrderList<TechnicalOrderStatus, TechnicalOrderListRow>({
   view: 'technical_orders_summary',
   itemsTable: 'technical_order_items',
