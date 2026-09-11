@@ -1,12 +1,7 @@
 import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Button, Switch } from '@vitalock/ui';
+import { Button, Popover, PopoverContent, PopoverTrigger, Switch } from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 function initialsFromName(name: string): string {
   return name
@@ -40,46 +35,30 @@ export function UserMenu({ side = 'top' }: UserMenuProps = {}) {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:bg-muted"
+          className="hover:bg-muted focus-visible:bg-muted flex w-full items-center gap-3 px-3 py-3 text-left transition-colors focus-visible:outline-none"
           aria-label="Abrir menú de usuario"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+          <span className="bg-muted text-muted-foreground flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium">
             {initials}
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-medium">{name}</span>
-            {email && (
-              <span className="truncate text-xs text-muted-foreground">
-                {email}
-              </span>
-            )}
+            {email && <span className="text-muted-foreground truncate text-xs">{email}</span>}
           </div>
-          <ChevronsUpDown
-            className="h-4 w-4 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
+          <ChevronsUpDown className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden="true" />
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        side={side}
-        align="start"
-        sideOffset={8}
-        className="w-[248px] p-0"
-      >
+      <PopoverContent side={side} align="start" sideOffset={8} className="w-[248px] p-0">
         <div className="flex flex-col gap-0.5 border-b px-3 py-3">
           <span className="truncate text-sm font-medium">{name}</span>
-          {email && (
-            <span className="truncate text-xs text-muted-foreground">
-              {email}
-            </span>
-          )}
+          {email && <span className="text-muted-foreground truncate text-xs">{email}</span>}
         </div>
         <div className="flex items-center justify-between px-3 py-2.5">
           <div className="flex items-center gap-2 text-sm">
             {isDark ? (
-              <Moon className="h-4 w-4 text-muted-foreground" />
+              <Moon className="text-muted-foreground h-4 w-4" />
             ) : (
-              <Sun className="h-4 w-4 text-muted-foreground" />
+              <Sun className="text-muted-foreground h-4 w-4" />
             )}
             <span>Modo oscuro</span>
           </div>

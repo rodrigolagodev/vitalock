@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Button } from '@vitalock/ui';
+import { Button, ErrorState } from '@vitalock/ui';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { KeyOrderForm } from '@/components/llaves/KeyOrderForm';
 import type { KeyOrderFormValues } from '@/components/llaves/KeyOrderForm';
@@ -20,11 +20,11 @@ export default function KeyOrderEditarPage() {
         <div
           role="status"
           aria-label="Cargando orden"
-          className="animate-pulse flex flex-col gap-4"
+          className="flex animate-pulse flex-col gap-4"
         >
-          <div className="h-6 w-48 rounded bg-muted" />
-          <div className="h-48 rounded bg-muted" />
-          <div className="h-48 rounded bg-muted" />
+          <div className="bg-muted h-6 w-48 rounded" />
+          <div className="bg-muted h-48 rounded" />
+          <div className="bg-muted h-48 rounded" />
         </div>
       </div>
     );
@@ -33,7 +33,10 @@ export default function KeyOrderEditarPage() {
   if (isError || !order) {
     return (
       <div className="flex flex-col gap-6 pb-24">
-        <p className="text-destructive">Error al cargar la orden.</p>
+        <ErrorState
+          message="Error al cargar la orden."
+          back={{ label: 'Volver al listado', to: '/llaves' }}
+        />
       </div>
     );
   }
@@ -51,18 +54,15 @@ export default function KeyOrderEditarPage() {
           ]}
         />
 
-        <div className="flex flex-col gap-4 rounded-md border border-destructive/30 bg-destructive/5 p-5">
-          <p className="text-sm text-destructive font-medium">
+        <div className="border-destructive/30 bg-destructive/5 flex flex-col gap-4 rounded-md border p-5">
+          <p className="text-destructive text-sm font-medium">
             Esta orden no puede editarse porque no está en estado borrador.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Solo las órdenes en estado <strong>borrador</strong> pueden modificarse. El estado
             actual de esta orden es <strong>{order.status}</strong>.
           </p>
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/llaves/${order.id}`)}
-          >
+          <Button variant="outline" onClick={() => navigate(`/llaves/${order.id}`)}>
             Volver al detalle
           </Button>
         </div>

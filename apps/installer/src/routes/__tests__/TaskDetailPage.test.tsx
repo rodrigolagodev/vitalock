@@ -53,16 +53,24 @@ const {
     })),
     mockToastSuccess: vi.fn(),
     mockToastWarning: vi.fn(),
-    mockUseAssignedTickets: vi.fn<(ids?: never) => { data: unknown[]; isLoading: boolean; isFetching: boolean }>(() => ({
+    mockUseAssignedTickets: vi.fn<
+      (ids?: never) => { data: unknown[]; isLoading: boolean; isFetching: boolean }
+    >(() => ({
       data: [],
       isLoading: false,
       isFetching: false,
     })),
     mockUseRfidKeyCodeMap: vi.fn<(ids: string[]) => Map<string, string>>(() => new Map()),
     mockUseTicketComments: vi.fn<(id: string) => { data: unknown[] }>(() => ({ data: [] })),
-    mockUseEquipmentById: vi.fn<() => { data: unknown; isLoading: boolean; isFetching: boolean }>(() => ({ data: null, isLoading: false, isFetching: false })),
-    mockUseMaintenanceHistory: vi.fn<() => { data: unknown[]; isLoading: boolean; isFetching: boolean }>(() => ({ data: [], isLoading: false, isFetching: false })),
-    mockUseEquipmentUpdateHistory: vi.fn<() => { data: unknown[]; isLoading: boolean; isFetching: boolean }>(() => ({ data: [], isLoading: false, isFetching: false })),
+    mockUseEquipmentById: vi.fn<() => { data: unknown; isLoading: boolean; isFetching: boolean }>(
+      () => ({ data: null, isLoading: false, isFetching: false }),
+    ),
+    mockUseMaintenanceHistory: vi.fn<
+      () => { data: unknown[]; isLoading: boolean; isFetching: boolean }
+    >(() => ({ data: [], isLoading: false, isFetching: false })),
+    mockUseEquipmentUpdateHistory: vi.fn<
+      () => { data: unknown[]; isLoading: boolean; isFetching: boolean }
+    >(() => ({ data: [], isLoading: false, isFetching: false })),
   };
 });
 
@@ -78,7 +86,9 @@ vi.mock('@vitalock/supabase', () => ({
   resolveEquipmentUpdate: mockResolveEquipmentUpdateRpc,
 }));
 
-vi.mock('@vitalock/shared', () => ({
+// Partial mock: keep the real hooks (useMdbDownload etc.) and override only auth/logger.
+vi.mock('@vitalock/shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@vitalock/shared')>()),
   useAuthContext: () => ({
     staff: { id: 'installer-001', full_name: 'Pablo', role: 'installer', status: 'active' },
   }),
@@ -218,7 +228,10 @@ describe('TaskDetailPage', () => {
 
   it('renders the .mdb download button and calls createSignedUrl on click', async () => {
     const user = userEvent.setup();
-    mockCreateSignedUrl.mockResolvedValueOnce({ data: { signedUrl: 'https://x/signed' }, error: null });
+    mockCreateSignedUrl.mockResolvedValueOnce({
+      data: { signedUrl: 'https://x/signed' },
+      error: null,
+    });
     renderDetail();
 
     const btn = screen.getByRole('button', { name: /descargar archivo/i });
@@ -374,7 +387,15 @@ describe('TaskDetailPage', () => {
       });
       mockUseMaintenanceHistory.mockReturnValue({
         data: [
-          { id: 't-prev', title: 'Mantenimiento previo', status: 'resolved', category: 'maintain_equipment', opened_at: '2026-01-01T00:00:00Z', resolved_at: '2026-01-05T00:00:00Z', resolution_notes: 'Todo ok' },
+          {
+            id: 't-prev',
+            title: 'Mantenimiento previo',
+            status: 'resolved',
+            category: 'maintain_equipment',
+            opened_at: '2026-01-01T00:00:00Z',
+            resolved_at: '2026-01-05T00:00:00Z',
+            resolution_notes: 'Todo ok',
+          },
         ],
         isLoading: false,
         isFetching: false,
@@ -401,7 +422,9 @@ describe('TaskDetailPage', () => {
       });
       renderDetail();
 
-      expect(screen.getByText(/No se encontró la tarea de actualización asociada a este ticket/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/No se encontró la tarea de actualización asociada a este ticket/),
+      ).toBeInTheDocument();
     });
   });
 });

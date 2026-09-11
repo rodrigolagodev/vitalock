@@ -1,15 +1,18 @@
-import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Download, Loader2 } from 'lucide-react';
-import { Badge, Button } from '@vitalock/ui';
-import { Separator } from '@/components/ui/separator';
+import { Badge, Button, Separator } from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
+import { useMdbDownload } from '@vitalock/shared';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
 import { useResolveEquipmentUpdate } from '@/hooks/useResolveEquipmentUpdate';
 import { useResolveTickets } from '@/hooks/useResolveTickets';
 import { useRfidKeyCodeMap } from '@/hooks/useRfidKeyCodeMap';
 import { useTicketComments } from '@/hooks/useTicketComments';
-import { useEquipmentById, useMaintenanceHistory, useEquipmentUpdateHistory } from '@/hooks/useEquipmentDetail';
+import {
+  useEquipmentById,
+  useMaintenanceHistory,
+  useEquipmentUpdateHistory,
+} from '@/hooks/useEquipmentDetail';
 import { TicketCommentsList } from '@/components/work/TicketCommentsList';
 import { AddCommentForm } from '@/components/work/AddCommentForm';
 import { ConfigureEquipmentInline } from '@/components/work/ConfigureEquipmentInline';
@@ -84,40 +87,38 @@ export default function TaskDetailPage() {
 
   // Equipment + per-category history (only wired when the task targets a device).
   const equipment = useEquipmentById(equipmentId).data ?? null;
-  const maintenanceHistory = useMaintenanceHistory(
-    category === MAINTENANCE ? equipmentId : null,
-  ).data ?? [];
-  const updatesHistory = useEquipmentUpdateHistory(
-    category === EQUIPMENT_UPDATE ? snapshot?.equipment_id ?? null : null,
-  ).data ?? [];
+  const maintenanceHistory =
+    useMaintenanceHistory(category === MAINTENANCE ? equipmentId : null).data ?? [];
+  const updatesHistory =
+    useEquipmentUpdateHistory(
+      category === EQUIPMENT_UPDATE ? (snapshot?.equipment_id ?? null) : null,
+    ).data ?? [];
 
-  const allKeyIds = snapshot
-    ? [...snapshot.keys_to_activate, ...snapshot.keys_to_disable]
-    : [];
+  const allKeyIds = snapshot ? [...snapshot.keys_to_activate, ...snapshot.keys_to_disable] : [];
   const rfidCodeMap = useRfidKeyCodeMap(allKeyIds);
 
-  const [downloadingPriorId, setDownloadingPriorId] = useState<string | null>(null);
+  const { download: downloadMdb, downloadingId: downloadingPriorId } = useMdbDownload(supabase);
 
   const isLoading = assigned.isLoading && !assigned.data;
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-label="Cargando" />
+      <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
+        <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" aria-label="Cargando" />
       </div>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
+      <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
         <Link
           to="/tareas"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
         >
           <ArrowLeft className="h-4 w-4" /> Mis tareas
         </Link>
-        <p className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+        <p className="bg-card text-muted-foreground rounded-md border p-4 text-sm">
           No se encontró la tarea. Puede que ya esté cerrada o que no tengas acceso a ella.
         </p>
       </div>
@@ -129,34 +130,6 @@ export default function TaskDetailPage() {
   const addressParts = [building.address, building.city]
     .filter((v): v is string => Boolean(v))
     .join(', ');
-
-  const handleDownload = async () => {
-    if (!snapshot) return;
-    const { data, error } = await supabase.storage
-      .from('equipment-updates-mdb')
-      .createSignedUrl(snapshot.mdb_storage_path, 300);
-    if (error || !data?.signedUrl) return;
-    const a = document.createElement('a');
-    a.href = data.signedUrl;
-    a.download = snapshot.mdb_storage_path.split('/').pop() ?? 'db.mdb';
-    a.click();
-  };
-
-  const handleDownloadPrior = async (path: string, id: string) => {
-    setDownloadingPriorId(id);
-    try {
-      const { data, error } = await supabase.storage
-        .from('equipment-updates-mdb')
-        .createSignedUrl(path, 300);
-      if (error || !data?.signedUrl) return;
-      const a = document.createElement('a');
-      a.href = data.signedUrl;
-      a.download = path.split('/').pop() ?? 'db.mdb';
-      a.click();
-    } finally {
-      setDownloadingPriorId(null);
-    }
-  };
 
   const handleResolve = () => {
     if (!snapshot) return;
@@ -174,10 +147,10 @@ export default function TaskDetailPage() {
   const isGenericResolve = GENERIC_RESOLVE_CATEGORIES.includes(category);
 
   return (
-    <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
+    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <Link
         to="/tareas"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
       >
         <ArrowLeft className="h-4 w-4" /> Mis tareas
       </Link>
@@ -190,35 +163,33 @@ export default function TaskDetailPage() {
             {statusLabel[ticket.status]}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {categorySubtitle[category] ?? 'Tarea'}
-        </p>
+        <p className="text-muted-foreground text-sm">{categorySubtitle[category] ?? 'Tarea'}</p>
         {building?.name && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {building.name}
             {addressParts ? ` · ${addressParts}` : ''}
           </p>
         )}
-        {adminName && <p className="text-sm text-muted-foreground">{adminName}</p>}
-        <p className="text-xs text-muted-foreground">Creada el {fmt(ticket.opened_at)}</p>
+        {adminName && <p className="text-muted-foreground text-sm">{adminName}</p>}
+        <p className="text-muted-foreground text-xs">Creada el {fmt(ticket.opened_at)}</p>
       </header>
 
       {ticket.description && category !== EQUIPMENT_UPDATE && (
-        <p className="text-sm text-muted-foreground">{ticket.description}</p>
+        <p className="text-muted-foreground text-sm">{ticket.description}</p>
       )}
 
       {/* Work section — per category */}
       {category === EQUIPMENT_UPDATE && (
         <>
           {snapshot ? (
-            <section className="rounded-md border bg-card p-4 flex flex-col gap-4">
+            <section className="bg-card flex flex-col gap-4 rounded-md border p-4">
               {/* Keys to activate */}
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium">
                   Llaves a activar ({snapshot.keys_to_activate.length})
                 </p>
                 {snapshot.keys_to_activate.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Ninguna</p>
+                  <p className="text-muted-foreground text-xs">Ninguna</p>
                 ) : (
                   <div className="flex flex-wrap gap-1">
                     {snapshot.keys_to_activate.map((kid) => (
@@ -236,7 +207,7 @@ export default function TaskDetailPage() {
                   Llaves a dar de baja ({snapshot.keys_to_disable.length})
                 </p>
                 {snapshot.keys_to_disable.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Ninguna</p>
+                  <p className="text-muted-foreground text-xs">Ninguna</p>
                 ) : (
                   <div className="flex flex-wrap gap-1">
                     {snapshot.keys_to_disable.map((kid) => (
@@ -253,7 +224,7 @@ export default function TaskDetailPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => void handleDownload()}
+                  onClick={() => snapshot && void downloadMdb(snapshot.mdb_storage_path, 'current')}
                 >
                   <Download className="mr-1.5 h-4 w-4" />
                   Descargar archivo .mdb
@@ -262,26 +233,27 @@ export default function TaskDetailPage() {
 
               {/* Prior update history */}
               {updatesHistory.length > 0 && (
-                <details className="rounded-md border border-border text-sm">
+                <details className="border-border rounded-md border text-sm">
                   <summary className="cursor-pointer select-none px-3 py-2 font-medium">
                     Actualizaciones anteriores ({updatesHistory.length})
                   </summary>
                   <div className="flex flex-col gap-2 px-3 pb-3 pt-2">
-                    <p className="rounded bg-yellow-50 px-3 py-2 text-xs text-yellow-800 border border-yellow-200">
-                      Atención: cargar un archivo anterior desincronizará la base de datos hasta el próximo update correctivo.
+                    <p className="rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                      Atención: cargar un archivo anterior desincronizará la base de datos hasta el
+                      próximo update correctivo.
                     </p>
                     <div className="flex flex-col gap-1">
                       {updatesHistory.map((u) => (
                         <div
                           key={u.id}
-                          className="flex items-center justify-between gap-2 rounded border border-border px-2 py-1.5"
+                          className="border-border flex items-center justify-between gap-2 rounded border px-2 py-1.5"
                         >
-                          <span className="text-xs text-muted-foreground">{fmt(u.created_at)}</span>
+                          <span className="text-muted-foreground text-xs">{fmt(u.created_at)}</span>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => void handleDownloadPrior(u.mdb_storage_path, u.id)}
+                            onClick={() => void downloadMdb(u.mdb_storage_path, u.id)}
                             disabled={downloadingPriorId === u.id}
                             className="h-7 px-2 text-xs"
                           >
@@ -296,18 +268,20 @@ export default function TaskDetailPage() {
               )}
             </section>
           ) : (
-            <p className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+            <p className="bg-card text-muted-foreground rounded-md border p-4 text-sm">
               No se encontró la tarea de actualización asociada a este ticket.
             </p>
           )}
         </>
       )}
 
-      {(category === EQUIPMENT_INSTALLATION || category === EQUIPMENT_REPLACEMENT || category === 'installation') && (
+      {(category === EQUIPMENT_INSTALLATION ||
+        category === EQUIPMENT_REPLACEMENT ||
+        category === 'installation') && (
         <section className="flex flex-col gap-4">
           {category === EQUIPMENT_REPLACEMENT && equipment && (
-            <div className="rounded-md border bg-card p-4 flex flex-col gap-2">
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="bg-card flex flex-col gap-2 rounded-md border p-4">
+              <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
                 Equipo a reemplazar
               </p>
               <p className="text-sm">
@@ -333,8 +307,8 @@ export default function TaskDetailPage() {
       {category === MAINTENANCE && (
         <section className="flex flex-col gap-4">
           {equipment && (
-            <div className="rounded-md border bg-card p-4 flex flex-col gap-1">
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="bg-card flex flex-col gap-1 rounded-md border p-4">
+              <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
                 Equipo a mantener
               </p>
               <p className="text-sm">
@@ -351,13 +325,13 @@ export default function TaskDetailPage() {
                 </p>
               )}
               {equipment.description && (
-                <p className="text-sm text-muted-foreground">{equipment.description}</p>
+                <p className="text-muted-foreground text-sm">{equipment.description}</p>
               )}
             </div>
           )}
 
           {maintenanceHistory.length > 0 && (
-            <details className="rounded-md border border-border text-sm">
+            <details className="border-border rounded-md border text-sm">
               <summary className="cursor-pointer select-none px-3 py-2 font-medium">
                 Mantenimientos anteriores del equipo ({maintenanceHistory.length})
               </summary>
@@ -365,14 +339,14 @@ export default function TaskDetailPage() {
                 {maintenanceHistory.map((m) => (
                   <div
                     key={m.id}
-                    className="flex flex-col gap-0.5 rounded border border-border px-2 py-1.5"
+                    className="border-border flex flex-col gap-0.5 rounded border px-2 py-1.5"
                   >
                     <span className="text-xs font-medium">{m.title || 'Mantenimiento'}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       Resuelto el {fmt(m.resolved_at)}
                     </span>
                     {m.resolution_notes && (
-                      <span className="text-xs text-muted-foreground">{m.resolution_notes}</span>
+                      <span className="text-muted-foreground text-xs">{m.resolution_notes}</span>
                     )}
                   </div>
                 ))}
@@ -384,7 +358,7 @@ export default function TaskDetailPage() {
 
       {/* Task history — comments */}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
           Historial
         </h2>
         <TicketCommentsList comments={comments} />
