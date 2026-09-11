@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { StatusBadge, type StatusTone } from './StatusBadge';
 
 export interface StatusMeta {
