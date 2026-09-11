@@ -103,8 +103,12 @@ export type Database = {
     Functions: {
       current_staff_id: { Args: never; Returns: string }
       current_staff_role: { Args: never; Returns: string }
+      effective_actor: { Args: { p_actor_staff_id: string }; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      is_api_client_role: { Args: never; Returns: boolean }
       is_installer: { Args: never; Returns: boolean }
+      require_admin: { Args: { p_rpc: string }; Returns: undefined }
+      require_staff: { Args: { p_rpc: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
@@ -1271,12 +1275,33 @@ export type Database = {
         Args: { p_actor_staff_id?: string; p_key_id: string; p_note?: string }
         Returns: undefined
       }
+      cancel_key_disable_unguarded: {
+        Args: { p_actor_staff_id?: string; p_key_id: string; p_note?: string }
+        Returns: undefined
+      }
       cancel_key_order: { Args: { p_order_id: string }; Returns: undefined }
+      cancel_key_order_unguarded: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       cancel_technical_order: {
         Args: { p_order_id: string }
         Returns: undefined
       }
+      cancel_technical_order_unguarded: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       change_key_status: {
+        Args: {
+          p_actor_staff_id?: string
+          p_key_id: string
+          p_note?: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      change_key_status_unguarded: {
         Args: {
           p_actor_staff_id?: string
           p_key_id: string
@@ -1302,6 +1327,15 @@ export type Database = {
         }
         Returns: string
       }
+      configure_key_order_item_unguarded: {
+        Args: {
+          p_equipment_ids: string[]
+          p_order_item_id: string
+          p_rfid_code: string
+          p_unit_id: string
+        }
+        Returns: string
+      }
       configure_technical_ticket_equipment: {
         Args: {
           p_new_model?: string
@@ -1310,8 +1344,24 @@ export type Database = {
         }
         Returns: undefined
       }
+      configure_technical_ticket_equipment_unguarded: {
+        Args: {
+          p_new_model?: string
+          p_new_serial: string
+          p_ticket_id: string
+        }
+        Returns: undefined
+      }
       confirm_key_order: { Args: { p_order_id: string }; Returns: undefined }
+      confirm_key_order_unguarded: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       confirm_technical_order: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
+      confirm_technical_order_unguarded: {
         Args: { p_order_id: string }
         Returns: undefined
       }
@@ -1340,7 +1390,29 @@ export type Database = {
         }
         Returns: string
       }
+      create_equipment_update_unguarded: {
+        Args: {
+          p_actor_staff_id?: string
+          p_administration_id: string
+          p_assigned_to_staff_id?: string
+          p_building_id: string
+          p_description: string
+          p_equipment_id: string
+          p_keys_to_activate?: string[]
+          p_keys_to_disable?: string[]
+          p_mdb_storage_path: string
+        }
+        Returns: string
+      }
       create_key_order_with_items: {
+        Args: {
+          p_confirm_immediately?: boolean
+          p_items: Json[]
+          p_order: Json
+        }
+        Returns: string
+      }
+      create_key_order_with_items_unguarded: {
         Args: {
           p_confirm_immediately?: boolean
           p_items: Json[]
@@ -1378,9 +1450,21 @@ export type Database = {
         }
         Returns: string
       }
+      create_technical_order_with_items_unguarded: {
+        Args: {
+          p_confirm_immediately?: boolean
+          p_items: Json[]
+          p_order: Json
+        }
+        Returns: string
+      }
       gen_key_order_number: { Args: never; Returns: string }
       gen_technical_order_number: { Args: never; Returns: string }
       mark_key_order_invoiced: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
+      mark_key_order_invoiced_unguarded: {
         Args: { p_order_id: string }
         Returns: undefined
       }
@@ -1388,7 +1472,15 @@ export type Database = {
         Args: { p_order_item_id: string }
         Returns: undefined
       }
+      mark_key_order_item_installed_unguarded: {
+        Args: { p_order_item_id: string }
+        Returns: undefined
+      }
       mark_technical_order_invoiced: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
+      mark_technical_order_invoiced_unguarded: {
         Args: { p_order_id: string }
         Returns: undefined
       }
@@ -1410,11 +1502,35 @@ export type Database = {
         }
         Returns: undefined
       }
+      record_order_key_pickup_unguarded: {
+        Args: {
+          p_actor_staff_id?: string
+          p_key_id: string
+          p_picked_up_by_dni: string
+          p_picked_up_by_name: string
+          p_picked_up_by_surname: string
+        }
+        Returns: undefined
+      }
       request_key_disable: {
         Args: { p_actor_staff_id?: string; p_key_id: string; p_note?: string }
         Returns: undefined
       }
+      request_key_disable_unguarded: {
+        Args: { p_actor_staff_id?: string; p_key_id: string; p_note?: string }
+        Returns: undefined
+      }
       resolve_equipment_installation: {
+        Args: {
+          p_actor_staff_id?: string
+          p_note?: string
+          p_serial: string
+          p_ticket_id: string
+          p_unit_id?: string
+        }
+        Returns: string
+      }
+      resolve_equipment_installation_unguarded: {
         Args: {
           p_actor_staff_id?: string
           p_note?: string
@@ -1436,11 +1552,35 @@ export type Database = {
         }
         Returns: string
       }
+      resolve_equipment_replacement_unguarded: {
+        Args: {
+          p_actor_staff_id?: string
+          p_new_description?: string
+          p_new_model?: string
+          p_new_serial: string
+          p_note?: string
+          p_old_equipment_id: string
+          p_ticket_id: string
+        }
+        Returns: string
+      }
       resolve_equipment_update: {
         Args: { p_actor_staff_id?: string; p_task_id: string }
         Returns: Json
       }
+      resolve_equipment_update_unguarded: {
+        Args: { p_actor_staff_id?: string; p_task_id: string }
+        Returns: Json
+      }
       resolve_ticket: {
+        Args: {
+          p_actor_staff_id?: string
+          p_note?: string
+          p_ticket_id: string
+        }
+        Returns: string
+      }
+      resolve_ticket_unguarded: {
         Args: {
           p_actor_staff_id?: string
           p_note?: string
@@ -1457,7 +1597,25 @@ export type Database = {
         }
         Returns: string
       }
+      update_draft_key_order_with_items_unguarded: {
+        Args: {
+          p_expected_updated_at: string
+          p_items: Json[]
+          p_order_id: string
+          p_patch: Json
+        }
+        Returns: string
+      }
       update_draft_technical_order_with_items: {
+        Args: {
+          p_expected_updated_at: string
+          p_items: Json[]
+          p_order_id: string
+          p_patch: Json
+        }
+        Returns: string
+      }
+      update_draft_technical_order_with_items_unguarded: {
         Args: {
           p_expected_updated_at: string
           p_items: Json[]

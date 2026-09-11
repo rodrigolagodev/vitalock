@@ -17,13 +17,13 @@ introspección (`\d+`, `\df+`, DBeaver, etc.).
 
 ## Servicios implementados
 
-| Schema        | Servicio                                | Estado |
-|---------------|-----------------------------------------|--------|
-| `public`      | Customer Service                        | ✅     |
-| `identity`    | Staff / usuarios internos               | ✅     |
-| `operations`  | Equipos y autorizaciones de llaves      | ✅     |
-| `sales`       | Solicitudes, cargos, cobros, presupuestos, abonos | ✅ |
-| `support`     | Tickets de mantenimiento e instalación  | ✅     |
+| Schema       | Servicio                                          | Estado |
+| ------------ | ------------------------------------------------- | ------ |
+| `public`     | Customer Service                                  | ✅     |
+| `identity`   | Staff / usuarios internos                         | ✅     |
+| `operations` | Equipos y autorizaciones de llaves                | ✅     |
+| `sales`      | Solicitudes, cargos, cobros, presupuestos, abonos | ✅     |
+| `support`    | Tickets de mantenimiento e instalación            | ✅     |
 
 ## Modelo
 
@@ -113,11 +113,11 @@ Las llaves tienen dos dimensiones separadas por diseño:
 Enforcado por triggers `BEFORE UPDATE` que lanzan `check_violation`. La regla
 vive en la DB, no en la app.
 
-| Tabla                 | Campos inmutables                                      |
-|-----------------------|--------------------------------------------------------|
-| `rfid_keys`           | `unit_id`, `rfid_code`                                 |
-| `equipment`           | `serial_number`, `building_id`, `replaces_equipment_id`, `installed_at` |
-| `key_authorizations`  | `rfid_key_id`, `equipment_id`                          |
+| Tabla                | Campos inmutables                                                       |
+| -------------------- | ----------------------------------------------------------------------- |
+| `rfid_keys`          | `unit_id`, `rfid_code`                                                  |
+| `equipment`          | `serial_number`, `building_id`, `replaces_equipment_id`, `installed_at` |
+| `key_authorizations` | `rfid_key_id`, `equipment_id`                                           |
 
 ### Ciclo de vida del equipo
 
@@ -206,6 +206,7 @@ con trazabilidad legal — perder por cascada una administración, un edificio o
 una llave no es aceptable. Las bajas son **lógicas** vía columnas de estado.
 
 Excepciones:
+
 - `staff.auth_user_id → auth.users` es `ON DELETE SET NULL` (la fila de auth
   puede desaparecer sin que dejemos de conocer al empleado).
 - `key_authorizations.{installed,removed}_by_staff_id → staff.id` es
@@ -351,3 +352,32 @@ select operations.replace_equipment(
 -- nueva: status=active, autorizaciones installed del viejo migradas
 --        como pending_install
 ```
+
+## Authorization convention for RPCs (since 2026-09-10)
+
+Every `SECURITY DEFINER` function exposed through PostgREST **must**:
+
+1. **Guard the role explicitly.** Call `identity.require_admin('<rpc_name>')` or
+   `identity.require_staff('<rpc_name>')` as the first statement. `SECURITY DEFINER`
+   bypasses RLS, so a function without a guard is reachable by anyone holding the
+   public anon key. Both helpers raise `42501 insufficient_privilege`.
+2. **Pin `search_path`.** `SET search_path = pg_catalog, public, pg_temp` (add other
+   schemas only if the body references them unqualified). Never leave it mutable.
+3. **Derive the actor server-side.** Never write a client-supplied staff id into an
+   audit column. Use `identity.effective_actor(p_actor_staff_id)`: through an API
+   role it returns the session's staff id and ignores the argument; in trusted
+   non-API contexts (migrations, seeds, pg_cron, pgTAP fixtures) it honours the
+   explicit value.
+4. **Revoke from `anon`.** `REVOKE EXECUTE ... FROM public, anon;` after creation —
+   the schema's default privileges grant every new function to `anon`.
+
+The guard is scoped by `identity.is_api_client_role()` (true when
+`current_setting('role')` is `anon` or `authenticated`, which PostgREST sets on every
+request), so migrations and pgTAP fixtures running as `postgres` keep working.
+
+The 22 pre-existing business RPCs were hardened in
+`20260910110000_harden_security_definer_rpcs.sql` using a rename + wrapper strategy:
+`<name>` is now a guarded wrapper delegating to `<name>_unguarded`. New RPCs should
+simply follow the four rules above in one function.
+
+Regression tests: `tests-sql/test_130_*` … `test_134_*`.
