@@ -1,0 +1,6 @@
+{
+  "_comment": "gzip kB. Measured 2026-09-10: initial 194.5 / largest chunk 52.7 (vendor-react) / total 298. ~10% headroom. Raise deliberately, never to silence CI.",
+  "initialGzipKb": 215,
+  "chunkGzipKb": 60,
+  "totalGzipKb": 330
+}

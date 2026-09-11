@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -8,18 +9,38 @@ const basePath = process.env.VITE_BASE_PATH ?? '/';
 
 // CSP is only injected in production builds. In dev, Vite's HMR needs
 // eval + ws://localhost which would be blocked by a strict policy.
+/**
+ * connect-src is derived from the Supabase URL this bundle is built for, so the
+ * policy allows exactly that backend and its realtime websocket instead of a
+ * wildcard. A plain-http origin (the local stack under Playwright) also drops
+ * `upgrade-insecure-requests`, which would otherwise rewrite it to https.
+ */
+function supabaseCsp(): { connectSrc: string; upgradeInsecure: boolean } {
+  const raw = process.env.VITE_SUPABASE_URL;
+  if (!raw)
+    return { connectSrc: 'https://*.supabase.co wss://*.supabase.co', upgradeInsecure: true };
+  const url = new URL(raw);
+  const ws = url.protocol === 'https:' ? 'wss:' : 'ws:';
+  return {
+    connectSrc: `${url.origin} ${ws}//${url.host}`,
+    upgradeInsecure: url.protocol === 'https:',
+  };
+}
+
+const { connectSrc, upgradeInsecure } = supabaseCsp();
+
 const PROD_CSP = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  `connect-src 'self' ${connectSrc}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  'upgrade-insecure-requests',
+  ...(upgradeInsecure ? ['upgrade-insecure-requests'] : []),
 ].join('; ');
 
 function cspPlugin(): Plugin {
@@ -83,8 +104,34 @@ export function sriPlugin(): Plugin {
   };
 }
 
+/**
+ * Vendor chunking. Route pages are already split by React.lazy (see
+ * src/routes/lazy.ts); this splits the shared vendor bundle by update cadence
+ * so a bump in one library does not invalidate the browser cache for all of
+ * them. pnpm stores packages under node_modules/.pnpm/<name>@<ver>/node_modules/<name>/,
+ * so we match on the inner `/node_modules/<name>/` segment.
+ */
+function vendorChunk(id: string): string | undefined {
+  if (!id.includes('node_modules')) return undefined;
+  const inner = id.split('node_modules/').pop() ?? '';
+  if (/^(react|react-dom|scheduler|react-router|react-router-dom|@remix-run)\//.test(inner))
+    return 'vendor-react';
+  if (inner.startsWith('@radix-ui/')) return 'vendor-radix';
+  if (inner.startsWith('@tanstack/')) return 'vendor-query';
+  if (inner.startsWith('@supabase/')) return 'vendor-supabase';
+  if (/^(react-hook-form|@hookform|zod)\//.test(inner)) return 'vendor-forms';
+  if (inner.startsWith('lucide-react/')) return 'vendor-icons';
+  return 'vendor';
+}
+
 export default defineConfig({
   base: basePath,
+  build: {
+    // Hidden: emitted as build artifacts for an error reporter, never
+    // referenced from the bundle. pages.yml strips *.map before publishing.
+    sourcemap: 'hidden',
+    rollupOptions: { output: { manualChunks: vendorChunk } },
+  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -124,6 +171,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globIgnores: ['**/*.map', 'stats.html'],
+        // Anything above this is a bug, not something to precache on a phone.
+        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
       },
@@ -132,6 +182,8 @@ export default defineConfig({
     // sriPlugin disabled: post-build modifications by Vite/Rollup (source map
     // comment, module preload transforms) cause hash mismatches at runtime,
     // breaking script loading on GitHub Pages. CSP remains the primary defense.
+    // ANALYZE=1 pnpm --filter @vitalock/installer build → dist/stats.html
+    ...(process.env.ANALYZE ? [visualizer({ filename: 'dist/stats.html', gzipSize: true })] : []),
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },

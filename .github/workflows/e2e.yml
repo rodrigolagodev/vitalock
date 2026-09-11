@@ -1,0 +1,75 @@
+name: e2e
+
+# Real browser journeys against both apps and the local Supabase stack.
+# Runs on PRs that touch runtime code and on every push to main. Not a
+# required check yet — promote it in branch protection once it has been
+# stable for a couple of weeks.
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'supabase/migrations/**'
+      - 'supabase/seed*.sql'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - '.github/workflows/e2e.yml'
+  push:
+    branches: [main]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase stack (migrations + seed users)
+        run: supabase start -x studio,imgproxy,edge-runtime
+
+      # The local anon key is a fixed dev JWT, not a secret; read it from the
+      # stack so the apps under test talk to this runner's database.
+      - name: Export local Supabase env for the apps
+        run: |
+          eval "$(supabase status -o env | sed 's/^/export /')"
+          echo "VITE_SUPABASE_URL=${API_URL}" >> "$GITHUB_ENV"
+          echo "VITE_SUPABASE_ANON_KEY=${ANON_KEY}" >> "$GITHUB_ENV"
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run journeys
+        run: pnpm e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop --no-backup

@@ -133,6 +133,16 @@ jobs:
           VITE_BASE_PATH: /vitalock/installer/
         run: pnpm exec turbo run build --filter=@vitalock/installer --cache-dir=.turbo/cache
 
+      - name: Check bundle budgets
+        run: |
+          node scripts/check-bundle-size.mjs apps/admin
+          node scripts/check-bundle-size.mjs apps/installer
+
+      # vite `sourcemap: 'hidden'` emits *.map next to the chunks for an error
+      # reporter to consume. They must not be served from the public site.
+      - name: Strip sourcemaps from publishable output
+        run: find apps/admin/dist apps/installer/dist -name '*.map' -type f -delete
+
       - name: Assemble Pages site
         run: |
           mkdir -p _site/admin _site/installer
