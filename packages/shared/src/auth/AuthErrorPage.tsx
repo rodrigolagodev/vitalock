@@ -21,7 +21,7 @@ export function AuthErrorPage() {
   const message = ERROR_MESSAGES[reason] ?? FALLBACK_MESSAGE;
   // Network failures keep the session alive (no signOut), so offer a retry
   // that re-fetches the profile instead of forcing a fresh login.
-  const isNetworkError = reason === AuthErrorCode.NETWORK_ERROR;
+  const isNetworkError = reason === (AuthErrorCode.NETWORK_ERROR as string);
 
   const handleRetry = () => {
     void refresh().then(() => navigate('/', { replace: true }));
@@ -36,7 +36,7 @@ export function AuthErrorPage() {
       <button
         type="button"
         onClick={isNetworkError ? handleRetry : () => navigate('/login')}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm font-medium"
       >
         {isNetworkError ? 'Reintentar' : 'Volver al inicio'}
       </button>

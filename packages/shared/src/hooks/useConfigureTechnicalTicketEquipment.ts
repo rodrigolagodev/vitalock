@@ -36,7 +36,7 @@ export function createUseConfigureTechnicalTicketEquipment(
   opts: CreateUseConfigureTechnicalTicketEquipmentOptions,
 ): () => UseMutationResult<void, unknown, ConfigureTechnicalTicketEquipmentInput> {
   return function useConfigureTechnicalTicketEquipment() {
-    return useMutation<void, unknown, ConfigureTechnicalTicketEquipmentInput>({
+    return useMutation({
       mutationFn: (input) => configureTechnicalTicketEquipment(opts.supabase, input),
       onSuccess: (_data, vars) => opts.onSuccess(vars),
       onError: opts.mapMutationError,
