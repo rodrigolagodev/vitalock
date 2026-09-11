@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import type { KeyStatus } from '@/lib/status/keyStatus';
+import { keyDetailKey } from '@/lib/queryKeys';
 
 interface KeyDetailAuthorizedEquipment {
   authorization_id: string;
@@ -49,52 +51,66 @@ export interface KeyDetail {
   associated_orders: KeyDetailAssociatedOrder[];
 }
 
-interface RawKey {
-  id: string;
-  rfid_code: string;
-  status: string;
-  notes: string | null;
-  activated_at: string;
-  deactivated_at: string | null;
-  picked_up_at: string | null;
-  picked_up_by_name: string | null;
-  picked_up_by_surname: string | null;
-  picked_up_by_dni: string | null;
-  delivered_by_staff_id: string | null;
-  units: {
-    id: string;
-    number: string;
-    unit_type: string | null;
-    is_administrative: boolean;
-    status: string;
-    buildings: {
-      id: string;
-      name: string;
-      administrations: { id: string; company_name: string } | null;
-    } | null;
-  } | null;
-}
+// Embedded selects below (`units!unit_id (…)`, `equipment:equipment_id (…)`,
+// `key_orders!order_id (…)`) are to-one relations. postgrest-js 2.45 infers
+// them as arrays (and errors on the cross-schema alias), while PostgREST
+// returns objects at runtime. Instead of casting to the shape we believe in,
+// the payload is validated at the boundary: a mismatch surfaces as a thrown
+// ZodError at the call site, not as `undefined` several renders later.
+const RawKeySchema = z.object({
+  id: z.string(),
+  rfid_code: z.string(),
+  status: z.string(),
+  notes: z.string().nullable(),
+  activated_at: z.string(),
+  deactivated_at: z.string().nullable(),
+  picked_up_at: z.string().nullable(),
+  picked_up_by_name: z.string().nullable(),
+  picked_up_by_surname: z.string().nullable(),
+  picked_up_by_dni: z.string().nullable(),
+  delivered_by_staff_id: z.string().nullable(),
+  units: z
+    .object({
+      id: z.string(),
+      number: z.string(),
+      unit_type: z.string().nullable(),
+      is_administrative: z.boolean(),
+      status: z.string(),
+      buildings: z
+        .object({
+          id: z.string(),
+          name: z.string(),
+          administrations: z.object({ id: z.string(), company_name: z.string() }).nullable(),
+        })
+        .nullable(),
+    })
+    .nullable(),
+});
 
-interface RawAuth {
-  id: string;
-  equipment: {
-    id: string;
-    serial_number: string;
-    model: string | null;
-    building_id: string;
-  } | null;
-}
+const RawAuthSchema = z.object({
+  id: z.string(),
+  equipment: z
+    .object({
+      id: z.string(),
+      serial_number: z.string(),
+      model: z.string().nullable(),
+      building_id: z.string(),
+    })
+    .nullable(),
+});
 
-interface RawOrderItem {
-  status: string;
-  created_at: string | null;
-  key_orders: {
-    id: string;
-    order_number: string;
-    status: string;
-    created_at: string;
-  } | null;
-}
+const RawOrderItemSchema = z.object({
+  status: z.string(),
+  created_at: z.string().nullable(),
+  key_orders: z
+    .object({
+      id: z.string(),
+      order_number: z.string(),
+      status: z.string(),
+      created_at: z.string(),
+    })
+    .nullable(),
+});
 
 /**
  * Rich, audit-oriented detail for a single RFID key. Aggregates:
@@ -109,7 +125,7 @@ interface RawOrderItem {
  */
 export function useKeyById(keyId: string | null | undefined) {
   return useQuery({
-    queryKey: ['admin', 'key-detail', keyId ?? 'none'],
+    queryKey: keyDetailKey(keyId ?? undefined),
     enabled: Boolean(keyId),
     queryFn: async (): Promise<KeyDetail | null> => {
       const id = keyId as string;
@@ -150,11 +166,11 @@ export function useKeyById(keyId: string | null | undefined) {
       if (authRes.error) throw authRes.error;
       if (orderItemsRes.error) throw orderItemsRes.error;
 
-      const raw = keyRes.data as unknown as RawKey;
+      const raw = RawKeySchema.parse(keyRes.data);
       if (!raw.units) return null;
 
-      const auths = (authRes.data ?? []) as unknown as RawAuth[];
-      const orderItems = (orderItemsRes.data ?? []) as unknown as RawOrderItem[];
+      const auths = z.array(RawAuthSchema).parse(authRes.data ?? []);
+      const orderItems = z.array(RawOrderItemSchema).parse(orderItemsRes.data ?? []);
 
       let deliveredBy: KeyDetail['delivered_by'] = null;
       if (raw.delivered_by_staff_id) {

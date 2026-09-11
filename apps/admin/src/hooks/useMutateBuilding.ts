@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { toastMutationError } from '@/lib/errors/toast';
+import { buildingsRootKey } from '@/lib/queryKeys';
 
 export interface CreateBuildingInput {
   name: string;
@@ -37,7 +38,7 @@ export function useMutateBuilding() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'buildings'] });
+      void queryClient.invalidateQueries({ queryKey: buildingsRootKey() });
       toast.success('Edificio creado correctamente.');
     },
     onError: (err) => {
@@ -58,7 +59,7 @@ export function useMutateBuilding() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'buildings'] });
+      void queryClient.invalidateQueries({ queryKey: buildingsRootKey() });
       toast.success('Edificio actualizado correctamente.');
     },
     onError: (err) => {
@@ -78,7 +79,7 @@ export function useMutateBuilding() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'buildings'] });
+      void queryClient.invalidateQueries({ queryKey: buildingsRootKey() });
       toast.success('Edificio desactivado correctamente.');
     },
     onError: (err) => {

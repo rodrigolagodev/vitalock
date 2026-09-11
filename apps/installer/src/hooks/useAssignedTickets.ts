@@ -25,12 +25,14 @@ export interface AssignedTicket {
   title: string;
   description: string | null;
   status: 'open' | 'in_progress';
+  // Known categories keep autocomplete; `(string & {})` admits values added by a
+  // later migration without widening the union to plain `string`.
   category:
     | 'install_equipment'
     | 'replace_equipment'
     | 'update_equipment'
     | 'maintain_equipment'
-    | string;
+    | (string & {});
   opened_at: string;
   building: {
     id: string;

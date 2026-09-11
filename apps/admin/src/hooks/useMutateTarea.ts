@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { toastMutationError } from '@/lib/errors/toast';
+import { tareasRootKey } from '@/lib/queryKeys';
 
 export interface CreateTareaInput {
   administration_id: string;
@@ -28,7 +29,7 @@ export function useMutateTarea() {
   const queryClient = useQueryClient();
 
   const invalidateTareas = () => {
-    void queryClient.invalidateQueries({ queryKey: ['admin', 'tareas'] });
+    void queryClient.invalidateQueries({ queryKey: tareasRootKey() });
   };
 
   const createTarea = useMutation({

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { productsByIdsKey } from '@/lib/queryKeys';
 
 export interface ProductLookupRow {
   id: string;
@@ -17,7 +18,7 @@ export function useProductsByIds(ids: readonly string[]) {
   const enabled = unique.length > 0;
 
   return useQuery({
-    queryKey: ['admin', 'products', 'by-ids', ...[...unique].sort()],
+    queryKey: productsByIdsKey([...unique]),
     queryFn: async (): Promise<Map<string, ProductLookupRow>> => {
       const { data, error } = await supabase
         .from('products')

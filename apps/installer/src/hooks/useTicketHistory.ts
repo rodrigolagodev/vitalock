@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useAuthContext } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
+import { historicalTicketsKey } from '@/lib/queryKeys';
 
 export interface HistoricalTicket {
   id: string;
@@ -16,10 +17,6 @@ export interface HistoricalTicket {
     name: string;
     administration: { id: string; company_name: string };
   };
-}
-
-function historicalTicketsKey(staffId: string) {
-  return ['installer', 'ticket-history', staffId] as const;
 }
 
 async function fetchHistoricalTickets(staffId: string): Promise<HistoricalTicket[]> {

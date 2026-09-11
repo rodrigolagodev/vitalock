@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { equipmentUpdateHistoryKey } from '@/lib/queryKeys';
 
 export interface EquipmentUpdateHistoryRow {
   id: string;
@@ -10,9 +11,6 @@ export interface EquipmentUpdateHistoryRow {
   keys_to_activate: string[];
   keys_to_disable: string[];
 }
-
-const equipmentUpdateHistoryKey = (equipmentId: string) =>
-  ['admin', 'equipment-update-history', equipmentId] as const;
 
 /**
  * Fetches all resolved equipment_updates for a given equipment, ordered
@@ -38,7 +36,11 @@ export function useEquipmentUpdateHistory(equipmentId: string) {
 
       if (error) throw error;
 
-      return (data ?? []) as unknown as EquipmentUpdateHistoryRow[];
+      // `.not('resolved_at', 'is', null)` guarantees this at runtime; the
+      // generated column type is still nullable, so narrow instead of asserting.
+      return (data ?? []).filter(
+        (row): row is typeof row & { resolved_at: string } => row.resolved_at !== null,
+      );
     },
   });
 }

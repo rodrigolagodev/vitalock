@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { productKey } from '@/lib/queryKeys';
-import type { ProductCategory, ProductRow } from '@/types/stock';
+import type { ProductRow } from '@/types/stock';
 
 /** Single product by id; disabled until a truthy id is provided. */
 export function useProduct(id: string | undefined) {
@@ -24,7 +24,7 @@ export function useProduct(id: string | undefined) {
       const row = data as unknown as ProductRow;
       return {
         ...row,
-        category: row.category as ProductCategory,
+        category: row.category,
         stock_disponible: row.stock_total - row.stock_reservado,
       };
     },

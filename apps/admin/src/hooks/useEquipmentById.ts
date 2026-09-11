@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { EquipmentStatus } from '@/lib/status/equipmentStatus';
+import { equipmentDetailKey } from '@/lib/queryKeys';
 
 type AuthorizationSyncState = 'pending_install' | 'installed' | 'pending_removal' | 'removed';
 
@@ -54,29 +55,6 @@ export interface EquipmentDetail {
   associated_orders: EquipmentDetailAssociatedOrder[];
 }
 
-interface RawEquipment {
-  id: string;
-  serial_number: string;
-  model: string | null;
-  description: string;
-  access_type: string | null;
-  status: string;
-  replaces_equipment_id: string | null;
-  installed_at: string;
-  decommissioned_at: string | null;
-  decommission_reason: string | null;
-  notes: string | null;
-  building_id: string;
-}
-
-interface RawAuth {
-  id: string;
-  sync_state: string;
-  installed_at: string | null;
-  removed_at: string | null;
-  rfid_key_id: string;
-}
-
 interface RawKey {
   id: string;
   rfid_code: string;
@@ -89,25 +67,11 @@ interface RawUnit {
   number: string;
 }
 
-interface RawOrderItem {
-  order_id: string;
-  item_type: string;
-  status: string;
-  intended_equipment_id: string | null;
-  intended_replacement_equipment_id: string | null;
-}
-
 interface RawTechnicalOrder {
   id: string;
   order_number: string;
   status: string;
   created_at: string;
-}
-
-interface RawBuilding {
-  id: string;
-  name: string;
-  administration_id: string;
 }
 
 interface RawAdministration {
@@ -133,7 +97,7 @@ interface RawReplacementRef {
  */
 export function useEquipmentById(equipmentId: string | null | undefined) {
   return useQuery({
-    queryKey: ['admin', 'equipment-detail', equipmentId ?? 'none'],
+    queryKey: equipmentDetailKey(equipmentId ?? undefined),
     enabled: Boolean(equipmentId),
     queryFn: async (): Promise<EquipmentDetail | null> => {
       const id = equipmentId as string;
@@ -183,10 +147,10 @@ export function useEquipmentById(equipmentId: string | null | undefined) {
       if (targetItemsRes.error) throw targetItemsRes.error;
       if (replacementItemsRes.error) throw replacementItemsRes.error;
 
-      const raw = equipmentRes.data as unknown as RawEquipment;
-      const auths = (authsRes.data ?? []) as unknown as RawAuth[];
-      const targetItems = (targetItemsRes.data ?? []) as unknown as RawOrderItem[];
-      const replacementItems = (replacementItemsRes.data ?? []) as unknown as RawOrderItem[];
+      const raw = equipmentRes.data;
+      const auths = authsRes.data ?? [];
+      const targetItems = targetItemsRes.data ?? [];
+      const replacementItems = replacementItemsRes.data ?? [];
 
       // Round 2: dependent lookups (need ids gathered from round 1).
       const keyIds = auths.map((a) => a.rfid_key_id);
@@ -224,9 +188,9 @@ export function useEquipmentById(equipmentId: string | null | undefined) {
       if (keysRes.error) throw keysRes.error;
       if (ordersRes.error) throw ordersRes.error;
 
-      const rawBuilding = buildingRes.data as unknown as RawBuilding | null;
-      const keys = (keysRes.data ?? []) as unknown as RawKey[];
-      const orders = (ordersRes.data ?? []) as unknown as RawTechnicalOrder[];
+      const rawBuilding = buildingRes.data;
+      const keys = keysRes.data ?? [];
+      const orders = ordersRes.data ?? [];
 
       // Round 3: admin + units (last dependency chain).
       const unitIds = Array.from(new Set(keys.map((k) => k.unit_id)));
@@ -247,8 +211,8 @@ export function useEquipmentById(equipmentId: string | null | undefined) {
       if (adminRes.error) throw adminRes.error;
       if (unitsRes.error) throw unitsRes.error;
 
-      const admin = adminRes.data as unknown as RawAdministration | null;
-      const units = (unitsRes.data ?? []) as unknown as RawUnit[];
+      const admin = adminRes.data;
+      const units = unitsRes.data ?? [];
 
       // Stitch everything together in memory.
       const keyById = new Map(keys.map((k) => [k.id, k]));

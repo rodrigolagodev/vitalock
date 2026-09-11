@@ -1,21 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { personalKey } from '@/lib/queryKeys';
+import type { StaffRole } from '@/lib/status/staffRole';
+import type { StaffStatus } from '@/lib/status/staffStatus';
 
 export interface StaffRow {
   id: string;
   full_name: string;
   email: string | null;
   phone: string | null;
-  role: 'admin' | 'installer';
-  status: 'active' | 'inactive';
+  role: StaffRole;
+  status: StaffStatus;
   notes: string | null;
   created_at: string;
 }
 
 export interface UsePersonalFilters {
   search?: string;
-  role?: 'admin' | 'installer';
+  role?: StaffRole;
 }
 
 export function usePersonal({ search, role }: UsePersonalFilters = {}) {

@@ -15,7 +15,7 @@ vi.mock('@vitalock/shared', () => ({
 }));
 
 // Mock supabase with channel support
-type ChannelStatus = 'SUBSCRIBED' | 'CHANNEL_ERROR' | string;
+type ChannelStatus = 'SUBSCRIBED' | 'CHANNEL_ERROR' | (string & {});
 type ChannelCallback = (status: ChannelStatus, err?: unknown) => void;
 
 interface MockChannel {
@@ -63,7 +63,12 @@ const mockBuildings = [
   },
 ];
 const mockRfidKeys = [
-  { id: 'rfid-1', rfid_code: 'ABC123', unit_id: 'unit-1', units: { id: 'unit-1', number: '101', unit_type: 'apartment' } },
+  {
+    id: 'rfid-1',
+    rfid_code: 'ABC123',
+    unit_id: 'unit-1',
+    units: { id: 'unit-1', number: '101', unit_type: 'apartment' },
+  },
 ];
 
 // Build a chainable mock that returns data for the right table
@@ -81,7 +86,9 @@ function buildSupabaseMock(embedError: { code: string; message: string } | null)
     return Promise.resolve({ data: mockAuths, error: null });
   });
   const inBldFn = vi.fn().mockResolvedValue({ data: mockBuildings, error: null });
-  const inEquipFn = vi.fn().mockImplementation(() => Promise.resolve({ data: mockEquipment, error: null }));
+  const inEquipFn = vi
+    .fn()
+    .mockImplementation(() => Promise.resolve({ data: mockEquipment, error: null }));
   const inRfidFn = vi.fn().mockResolvedValue({ data: mockRfidKeys, error: null });
 
   // We need different behavior per from() call
@@ -132,7 +139,11 @@ function buildSupabaseMock(embedError: { code: string; message: string } | null)
 
 let mockSupabase = buildSupabaseMock({ code: 'PGRST200', message: 'No FK' });
 
-vi.mock('@/lib/supabase', () => ({ get supabase() { return mockSupabase; } }));
+vi.mock('@/lib/supabase', () => ({
+  get supabase() {
+    return mockSupabase;
+  },
+}));
 
 import { useWorklist } from '../useWorklist';
 
@@ -140,9 +151,12 @@ function makeWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return { queryClient, Wrapper: function Wrapper({ children }: { children: ReactNode }) {
-    return React.createElement(QueryClientProvider, { client: queryClient }, children);
-  }};
+  return {
+    queryClient,
+    Wrapper: function Wrapper({ children }: { children: ReactNode }) {
+      return React.createElement(QueryClientProvider, { client: queryClient }, children);
+    },
+  };
 }
 
 describe('useWorklist', () => {

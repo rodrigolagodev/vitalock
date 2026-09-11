@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { equipmentKey } from '@/lib/queryKeys';
 import { toastMutationError } from '@/lib/errors/toast';
+import type { EquipmentStatus } from '@/lib/status/equipmentStatus';
 
 export interface CreateEquipmentInput {
   building_id: string;
@@ -20,7 +21,7 @@ export interface UpdateEquipmentInput {
 
 export interface UpdateStatusInput {
   id: string;
-  status: 'active' | 'maintenance' | 'dead';
+  status: EquipmentStatus;
   decommission_reason?: string;
 }
 
@@ -41,7 +42,7 @@ export function useMutateEquipment(buildingId: string) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
       toast.success('Equipo creado correctamente.');
     },
     onError: (err) => {
@@ -66,7 +67,7 @@ export function useMutateEquipment(buildingId: string) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
       toast.success('Equipo actualizado correctamente.');
     },
     onError: (err) => {
@@ -92,7 +93,7 @@ export function useMutateEquipment(buildingId: string) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
       toast.success('Estado del equipo actualizado.');
     },
     onError: (err) => {

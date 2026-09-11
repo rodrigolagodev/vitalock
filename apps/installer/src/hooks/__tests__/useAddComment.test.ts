@@ -27,6 +27,7 @@ vi.mock('@/lib/supabase', () => ({
 
 import { useAddComment } from '../useAddComment';
 import type { TicketComment } from '../useTicketComments';
+import { ticketCommentsKey } from '@/lib/queryKeys';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -48,7 +49,7 @@ describe('useAddComment', () => {
 
   it('reverts to snapshot on error — no pending comment remains (SC-R2-3)', async () => {
     const ticketId = 'ticket-001';
-    const queryKey = ['ticket-comments', ticketId];
+    const queryKey = ticketCommentsKey(ticketId);
 
     insertMock.mockResolvedValue({ error: { code: '50000', message: 'server error' } });
 
@@ -82,7 +83,7 @@ describe('useAddComment', () => {
 
   it('appends pending comment optimistically before DB confirms', async () => {
     const ticketId = 'ticket-002';
-    const queryKey = ['ticket-comments', ticketId];
+    const queryKey = ticketCommentsKey(ticketId);
 
     let resolveInsert!: () => void;
     insertMock.mockReturnValue(

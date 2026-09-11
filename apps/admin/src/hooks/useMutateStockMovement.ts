@@ -40,7 +40,7 @@ export function useMutateStockMovement() {
         ...(input.actor_staff_id ? { p_actor_staff_id: input.actor_staff_id } : {}),
       });
       if (error) throw error;
-      return data as string;
+      return data;
     },
     onSuccess: (_data, vars) => {
       void queryClient.invalidateQueries({ queryKey: productsKey() });
@@ -61,7 +61,7 @@ export function useMutateStockMovement() {
         ...(input.actor_staff_id ? { p_actor_staff_id: input.actor_staff_id } : {}),
       });
       if (error) throw error;
-      return data as string;
+      return data;
     },
     onSuccess: (productId) => {
       void queryClient.invalidateQueries({ queryKey: productsKey() });

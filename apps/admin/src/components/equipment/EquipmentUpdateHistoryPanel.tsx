@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { Download } from 'lucide-react';
 import { DataTable } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useMdbDownload } from '@vitalock/shared';
 import { formatDateTime } from '@/lib/format';
 import { useEquipmentUpdateHistory } from '@/hooks/useEquipmentUpdateHistory';
 import { useStaffByIds } from '@/hooks/useStaffByIds';
@@ -19,32 +19,15 @@ interface EquipmentUpdateHistoryPanelProps {
  */
 export function EquipmentUpdateHistoryPanel({ equipmentId }: EquipmentUpdateHistoryPanelProps) {
   const { data: rows = [], isFetching } = useEquipmentUpdateHistory(equipmentId);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const { download, downloadingId } = useMdbDownload(supabase, {
+    onError: () => toast.error('No se pudo generar el enlace de descarga.'),
+  });
 
   // Batch-fetch staff names for resolved_by_staff_id
   const staffIds = [
-    ...new Set(
-      rows
-        .map((r) => r.resolved_by_staff_id)
-        .filter((id): id is string => Boolean(id)),
-    ),
+    ...new Set(rows.map((r) => r.resolved_by_staff_id).filter((id): id is string => Boolean(id))),
   ];
   const { data: staffMap } = useStaffByIds(staffIds);
-
-  const handleDownload = async (row: EquipmentUpdateHistoryRow) => {
-    setDownloadingId(row.id);
-    try {
-      const { data, error } = await supabase.storage
-        .from('equipment-updates-mdb')
-        .createSignedUrl(row.mdb_storage_path, 300);
-      if (error) throw error;
-      window.open(data.signedUrl, '_blank');
-    } catch {
-      toast.error('No se pudo generar el enlace de descarga.');
-    } finally {
-      setDownloadingId(null);
-    }
-  };
 
   return (
     <DataTable<EquipmentUpdateHistoryRow>
@@ -61,7 +44,8 @@ export function EquipmentUpdateHistoryPanel({ equipmentId }: EquipmentUpdateHist
           header: 'Resuelto por',
           cell: (r) =>
             r.resolved_by_staff_id
-              ? (staffMap?.get(r.resolved_by_staff_id)?.full_name ?? r.resolved_by_staff_id.slice(0, 8) + '…')
+              ? (staffMap?.get(r.resolved_by_staff_id)?.full_name ??
+                r.resolved_by_staff_id.slice(0, 8) + '…')
               : '—',
           className: 'text-sm text-muted-foreground',
         },
@@ -81,7 +65,7 @@ export function EquipmentUpdateHistoryPanel({ equipmentId }: EquipmentUpdateHist
             <Button
               variant="outline"
               size="sm"
-              onClick={() => void handleDownload(r)}
+              onClick={() => void download(r.mdb_storage_path, r.id)}
               disabled={downloadingId === r.id}
               className="w-fit"
             >

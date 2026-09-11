@@ -114,7 +114,7 @@ export function EquipmentFormSheet({
 
   const handleDecommissionConfirm = async (input: {
     id: string;
-    status: 'active' | 'maintenance' | 'dead';
+    status: EquipmentStatus;
     decommission_reason: string;
   }) => {
     await updateStatus.mutateAsync(input);

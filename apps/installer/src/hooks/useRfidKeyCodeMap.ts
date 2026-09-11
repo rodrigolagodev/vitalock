@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { rfidKeyCodesKey } from '@/lib/queryKeys';
 
 /**
  * Given a list of rfid_key UUIDs, returns a Map<uuid, rfid_code> for display.
@@ -9,7 +10,7 @@ export function useRfidKeyCodeMap(keyIds: string[]): Map<string, string> {
   const stable = keyIds.slice().sort().join(',');
 
   const { data } = useQuery({
-    queryKey: ['rfid-key-codes', stable],
+    queryKey: rfidKeyCodesKey(stable),
     queryFn: async () => {
       if (keyIds.length === 0) return [];
       const { data, error } = await supabase

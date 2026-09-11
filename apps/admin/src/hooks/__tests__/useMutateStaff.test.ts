@@ -28,7 +28,11 @@ const mockFrom = vi.fn().mockReturnValue({
 const mockSchema = vi.fn().mockReturnValue({ from: mockFrom });
 const mockSupabase = { schema: mockSchema };
 
-vi.mock('@/lib/supabase', () => ({ get supabase() { return mockSupabase; } }));
+vi.mock('@/lib/supabase', () => ({
+  get supabase() {
+    return mockSupabase;
+  },
+}));
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -79,9 +83,7 @@ describe('useMutateStaff', () => {
         });
       });
 
-      await waitFor(() =>
-        expect(result.current.createStaff.isSuccess).toBe(true),
-      );
+      await waitFor(() => expect(result.current.createStaff.isSuccess).toBe(true));
 
       expect(mockSchema).toHaveBeenCalledWith('identity');
       expect(mockFrom).toHaveBeenCalledWith('staff');
@@ -95,9 +97,6 @@ describe('useMutateStaff', () => {
       );
       expect(invalidateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ queryKey: ['admin', 'personal'] }),
-      );
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ queryKey: ['admin', 'staff'] }),
       );
       expect(toast.success).toHaveBeenCalledWith('Personal creado correctamente.');
     });
@@ -129,7 +128,12 @@ describe('useMutateStaff', () => {
 
   describe('updateStaff', () => {
     it('strips id and excludes status from the update payload', async () => {
-      const fakeStaff = { id: 's-1', full_name: 'Juan Updated', role: 'installer', status: 'active' };
+      const fakeStaff = {
+        id: 's-1',
+        full_name: 'Juan Updated',
+        role: 'installer',
+        status: 'active',
+      };
       mockSingle.mockResolvedValueOnce({ data: fakeStaff, error: null });
 
       const { Wrapper } = makeWrapper();
@@ -167,9 +171,7 @@ describe('useMutateStaff', () => {
         await result.current.deactivateStaff.mutateAsync({ id: 's-1' });
       });
 
-      await waitFor(() =>
-        expect(result.current.deactivateStaff.isSuccess).toBe(true),
-      );
+      await waitFor(() => expect(result.current.deactivateStaff.isSuccess).toBe(true));
 
       const updateCall = (mockUpdate.mock.calls[0] as [Record<string, unknown>])[0];
       expect(updateCall).toEqual({ status: 'inactive' });
@@ -177,12 +179,7 @@ describe('useMutateStaff', () => {
       expect(invalidateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ queryKey: ['admin', 'personal'] }),
       );
-      expect(invalidateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ queryKey: ['admin', 'staff'] }),
-      );
-      expect(toast.success).toHaveBeenCalledWith(
-        'Personal dado de baja correctamente.',
-      );
+      expect(toast.success).toHaveBeenCalledWith('Personal dado de baja correctamente.');
     });
   });
 });

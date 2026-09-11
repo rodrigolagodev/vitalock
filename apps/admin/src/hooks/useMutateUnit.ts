@@ -49,7 +49,7 @@ export function useMutateUnit(buildingId: string) {
       queryClient.setQueryData<UnitRow[]>(unitsKey(buildingId), (prev = []) =>
         [...prev, created].sort((a, b) => a.number.localeCompare(b.number)),
       );
-      queryClient.invalidateQueries({ queryKey: unitsKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: unitsKey(buildingId) });
       toast.success('Unidad creada correctamente.');
     },
     onError: (err) => {
@@ -71,7 +71,7 @@ export function useMutateUnit(buildingId: string) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: unitsKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: unitsKey(buildingId) });
       toast.success('Unidad actualizada correctamente.');
     },
     onError: (err) => {
@@ -91,7 +91,7 @@ export function useMutateUnit(buildingId: string) {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: unitsKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: unitsKey(buildingId) });
       toast.success('Unidad desactivada correctamente.');
     },
     onError: (err) => {

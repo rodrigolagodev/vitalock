@@ -58,7 +58,7 @@ export function useEquipmentById(equipmentId: string | null) {
         .maybeSingle();
 
       if (error) throw error;
-      return (data ?? null) as unknown as EquipmentDetail | null;
+      return data ?? null;
     },
   });
 }
@@ -98,7 +98,7 @@ export function useMaintenanceHistory(equipmentId: string | null) {
         opened_at: r.opened_at,
         resolved_at: r.resolved_at,
         resolution_notes: r.resolution_notes,
-      })) as unknown as MaintenanceHistoryRow[];
+      }));
     },
   });
 }
@@ -128,7 +128,13 @@ export function useEquipmentUpdateHistory(equipmentId: string | null) {
 
       if (error) throw error;
 
-      return (data ?? []) as unknown as EquipmentUpdateHistoryRow[];
+      // `resolved_at` is nullable in the schema; the `.not('resolved_at', 'is',
+      // null)` filter above is what makes it non-null here. Enforce that
+      // invariant at runtime instead of asserting it, so a query change can
+      // never silently push a null into EquipmentUpdateHistoryRow.
+      return (data ?? []).filter(
+        (row): row is EquipmentUpdateHistoryRow => row.resolved_at !== null,
+      );
     },
   });
 }
