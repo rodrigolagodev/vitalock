@@ -2,23 +2,11 @@ import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { ProductFormFields } from './ProductFormFields';
 import { useProducts } from '@/hooks/useProducts';
 import { useMutateStockMovement } from '@/hooks/useMutateStockMovement';
@@ -91,8 +79,7 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
   const mode = watch('mode');
   const typedName = watch('name')?.trim() ?? '';
   const selectedCategory = watch('category');
-  const isPending =
-    createMovement.isPending || createProductWithStock.isPending;
+  const isPending = createMovement.isPending || createProductWithStock.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -113,7 +100,9 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
       setValue('product_id', '');
       // Alta de producto: el costo es obligatorio y positivo, así que
       // arrancamos el campo vacío para que el usuario tenga que tipearlo.
-      setValue('unit_cost', undefined as unknown as number);
+      // NaN renders as an empty <input type="number"> and fails z.number(),
+      // which is exactly "the user must type a value" — without lying to RHF's types.
+      setValue('unit_cost', Number.NaN);
     } else {
       // Producto existente: 0 = "no actualizar el precio de costo actual".
       setValue('unit_cost', 0);
@@ -158,15 +147,12 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
 
   return (
     <Sheet open={open} onOpenChange={(o) => !isPending && onOpenChange(o)}>
-      <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-lg overflow-y-auto">
+      <SheetContent side="right" className="flex flex-col gap-0 overflow-y-auto sm:max-w-lg">
         <SheetHeader className="p-6 pb-4">
           <SheetTitle>Cargar producto</SheetTitle>
         </SheetHeader>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-1 flex-col gap-6 px-6"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col gap-6 px-6">
           {/* ---- Mode toggle ---- */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-mode">Tipo de carga *</Label>
@@ -194,125 +180,109 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
             <>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="product-select">Producto *</Label>
-              <Controller
-                control={control}
-                name="product_id"
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger id="product-select">
-                      <SelectValue placeholder="Seleccioná un producto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {products.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <Controller
+                  control={control}
+                  name="product_id"
+                  render={({ field }) => (
+                    <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                      <SelectTrigger id="product-select">
+                        <SelectValue placeholder="Seleccioná un producto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {(errors as Record<string, { message?: string } | undefined>).product_id && (
+                  <p className="text-destructive text-sm">
+                    {(errors as Record<string, { message?: string }>).product_id?.message}
+                  </p>
                 )}
-              />
-              {(
-                errors as Record<string, { message?: string } | undefined>
-              ).product_id && (
-                <p className="text-sm text-destructive">
-                  {(errors as Record<string, { message?: string }>).product_id
-                    ?.message}
-                </p>
-              )}
-            </div>
+              </div>
 
-            {/* ---- Unit cost (0 = mantener el precio de costo actual) ---- */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="product-unit-cost">Costo unitario</Label>
-              <Controller
-                control={control}
-                name="unit_cost"
-                render={({ field }) => (
-                  <Input
-                    id="product-unit-cost"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={field.value ?? 0}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === '' ? 0 : Number(e.target.value),
-                      )
-                    }
-                  />
-                )}
-              />
-              <p className="text-xs text-muted-foreground">
-                Dejalo en 0 para no actualizar el precio de costo actual del producto.
-              </p>
-              {(
-                errors as Record<string, { message?: string } | undefined>
-              ).unit_cost && (
-                <p className="text-sm text-destructive">
-                  {(errors as Record<string, { message?: string }>).unit_cost
-                    ?.message}
+              {/* ---- Unit cost (0 = mantener el precio de costo actual) ---- */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="product-unit-cost">Costo unitario</Label>
+                <Controller
+                  control={control}
+                  name="unit_cost"
+                  render={({ field }) => (
+                    <Input
+                      id="product-unit-cost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={field.value ?? 0}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === '' ? 0 : Number(e.target.value))
+                      }
+                    />
+                  )}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Dejalo en 0 para no actualizar el precio de costo actual del producto.
                 </p>
-              )}
+                {(errors as Record<string, { message?: string } | undefined>).unit_cost && (
+                  <p className="text-destructive text-sm">
+                    {(errors as Record<string, { message?: string }>).unit_cost?.message}
+                  </p>
+                )}
               </div>
             </>
-        ) : (
-          <>
-            <ProductFormFields
-              control={control}
-              name="name"
-              categoryName="category"
-              errors={errors}
-            />
-
-            {/* ---- Unit cost (obligatorio al dar de alta el producto) ---- */}
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="product-unit-cost">Costo unitario *</Label>
-              <Controller
+          ) : (
+            <>
+              <ProductFormFields
                 control={control}
-                name="unit_cost"
-                render={({ field }) => (
-                  <Input
-                    id="product-unit-cost"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={field.value ?? ''}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === '' ? '' : Number(e.target.value),
-                      )
-                    }
-                  />
-                )}
+                name="name"
+                categoryName="category"
+                errors={errors}
               />
-              {(
-                errors as Record<string, { message?: string } | undefined>
-              ).unit_cost && (
-                <p className="text-sm text-destructive">
-                  {(errors as Record<string, { message?: string }>).unit_cost
-                    ?.message}
-                </p>
-              )}
-            </div>
-            {typedName && selectedCategory &&
-              products.some(
-                (p) =>
-                  p.category === selectedCategory &&
-                  p.name.trim().toLowerCase() === typedName.toLowerCase(),
-              ) && (
-                <p className="text-sm text-warning">
-                  Ya existe &quot;{typedName}&quot; en esta categoría. Se
-                  validará al guardar.
-                </p>
-              )}
-          </>
-        )}
+
+              {/* ---- Unit cost (obligatorio al dar de alta el producto) ---- */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="product-unit-cost">Costo unitario *</Label>
+                <Controller
+                  control={control}
+                  name="unit_cost"
+                  render={({ field }) => (
+                    <Input
+                      id="product-unit-cost"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={field.value ?? ''}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === '' ? '' : Number(e.target.value))
+                      }
+                    />
+                  )}
+                />
+                {(errors as Record<string, { message?: string } | undefined>).unit_cost && (
+                  <p className="text-destructive text-sm">
+                    {(errors as Record<string, { message?: string }>).unit_cost?.message}
+                  </p>
+                )}
+              </div>
+              {typedName &&
+                selectedCategory &&
+                products.some(
+                  (p) =>
+                    p.category === selectedCategory &&
+                    p.name.trim().toLowerCase() === typedName.toLowerCase(),
+                ) && (
+                  <p className="text-warning text-sm">
+                    Ya existe &quot;{typedName}&quot; en esta categoría. Se validará al guardar.
+                  </p>
+                )}
+            </>
+          )}
 
           {/* ---- Quantity ---- */}
           <div className="flex flex-col gap-2">
@@ -328,17 +298,13 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
                   step="1"
                   value={field.value ?? ''}
                   onChange={(e) =>
-                    field.onChange(
-                      e.target.value === '' ? '' : Number(e.target.value),
-                    )
+                    field.onChange(e.target.value === '' ? '' : Number(e.target.value))
                   }
                 />
               )}
             />
             {errors.quantity && (
-              <p className="text-sm text-destructive">
-                {errors.quantity.message}
-              </p>
+              <p className="text-destructive text-sm">{errors.quantity.message}</p>
             )}
           </div>
 
@@ -359,11 +325,9 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
             />
           </div>
 
-          {duplicateError && (
-            <p className="text-sm text-destructive">{duplicateError}</p>
-          )}
+          {duplicateError && <p className="text-destructive text-sm">{duplicateError}</p>}
 
-          <SheetFooter className="mt-auto pt-4 pb-6">
+          <SheetFooter className="mt-auto pb-6 pt-4">
             <Button
               type="button"
               variant="outline"

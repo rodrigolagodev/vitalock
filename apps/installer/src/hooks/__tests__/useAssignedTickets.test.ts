@@ -17,7 +17,11 @@ vi.mock('@vitalock/shared', () => ({
 // Hoisted channel tracking + `.from()` call recording
 const { removeChannelMock, channels, fromCalls } = vi.hoisted(() => {
   const removeChannelMock = vi.fn().mockResolvedValue(undefined);
-  const channels: Array<{ name: string; filterArg?: unknown; subscribeCb?: (status: string, err?: unknown) => void }> = [];
+  const channels: Array<{
+    name: string;
+    filterArg?: unknown;
+    subscribeCb?: (status: string, err?: unknown) => void;
+  }> = [];
   const fromCalls: Array<{ schema: string | null; from: string }> = [];
   return { removeChannelMock, channels, fromCalls };
 });
@@ -77,7 +81,11 @@ vi.mock('@/lib/supabase', () => {
         return { select: vi.fn().mockReturnValue(emptyChain) };
       }),
       channel: vi.fn().mockImplementation((name: string) => {
-        const entry: { name: string; filterArg?: unknown; subscribeCb?: (status: string, err?: unknown) => void } = { name };
+        const entry: {
+          name: string;
+          filterArg?: unknown;
+          subscribeCb?: (status: string, err?: unknown) => void;
+        } = { name };
         channels.push(entry);
         return {
           on: vi.fn().mockImplementation((_event: string, filter: unknown) => {
@@ -96,6 +104,7 @@ vi.mock('@/lib/supabase', () => {
 });
 
 import { useAssignedTickets } from '../useAssignedTickets';
+import { assignedTicketsKey } from '@/lib/queryKeys';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -159,7 +168,7 @@ describe('useAssignedTickets', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    const cached = queryClient.getQueryData(['assigned-tickets', mockStaffId]);
+    const cached = queryClient.getQueryData(assignedTicketsKey(mockStaffId));
     expect(cached).toBeDefined();
     expect(Array.isArray(cached)).toBe(true);
   });

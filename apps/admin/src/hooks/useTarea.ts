@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { TareaRow } from './useTareas';
+import { tareaKey } from '@/lib/queryKeys';
 
 interface AssignedEquipment {
   id: string;
@@ -25,7 +26,7 @@ export type TareaDetailRow = TareaRow & {
 
 export function useTarea(id: string | undefined) {
   return useQuery({
-    queryKey: ['admin', 'tarea', id ?? ''],
+    queryKey: tareaKey(id ?? ''),
     enabled: Boolean(id),
     queryFn: async (): Promise<TareaDetailRow | null> => {
       if (!id) return null;

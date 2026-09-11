@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { technicalOrderTicketsKey } from '@/lib/queryKeys';
 
 /**
  * A single support ticket linked to a technical order item.
@@ -32,7 +33,7 @@ export interface TechnicalOrderTicketRow {
  */
 export function useTechnicalOrderTickets(orderId: string | undefined) {
   return useQuery({
-    queryKey: ['admin', 'technical-orders', orderId ?? '', 'tickets'],
+    queryKey: technicalOrderTicketsKey(orderId ?? undefined),
     enabled: Boolean(orderId),
     queryFn: async (): Promise<TechnicalOrderTicketRow[]> => {
       if (!orderId) return [];

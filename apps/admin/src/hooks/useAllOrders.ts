@@ -34,7 +34,13 @@ export interface UseAllOrdersFilters {
  * Read-only list hook over the public.all_orders VIEW.
  * Used by the /historial module. Never write through this hook.
  */
-export function useAllOrders({ search, status, orderKind, dateFrom, dateTo }: UseAllOrdersFilters = {}) {
+export function useAllOrders({
+  search,
+  status,
+  orderKind,
+  dateFrom,
+  dateTo,
+}: UseAllOrdersFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
@@ -64,15 +70,16 @@ export function useAllOrders({ search, status, orderKind, dateFrom, dateTo }: Us
 
       if (trimmed) {
         const safe = escapeIlikeValue(trimmed);
-        query = query.or(
-          `order_number.ilike.%${safe}%,particular_full_name.ilike.%${safe}%`,
-        );
+        query = query.or(`order_number.ilike.%${safe}%,particular_full_name.ilike.%${safe}%`);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
 
-      return (data ?? []) as unknown as AllOrderRow[];
+      // `all_orders` is a UNION view. Postgres does not carry NOT NULL through
+      // views, so `supabase gen types` marks every column nullable even though
+      // both underlying tables guarantee them. The one place this hook asserts.
+      return (data ?? []) as AllOrderRow[];
     },
   });
 }

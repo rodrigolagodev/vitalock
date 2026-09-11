@@ -1,9 +1,5 @@
 import { useState } from 'react';
-import {
-  useForm,
-  useFieldArray,
-  Controller,
-} from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ParticularSelector } from '@/components/particulares/ParticularSelector';
@@ -17,13 +13,7 @@ import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import { Plus, Trash2 } from 'lucide-react';
 import { formatCurrencyARS } from '@/lib/format';
@@ -170,7 +160,8 @@ export function KeyOrderForm({
   isPending = false,
 }: KeyOrderFormProps) {
   // Derive defaults: explicit initialValues take priority, then initialOrder, then EMPTY_DEFAULTS.
-  const defaultValues = initialValues ?? (initialOrder ? buildInitialValues(initialOrder) : EMPTY_DEFAULTS);
+  const defaultValues =
+    initialValues ?? (initialOrder ? buildInitialValues(initialOrder) : EMPTY_DEFAULTS);
 
   const { data: administrations = [] } = useAdministrations({ status: 'active' });
 
@@ -193,22 +184,18 @@ export function KeyOrderForm({
 
   const [particular, setParticular] = useState<ParticularRow | null>(null);
   const [editParticularOpen, setEditParticularOpen] = useState(false);
-  const [pickupParticulars, setPickupParticulars] = useState<
-    Record<number, ParticularRow | null>
-  >({});
+  const [pickupParticulars, setPickupParticulars] = useState<Record<number, ParticularRow | null>>(
+    {},
+  );
 
   const clientType = watch('client_type');
   const administrationId = watch('administration_id');
   const items = watch('items');
 
   // Live totals for the lines table (visibility of system status).
-  const keysCount = items.reduce(
-    (acc, it) => acc + (Number(it?.quantity) || 0),
-    0,
-  );
+  const keysCount = items.reduce((acc, it) => acc + (Number(it?.quantity) || 0), 0);
   const totalPrice = items.reduce(
-    (acc, it) =>
-      acc + (Number(it?.quantity) || 0) * (Number(it?.unit_price) || 0),
+    (acc, it) => acc + (Number(it?.quantity) || 0) * (Number(it?.unit_price) || 0),
     0,
   );
 
@@ -235,11 +222,7 @@ export function KeyOrderForm({
 
   const deleteItem = (index: number) => {
     remove(index);
-    setPickupParticulars((prev) => {
-      const next = { ...prev };
-      delete next[index];
-      return next;
-    });
+    setPickupParticulars(({ [index]: _removed, ...rest }) => rest);
     if (openItemIndex === index) setOpenItemIndex(null);
   };
 
@@ -251,11 +234,8 @@ export function KeyOrderForm({
   };
 
   const { data: buildings = [] } = useBuildings(
-    clientType === 'administration' && administrationId
-      ? { administrationId }
-      : {},
+    clientType === 'administration' && administrationId ? { administrationId } : {},
   );
-
 
   const handleParticularChange = (p: ParticularRow | null) => {
     setParticular(p);
@@ -280,8 +260,7 @@ export function KeyOrderForm({
   };
 
   const isFormPending = isPending || isSubmitting;
-  const submitLabel =
-    mode === 'edit' ? 'Guardar cambios' : 'Crear y confirmar orden';
+  const submitLabel = mode === 'edit' ? 'Guardar cambios' : 'Crear y confirmar orden';
 
   return (
     <>
@@ -291,7 +270,7 @@ export function KeyOrderForm({
         id="key-order-form"
       >
         {/* ---- Section: Cliente ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
+        <section className="bg-card flex flex-col gap-4 rounded-md border p-5">
           <SectionHeading title="Cliente" />
 
           <div className="flex flex-col gap-2">
@@ -302,9 +281,7 @@ export function KeyOrderForm({
               render={({ field }) => (
                 <RadioGroup
                   value={field.value}
-                  onValueChange={(v) =>
-                    field.onChange(v as 'administration' | 'particular')
-                  }
+                  onValueChange={(v) => field.onChange(v as 'administration' | 'particular')}
                   aria-label="Tipo de cliente"
                   className="grid w-full grid-cols-2"
                 >
@@ -314,11 +291,7 @@ export function KeyOrderForm({
                       { value: 'particular', label: 'Particular' },
                     ] as const
                   ).map((opt) => (
-                    <RadioGroupItem
-                      key={opt.value}
-                      value={opt.value}
-                      className="text-center"
-                    >
+                    <RadioGroupItem key={opt.value} value={opt.value} className="text-center">
                       {opt.label}
                     </RadioGroupItem>
                   ))}
@@ -344,9 +317,7 @@ export function KeyOrderForm({
                 )}
               />
               {errors.administration_id && (
-                <p className="text-sm text-destructive">
-                  {errors.administration_id.message}
-                </p>
+                <p className="text-destructive text-sm">{errors.administration_id.message}</p>
               )}
             </div>
           )}
@@ -360,23 +331,19 @@ export function KeyOrderForm({
                 onEdit={() => setEditParticularOpen(true)}
               />
               {errors.particular_id && (
-                <p className="text-sm text-destructive">
-                  {errors.particular_id.message}
-                </p>
+                <p className="text-destructive text-sm">{errors.particular_id.message}</p>
               )}
             </div>
           )}
         </section>
 
         {/* ---- Section: Ítems (item cards inline) ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
+        <section className="bg-card flex flex-col gap-4 rounded-md border p-5">
           <div className="flex items-center justify-between border-b pb-2">
             <h2 className="text-base font-semibold">
               Ítems{' '}
               {fields.length > 0 && (
-                <span className="text-muted-foreground font-normal">
-                  ({fields.length})
-                </span>
+                <span className="text-muted-foreground font-normal">({fields.length})</span>
               )}
             </h2>
             <Button
@@ -392,306 +359,261 @@ export function KeyOrderForm({
           </div>
 
           {errors.items && !Array.isArray(errors.items) && (
-            <p className="text-sm text-destructive">{errors.items.message}</p>
+            <p className="text-destructive text-sm">{errors.items.message}</p>
           )}
 
           <div className="flex flex-col gap-3" data-testid="key-order-items">
-              {fields.map((field, index) => {
-                const item = items[index];
-                const isOpen = openItemIndex === index;
-                const product = keyProducts.find(
-                  (p) => p.id === item?.product_id,
-                );
-                const building = buildings.find(
-                  (b) => b.id === item?.building_id,
-                );
-                const buildingId = item?.building_id ?? null;
-                const lineTotal =
-                  (Number(item?.quantity) || 0) *
-                  (Number(item?.unit_price) || 0);
-                const itemErrors = errors.items?.[index];
+            {fields.map((field, index) => {
+              const item = items[index];
+              const isOpen = openItemIndex === index;
+              const product = keyProducts.find((p) => p.id === item?.product_id);
+              const building = buildings.find((b) => b.id === item?.building_id);
+              const buildingId = item?.building_id ?? null;
+              const lineTotal = (Number(item?.quantity) || 0) * (Number(item?.unit_price) || 0);
+              const itemErrors = errors.items?.[index];
 
-                return (
-                  <div
-                    key={field.id}
-                    data-testid={`key-order-item-${index}`}
-                    className="flex flex-col rounded-md border bg-muted/20"
-                  >
-                    {/* Header (always visible) */}
-                    <div className="flex items-center gap-3 p-3">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setOpenItemIndex(isOpen ? null : index)
-                        }
-                        aria-label={
-                          isOpen
-                            ? `Colapsar ítem ${index + 1}`
-                            : `Expandir ítem ${index + 1}`
-                        }
-                        className="flex flex-1 min-w-0 items-center gap-3 text-left"
-                      >
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {isOpen ? '▾' : '▸'}
-                        </span>
-                        <span className="flex-1 min-w-0 flex flex-wrap items-center gap-2">
-                          <span className="font-medium text-sm shrink-0">
-                            Ítem {index + 1}
+              return (
+                <div
+                  key={field.id}
+                  data-testid={`key-order-item-${index}`}
+                  className="bg-muted/20 flex flex-col rounded-md border"
+                >
+                  {/* Header (always visible) */}
+                  <div className="flex items-center gap-3 p-3">
+                    <button
+                      type="button"
+                      onClick={() => setOpenItemIndex(isOpen ? null : index)}
+                      aria-label={
+                        isOpen ? `Colapsar ítem ${index + 1}` : `Expandir ítem ${index + 1}`
+                      }
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
+                      <span className="text-muted-foreground shrink-0 text-xs">
+                        {isOpen ? '▾' : '▸'}
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                        <span className="shrink-0 text-sm font-medium">Ítem {index + 1}</span>
+                        {product && (
+                          <span className="max-w-[200px] truncate rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                            {product.name}
                           </span>
-                          {product && (
-                            <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 truncate max-w-[200px]">
-                              {product.name}
+                        )}
+                        <span className="text-muted-foreground text-xs">
+                          ×{item?.quantity ?? 1}
+                        </span>
+                        {building && (
+                          <>
+                            <span className="text-muted-foreground text-xs">·</span>
+                            <span className="text-muted-foreground max-w-[200px] truncate text-xs">
+                              {building.name}
                             </span>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            ×{item?.quantity ?? 1}
-                          </span>
-                          {building && (
-                            <>
-                              <span className="text-xs text-muted-foreground">·</span>
-                              <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                                {building.name}
-                              </span>
-                            </>
-                          )}
-                          {(Number(item?.unit_price) || 0) > 0 && (
-                            <>
-                              <span className="text-xs text-muted-foreground">·</span>
-                              <span className="text-xs font-medium tabular-nums">
-                                {formatCurrencyARS(lineTotal)}
-                              </span>
-                            </>
-                          )}
-                        </span>
-                      </button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 px-0 text-destructive hover:text-destructive"
-                        aria-label={`Eliminar ítem ${index + 1}`}
-                        onClick={() => deleteItem(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                          </>
+                        )}
+                        {(Number(item?.unit_price) || 0) > 0 && (
+                          <>
+                            <span className="text-muted-foreground text-xs">·</span>
+                            <span className="text-xs font-medium tabular-nums">
+                              {formatCurrencyARS(lineTotal)}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive h-8 w-8 px-0"
+                      aria-label={`Eliminar ítem ${index + 1}`}
+                      onClick={() => deleteItem(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-                    {/* Error summary visible even when collapsed */}
-                    {!isOpen && itemErrors && (
-                      <div className="px-3 pb-3 flex flex-col gap-1">
-                        {itemErrors.product_id && (
-                          <p className="text-xs text-destructive">
+                  {/* Error summary visible even when collapsed */}
+                  {!isOpen && itemErrors && (
+                    <div className="flex flex-col gap-1 px-3 pb-3">
+                      {itemErrors.product_id && (
+                        <p className="text-destructive text-xs">{itemErrors.product_id.message}</p>
+                      )}
+                      {itemErrors.building_id && (
+                        <p className="text-destructive text-xs">{itemErrors.building_id.message}</p>
+                      )}
+                      {itemErrors.unit_price && (
+                        <p className="text-destructive text-xs">{itemErrors.unit_price.message}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Body (expanded) */}
+                  {isOpen && (
+                    <div className="bg-card grid grid-cols-1 gap-4 border-t p-4 sm:grid-cols-2">
+                      {/* Producto */}
+                      <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
+                        <Label htmlFor={`items.${index}.product_id`}>Llave *</Label>
+                        <Controller
+                          control={control}
+                          name={`items.${index}.product_id`}
+                          render={({ field: f }) => (
+                            <Select
+                              value={f.value ?? ''}
+                              onValueChange={(v) => f.onChange(v || null)}
+                            >
+                              <SelectTrigger id={`items.${index}.product_id`} aria-label="Llave">
+                                <SelectValue placeholder="Seleccioná un modelo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {keyProducts.map((p) => (
+                                  <SelectItem key={p.id} value={p.id}>
+                                    {p.name} — disponible: {p.stock_disponible}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {itemErrors?.product_id && (
+                          <p className="text-destructive text-xs">
                             {itemErrors.product_id.message}
                           </p>
                         )}
-                        {itemErrors.building_id && (
-                          <p className="text-xs text-destructive">
-                            {itemErrors.building_id.message}
+                      </div>
+
+                      {/* Cantidad */}
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <Label htmlFor={`items.${index}.quantity`}>Cantidad *</Label>
+                        <Input
+                          id={`items.${index}.quantity`}
+                          type="number"
+                          min={1}
+                          aria-label="Cantidad de llaves"
+                          {...register(`items.${index}.quantity`)}
+                        />
+                        {itemErrors?.quantity && (
+                          <p className="text-destructive text-xs">{itemErrors.quantity.message}</p>
+                        )}
+                        {(Number(item?.quantity) || 0) > 1 && (
+                          <p className="text-muted-foreground text-xs">
+                            Se dividirá en {item?.quantity} llaves individuales.
                           </p>
                         )}
-                        {itemErrors.unit_price && (
-                          <p className="text-xs text-destructive">
+                      </div>
+
+                      {/* Precio unitario */}
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <Label htmlFor={`items.${index}.unit_price`}>Precio unitario *</Label>
+                        <Input
+                          id={`items.${index}.unit_price`}
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          placeholder="0.00"
+                          aria-label="Precio unitario"
+                          {...register(`items.${index}.unit_price`)}
+                        />
+                        {itemErrors?.unit_price && (
+                          <p className="text-destructive text-xs">
                             {itemErrors.unit_price.message}
                           </p>
                         )}
                       </div>
-                    )}
 
-                    {/* Body (expanded) */}
-                    {isOpen && (
-                      <div className="p-4 border-t bg-card grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {/* Producto */}
-                        <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
-                          <Label htmlFor={`items.${index}.product_id`}>
-                            Llave *
-                          </Label>
-                          <Controller
-                            control={control}
-                            name={`items.${index}.product_id`}
-                            render={({ field: f }) => (
-                              <Select
-                                value={f.value ?? ''}
-                                onValueChange={(v) => f.onChange(v || null)}
-                              >
-                                <SelectTrigger
-                                  id={`items.${index}.product_id`}
-                                  aria-label="Llave"
-                                >
-                                  <SelectValue placeholder="Seleccioná un modelo" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {keyProducts.map((p) => (
-                                    <SelectItem key={p.id} value={p.id}>
-                                      {p.name} — disponible: {p.stock_disponible}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                          {itemErrors?.product_id && (
-                            <p className="text-xs text-destructive">
-                              {itemErrors.product_id.message}
-                            </p>
+                      {/* Edificio */}
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <Label>Edificio *</Label>
+                        <Controller
+                          control={control}
+                          name={`items.${index}.building_id`}
+                          render={({ field: f }) => (
+                            <BuildingCombobox
+                              id={`items.${index}.building_id`}
+                              buildings={buildings}
+                              value={f.value ?? ''}
+                              onChange={(v) => {
+                                f.onChange(v ?? null);
+                                // Clear unit when building changes; the previously
+                                // selected unit belongs to a different building.
+                                setValue(`items.${index}.unit_id`, null);
+                              }}
+                              placeholder="Buscar por nombre o dirección"
+                            />
                           )}
-                        </div>
-
-                        {/* Cantidad */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                          <Label htmlFor={`items.${index}.quantity`}>
-                            Cantidad *
-                          </Label>
-                          <Input
-                            id={`items.${index}.quantity`}
-                            type="number"
-                            min={1}
-                            aria-label="Cantidad de llaves"
-                            {...register(`items.${index}.quantity`)}
-                          />
-                          {itemErrors?.quantity && (
-                            <p className="text-xs text-destructive">
-                              {itemErrors.quantity.message}
-                            </p>
-                          )}
-                          {(Number(item?.quantity) || 0) > 1 && (
-                            <p className="text-xs text-muted-foreground">
-                              Se dividirá en {item?.quantity} llaves individuales.
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Precio unitario */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                          <Label htmlFor={`items.${index}.unit_price`}>
-                            Precio unitario *
-                          </Label>
-                          <Input
-                            id={`items.${index}.unit_price`}
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            placeholder="0.00"
-                            aria-label="Precio unitario"
-                            {...register(`items.${index}.unit_price`)}
-                          />
-                          {itemErrors?.unit_price && (
-                            <p className="text-xs text-destructive">
-                              {itemErrors.unit_price.message}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Edificio */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                          <Label>Edificio *</Label>
-                          <Controller
-                            control={control}
-                            name={`items.${index}.building_id`}
-                            render={({ field: f }) => (
-                              <BuildingCombobox
-                                id={`items.${index}.building_id`}
-                                buildings={buildings}
-                                value={f.value ?? ''}
-                                onChange={(v) => {
-                                  f.onChange(v ?? null);
-                                  // Clear unit when building changes; the previously
-                                  // selected unit belongs to a different building.
-                                  setValue(`items.${index}.unit_id`, null);
-                                }}
-                                placeholder="Buscar por nombre o dirección"
-                              />
-                            )}
-                          />
-                          {itemErrors?.building_id && (
-                            <p className="text-xs text-destructive">
-                              {itemErrors.building_id.message}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Unidad */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                          <Label>Unidad</Label>
-                          <KeyItemUnitField
-                            buildingId={buildingId}
-                            value={item?.unit_id ?? null}
-                            onChange={(v) =>
-                              setValue(`items.${index}.unit_id`, v)
-                            }
-                            error={itemErrors?.unit_id?.message}
-                          />
-                        </div>
-
-                        {/* Autorizado a retirar */}
-                        <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
-                          <Label>Autorizado a retirar</Label>
-                          <ParticularSelector
-                            value={pickupParticulars[index] ?? null}
-                            onChange={(p) =>
-                              setItemPickupParticular(index, p)
-                            }
-                            className="w-full"
-                          />
-                        </div>
+                        />
+                        {itemErrors?.building_id && (
+                          <p className="text-destructive text-xs">
+                            {itemErrors.building_id.message}
+                          </p>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
 
-              {/* Ghost slot: dashed placeholder that hints "there's room for
+                      {/* Unidad */}
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <Label>Unidad</Label>
+                        <KeyItemUnitField
+                          buildingId={buildingId}
+                          value={item?.unit_id ?? null}
+                          onChange={(v) => setValue(`items.${index}.unit_id`, v)}
+                          error={itemErrors?.unit_id?.message}
+                        />
+                      </div>
+
+                      {/* Autorizado a retirar */}
+                      <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
+                        <Label>Autorizado a retirar</Label>
+                        <ParticularSelector
+                          value={pickupParticulars[index] ?? null}
+                          onChange={(p) => setItemPickupParticular(index, p)}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Ghost slot: dashed placeholder that hints "there's room for
                   more". Visual only — the single entry point for adding an
                   item is the "Agregar ítem" button in the section header. */}
-              <div
-                data-testid="key-order-item-ghost"
-                className="rounded-md border-2 border-dashed border-border bg-muted/10 p-6 text-center text-sm text-muted-foreground"
-              >
-                {fields.length === 0
-                  ? 'La orden todavía no tiene ítems. Agregá el primero desde “Agregar ítem”.'
-                  : 'Hay lugar para más ítems.'}
-              </div>
+            <div
+              data-testid="key-order-item-ghost"
+              className="border-border bg-muted/10 text-muted-foreground rounded-md border-2 border-dashed p-6 text-center text-sm"
+            >
+              {fields.length === 0
+                ? 'La orden todavía no tiene ítems. Agregá el primero desde “Agregar ítem”.'
+                : 'Hay lugar para más ítems.'}
             </div>
+          </div>
 
           {/* Totals — always visible below the item list */}
           {fields.length > 0 && (
             <div
               data-testid="lines-totals"
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-4 py-3 text-sm"
+              className="bg-muted/40 flex flex-wrap items-center justify-between gap-2 rounded-md border px-4 py-3 text-sm"
             >
               <span className="text-muted-foreground">
-                {items.length} {items.length === 1 ? 'ítem' : 'ítems'} ·{' '}
-                {keysCount} {keysCount === 1 ? 'llave' : 'llaves'}
+                {items.length} {items.length === 1 ? 'ítem' : 'ítems'} · {keysCount}{' '}
+                {keysCount === 1 ? 'llave' : 'llaves'}
               </span>
               <span className="font-medium">
-                Total:{' '}
-                <span className="tabular-nums">
-                  {formatCurrencyARS(totalPrice)}
-                </span>
+                Total: <span className="tabular-nums">{formatCurrencyARS(totalPrice)}</span>
               </span>
             </div>
           )}
         </section>
 
         {/* ---- Section: Notas ---- */}
-        <section className="flex flex-col gap-4 rounded-md border p-5 bg-card">
+        <section className="bg-card flex flex-col gap-4 rounded-md border p-5">
           <SectionHeading title="Notas" />
-          <Textarea
-            id="notes"
-            placeholder="Observaciones adicionales..."
-            {...register('notes')}
-          />
+          <Textarea id="notes" placeholder="Observaciones adicionales..." {...register('notes')} />
         </section>
 
         {/* ---- Sticky action bar (mt-auto pushes to the bottom of the flex form;
              sticky bottom-0 pins it there when the user scrolls). ---- */}
-        <div className="mt-auto sticky bottom-0 -mx-6 px-6 z-40 bg-background/95 backdrop-blur border-t p-4 flex items-center justify-end gap-3">
+        <div className="bg-background/95 sticky bottom-0 z-40 -mx-6 mt-auto flex items-center justify-end gap-3 border-t p-4 px-6 backdrop-blur">
           {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isFormPending}
-            >
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isFormPending}>
               Cancelar
             </Button>
           )}
@@ -722,12 +644,7 @@ interface KeyItemUnitFieldProps {
   error?: string;
 }
 
-function KeyItemUnitField({
-  buildingId,
-  value,
-  onChange,
-  error,
-}: KeyItemUnitFieldProps) {
+function KeyItemUnitField({ buildingId, value, onChange, error }: KeyItemUnitFieldProps) {
   const [quickUnitOpen, setQuickUnitOpen] = useState(false);
   const { data: units = [] } = useUnits(buildingId ?? '');
 
@@ -782,7 +699,7 @@ function KeyItemUnitField({
           />
         )}
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-destructive text-xs">{error}</p>}
     </div>
   );
 }

@@ -68,7 +68,9 @@ vi.mock('sonner', () => ({
   toast: { success: mockToastSuccess, warning: mockToastWarning, error: vi.fn() },
 }));
 
-vi.mock('@vitalock/shared', () => ({
+// Partial mock: keep the real hooks (useMdbDownload etc.) and override only auth/logger.
+vi.mock('@vitalock/shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@vitalock/shared')>()),
   useAuthContext: () => ({
     staff: { id: 'installer-001', full_name: 'Pablo', role: 'installer', status: 'active' },
   }),

@@ -7,7 +7,10 @@ export const buildingsKey = (administrationId?: string) =>
     : (['admin', 'buildings', 'all'] as const);
 export const buildingKey = (id: string) => ['admin', 'building', id] as const;
 export const unitsKey = (buildingId: string) => ['admin', 'units', buildingId] as const;
-export const equipmentKey = (buildingId: string) => ['admin', 'equipment', buildingId] as const;
+export const equipmentKey = (buildingId: string, scope?: 'active' | 'all') =>
+  scope
+    ? (['admin', 'equipment', buildingId, scope] as const)
+    : (['admin', 'equipment', buildingId] as const);
 export const keysKey = (buildingId: string | undefined) =>
   ['admin', 'keys', buildingId ?? 'none'] as const;
 export const particularesKey = (search?: string) =>
@@ -75,7 +78,6 @@ export const tareasKey = (
     buildingId ?? 'all',
     status ?? 'all',
   ] as const;
-export const staffKey = () => ['admin', 'staff'] as const;
 export const buildingsByIdsKey = (ids: readonly string[]) =>
   ['admin', 'buildings', 'by-ids', ...[...ids].sort()] as const;
 export const equipmentByIdsKey = (ids: readonly string[]) =>
@@ -110,11 +112,39 @@ export const keysInventoryKey = (
 export const equipmentInventoryKey = (adminId?: string, buildingId?: string, status?: string) =>
   ['admin', 'equipment-inventory', adminId ?? 'all', buildingId ?? 'all', status ?? 'all'] as const;
 
-export const equipmentByBuildingKey = (buildingId?: string) =>
-  ['admin', 'equipment-by-building', buildingId ?? 'none'] as const;
+export const equipmentByBuildingKey = (buildingId?: string, scope?: 'active' | 'all') =>
+  scope
+    ? (['admin', 'equipment-by-building', buildingId ?? 'none', scope] as const)
+    : (['admin', 'equipment-by-building', buildingId ?? 'none'] as const);
 
 export const equipmentUpdatesKey = (equipmentId: string) =>
   ['admin', 'equipment-updates', equipmentId] as const;
+export const equipmentUpdateHistoryKey = (equipmentId: string) =>
+  ['admin', 'equipment-update-history', equipmentId] as const;
 
 export const keyEventsKey = (keyId: string | undefined) =>
   ['admin', 'key-events', keyId ?? 'none'] as const;
+
+// ── Detail / lookup keys ────────────────────────────────────────────────────
+export const tareaKey = (id: string) => ['admin', 'tarea', id] as const;
+export const keyDetailKey = (keyId: string | undefined) =>
+  ['admin', 'key-detail', keyId ?? 'none'] as const;
+export const equipmentDetailKey = (equipmentId: string | undefined) =>
+  ['admin', 'equipment-detail', equipmentId ?? 'none'] as const;
+export const orderKeyDetailsKey = (keyId: string | undefined) =>
+  ['admin', 'order-keys', 'details', keyId ?? ''] as const;
+export const technicalOrderTicketsKey = (orderId: string | undefined) =>
+  ['admin', 'technical-orders', orderId ?? '', 'tickets'] as const;
+export const pendingKeysForEquipmentKey = (equipmentId: string) =>
+  ['admin', 'pending-keys-for-equipment', equipmentId] as const;
+export const productsByIdsKey = (ids: readonly string[]) =>
+  ['admin', 'products', 'by-ids', ...[...ids].sort()] as const;
+
+// ── Root keys — invalidate every variant of a list in one call ─────────────
+// TanStack matches by prefix, so `['admin', 'tareas']` covers `tareasKey(...)`
+// for every filter combination. Prefer these over hand-written prefixes.
+export const administrationsRootKey = () => ['admin', 'administrations'] as const;
+export const buildingsRootKey = () => ['admin', 'buildings'] as const;
+export const keyOrdersRootKey = () => ['admin', 'key-orders'] as const;
+export const tareasRootKey = () => ['admin', 'tareas'] as const;
+export const personalRootKey = () => ['admin', 'personal'] as const;

@@ -42,6 +42,63 @@ const BuildingPathSchema = z.object({
   administration: z.object({ id: z.string(), company_name: z.string() }),
 });
 
+/**
+ * Full shape of one embedded row. The nested embed below crosses schemas
+ * (`operations.key_authorizations` → `public.buildings`), a relationship
+ * PostgREST does not expose in this project's schema cache, so the generated
+ * types cannot describe the result. Rather than assert the shape, the whole
+ * row is parsed by Zod before it is trusted — the fallback path already
+ * treats a failed parse as "use the flat fetch", so validation costs nothing
+ * and removes the only place where an unchecked shape could enter the hook.
+ */
+const EmbeddedAuthorizationSchema = z.object({
+  id: z.string(),
+  sync_state: z.union([z.literal('pending_install'), z.literal('pending_removal')]),
+  notes: z.string().nullable(),
+  created_at: z.string(),
+  equipment: z.object({
+    id: z.string(),
+    description: z.string(),
+    building: BuildingPathSchema,
+  }),
+  rfid_key: z.object({
+    id: z.string(),
+    rfid_code: z.string(),
+    unit: z.object({
+      id: z.string(),
+      number: z.string(),
+      unit_type: z.string().nullable(),
+    }),
+  }),
+}) satisfies z.ZodType<WorklistAuthorization>;
+
+/**
+ * Shapes for the flat-fetch fallback embeds.
+ *
+ * `buildings` and `rfid_keys` are selected with the `alias:fk_column(...)`
+ * embed form. PostgREST resolves it at runtime, but supabase-js's select-string
+ * parser reads the part after `:` as the target relation and so types these
+ * columns as `SelectQueryError`. The generated types therefore cannot describe
+ * the result — parse it instead of asserting it. A row that fails to parse is
+ * dropped, which lands on the same `continue` branch the join below already
+ * takes for a missing building or key.
+ */
+const BuildingWithAdminSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  administration_id: z.string(),
+  administrations: z.object({ id: z.string(), company_name: z.string() }).nullable(),
+});
+
+const RfidKeyWithUnitSchema = z.object({
+  id: z.string(),
+  rfid_code: z.string(),
+  unit_id: z.string(),
+  units: z
+    .object({ id: z.string(), number: z.string(), unit_type: z.string().nullable() })
+    .nullable(),
+});
+
 // ---------------------------------------------------------------------------
 // Fetcher — attempts nested embed first; falls back to two-step flat fetch
 //
@@ -66,7 +123,8 @@ async function fetchWorklist(): Promise<WorklistAuthorization[]> {
   const { data: embedData, error: embedError } = await supabase
     .schema('operations')
     .from('key_authorizations')
-    .select(`
+    .select(
+      `
       id,
       sync_state,
       notes,
@@ -85,20 +143,16 @@ async function fetchWorklist(): Promise<WorklistAuthorization[]> {
         rfid_code,
         unit:unit_id(id, number, unit_type)
       )
-    `)
+    `,
+    )
     .in('sync_state', ['pending_install', 'pending_removal']);
 
   if (!embedError) {
-    // Validate that the building path resolved correctly
-    const allValid = (embedData ?? []).every((row) => {
-      const parsed = BuildingPathSchema.safeParse(
-        (row as unknown as { equipment?: { building?: unknown } }).equipment?.building,
-      );
-      return parsed.success;
-    });
-
-    if (allValid) {
-      return (embedData ?? []) as unknown as WorklistAuthorization[];
+    // Validate the embed result — most importantly that the cross-schema
+    // building path resolved rather than coming back null.
+    const parsed = z.array(EmbeddedAuthorizationSchema).safeParse(embedData ?? []);
+    if (parsed.success) {
+      return parsed.data;
     }
   }
 
@@ -134,9 +188,7 @@ async function fetchWorklistFlat(): Promise<WorklistAuthorization[]> {
     .in('id', equipmentIds);
   if (equipError) throw equipError;
 
-  const buildingIds = [
-    ...new Set((equipRows ?? []).map((e) => e.building_id)),
-  ];
+  const buildingIds = [...new Set((equipRows ?? []).map((e) => e.building_id))];
 
   // Step 2b: fetch buildings + administrations
   const { data: buildingRows, error: buildingError } = await supabase
@@ -152,31 +204,21 @@ async function fetchWorklistFlat(): Promise<WorklistAuthorization[]> {
     .in('id', rfidKeyIds);
   if (rfidError) throw rfidError;
 
-  // Build lookup maps
-  type BuildingWithAdmin = {
-    id: string;
-    name: string;
-    administration_id: string;
-    administrations: { id: string; company_name: string } | null;
-  };
-  const buildingMap = new Map<string, BuildingWithAdmin>(
-    (buildingRows ?? []).map((b) => [b.id, b as unknown as BuildingWithAdmin]),
-  );
+  // Build lookup maps. `equipment` selects plain columns, so its element type
+  // comes straight from the generated types; the two embed queries are parsed.
+  const equipMap = new Map((equipRows ?? []).map((e) => [e.id, e] as const));
 
-  type EquipRow = { id: string; description: string; building_id: string };
-  const equipMap = new Map<string, EquipRow>(
-    (equipRows ?? []).map((e) => [e.id, e as EquipRow]),
-  );
+  const buildingMap = new Map<string, z.infer<typeof BuildingWithAdminSchema>>();
+  for (const row of buildingRows ?? []) {
+    const parsed = BuildingWithAdminSchema.safeParse(row);
+    if (parsed.success) buildingMap.set(parsed.data.id, parsed.data);
+  }
 
-  type RfidRow = {
-    id: string;
-    rfid_code: string;
-    unit_id: string;
-    units: { id: string; number: string; unit_type: string | null } | null;
-  };
-  const rfidMap = new Map<string, RfidRow>(
-    (rfidRows ?? []).map((r) => [r.id, r as unknown as RfidRow]),
-  );
+  const rfidMap = new Map<string, z.infer<typeof RfidKeyWithUnitSchema>>();
+  for (const row of rfidRows ?? []) {
+    const parsed = RfidKeyWithUnitSchema.safeParse(row);
+    if (parsed.success) rfidMap.set(parsed.data.id, parsed.data);
+  }
 
   // Join
   const result: WorklistAuthorization[] = [];
@@ -240,20 +282,18 @@ export function useWorklist(): UseQueryResult<WorklistAuthorization[]> {
   useEffect(() => {
     if (!staffId) return;
 
-    let channel = supabase
-      .channel('worklist-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'operations',
-          table: 'key_authorizations',
-          filter: 'sync_state=in.(pending_install,pending_removal)',
-        },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: worklistKey(staffId) });
-        },
-      );
+    let channel = supabase.channel('worklist-realtime').on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'operations',
+        table: 'key_authorizations',
+        filter: 'sync_state=in.(pending_install,pending_removal)',
+      },
+      () => {
+        void queryClient.invalidateQueries({ queryKey: worklistKey(staffId) });
+      },
+    );
 
     channel.subscribe((status, err) => {
       if (status === 'CHANNEL_ERROR') {

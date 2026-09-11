@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { stockMovementsKey } from '@/lib/queryKeys';
-import type { MovementType, StockMovementRow } from '@/types/stock';
+import type { StockMovementRow } from '@/types/stock';
 
 /**
  * Movement ledger for a single product, newest first.
@@ -32,9 +32,7 @@ export function useStockMovements(productId: string | undefined) {
       const rows = (data ?? []) as unknown as StockMovementRow[];
 
       const staffIds = [
-        ...new Set(
-          rows.map((r) => r.created_by).filter((v): v is string => Boolean(v)),
-        ),
+        ...new Set(rows.map((r) => r.created_by).filter((v): v is string => Boolean(v))),
       ];
       const staffMap = new Map<string, string>();
       if (staffIds.length > 0) {
@@ -47,9 +45,7 @@ export function useStockMovements(productId: string | undefined) {
       }
 
       const ticketIds = [
-        ...new Set(
-          rows.map((r) => r.ticket_id).filter((v): v is string => Boolean(v)),
-        ),
+        ...new Set(rows.map((r) => r.ticket_id).filter((v): v is string => Boolean(v))),
       ];
       const ticketMap = new Map<string, string>();
       if (ticketIds.length > 0) {
@@ -63,9 +59,9 @@ export function useStockMovements(productId: string | undefined) {
 
       return rows.map((row) => ({
         ...row,
-        type: row.type as MovementType,
-        ticket_number: row.ticket_id ? ticketMap.get(row.ticket_id) ?? null : null,
-        staff_name: row.created_by ? staffMap.get(row.created_by) ?? null : null,
+        type: row.type,
+        ticket_number: row.ticket_id ? (ticketMap.get(row.ticket_id) ?? null) : null,
+        staff_name: row.created_by ? (staffMap.get(row.created_by) ?? null) : null,
       }));
     },
   });

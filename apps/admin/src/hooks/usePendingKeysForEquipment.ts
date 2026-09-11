@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { pendingKeysForEquipmentKey } from '@/lib/queryKeys';
 
 export interface PendingKey {
   id: string;
@@ -18,7 +19,7 @@ export interface PendingKeysForEquipment {
 
 export function usePendingKeysForEquipment(equipmentId: string) {
   return useQuery({
-    queryKey: ['pending-keys-for-equipment', equipmentId] as const,
+    queryKey: pendingKeysForEquipmentKey(equipmentId),
     enabled: Boolean(equipmentId),
     queryFn: async (): Promise<PendingKeysForEquipment> => {
       if (!equipmentId) {

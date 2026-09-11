@@ -6,11 +6,7 @@ import { tareasKey } from '@/lib/queryKeys';
 export interface TareaRow {
   id: string;
   ticket_number: string;
-  category:
-    | 'install_equipment'
-    | 'replace_equipment'
-    | 'update_equipment'
-    | 'maintain_equipment';
+  category: 'install_equipment' | 'replace_equipment' | 'update_equipment' | 'maintain_equipment';
   description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'cancelled';
   building_id: string;
@@ -38,12 +34,7 @@ export interface UseTareaFilters {
   status?: string;
 }
 
-export function useTareas({
-  search,
-  staffId,
-  buildingId,
-  status,
-}: UseTareaFilters = {}) {
+export function useTareas({ search, staffId, buildingId, status }: UseTareaFilters = {}) {
   const trimmed = search?.trim() ?? '';
 
   return useQuery({
@@ -52,10 +43,7 @@ export function useTareas({
       // Note: PostgREST cannot embed cross-schema FKs (support -> public /
       // support -> identity), so we fetch the flat rows and resolve building,
       // administration and staff names with batch lookups.
-      let query = supabase
-        .schema('support')
-        .from('tickets')
-        .select(`
+      let query = supabase.schema('support').from('tickets').select(`
           id,
           ticket_number,
           category,
@@ -92,9 +80,7 @@ export function useTareas({
       // Server-side text search on ticket_number and description.
       if (trimmed) {
         const safe = escapeIlikeValue(trimmed);
-        query = query.or(
-          `ticket_number.ilike.%${safe}%,description.ilike.%${safe}%`,
-        );
+        query = query.or(`ticket_number.ilike.%${safe}%,description.ilike.%${safe}%`);
       }
 
       const { data, error } = await query.order('opened_at', { ascending: false });
@@ -106,7 +92,10 @@ export function useTareas({
       const buildingIds = [
         ...new Set(rows.map((r) => r.building_id).filter((v): v is string => Boolean(v))),
       ];
-      const buildingMap = new Map<string, { id: string; name: string; administration_id: string | null }>();
+      const buildingMap = new Map<
+        string,
+        { id: string; name: string; administration_id: string | null }
+      >();
       if (buildingIds.length > 0) {
         const { data: buildings } = await supabase
           .from('buildings')
@@ -161,8 +150,8 @@ export function useTareas({
           : undefined;
         return {
           ...row,
-          status: row.status as TareaRow['status'],
-          category: row.category as TareaRow['category'],
+          status: row.status,
+          category: row.category,
           building: buildingInfo
             ? {
                 id: buildingInfo.id,
@@ -171,10 +160,10 @@ export function useTareas({
               }
             : null,
           assigned_to_name: row.assigned_to_staff_id
-            ? staffMap.get(row.assigned_to_staff_id) ?? null
+            ? (staffMap.get(row.assigned_to_staff_id) ?? null)
             : null,
           opened_by_name: row.opened_by_staff_id
-            ? staffMap.get(row.opened_by_staff_id) ?? null
+            ? (staffMap.get(row.opened_by_staff_id) ?? null)
             : null,
         };
       });

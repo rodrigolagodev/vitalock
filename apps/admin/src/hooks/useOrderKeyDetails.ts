@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { orderKeyDetailsKey } from '@/lib/queryKeys';
 
 export interface OrderKeyDetails {
   id: string;
@@ -37,7 +38,7 @@ export interface OrderKeyDetails {
  */
 export function useOrderKeyDetails(keyId: string | null | undefined) {
   return useQuery({
-    queryKey: ['admin', 'order-keys', 'details', keyId ?? ''],
+    queryKey: orderKeyDetailsKey(keyId ?? undefined),
     enabled: Boolean(keyId),
     queryFn: async (): Promise<OrderKeyDetails> => {
       const [{ data: keyRow, error: keyErr }, { data: authRows, error: authErr }] =
@@ -57,9 +58,7 @@ export function useOrderKeyDetails(keyId: string | null | undefined) {
           supabase
             .schema('operations')
             .from('key_authorizations')
-            .select(
-              `id, equipment:equipment_id ( id, serial_number, model )`,
-            )
+            .select(`id, equipment:equipment_id ( id, serial_number, model )`)
             .eq('rfid_key_id', keyId as string),
         ]);
 

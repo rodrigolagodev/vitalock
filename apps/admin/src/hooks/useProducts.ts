@@ -19,9 +19,11 @@ export function useProducts({ category, search }: UseProductsFilters = {}) {
   return useQuery({
     queryKey: productsKey(category, trimmed),
     queryFn: async (): Promise<ProductRow[]> => {
-      let query = supabase.from('products').select(
-        'id, name, category, cost_price, stock_total, stock_reservado, created_at, updated_at',
-      );
+      let query = supabase
+        .from('products')
+        .select(
+          'id, name, category, cost_price, stock_total, stock_reservado, created_at, updated_at',
+        );
 
       if (category) {
         query = query.eq('category', category);
@@ -39,7 +41,7 @@ export function useProducts({ category, search }: UseProductsFilters = {}) {
 
       return rows.map((row) => ({
         ...row,
-        category: row.category as ProductCategory,
+        category: row.category,
         stock_disponible: row.stock_total - row.stock_reservado,
       }));
     },

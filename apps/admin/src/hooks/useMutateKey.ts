@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { keysKey, keyOrderKey, keyEventsKey } from '@/lib/queryKeys';
+import { keyEventsKey, keyOrderKey, keyOrdersRootKey, keysKey } from '@/lib/queryKeys';
 import { toastMutationError } from '@/lib/errors/toast';
 import { requestKeyDisable, cancelKeyDisable } from '@vitalock/supabase';
 
@@ -149,7 +149,7 @@ export function useMutateKey(buildingId: string | undefined) {
       void invalidateKeys();
       void queryClient.invalidateQueries({ queryKey: keyOrderKey(vars.order_id) });
       // Prefix invalidation catches every `keyOrdersKey(status, search, ...)` variant.
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'key-orders'] });
+      void queryClient.invalidateQueries({ queryKey: keyOrdersRootKey() });
       toast.success('Retiro registrado.');
     },
     onError: toastMutationError,

@@ -52,6 +52,7 @@ const unitRows = [
 // ---------------------------------------------------------------------------
 
 import { usePendingKeysForEquipment } from '../usePendingKeysForEquipment';
+import { pendingKeysForEquipmentKey } from '@/lib/queryKeys';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -109,16 +110,12 @@ describe('usePendingKeysForEquipment', () => {
       if (table === 'rfid_keys') {
         // Return different data depending on what IDs are requested
         return {
-          select: vi
-            .fn()
-            .mockReturnValue({
-              in: vi
-                .fn()
-                .mockResolvedValue({
-                  data: [...toActivateRows, ...toDisableRows, ...unchangedRows],
-                  error: null,
-                }),
+          select: vi.fn().mockReturnValue({
+            in: vi.fn().mockResolvedValue({
+              data: [...toActivateRows, ...toDisableRows, ...unchangedRows],
+              error: null,
             }),
+          }),
         };
       }
       if (table === 'units') {
@@ -264,7 +261,7 @@ describe('usePendingKeysForEquipment', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     // Query key should include equipmentId
-    const queries = qc.getQueriesData({ queryKey: ['pending-keys-for-equipment', 'equip-999'] });
+    const queries = qc.getQueriesData({ queryKey: pendingKeysForEquipmentKey('equip-999') });
     expect(queries.length).toBeGreaterThan(0);
   });
 });

@@ -36,7 +36,12 @@ export function useSidebarCollapsed(): [boolean, () => void] {
   }, []);
 
   useEffect(() => {
-    const isMac = /Mac/i.test(window.navigator.platform);
+    // navigator.platform is deprecated; userAgentData is the successor where
+    // available, with the UA string as the portable fallback.
+    const platform =
+      (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData
+        ?.platform ?? navigator.userAgent;
+    const isMac = /Mac/i.test(platform);
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== '\\' || e.altKey || e.shiftKey) return;
       const modifier = isMac ? e.metaKey : e.ctrlKey;

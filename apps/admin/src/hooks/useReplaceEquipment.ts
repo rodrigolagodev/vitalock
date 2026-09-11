@@ -23,19 +23,17 @@ export function useReplaceEquipment(buildingId: string) {
 
   const replaceEquipment = useMutation({
     mutationFn: async (input: ReplaceEquipmentInput) => {
-      const { data, error } = await supabase
-        .schema('operations')
-        .rpc('replace_equipment', {
-          p_old_equipment_id: input.old_equipment_id,
-          p_new_serial_number: input.new_serial_number,
-          p_new_model: input.new_model,
-          p_new_description: input.new_description ?? '',
-        });
+      const { data, error } = await supabase.schema('operations').rpc('replace_equipment', {
+        p_old_equipment_id: input.old_equipment_id,
+        p_new_serial_number: input.new_serial_number,
+        p_new_model: input.new_model,
+        p_new_description: input.new_description ?? '',
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
       toast.success('Equipo reemplazado correctamente.');
     },
     onError: (err) => {

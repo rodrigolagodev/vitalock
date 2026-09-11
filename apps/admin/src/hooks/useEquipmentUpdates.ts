@@ -33,7 +33,7 @@ export function useEquipmentUpdates(equipmentId: string | undefined) {
         .order('created_at', { ascending: false });
       if (updErr) throw updErr;
 
-      const rows = (updates ?? []) as unknown as Omit<EquipmentUpdateRow, 'ticket_status'>[];
+      const rows = updates ?? [];
 
       if (rows.length === 0) return [];
 

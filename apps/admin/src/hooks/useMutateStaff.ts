@@ -2,8 +2,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { toastMutationError } from '@/lib/errors/toast';
+import { personalRootKey } from '@/lib/queryKeys';
+import type { StaffRole } from '@/lib/status/staffRole';
 
-export type StaffRole = 'admin' | 'installer';
+export type { StaffRole } from '@/lib/status/staffRole';
 
 export interface CreateStaffInput {
   full_name: string;
@@ -30,8 +32,7 @@ export function useMutateStaff() {
   const queryClient = useQueryClient();
 
   const invalidateStaff = () => {
-    void queryClient.invalidateQueries({ queryKey: ['admin', 'personal'] });
-    void queryClient.invalidateQueries({ queryKey: ['admin', 'staff'] });
+    void queryClient.invalidateQueries({ queryKey: personalRootKey() });
   };
 
   const createStaff = useMutation({

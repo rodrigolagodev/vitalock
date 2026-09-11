@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { createAndAssignEquipment as createAndAssignEquipmentRpc } from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
-import { equipmentKey, tareasKey } from '@/lib/queryKeys';
+import { equipmentKey, tareaKey, tareasKey } from '@/lib/queryKeys';
 import { toastMutationError } from '@/lib/errors/toast';
 
 export interface AssignExistingEquipmentInput {
@@ -40,10 +40,10 @@ export function useMutateTicketEquipment(buildingId: string | null | undefined) 
   const queryClient = useQueryClient();
 
   const invalidate = (ticketId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['admin', 'tarea', ticketId] });
-    queryClient.invalidateQueries({ queryKey: tareasKey() });
+    void queryClient.invalidateQueries({ queryKey: tareaKey(ticketId) });
+    void queryClient.invalidateQueries({ queryKey: tareasKey() });
     if (buildingId) {
-      queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
     }
   };
 

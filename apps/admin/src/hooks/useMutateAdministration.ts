@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { toastMutationError } from '@/lib/errors/toast';
+import { administrationsRootKey } from '@/lib/queryKeys';
 
 export interface CreateAdministrationInput {
   company_name: string;
@@ -47,7 +48,7 @@ export function useMutateAdministration() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'administrations'] });
+      void queryClient.invalidateQueries({ queryKey: administrationsRootKey() });
       toast.success('Administración creada correctamente.');
     },
     onError: (err) => {
@@ -68,7 +69,7 @@ export function useMutateAdministration() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'administrations'] });
+      void queryClient.invalidateQueries({ queryKey: administrationsRootKey() });
       toast.success('Administración actualizada correctamente.');
     },
     onError: (err) => {
@@ -88,7 +89,7 @@ export function useMutateAdministration() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'administrations'] });
+      void queryClient.invalidateQueries({ queryKey: administrationsRootKey() });
       toast.success('Administración desactivada correctamente.');
     },
     onError: (err) => {

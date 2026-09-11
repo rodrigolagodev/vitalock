@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { toastMutationError } from '@/lib/errors/toast';
 import { createEquipmentUpdate } from '@vitalock/supabase';
-import { equipmentUpdatesKey } from '@/lib/queryKeys';
+import { equipmentUpdatesKey, tareasRootKey } from '@/lib/queryKeys';
+import { MDB_BUCKET } from '@vitalock/shared';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -33,7 +34,7 @@ export function useMutateEquipmentUpdate() {
       const storagePath = `${input.ticketId}/${input.file.name}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('equipment-updates-mdb')
+        .from(MDB_BUCKET)
         .upload(storagePath, input.file, { upsert: false });
 
       if (uploadError) throw uploadError;
@@ -52,7 +53,7 @@ export function useMutateEquipmentUpdate() {
         });
         return taskId;
       } catch (rpcError) {
-        await supabase.storage.from('equipment-updates-mdb').remove([storagePath]);
+        await supabase.storage.from(MDB_BUCKET).remove([storagePath]);
         throw rpcError;
       }
     },
@@ -60,7 +61,7 @@ export function useMutateEquipmentUpdate() {
       void queryClient.invalidateQueries({
         queryKey: equipmentUpdatesKey(vars.equipmentId),
       });
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'tareas'] });
+      void queryClient.invalidateQueries({ queryKey: tareasRootKey() });
       toast.success('Tarea de actualización creada correctamente.');
     },
     onError: (err: unknown) => {

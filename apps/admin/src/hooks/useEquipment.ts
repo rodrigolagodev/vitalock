@@ -16,7 +16,7 @@ export function useEquipment(
   { activeOnly = false }: { activeOnly?: boolean } = {},
 ) {
   return useQuery({
-    queryKey: [...equipmentKey(buildingId), activeOnly ? 'active' : 'all'],
+    queryKey: equipmentKey(buildingId, activeOnly ? 'active' : 'all'),
     queryFn: async (): Promise<EquipmentRow[]> => {
       let query = supabase
         .schema('operations')

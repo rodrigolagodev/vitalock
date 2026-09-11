@@ -5,7 +5,7 @@ import {
   type ResolveEquipmentInstallationInput,
 } from '@vitalock/supabase';
 import { supabase } from '@/lib/supabase';
-import { equipmentKey, tareasKey } from '@/lib/queryKeys';
+import { equipmentKey, tareaKey, tareasKey } from '@/lib/queryKeys';
 import { toastMutationError } from '@/lib/errors/toast';
 
 /**
@@ -21,10 +21,10 @@ export function useResolveEquipmentInstallation(buildingId: string | null | unde
   const queryClient = useQueryClient();
 
   const invalidate = (ticketId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['admin', 'tarea', ticketId] });
-    queryClient.invalidateQueries({ queryKey: tareasKey() });
+    void queryClient.invalidateQueries({ queryKey: tareaKey(ticketId) });
+    void queryClient.invalidateQueries({ queryKey: tareasKey() });
     if (buildingId) {
-      queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
+      void queryClient.invalidateQueries({ queryKey: equipmentKey(buildingId) });
     }
   };
 
