@@ -14,8 +14,89 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
 jobs:
+  # Production gate. Deliberately inline (`needs:`) instead of `workflow_run`
+  # on the *-checks workflows: those are `pull_request` + `paths:` filtered, so
+  # a docs-only push — or any push that skips their path filters — would leave
+  # `workflow_run` with nothing to wait for and ship an unverified build.
+  # This job has no path filter, so every push to main is verified.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-verify-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-verify-
+
+      - name: Lint, typecheck and test (whole workspace)
+        run: pnpm exec turbo run lint typecheck test --cache-dir=.turbo/cache
+
+  # The database contract ships with the apps: RLS, RPC authorization guards and
+  # constraints are what the frontends rely on. Same recipe as
+  # supabase-checks.yml's test-sql job; runs in parallel with `verify`.
+  verify-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase stack
+        run: supabase start -x studio,imgproxy,edge-runtime
+
+      - name: Run pgTAP suite
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: bash scripts/test-sql.sh
+
+      # supabase/SCHEMA.md is generated from the database. A migration that
+      # lands without regenerating it fails here instead of drifting silently.
+      - name: Check schema doc is current
+        run: |
+          bash scripts/gen-schema-doc.sh
+          git diff --exit-code -- supabase/SCHEMA.md || {
+            echo '::error::supabase/SCHEMA.md is stale. Run `pnpm gen:schema-doc` and commit.'; exit 1; }
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop --no-backup
+
   build:
+    needs: [verify, verify-sql]
     runs-on: ubuntu-latest
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -34,15 +115,23 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-build-
+
       - name: Build admin
         env:
           VITE_BASE_PATH: /vitalock/admin/
-        run: pnpm --filter @vitalock/admin build
+        run: pnpm exec turbo run build --filter=@vitalock/admin --cache-dir=.turbo/cache
 
       - name: Build installer
         env:
           VITE_BASE_PATH: /vitalock/installer/
-        run: pnpm --filter @vitalock/installer build
+        run: pnpm exec turbo run build --filter=@vitalock/installer --cache-dir=.turbo/cache
 
       - name: Assemble Pages site
         run: |

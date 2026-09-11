@@ -7,6 +7,9 @@ concurrency:
   group: supabase-checks-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
 jobs:
   # Required status checks must report on every PR. Filtering happens here
   # instead of on the trigger: a job skipped by `if:` still reports Success,
@@ -27,11 +30,13 @@ jobs:
               - 'packages/supabase/**'
               - 'packages/config-eslint/**'
               - 'packages/config-typescript/**'
+              - 'scripts/test-sql.sh'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'turbo.json'
               - 'tsconfig.json'
+              - 'vitest.config.ts'
               - '.github/workflows/supabase-checks.yml'
 
   supabase-checks:
@@ -52,11 +57,65 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm --filter @vitalock/supabase lint
+      - name: Restore Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-supabase-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-supabase-
 
-      - name: Typecheck
-        run: pnpm --filter @vitalock/supabase typecheck
+      - name: Lint, typecheck and test
+        run: pnpm exec turbo run lint typecheck test --filter=@vitalock/supabase... --cache-dir=.turbo/cache
 
-      - name: Test
-        run: pnpm --filter @vitalock/supabase test
+  # The pgTAP files under supabase/tests-sql/ (54 as of 2026-09-10) cover RLS, order-cancellation
+  # atomicity and table constraints. They ran nowhere until this job existed.
+  #
+  # This mirrors the local flow exactly: `supabase start` applies every
+  # migration (which creates the `pgtap` extension in the `extensions` schema)
+  # and seeds the database, then scripts/test-sql.sh replays each test file
+  # through psql against 127.0.0.1:54322 and greps for pgTAP `not ok` markers.
+  test-sql:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # studio/imgproxy/edge-runtime are not needed by the SQL suite.
+      - name: Start local Supabase stack
+        run: supabase start -x studio,imgproxy,edge-runtime
+
+      - name: Run pgTAP suite
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: bash scripts/test-sql.sh
+
+      # supabase/SCHEMA.md is generated from the database. A migration that
+      # lands without regenerating it fails here instead of drifting silently.
+      - name: Check schema doc is current
+        run: |
+          bash scripts/gen-schema-doc.sh
+          git diff --exit-code -- supabase/SCHEMA.md || {
+            echo '::error::supabase/SCHEMA.md is stale. Run `pnpm gen:schema-doc` and commit.'; exit 1; }
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop --no-backup
