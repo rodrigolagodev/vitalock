@@ -77,4 +77,11 @@ Q() { psql "$DATABASE_URL" --quiet --tuples-only --no-align --field-separator='|
     awk '{printf "- `%s`\n", $1}'
 } > "$OUT"
 
+# The repo's pre-commit hook runs prettier on staged markdown; format here too
+# so the generated file is byte-identical to what a commit would produce and
+# the CI drift check compares like with like.
+if command -v pnpm > /dev/null 2>&1; then
+  (cd "$(dirname "$OUT")/.." && pnpm exec prettier --log-level warn --write supabase/SCHEMA.md)
+fi
+
 echo "→ wrote $OUT ($(wc -l < "$OUT") lines)"
