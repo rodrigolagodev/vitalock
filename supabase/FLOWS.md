@@ -1,5 +1,11 @@
 # Vitalock DB — Specification for App Development
 
+> [!IMPORTANT] > **Schema reference lives in [`SCHEMA.md`](./SCHEMA.md)** — generated from the database and checked in CI.
+> This file is the _narrative_ (auth model, flows, business rules) and is hand-maintained. Its schema
+> sections (§ 5, § 8, § 9) were written before the orders/stock domains existed and **do not describe** > `public.key_orders`, `public.key_order_items`, `public.technical_orders`, `public.technical_order_items`,
+> `public.stock_movements`, `public.products`, `public.particulares` or `public.rfid_key_intended_equipment`.
+> When the two disagree, `SCHEMA.md` is right. Audit finding P1-12 (2026-09-09).
+
 Especificación completa de la base de datos Vitalock, escrita para consumo
 por agentes SDD (Spec-Driven Development) y developers construyendo apps
 sobre esta DB.
@@ -39,6 +45,7 @@ contradice al schema real, gana el schema — reportar la discrepancia como
 bug de documentación.
 
 **Para agentes**:
+
 - Secciones 2, 3, 4 son contexto obligatorio antes de escribir cualquier código.
 - Sección 7 (permisos) y sección 12 (invariantes) son restricciones duras
   que el código de app **no puede violar**; están enforceadas por la DB.
@@ -51,6 +58,7 @@ bug de documentación.
   debería mostrar al usuario.
 
 **Complementos**:
+
 - [`README.md`](./README.md): estructura de migraciones, cómo correr el stack.
 - Comentarios inline: cada tabla y función tiene `COMMENT ON` con
   descripción canónica (`SELECT obj_description(oid, 'pg_class')`).
@@ -64,11 +72,13 @@ bug de documentación.
 Convención estándar Postgres.
 
 **Idioma**:
+
 - Identifiers de DB, código de app, valores de enum, y este spec **en inglés**.
 - Descripciones en `notes`, mensajes UI, y contenido cara al usuario **en español** (usuarios finales son Vitalock y sus clientes argentinos).
 - Comentarios inline en migraciones: mixto (permitido).
 
 **Fechas y timestamps**:
+
 - Timestamps con timezone (`timestamptz`), **siempre**. Nunca `timestamp` naive.
 - La DB los guarda en UTC; la app es responsable de convertir a la timezone del usuario (asumir `America/Argentina/Buenos_Aires` como default).
 - Fechas sin hora (`date`) para cosas que son "el día tal" (charge_date, payment_date).
@@ -82,6 +92,7 @@ Excepción: los smoke tests y el seed usan UUIDs fijos para reproducibilidad.
 
 **Naming de identifiers humanos**: números correlativos con formato
 `PREFIJO-YYYY-NNNNNN`:
+
 - `REQ-2026-000001` — key_requests
 - `PRE-2026-000001` — quotes (presupuestos)
 - `VNT-2026-000001` — bills (ventas)
@@ -135,6 +146,7 @@ Supabase = Postgres + PostgREST + Auth + Realtime + Storage + Edge Functions.
 ### 3.2 Schemas expuestos en la API
 
 Solo estos schemas se exponen via PostgREST:
+
 - `public`, `identity`, `operations`, `sales`, `support`
 - (Configurado en `supabase/config.toml`, línea `[api].schemas`.)
 
@@ -150,12 +162,16 @@ cuando el admin agrega una autorización nueva":
 ```js
 supabase
   .channel('installer-worklist')
-  .on('postgres_changes', {
-    event: '*',
-    schema: 'operations',
-    table: 'key_authorizations',
-    filter: `sync_state=in.(pending_install,pending_removal)`,
-  }, handler)
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'operations',
+      table: 'key_authorizations',
+      filter: `sync_state=in.(pending_install,pending_removal)`,
+    },
+    handler,
+  )
   .subscribe();
 ```
 
@@ -174,6 +190,7 @@ ejemplo del instalador documentando el trabajo), se agrega un bucket dedicado.
 ### 4.1 Modelo de auth
 
 Solo usuarios internos de Vitalock se loguean. Dos roles:
+
 - `admin` — full access.
 - `installer` — acceso operativo limitado.
 
@@ -210,7 +227,8 @@ datos en el sistema.
 
 ```js
 const { data, error } = await supabase.auth.signInWithPassword({
-  email, password
+  email,
+  password,
 });
 // data.session.access_token es el JWT que se manda en cada request.
 // supabase-js lo persiste automáticamente en localStorage y lo adjunta.
@@ -219,6 +237,7 @@ const { data, error } = await supabase.auth.signInWithPassword({
 ### 4.4 Cómo la app detecta el rol del usuario
 
 **Server-side (recomendado)**: la DB tiene helpers:
+
 ```sql
 select identity.current_staff_role();  -- 'admin' | 'installer' | null
 select identity.is_admin();             -- boolean
@@ -226,12 +245,14 @@ select identity.is_installer();         -- boolean
 ```
 
 Se pueden invocar desde la app vía RPC:
+
 ```js
 const { data } = await supabase.rpc('current_staff_role');
 // data === 'admin' | 'installer' | null
 ```
 
 **Client-side (para pre-render inicial)**: hacer un query directo al primer render:
+
 ```js
 const { data: staff } = await supabase
   .from('staff')
@@ -312,13 +333,13 @@ erDiagram
 
 ### 5.2 Los 5 schemas
 
-| Schema        | Propósito                                                | Tablas |
-|---------------|----------------------------------------------------------|--------|
-| `public`      | Customer service — cliente, edificios, unidades, llaves. | 4 |
-| `identity`    | Staff interno de Vitalock.                               | 1 |
-| `operations`  | Equipos físicos y autorizaciones llave↔equipo.           | 2 |
-| `sales`       | Solicitudes, presupuestos, cargos, cobros, abonos.       | 9 |
-| `support`     | Tickets de mantenimiento e instalación.                  | 2 |
+| Schema       | Propósito                                                | Tablas |
+| ------------ | -------------------------------------------------------- | ------ |
+| `public`     | Customer service — cliente, edificios, unidades, llaves. | 4      |
+| `identity`   | Staff interno de Vitalock.                               | 1      |
+| `operations` | Equipos físicos y autorizaciones llave↔equipo.          | 2      |
+| `sales`      | Solicitudes, presupuestos, cargos, cobros, abonos.       | 9      |
+| `support`    | Tickets de mantenimiento e instalación.                  | 2      |
 
 Total: **18 tablas** en la DB.
 
@@ -404,30 +425,31 @@ consumiendo `sales.pending_to_invoice`. Nosotros trackeamos:
 ### 7.2 Matriz por tabla
 
 Notación:
+
 - ✅ = permitido
 - ❌ = denegado (RLS filtra a 0 rows en SELECT; INSERT/UPDATE/DELETE fallan con `insufficient_privilege`)
 - 🔒 = permitido pero con column-level restrictions (ver notas)
 - 🎯 = permitido pero row-level restringido (ver notas)
 
-| Schema.Tabla                         | admin | installer   | Notas                                                                                                    |
-|--------------------------------------|:-----:|:-----------:|----------------------------------------------------------------------------------------------------------|
-| `public.administrations`             | ✅ ALL | SELECT     | Installer necesita el nombre para contexto (mostrar "Torre Callao — Admin Central" en su UI).            |
-| `public.buildings`                   | ✅ ALL | SELECT     | Idem.                                                                                                     |
-| `public.units`                       | ✅ ALL | SELECT     | Idem.                                                                                                     |
-| `public.rfid_keys`                   | ✅ ALL | SELECT     | Installer ve códigos RFID para cargar en equipos, pero no puede modificar (los produce el admin).       |
-| `identity.staff`                     | ✅ ALL | SELECT     | Installer ve colegas (para saber quién es assigned_to de un ticket, etc.).                                |
-| `operations.equipment`               | ✅ ALL | SELECT     | Installer ve equipos para saber dónde ir; no crea ni modifica (admin decide alta/baja).                   |
-| `operations.key_authorizations`      | ✅ ALL | SELECT + 🔒 UPDATE | Installer solo puede modificar: `sync_state`, `installed_at`, `installed_by_staff_id`, `removed_at`, `removed_by_staff_id`, `remove_reason`, `notes`. FKs (rfid_key_id, equipment_id) son inmutables por trigger. |
-| `sales.products`                     | ✅ ALL | ❌          |                                                                                                          |
-| `sales.quotes`, `quote_items`        | ✅ ALL | ❌          |                                                                                                          |
-| `sales.bills`, `bill_items`          | ✅ ALL | ❌          |                                                                                                          |
-| `sales.payments`                     | ✅ ALL | ❌          |                                                                                                          |
-| `sales.recurring_charges`            | ✅ ALL | ❌          |                                                                                                          |
-| `sales.key_requests`, `_items`       | ✅ ALL | ❌          |                                                                                                          |
-| `sales.pending_to_invoice` (view)    | ✅     | ❌          | View con `security_invoker=true`; installer que hace SELECT recibe 0 rows.                                |
-| `sales.administration_balance` (view)| ✅     | ⚠️         | Installer ve la lista de admins con `total_billed`, `total_paid`, `balance` en 0 (RLS filtra los sales.* subyacentes). No hay leak de montos, solo lista de nombres que ya podía ver.  |
-| `support.tickets`                    | ✅ ALL | 🎯 SELECT + 🎯🔒 UPDATE | Installer solo ve tickets donde `assigned_to_staff_id = identity.current_staff_id()`. UPDATE solo puede tocar: `status`, `resolution_notes`, `resolved_by_staff_id`, `notes`. No puede reasignar ni cancelar. |
-| `support.ticket_comments`            | ✅ ALL | 🎯 SELECT + 🎯 INSERT | Installer solo ve comments de sus tickets asignados. INSERT solo permitido con `author_staff_id = current_staff_id()` (previene impersonación). Los comments son append-only (no UPDATE, no DELETE — para nadie). |
+| Schema.Tabla                          | admin  |        installer        | Notas                                                                                                                                                                                                             |
+| ------------------------------------- | :----: | :---------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public.administrations`              | ✅ ALL |         SELECT          | Installer necesita el nombre para contexto (mostrar "Torre Callao — Admin Central" en su UI).                                                                                                                     |
+| `public.buildings`                    | ✅ ALL |         SELECT          | Idem.                                                                                                                                                                                                             |
+| `public.units`                        | ✅ ALL |         SELECT          | Idem.                                                                                                                                                                                                             |
+| `public.rfid_keys`                    | ✅ ALL |         SELECT          | Installer ve códigos RFID para cargar en equipos, pero no puede modificar (los produce el admin).                                                                                                                 |
+| `identity.staff`                      | ✅ ALL |         SELECT          | Installer ve colegas (para saber quién es assigned_to de un ticket, etc.).                                                                                                                                        |
+| `operations.equipment`                | ✅ ALL |         SELECT          | Installer ve equipos para saber dónde ir; no crea ni modifica (admin decide alta/baja).                                                                                                                           |
+| `operations.key_authorizations`       | ✅ ALL |   SELECT + 🔒 UPDATE    | Installer solo puede modificar: `sync_state`, `installed_at`, `installed_by_staff_id`, `removed_at`, `removed_by_staff_id`, `remove_reason`, `notes`. FKs (rfid_key_id, equipment_id) son inmutables por trigger. |
+| `sales.products`                      | ✅ ALL |           ❌            |                                                                                                                                                                                                                   |
+| `sales.quotes`, `quote_items`         | ✅ ALL |           ❌            |                                                                                                                                                                                                                   |
+| `sales.bills`, `bill_items`           | ✅ ALL |           ❌            |                                                                                                                                                                                                                   |
+| `sales.payments`                      | ✅ ALL |           ❌            |                                                                                                                                                                                                                   |
+| `sales.recurring_charges`             | ✅ ALL |           ❌            |                                                                                                                                                                                                                   |
+| `sales.key_requests`, `_items`        | ✅ ALL |           ❌            |                                                                                                                                                                                                                   |
+| `sales.pending_to_invoice` (view)     |   ✅   |           ❌            | View con `security_invoker=true`; installer que hace SELECT recibe 0 rows.                                                                                                                                        |
+| `sales.administration_balance` (view) |   ✅   |           ⚠️            | Installer ve la lista de admins con `total_billed`, `total_paid`, `balance` en 0 (RLS filtra los sales.\* subyacentes). No hay leak de montos, solo lista de nombres que ya podía ver.                            |
+| `support.tickets`                     | ✅ ALL | 🎯 SELECT + 🎯🔒 UPDATE | Installer solo ve tickets donde `assigned_to_staff_id = identity.current_staff_id()`. UPDATE solo puede tocar: `status`, `resolution_notes`, `resolved_by_staff_id`, `notes`. No puede reasignar ni cancelar.     |
+| `support.ticket_comments`             | ✅ ALL |  🎯 SELECT + 🎯 INSERT  | Installer solo ve comments de sus tickets asignados. INSERT solo permitido con `author_staff_id = current_staff_id()` (previene impersonación). Los comments son append-only (no UPDATE, no DELETE — para nadie). |
 
 ### 7.3 RLS testing en local
 
@@ -443,37 +465,37 @@ la DB es la fuente de verdad.
 
 ### 8.1 Estados de entidades
 
-| Tabla | Columna | Valores permitidos | Notas |
-|---|---|---|---|
-| `administrations` | `status` | `active`, `inactive` | Baja lógica de admin. |
-| `buildings` | `status` | `active`, `inactive` | Idem. |
-| `units` | `status` | `active`, `inactive` | Idem. |
-| `staff` | `status` | `active`, `inactive` | `inactive` bloquea acceso via `is_admin()`/`is_installer()`. |
-| `rfid_keys` | `status` | `active`, `disabled`, `lost` | Auto-completa `deactivated_at`. Auto-revoca autorizaciones. |
-| `equipment` | `status` | `active`, `maintenance`, `dead` | `dead` es terminal. Auto-cierra autorizaciones. |
-| `equipment` | `access_type` | `peatonal`, `cochera`, `service`, `terraza`, `amenities`, `other` | Categorización flexible. Nullable. |
-| `key_authorizations` | `sync_state` | `pending_install`, `installed`, `pending_removal`, `removed` | Máquina de estados forward-only. |
-| `key_requests` | `status` | `pending_authorization`, `authorized`, `in_production`, `ready_for_pickup`, `delivered`, `rejected`, `cancelled` | Auto-avanza vía triggers. Terminales: `delivered`, `rejected`, `cancelled`. |
-| `quotes` | `status` | `draft`, `sent`, `accepted`, `rejected`, `expired`, `cancelled` | Terminales: `accepted`, `rejected`, `expired`, `cancelled`. |
-| `bills` | `status` | `draft`, `confirmed`, `cancelled` | `cancelled` es terminal. No se puede cancelar si tiene payment. |
-| `tickets` | `status` | `open`, `in_progress`, `resolved`, `cancelled` | Permite reapertura `resolved → in_progress`. |
+| Tabla                | Columna       | Valores permitidos                                                                                               | Notas                                                                       |
+| -------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `administrations`    | `status`      | `active`, `inactive`                                                                                             | Baja lógica de admin.                                                       |
+| `buildings`          | `status`      | `active`, `inactive`                                                                                             | Idem.                                                                       |
+| `units`              | `status`      | `active`, `inactive`                                                                                             | Idem.                                                                       |
+| `staff`              | `status`      | `active`, `inactive`                                                                                             | `inactive` bloquea acceso via `is_admin()`/`is_installer()`.                |
+| `rfid_keys`          | `status`      | `active`, `disabled`, `lost`                                                                                     | Auto-completa `deactivated_at`. Auto-revoca autorizaciones.                 |
+| `equipment`          | `status`      | `active`, `maintenance`, `dead`                                                                                  | `dead` es terminal. Auto-cierra autorizaciones.                             |
+| `equipment`          | `access_type` | `peatonal`, `cochera`, `service`, `terraza`, `amenities`, `other`                                                | Categorización flexible. Nullable.                                          |
+| `key_authorizations` | `sync_state`  | `pending_install`, `installed`, `pending_removal`, `removed`                                                     | Máquina de estados forward-only.                                            |
+| `key_requests`       | `status`      | `pending_authorization`, `authorized`, `in_production`, `ready_for_pickup`, `delivered`, `rejected`, `cancelled` | Auto-avanza vía triggers. Terminales: `delivered`, `rejected`, `cancelled`. |
+| `quotes`             | `status`      | `draft`, `sent`, `accepted`, `rejected`, `expired`, `cancelled`                                                  | Terminales: `accepted`, `rejected`, `expired`, `cancelled`.                 |
+| `bills`              | `status`      | `draft`, `confirmed`, `cancelled`                                                                                | `cancelled` es terminal. No se puede cancelar si tiene payment.             |
+| `tickets`            | `status`      | `open`, `in_progress`, `resolved`, `cancelled`                                                                   | Permite reapertura `resolved → in_progress`.                                |
 
 ### 8.2 Tipologías y categorías
 
-| Tabla | Columna | Valores | Uso |
-|---|---|---|---|
-| `staff` | `role` | `admin`, `installer` | Solo 2 roles internos. |
-| `products` | `product_type` | `rfid_key`, `equipment`, `installation`, `maintenance_recurring`, `maintenance_one_time`, `equipment_replacement`, `cctv_wifi_installation`, `other` | Catálogo tipológico. |
-| `key_requests` | `requester_type` | `administration`, `individual` | Define si auto-autoriza o requiere confirmación. |
-| `key_requests` | `authorization_method` | `whatsapp`, `email`, `phone`, `in_person`, `self` | Canal por el que se confirmó la autorización. `self` = auto-autorización de admin. |
-| `key_requests` | `rejection_reason` | `not_authorized_by_administration`, `data_mismatch`, `security_concern`, `other` | Categoría de rechazo (con `rejection_notes` free text opcional). |
-| `payments` | `payment_method` | `cash`, `transfer`, `deposit`, `mercado_pago`, `check`, `other` | Autodetermina `requires_invoice` (todo salvo `cash` requiere). |
-| `tickets` | `category` | `maintenance`, `installation` | Categoría del ticket. |
+| Tabla          | Columna                | Valores                                                                                                                                              | Uso                                                                                |
+| -------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `staff`        | `role`                 | `admin`, `installer`                                                                                                                                 | Solo 2 roles internos.                                                             |
+| `products`     | `product_type`         | `rfid_key`, `equipment`, `installation`, `maintenance_recurring`, `maintenance_one_time`, `equipment_replacement`, `cctv_wifi_installation`, `other` | Catálogo tipológico.                                                               |
+| `key_requests` | `requester_type`       | `administration`, `individual`                                                                                                                       | Define si auto-autoriza o requiere confirmación.                                   |
+| `key_requests` | `authorization_method` | `whatsapp`, `email`, `phone`, `in_person`, `self`                                                                                                    | Canal por el que se confirmó la autorización. `self` = auto-autorización de admin. |
+| `key_requests` | `rejection_reason`     | `not_authorized_by_administration`, `data_mismatch`, `security_concern`, `other`                                                                     | Categoría de rechazo (con `rejection_notes` free text opcional).                   |
+| `payments`     | `payment_method`       | `cash`, `transfer`, `deposit`, `mercado_pago`, `check`, `other`                                                                                      | Autodetermina `requires_invoice` (todo salvo `cash` requiere).                     |
+| `tickets`      | `category`             | `maintenance`, `installation`                                                                                                                        | Categoría del ticket.                                                              |
 
 ### 8.3 Otros valores acotados
 
-| Tabla | Columna | Valores | Notas |
-|---|---|---|---|
+| Tabla                         | Columna    | Valores      | Notas                                                      |
+| ----------------------------- | ---------- | ------------ | ---------------------------------------------------------- |
 | `quotes`, `bills`, `payments` | `currency` | `ARS` (solo) | Enforceado por CHECK; futura extensión requiere migración. |
 
 ---
@@ -487,47 +509,47 @@ y defaults, y `SELECT obj_description(...)` para los comments detallados.
 
 Ente comercial que factura. Único tipo de "cliente".
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `company_name` | text | ❌ | | Razón social |
-| `tax_id` | text | ✅ | | CUIT, único |
-| `email` | text | ✅ | | |
-| `phone` | text | ✅ | | |
-| `address` | text | ✅ | | |
-| `status` | text | ❌ | `'active'` | Enum |
-| `notes` | text | ✅ | | Free text |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | Auditoría |
+| Columna                    | Tipo        | Null | Default           | Notas        |
+| -------------------------- | ----------- | ---- | ----------------- | ------------ |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK           |
+| `company_name`             | text        | ❌   |                   | Razón social |
+| `tax_id`                   | text        | ✅   |                   | CUIT, único  |
+| `email`                    | text        | ✅   |                   |              |
+| `phone`                    | text        | ✅   |                   |              |
+| `address`                  | text        | ✅   |                   |              |
+| `status`                   | text        | ❌   | `'active'`        | Enum         |
+| `notes`                    | text        | ✅   |                   | Free text    |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             | Auditoría    |
 
 ### 9.2 `public.buildings`
 
 Edificio de una administración.
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `administration_id` | uuid | ❌ | | FK RESTRICT |
-| `name` | text | ❌ | | |
-| `address` | text | ✅ | | |
-| `city` | text | ✅ | | |
-| `status` | text | ❌ | `'active'` | Enum |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default           | Notas       |
+| -------------------------- | ----------- | ---- | ----------------- | ----------- |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK          |
+| `administration_id`        | uuid        | ❌   |                   | FK RESTRICT |
+| `name`                     | text        | ❌   |                   |             |
+| `address`                  | text        | ✅   |                   |             |
+| `city`                     | text        | ✅   |                   |             |
+| `status`                   | text        | ❌   | `'active'`        | Enum        |
+| `notes`                    | text        | ✅   |                   |             |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             |             |
 
 ### 9.3 `public.units`
 
 Unidad dentro de un edificio (dept, local, cochera, admin slot).
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `building_id` | uuid | ❌ | | FK RESTRICT |
-| `number` | text | ❌ | | Único por edificio |
-| `unit_type` | text | ✅ | | Free text (departamento, local, cochera, ...) |
-| `is_administrative` | bool | ❌ | `false` | Máx 1 por building (unique parcial) |
-| `status` | text | ❌ | `'active'` | Enum |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default           | Notas                                         |
+| -------------------------- | ----------- | ---- | ----------------- | --------------------------------------------- |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK                                            |
+| `building_id`              | uuid        | ❌   |                   | FK RESTRICT                                   |
+| `number`                   | text        | ❌   |                   | Único por edificio                            |
+| `unit_type`                | text        | ✅   |                   | Free text (departamento, local, cochera, ...) |
+| `is_administrative`        | bool        | ❌   | `false`           | Máx 1 por building (unique parcial)           |
+| `status`                   | text        | ❌   | `'active'`        | Enum                                          |
+| `notes`                    | text        | ✅   |                   |                                               |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             |                                               |
 
 **Constraints únicos**: `(building_id, number)`; `(building_id) WHERE is_administrative=true`.
 
@@ -535,22 +557,22 @@ Unidad dentro de un edificio (dept, local, cochera, admin slot).
 
 Tarjeta RFID física emitida por Vitalock.
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `rfid_code` | text | ❌ | | Único global |
-| `unit_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `status` | text | ❌ | `'active'` | Enum; auto-revoca autorizaciones en lost/disabled |
-| `notes` | text | ✅ | | Free text (nombre comprador, rol admin, etc.) |
-| `activated_at` | timestamptz | ❌ | now() | |
-| `deactivated_at` | timestamptz | ✅ | | Auto-fill al pasar a disabled/lost |
-| `key_request_item_id` | uuid | ✅ | | FK opcional, **inmutable** |
-| `picked_up_at` | timestamptz | ✅ | | |
-| `picked_up_by_name` | text | ✅ | | Requerido si picked_up_at set |
-| `picked_up_by_surname` | text | ✅ | | Idem |
-| `picked_up_by_dni` | text | ✅ | | Idem, debe matchear DNI autorizado |
-| `delivered_by_staff_id` | uuid | ✅ | | FK SET NULL |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default           | Notas                                             |
+| -------------------------- | ----------- | ---- | ----------------- | ------------------------------------------------- |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK                                                |
+| `rfid_code`                | text        | ❌   |                   | Único global                                      |
+| `unit_id`                  | uuid        | ❌   |                   | FK RESTRICT, **inmutable**                        |
+| `status`                   | text        | ❌   | `'active'`        | Enum; auto-revoca autorizaciones en lost/disabled |
+| `notes`                    | text        | ✅   |                   | Free text (nombre comprador, rol admin, etc.)     |
+| `activated_at`             | timestamptz | ❌   | now()             |                                                   |
+| `deactivated_at`           | timestamptz | ✅   |                   | Auto-fill al pasar a disabled/lost                |
+| `key_request_item_id`      | uuid        | ✅   |                   | FK opcional, **inmutable**                        |
+| `picked_up_at`             | timestamptz | ✅   |                   |                                                   |
+| `picked_up_by_name`        | text        | ✅   |                   | Requerido si picked_up_at set                     |
+| `picked_up_by_surname`     | text        | ✅   |                   | Idem                                              |
+| `picked_up_by_dni`         | text        | ✅   |                   | Idem, debe matchear DNI autorizado                |
+| `delivered_by_staff_id`    | uuid        | ✅   |                   | FK SET NULL                                       |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             |                                                   |
 
 **Inmutabilidad post-pickup**: `picked_up_*` y `delivered_by_staff_id` son inmutables una vez seteado `picked_up_at`.
 
@@ -558,55 +580,55 @@ Tarjeta RFID física emitida por Vitalock.
 
 Empleado interno de Vitalock.
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `auth_user_id` | uuid | ✅ | | FK a auth.users, SET NULL, único |
-| `full_name` | text | ❌ | | |
-| `email` | text | ✅ | | Único |
-| `phone` | text | ✅ | | |
-| `role` | text | ❌ | | Enum (`admin` | `installer`) |
-| `status` | text | ❌ | `'active'` | Enum |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default           | Notas                            |
+| -------------------------- | ----------- | ---- | ----------------- | -------------------------------- | ------------ |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK                               |
+| `auth_user_id`             | uuid        | ✅   |                   | FK a auth.users, SET NULL, único |
+| `full_name`                | text        | ❌   |                   |                                  |
+| `email`                    | text        | ✅   |                   | Único                            |
+| `phone`                    | text        | ✅   |                   |                                  |
+| `role`                     | text        | ❌   |                   | Enum (`admin`                    | `installer`) |
+| `status`                   | text        | ❌   | `'active'`        | Enum                             |
+| `notes`                    | text        | ✅   |                   |                                  |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             |                                  |
 
 ### 9.6 `operations.equipment`
 
 Controladora física (una = una puerta).
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `serial_number` | text | ❌ | | Único global, **inmutable** |
-| `model` | text | ✅ | | |
-| `building_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `description` | text | ❌ | | Ej: "Controladora porton peatonal" |
-| `access_type` | text | ✅ | | Enum |
-| `status` | text | ❌ | `'active'` | Enum, `dead` terminal |
-| `replaces_equipment_id` | uuid | ✅ | | FK a otro equipment (mismo building, dead), **inmutable** |
-| `installed_at` | timestamptz | ❌ | now() | **Inmutable** |
-| `decommissioned_at` | timestamptz | ✅ | | Auto-fill al pasar a dead |
-| `decommission_reason` | text | ✅ | | |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default           | Notas                                                     |
+| -------------------------- | ----------- | ---- | ----------------- | --------------------------------------------------------- |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK                                                        |
+| `serial_number`            | text        | ❌   |                   | Único global, **inmutable**                               |
+| `model`                    | text        | ✅   |                   |                                                           |
+| `building_id`              | uuid        | ❌   |                   | FK RESTRICT, **inmutable**                                |
+| `description`              | text        | ❌   |                   | Ej: "Controladora porton peatonal"                        |
+| `access_type`              | text        | ✅   |                   | Enum                                                      |
+| `status`                   | text        | ❌   | `'active'`        | Enum, `dead` terminal                                     |
+| `replaces_equipment_id`    | uuid        | ✅   |                   | FK a otro equipment (mismo building, dead), **inmutable** |
+| `installed_at`             | timestamptz | ❌   | now()             | **Inmutable**                                             |
+| `decommissioned_at`        | timestamptz | ✅   |                   | Auto-fill al pasar a dead                                 |
+| `decommission_reason`      | text        | ✅   |                   |                                                           |
+| `notes`                    | text        | ✅   |                   |                                                           |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             |                                                           |
 
 ### 9.7 `operations.key_authorizations`
 
 Relación N:M llave↔equipo con sync state.
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `rfid_key_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `equipment_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `sync_state` | text | ❌ | `'pending_install'` | Enum, forward-only |
-| `installed_at` | timestamptz | ✅ | | Auto-fill al pasar a installed |
-| `installed_by_staff_id` | uuid | ✅ | | FK SET NULL |
-| `removed_at` | timestamptz | ✅ | | Auto-fill al pasar a removed |
-| `removed_by_staff_id` | uuid | ✅ | | FK SET NULL |
-| `remove_reason` | text | ✅ | | |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default             | Notas                          |
+| -------------------------- | ----------- | ---- | ------------------- | ------------------------------ |
+| `id`                       | uuid        | ❌   | gen_random_uuid()   | PK                             |
+| `rfid_key_id`              | uuid        | ❌   |                     | FK RESTRICT, **inmutable**     |
+| `equipment_id`             | uuid        | ❌   |                     | FK RESTRICT, **inmutable**     |
+| `sync_state`               | text        | ❌   | `'pending_install'` | Enum, forward-only             |
+| `installed_at`             | timestamptz | ✅   |                     | Auto-fill al pasar a installed |
+| `installed_by_staff_id`    | uuid        | ✅   |                     | FK SET NULL                    |
+| `removed_at`               | timestamptz | ✅   |                     | Auto-fill al pasar a removed   |
+| `removed_by_staff_id`      | uuid        | ✅   |                     | FK SET NULL                    |
+| `remove_reason`            | text        | ✅   |                     |                                |
+| `notes`                    | text        | ✅   |                     |                                |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()               |                                |
 
 **Constraint único**: `(rfid_key_id, equipment_id)`.
 
@@ -614,14 +636,14 @@ Relación N:M llave↔equipo con sync state.
 
 Catálogo tipológico (sin precio fijo).
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `name` | text | ❌ | | |
-| `product_type` | text | ❌ | | Enum |
-| `description` | text | ✅ | | |
-| `is_active` | bool | ❌ | `true` | Discontinuar sin borrar |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default           | Notas                   |
+| -------------------------- | ----------- | ---- | ----------------- | ----------------------- |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK                      |
+| `name`                     | text        | ❌   |                   |                         |
+| `product_type`             | text        | ❌   |                   | Enum                    |
+| `description`              | text        | ✅   |                   |                         |
+| `is_active`                | bool        | ❌   | `true`            | Discontinuar sin borrar |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             |                         |
 
 Productos con `is_active=false` **no pueden ser referenciados** en nuevos items (bill_items, quote_items, recurring_charges). Referencias históricas se mantienen.
 
@@ -631,34 +653,34 @@ Presupuestos + líneas.
 
 **`quotes`**:
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `quote_number` | text | ❌ | `PRE-YYYY-NNNNNN` auto | Único, auto-generado |
-| `administration_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `status` | text | ❌ | `'draft'` | Enum |
-| `valid_until` | date | ✅ | | |
-| `total_amount` | numeric(14,2) | ❌ | `0` | **Auto-computado** desde items |
-| `currency` | text | ❌ | `'ARS'` | Solo ARS |
-| `sent_at`, `accepted_at`, `rejected_at` | timestamptz | ✅ | | |
-| `rejection_reason` | text | ✅ | | |
-| `created_by_staff_id` | uuid | ✅ | | FK SET NULL |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                                 | Tipo          | Null | Default                | Notas                          |
+| --------------------------------------- | ------------- | ---- | ---------------------- | ------------------------------ |
+| `id`                                    | uuid          | ❌   | gen_random_uuid()      | PK                             |
+| `quote_number`                          | text          | ❌   | `PRE-YYYY-NNNNNN` auto | Único, auto-generado           |
+| `administration_id`                     | uuid          | ❌   |                        | FK RESTRICT, **inmutable**     |
+| `status`                                | text          | ❌   | `'draft'`              | Enum                           |
+| `valid_until`                           | date          | ✅   |                        |                                |
+| `total_amount`                          | numeric(14,2) | ❌   | `0`                    | **Auto-computado** desde items |
+| `currency`                              | text          | ❌   | `'ARS'`                | Solo ARS                       |
+| `sent_at`, `accepted_at`, `rejected_at` | timestamptz   | ✅   |                        |                                |
+| `rejection_reason`                      | text          | ✅   |                        |                                |
+| `created_by_staff_id`                   | uuid          | ✅   |                        | FK SET NULL                    |
+| `notes`                                 | text          | ✅   |                        |                                |
+| `created_at`, `updated_at`              | timestamptz   | ❌   | now()                  |                                |
 
 **`quote_items`**:
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `quote_id` | uuid | ❌ | | FK CASCADE |
-| `product_id` | uuid | ✅ | | FK RESTRICT (opcional) |
-| `description` | text | ❌ | | |
-| `quantity` | numeric(10,2) | ❌ | | > 0 |
-| `unit_price` | numeric(14,2) | ❌ | | >= 0 |
-| `subtotal` | numeric(14,2) | ❌ | `0` | **Auto-computado** = quantity × unit_price |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo          | Null | Default           | Notas                                      |
+| -------------------------- | ------------- | ---- | ----------------- | ------------------------------------------ |
+| `id`                       | uuid          | ❌   | gen_random_uuid() | PK                                         |
+| `quote_id`                 | uuid          | ❌   |                   | FK CASCADE                                 |
+| `product_id`               | uuid          | ✅   |                   | FK RESTRICT (opcional)                     |
+| `description`              | text          | ❌   |                   |                                            |
+| `quantity`                 | numeric(10,2) | ❌   |                   | > 0                                        |
+| `unit_price`               | numeric(14,2) | ❌   |                   | >= 0                                       |
+| `subtotal`                 | numeric(14,2) | ❌   | `0`               | **Auto-computado** = quantity × unit_price |
+| `notes`                    | text          | ✅   |                   |                                            |
+| `created_at`, `updated_at` | timestamptz   | ❌   | now()             |                                            |
 
 Items solo se pueden modificar si `quote.status = 'draft'`.
 
@@ -668,38 +690,38 @@ Cargos + líneas.
 
 **`bills`**:
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `bill_number` | text | ❌ | `VNT-YYYY-NNNNNN` auto | Único, auto-generado |
-| `administration_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `charge_date` | date | ❌ | current_date | |
-| `due_date` | date | ✅ | | |
-| `status` | text | ❌ | `'draft'` | Enum |
-| `total_amount` | numeric(14,2) | ❌ | `0` | **Auto-computado** |
-| `currency` | text | ❌ | `'ARS'` | |
-| `from_quote_id` | uuid | ✅ | | FK SET NULL, **inmutable** |
-| `cancellation_reason` | text | ✅ | | Requerido si cancelled |
-| `created_by_staff_id` | uuid | ✅ | | FK SET NULL |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo          | Null | Default                | Notas                      |
+| -------------------------- | ------------- | ---- | ---------------------- | -------------------------- |
+| `id`                       | uuid          | ❌   | gen_random_uuid()      | PK                         |
+| `bill_number`              | text          | ❌   | `VNT-YYYY-NNNNNN` auto | Único, auto-generado       |
+| `administration_id`        | uuid          | ❌   |                        | FK RESTRICT, **inmutable** |
+| `charge_date`              | date          | ❌   | current_date           |                            |
+| `due_date`                 | date          | ✅   |                        |                            |
+| `status`                   | text          | ❌   | `'draft'`              | Enum                       |
+| `total_amount`             | numeric(14,2) | ❌   | `0`                    | **Auto-computado**         |
+| `currency`                 | text          | ❌   | `'ARS'`                |                            |
+| `from_quote_id`            | uuid          | ✅   |                        | FK SET NULL, **inmutable** |
+| `cancellation_reason`      | text          | ✅   |                        | Requerido si cancelled     |
+| `created_by_staff_id`      | uuid          | ✅   |                        | FK SET NULL                |
+| `notes`                    | text          | ✅   |                        |                            |
+| `created_at`, `updated_at` | timestamptz   | ❌   | now()                  |                            |
 
 **`bill_items`**:
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `bill_id` | uuid | ❌ | | FK CASCADE |
-| `product_id` | uuid | ✅ | | FK RESTRICT (opcional, debe estar active) |
-| `description` | text | ❌ | | |
-| `quantity` | numeric(10,2) | ❌ | | > 0 |
-| `unit_price` | numeric(14,2) | ❌ | | >= 0 |
-| `subtotal` | numeric(14,2) | ❌ | `0` | **Auto-computado** |
-| `related_key_request_item_id` | uuid | ✅ | | FK SET NULL — trazabilidad |
-| `related_equipment_id` | uuid | ✅ | | Idem |
-| `related_recurring_charge_id` | uuid | ✅ | | Idem |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                       | Tipo          | Null | Default           | Notas                                     |
+| ----------------------------- | ------------- | ---- | ----------------- | ----------------------------------------- |
+| `id`                          | uuid          | ❌   | gen_random_uuid() | PK                                        |
+| `bill_id`                     | uuid          | ❌   |                   | FK CASCADE                                |
+| `product_id`                  | uuid          | ✅   |                   | FK RESTRICT (opcional, debe estar active) |
+| `description`                 | text          | ❌   |                   |                                           |
+| `quantity`                    | numeric(10,2) | ❌   |                   | > 0                                       |
+| `unit_price`                  | numeric(14,2) | ❌   |                   | >= 0                                      |
+| `subtotal`                    | numeric(14,2) | ❌   | `0`               | **Auto-computado**                        |
+| `related_key_request_item_id` | uuid          | ✅   |                   | FK SET NULL — trazabilidad                |
+| `related_equipment_id`        | uuid          | ✅   |                   | Idem                                      |
+| `related_recurring_charge_id` | uuid          | ✅   |                   | Idem                                      |
+| `notes`                       | text          | ✅   |                   |                                           |
+| `created_at`, `updated_at`    | timestamptz   | ❌   | now()             |                                           |
 
 Items solo modificables si `bill.status = 'draft'`.
 
@@ -707,37 +729,37 @@ Items solo modificables si `bill.status = 'draft'`.
 
 Cobros.
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `administration_id` | uuid | ❌ | | FK RESTRICT; debe matchear bill.administration |
-| `bill_id` | uuid | ❌ | | FK RESTRICT, **inmutable**, **único** (1 pago por bill) |
-| `payment_date` | date | ❌ | current_date | |
-| `amount` | numeric(14,2) | ❌ | | > 0; debe ser == bill.total_amount |
-| `currency` | text | ❌ | `'ARS'` | |
-| `payment_method` | text | ❌ | | Enum, **inmutable** |
-| `reference` | text | ✅ | | Nro transferencia, comprobante |
-| `requires_invoice` | bool | ❌ | | **Auto-computado** = (method != cash) |
-| `invoiced_at` | timestamptz | ✅ | | Set por contadora cuando factura |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo          | Null | Default           | Notas                                                   |
+| -------------------------- | ------------- | ---- | ----------------- | ------------------------------------------------------- |
+| `id`                       | uuid          | ❌   | gen_random_uuid() | PK                                                      |
+| `administration_id`        | uuid          | ❌   |                   | FK RESTRICT; debe matchear bill.administration          |
+| `bill_id`                  | uuid          | ❌   |                   | FK RESTRICT, **inmutable**, **único** (1 pago por bill) |
+| `payment_date`             | date          | ❌   | current_date      |                                                         |
+| `amount`                   | numeric(14,2) | ❌   |                   | > 0; debe ser == bill.total_amount                      |
+| `currency`                 | text          | ❌   | `'ARS'`           |                                                         |
+| `payment_method`           | text          | ❌   |                   | Enum, **inmutable**                                     |
+| `reference`                | text          | ✅   |                   | Nro transferencia, comprobante                          |
+| `requires_invoice`         | bool          | ❌   |                   | **Auto-computado** = (method != cash)                   |
+| `invoiced_at`              | timestamptz   | ✅   |                   | Set por contadora cuando factura                        |
+| `notes`                    | text          | ✅   |                   |                                                         |
+| `created_at`, `updated_at` | timestamptz   | ❌   | now()             |                                                         |
 
 ### 9.12 `sales.recurring_charges`
 
 Configuración de abonos mensuales.
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `administration_id` | uuid | ❌ | | FK RESTRICT |
-| `product_id` | uuid | ✅ | | FK RESTRICT (opcional, active) |
-| `description` | text | ❌ | | |
-| `monthly_amount` | numeric(14,2) | ❌ | | > 0 |
-| `start_date` | date | ❌ | | |
-| `end_date` | date | ✅ | | >= start_date si set |
-| `is_active` | bool | ❌ | `true` | Pausar sin borrar |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo          | Null | Default           | Notas                          |
+| -------------------------- | ------------- | ---- | ----------------- | ------------------------------ |
+| `id`                       | uuid          | ❌   | gen_random_uuid() | PK                             |
+| `administration_id`        | uuid          | ❌   |                   | FK RESTRICT                    |
+| `product_id`               | uuid          | ✅   |                   | FK RESTRICT (opcional, active) |
+| `description`              | text          | ❌   |                   |                                |
+| `monthly_amount`           | numeric(14,2) | ❌   |                   | > 0                            |
+| `start_date`               | date          | ❌   |                   |                                |
+| `end_date`                 | date          | ✅   |                   | >= start_date si set           |
+| `is_active`                | bool          | ❌   | `true`            | Pausar sin borrar              |
+| `notes`                    | text          | ✅   |                   |                                |
+| `created_at`, `updated_at` | timestamptz   | ❌   | now()             |                                |
 
 ### 9.13 `sales.key_requests` / `sales.key_request_items`
 
@@ -745,41 +767,41 @@ Solicitudes de llaves + líneas.
 
 **`key_requests`**:
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `request_number` | text | ❌ | `REQ-YYYY-NNNNNN` auto | Único |
-| `administration_id` | uuid | ❌ | | FK RESTRICT |
-| `requester_type` | text | ❌ | | Enum |
-| `requester_name` | text | ✅ | | Obligatorio siempre (chequeado por trigger) |
-| `requester_surname` | text | ✅ | | Obligatorio si `individual` |
-| `requester_dni` | text | ✅ | | Obligatorio si `individual` |
-| `requester_contact` | text | ✅ | | Obligatorio si `individual` (WhatsApp/tel/email) |
-| `pickup_person_name` | text | ✅ | | Obligatorio si status >= authorized |
-| `pickup_person_surname` | text | ✅ | | Idem |
-| `pickup_person_dni` | text | ✅ | | Idem, **inmutable desde authorized** |
-| `status` | text | ❌ | `'pending_authorization'` | Enum, auto para admin → `'authorized'` |
-| `received_at` | timestamptz | ❌ | now() | |
-| `received_by_staff_id` | uuid | ✅ | | FK SET NULL |
-| `authorized_by` | text | ✅ | | Nombre libre del referente de admin |
-| `authorized_at` | timestamptz | ✅ | | Auto-fill al pasar a authorized (self-auth admin) |
-| `authorization_method` | text | ✅ | | Enum |
-| `rejection_reason` | text | ✅ | | Requerido si rejected |
-| `rejection_notes` | text | ✅ | | |
-| `cancellation_reason` | text | ✅ | | Requerido si cancelled |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default                   | Notas                                             |
+| -------------------------- | ----------- | ---- | ------------------------- | ------------------------------------------------- |
+| `id`                       | uuid        | ❌   | gen_random_uuid()         | PK                                                |
+| `request_number`           | text        | ❌   | `REQ-YYYY-NNNNNN` auto    | Único                                             |
+| `administration_id`        | uuid        | ❌   |                           | FK RESTRICT                                       |
+| `requester_type`           | text        | ❌   |                           | Enum                                              |
+| `requester_name`           | text        | ✅   |                           | Obligatorio siempre (chequeado por trigger)       |
+| `requester_surname`        | text        | ✅   |                           | Obligatorio si `individual`                       |
+| `requester_dni`            | text        | ✅   |                           | Obligatorio si `individual`                       |
+| `requester_contact`        | text        | ✅   |                           | Obligatorio si `individual` (WhatsApp/tel/email)  |
+| `pickup_person_name`       | text        | ✅   |                           | Obligatorio si status >= authorized               |
+| `pickup_person_surname`    | text        | ✅   |                           | Idem                                              |
+| `pickup_person_dni`        | text        | ✅   |                           | Idem, **inmutable desde authorized**              |
+| `status`                   | text        | ❌   | `'pending_authorization'` | Enum, auto para admin → `'authorized'`            |
+| `received_at`              | timestamptz | ❌   | now()                     |                                                   |
+| `received_by_staff_id`     | uuid        | ✅   |                           | FK SET NULL                                       |
+| `authorized_by`            | text        | ✅   |                           | Nombre libre del referente de admin               |
+| `authorized_at`            | timestamptz | ✅   |                           | Auto-fill al pasar a authorized (self-auth admin) |
+| `authorization_method`     | text        | ✅   |                           | Enum                                              |
+| `rejection_reason`         | text        | ✅   |                           | Requerido si rejected                             |
+| `rejection_notes`          | text        | ✅   |                           |                                                   |
+| `cancellation_reason`      | text        | ✅   |                           | Requerido si cancelled                            |
+| `notes`                    | text        | ✅   |                           |                                                   |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()                     |                                                   |
 
 **`key_request_items`**:
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `key_request_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `unit_id` | uuid | ❌ | | FK RESTRICT, **inmutable**; unit debe ser de un edificio del admin del request |
-| `quantity` | int | ❌ | | > 0; no reducible por debajo de las rfid_keys ya producidas |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default           | Notas                                                                          |
+| -------------------------- | ----------- | ---- | ----------------- | ------------------------------------------------------------------------------ |
+| `id`                       | uuid        | ❌   | gen_random_uuid() | PK                                                                             |
+| `key_request_id`           | uuid        | ❌   |                   | FK RESTRICT, **inmutable**                                                     |
+| `unit_id`                  | uuid        | ❌   |                   | FK RESTRICT, **inmutable**; unit debe ser de un edificio del admin del request |
+| `quantity`                 | int         | ❌   |                   | > 0; no reducible por debajo de las rfid_keys ya producidas                    |
+| `notes`                    | text        | ✅   |                   |                                                                                |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()             |                                                                                |
 
 ### 9.14 `support.tickets` / `support.ticket_comments`
 
@@ -787,38 +809,38 @@ Tickets de soporte + timeline.
 
 **`tickets`**:
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `ticket_number` | text | ❌ | `SOP-YYYY-NNNNNN` auto | Único |
-| `administration_id` | uuid | ❌ | | FK RESTRICT, **inmutable** |
-| `building_id` | uuid | ❌ | | FK RESTRICT, **inmutable**, debe ∈ admin |
-| `unit_id` | uuid | ✅ | | FK RESTRICT, debe ∈ building |
-| `equipment_id` | uuid | ✅ | | FK RESTRICT, debe ∈ building |
-| `category` | text | ❌ | | Enum, **inmutable** |
-| `description` | text | ❌ | | |
-| `status` | text | ❌ | `'open'` | Enum; máquina con reapertura |
-| `related_bill_id` | uuid | ✅ | | FK SET NULL |
-| `related_key_request_id` | uuid | ✅ | | FK SET NULL |
-| `opened_at` | timestamptz | ❌ | now() | **Inmutable** |
-| `opened_by_staff_id` | uuid | ✅ | | FK SET NULL, **inmutable** |
-| `assigned_to_staff_id` | uuid | ✅ | | FK SET NULL; installer no puede modificar |
-| `resolved_at` | timestamptz | ✅ | | Auto-fill al pasar a resolved |
-| `resolved_by_staff_id` | uuid | ✅ | | FK SET NULL |
-| `resolution_notes` | text | ✅ | | Requerido si resolved |
-| `cancellation_reason` | text | ✅ | | Requerido si cancelled |
-| `notes` | text | ✅ | | |
-| `created_at`, `updated_at` | timestamptz | ❌ | now() | |
+| Columna                    | Tipo        | Null | Default                | Notas                                     |
+| -------------------------- | ----------- | ---- | ---------------------- | ----------------------------------------- |
+| `id`                       | uuid        | ❌   | gen_random_uuid()      | PK                                        |
+| `ticket_number`            | text        | ❌   | `SOP-YYYY-NNNNNN` auto | Único                                     |
+| `administration_id`        | uuid        | ❌   |                        | FK RESTRICT, **inmutable**                |
+| `building_id`              | uuid        | ❌   |                        | FK RESTRICT, **inmutable**, debe ∈ admin  |
+| `unit_id`                  | uuid        | ✅   |                        | FK RESTRICT, debe ∈ building              |
+| `equipment_id`             | uuid        | ✅   |                        | FK RESTRICT, debe ∈ building              |
+| `category`                 | text        | ❌   |                        | Enum, **inmutable**                       |
+| `description`              | text        | ❌   |                        |                                           |
+| `status`                   | text        | ❌   | `'open'`               | Enum; máquina con reapertura              |
+| `related_bill_id`          | uuid        | ✅   |                        | FK SET NULL                               |
+| `related_key_request_id`   | uuid        | ✅   |                        | FK SET NULL                               |
+| `opened_at`                | timestamptz | ❌   | now()                  | **Inmutable**                             |
+| `opened_by_staff_id`       | uuid        | ✅   |                        | FK SET NULL, **inmutable**                |
+| `assigned_to_staff_id`     | uuid        | ✅   |                        | FK SET NULL; installer no puede modificar |
+| `resolved_at`              | timestamptz | ✅   |                        | Auto-fill al pasar a resolved             |
+| `resolved_by_staff_id`     | uuid        | ✅   |                        | FK SET NULL                               |
+| `resolution_notes`         | text        | ✅   |                        | Requerido si resolved                     |
+| `cancellation_reason`      | text        | ✅   |                        | Requerido si cancelled                    |
+| `notes`                    | text        | ✅   |                        |                                           |
+| `created_at`, `updated_at` | timestamptz | ❌   | now()                  |                                           |
 
 **`ticket_comments`** (append-only):
 
-| Columna | Tipo | Null | Default | Notas |
-|---|---|---|---|---|
-| `id` | uuid | ❌ | gen_random_uuid() | PK |
-| `ticket_id` | uuid | ❌ | | FK CASCADE (pero cascada bloqueada por trigger append-only) |
-| `author_staff_id` | uuid | ✅ | | FK SET NULL; installer solo puede insertar con `= current_staff_id()` |
-| `body` | text | ❌ | | |
-| `created_at` | timestamptz | ❌ | now() | Sin `updated_at` — append only |
+| Columna           | Tipo        | Null | Default           | Notas                                                                 |
+| ----------------- | ----------- | ---- | ----------------- | --------------------------------------------------------------------- |
+| `id`              | uuid        | ❌   | gen_random_uuid() | PK                                                                    |
+| `ticket_id`       | uuid        | ❌   |                   | FK CASCADE (pero cascada bloqueada por trigger append-only)           |
+| `author_staff_id` | uuid        | ✅   |                   | FK SET NULL; installer solo puede insertar con `= current_staff_id()` |
+| `body`            | text        | ❌   |                   |                                                                       |
+| `created_at`      | timestamptz | ❌   | now()             | Sin `updated_at` — append only                                        |
 
 ---
 
@@ -830,37 +852,38 @@ Callables desde la app vía Supabase RPC o consultables como views.
 
 Todas `SECURITY DEFINER`, `STABLE`.
 
-| Función | Retorna | Uso |
-|---|---|---|
-| `identity.current_staff_id()` | uuid | UUID del staff logueado, o NULL. |
-| `identity.current_staff_role()` | text | `'admin'`, `'installer'`, o NULL. |
-| `identity.is_admin()` | bool | `true` si admin activo. |
-| `identity.is_installer()` | bool | `true` si installer activo. |
+| Función                         | Retorna | Uso                               |
+| ------------------------------- | ------- | --------------------------------- |
+| `identity.current_staff_id()`   | uuid    | UUID del staff logueado, o NULL.  |
+| `identity.current_staff_role()` | text    | `'admin'`, `'installer'`, o NULL. |
+| `identity.is_admin()`           | bool    | `true` si admin activo.           |
+| `identity.is_installer()`       | bool    | `true` si installer activo.       |
 
 **Desde JS**:
+
 ```js
 const { data } = await supabase.rpc('current_staff_role');
 ```
 
 ### 10.2 Operations
 
-| Función | Signatura | Uso |
-|---|---|---|
-| `operations.replace_equipment(...)` | `(p_old_equipment_id uuid, p_new_serial_number text, p_new_model text, p_new_description text, p_new_access_type text default null, p_decommission_reason text default 'Replaced by new equipment', p_replacement_staff_id uuid default null) returns uuid` | Reemplaza un equipo atómicamente. Retorna el UUID del nuevo. Ver flow 11.7. |
-| `operations.revoke_key_from_all_equipment(...)` | `(p_rfid_key_id uuid, p_reason text default 'Key revoked') returns int` | Marca todas las autorizaciones installed de una llave como pending_removal. Retorna cantidad de rows afectadas. Se invoca automáticamente cuando la llave pasa a lost/disabled, pero también manual si es necesario. |
+| Función                                         | Signatura                                                                                                                                                                                                                                                   | Uso                                                                                                                                                                                                                  |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `operations.replace_equipment(...)`             | `(p_old_equipment_id uuid, p_new_serial_number text, p_new_model text, p_new_description text, p_new_access_type text default null, p_decommission_reason text default 'Replaced by new equipment', p_replacement_staff_id uuid default null) returns uuid` | Reemplaza un equipo atómicamente. Retorna el UUID del nuevo. Ver flow 11.7.                                                                                                                                          |
+| `operations.revoke_key_from_all_equipment(...)` | `(p_rfid_key_id uuid, p_reason text default 'Key revoked') returns int`                                                                                                                                                                                     | Marca todas las autorizaciones installed de una llave como pending_removal. Retorna cantidad de rows afectadas. Se invoca automáticamente cuando la llave pasa a lost/disabled, pero también manual si es necesario. |
 
 ### 10.3 Sales
 
-| Función | Signatura | Uso |
-|---|---|---|
+| Función                                                     | Signatura     | Uso                                                                                                                                                                                                             |
+| ----------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sales.generate_recurring_charges(p_year int, p_month int)` | `returns int` | Genera bills confirmed del mes para todos los recurring_charges activos, sin duplicar. Retorna cantidad de bills creadas. Ver flow 11.11. Hay un cron job (`pg_cron`) que lo corre el 1° de cada mes 08:00 UTC. |
 
 ### 10.4 Vistas de consumo
 
-| Vista | Retorna | Uso |
-|---|---|---|
-| `sales.pending_to_invoice` | `payment_id, payment_date, amount, payment_method, reference, bill_number, charge_date, administration_id, company_name, tax_id` | Pagos por transferencia/depósito/MP/cheque no facturados aún. La contadora consume esto y va marcando `payments.invoiced_at`. |
-| `sales.administration_balance` | `administration_id, company_name, tax_id, total_billed, total_paid, balance` | Cuenta corriente por administración. `balance > 0` = admin debe. |
+| Vista                          | Retorna                                                                                                                          | Uso                                                                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `sales.pending_to_invoice`     | `payment_id, payment_date, amount, payment_method, reference, bill_number, charge_date, administration_id, company_name, tax_id` | Pagos por transferencia/depósito/MP/cheque no facturados aún. La contadora consume esto y va marcando `payments.invoiced_at`. |
+| `sales.administration_balance` | `administration_id, company_name, tax_id, total_billed, total_paid, balance`                                                     | Cuenta corriente por administración. `balance > 0` = admin debe.                                                              |
 
 Ambas con `security_invoker=true` — RLS aplica normalmente.
 
@@ -1349,18 +1372,18 @@ opcional para UX.
 
 ### 12.2 Inmutabilidad de datos críticos
 
-| Tabla | Campos inmutables una vez creados |
-|---|---|
-| `rfid_keys` | `unit_id`, `rfid_code`, `key_request_item_id` (si aplica) |
-| `rfid_keys` (post-pickup) | `picked_up_at`, `picked_up_by_*`, `delivered_by_staff_id` |
-| `equipment` | `serial_number`, `building_id`, `replaces_equipment_id`, `installed_at` |
-| `key_authorizations` | `rfid_key_id`, `equipment_id` |
-| `key_requests` (post-authorized) | `pickup_person_name`, `pickup_person_surname`, `pickup_person_dni` |
-| `bills` | `administration_id`, `from_quote_id` |
-| `bill_items`, `quote_items` | No modificables si `parent.status != 'draft'` |
-| `payments` | `bill_id`, `amount`, `payment_method` |
-| `tickets` | `administration_id`, `building_id`, `category`, `opened_at`, `opened_by_staff_id` |
-| `ticket_comments` | Toda la row — append-only, no UPDATE ni DELETE |
+| Tabla                            | Campos inmutables una vez creados                                                 |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| `rfid_keys`                      | `unit_id`, `rfid_code`, `key_request_item_id` (si aplica)                         |
+| `rfid_keys` (post-pickup)        | `picked_up_at`, `picked_up_by_*`, `delivered_by_staff_id`                         |
+| `equipment`                      | `serial_number`, `building_id`, `replaces_equipment_id`, `installed_at`           |
+| `key_authorizations`             | `rfid_key_id`, `equipment_id`                                                     |
+| `key_requests` (post-authorized) | `pickup_person_name`, `pickup_person_surname`, `pickup_person_dni`                |
+| `bills`                          | `administration_id`, `from_quote_id`                                              |
+| `bill_items`, `quote_items`      | No modificables si `parent.status != 'draft'`                                     |
+| `payments`                       | `bill_id`, `amount`, `payment_method`                                             |
+| `tickets`                        | `administration_id`, `building_id`, `category`, `opened_at`, `opened_by_staff_id` |
+| `ticket_comments`                | Toda la row — append-only, no UPDATE ni DELETE                                    |
 
 ### 12.3 Coherencia entre entidades
 
@@ -1445,6 +1468,7 @@ sugerencia de mensaje user-facing en español.
 ### 13.1 Formato de error de Postgres
 
 En `supabase-js`, los errores llegan como:
+
 ```js
 { code: 'SQLSTATE', message: 'mensaje del DB', details: '...', hint: '...' }
 ```
@@ -1453,59 +1477,59 @@ En `supabase-js`, los errores llegan como:
 
 #### Violaciones de unicidad (`23505` / `unique_violation`)
 
-| Mensaje contiene | Causa | Sugerencia UI |
-|---|---|---|
-| `administrations_tax_id_key` | CUIT duplicado | "El CUIT ya está registrado en otra administración." |
-| `rfid_keys_rfid_code_key` | Código RFID duplicado | "Ese código RFID ya está emitido. Verificá que el lector no lo haya duplicado." |
-| `equipment_serial_number_key` | Serial equipo duplicado | "El número de serie ya está registrado en otro equipo." |
-| `units_building_number_unique` | Unidad duplicada en el edificio | "Ya existe una unidad con ese número en este edificio." |
-| `units_one_admin_per_building_idx` | 2+ admin units por edificio | "Este edificio ya tiene una unidad administrativa. Solo se permite una por edificio." |
-| `key_authorizations_key_equipment_unique` | Llave ya autorizada en ese equipo | "Esta llave ya está autorizada en ese equipo." |
-| `payments_bill_id_key` | Bill ya tiene pago | "Esta factura ya tiene un pago registrado." |
-| `staff_email_key` / `staff_auth_user_id_key` | Email/user duplicado | "Ya existe un empleado con ese email/usuario." |
+| Mensaje contiene                             | Causa                             | Sugerencia UI                                                                         |
+| -------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------- |
+| `administrations_tax_id_key`                 | CUIT duplicado                    | "El CUIT ya está registrado en otra administración."                                  |
+| `rfid_keys_rfid_code_key`                    | Código RFID duplicado             | "Ese código RFID ya está emitido. Verificá que el lector no lo haya duplicado."       |
+| `equipment_serial_number_key`                | Serial equipo duplicado           | "El número de serie ya está registrado en otro equipo."                               |
+| `units_building_number_unique`               | Unidad duplicada en el edificio   | "Ya existe una unidad con ese número en este edificio."                               |
+| `units_one_admin_per_building_idx`           | 2+ admin units por edificio       | "Este edificio ya tiene una unidad administrativa. Solo se permite una por edificio." |
+| `key_authorizations_key_equipment_unique`    | Llave ya autorizada en ese equipo | "Esta llave ya está autorizada en ese equipo."                                        |
+| `payments_bill_id_key`                       | Bill ya tiene pago                | "Esta factura ya tiene un pago registrado."                                           |
+| `staff_email_key` / `staff_auth_user_id_key` | Email/user duplicado              | "Ya existe un empleado con ese email/usuario."                                        |
 
 #### Violaciones de check / triggers (`23514` / `check_violation`)
 
-| Mensaje del DB | Causa | Sugerencia UI |
-|---|---|---|
-| `... is immutable` | Se intentó modificar un campo inmutable | "Este dato no se puede modificar una vez creado. Si necesitás corregirlo, hablá con soporte." |
-| `invalid ... status transition: X -> Y` | Transición prohibida | "No se puede cambiar el estado de X a Y. Estados permitidos: [...]." |
-| `key and equipment must belong to the same building` | Cross-building auth | "No se puede autorizar una llave para un equipo de otro edificio." |
-| `cannot authorize an rfid_key with status=lost` | Autorizar llave no active | "No se puede autorizar una llave perdida/desactivada." |
-| `cannot authorize on equipment with status=dead` | Autorizar en equipo dead | "No se puede autorizar en un equipo dado de baja." |
-| `unit ... belongs to administration ...` | Unit de otra admin | "La unidad seleccionada no pertenece a esta administración." |
-| `cannot produce more keys than requested for this line` | Sobre-producción | "Ya se produjeron todas las llaves solicitadas en esta línea. Aumentá la cantidad o creá otra línea." |
-| `cannot produce a key for a request in status ...` | Producir en status prohibido | "No se pueden producir llaves para esta solicitud (estado: X)." |
-| `pickup DNI ... does not match the authorized pickup person DNI ...` | DNI no matchea | "El DNI no coincide con la persona autorizada a retirar. Verificá el documento." |
-| `cannot pickup a key while the request is in status ...` | Retiro en status prohibido | "La solicitud no está lista para retirar (estado: X)." |
-| `pickup person data is immutable once the request is authorized` | Modificar retirador post-auth | "No se puede cambiar la persona autorizada una vez que la solicitud está autorizada." |
-| `resolution_notes required when status=resolved` | Cerrar ticket sin notas | "Agregá una nota de resolución antes de cerrar el ticket." |
-| `cancellation_reason required when status=cancelled` | Cancelar sin motivo | "Escribí un motivo antes de cancelar." |
-| `cannot cancel bill ... — it has ... payment(s) attached` | Cancelar bill con pago | "Esta factura ya fue pagada. Para anularla hay que revertir el pago primero." |
-| `payment amount ... must equal bill total ...` | Monto ≠ total | "El monto del pago debe ser exacto: X. No se aceptan pagos parciales." |
-| `cannot register payment for bill in status ...` | Pago en bill no confirmed | "La factura debe estar confirmada antes de registrar el pago." |
-| `product ... is inactive and cannot be referenced` | Producto inactivo | "El producto seleccionado está discontinuado. Elegí otro." |
-| `individual requester must have surname, dni and contact` | Faltan datos particular | "Para solicitantes particulares, completá nombre, apellido, DNI y contacto." |
-| `pickup person (name, surname, dni) is required once status is authorized` | Autorizar sin retirador | "Antes de autorizar, completá los datos de la persona autorizada a retirar." |
-| `equipment.status transitions out of dead are forbidden` | Resucitar equipo | "Un equipo dado de baja no se puede reactivar. Registrá uno nuevo como reemplazo." |
-| `replacement must be at the same building` | Reemplazo cross-building | "El equipo de reemplazo debe estar en el mismo edificio que el original." |
-| `predecessor equipment ... must be status=dead to be replaced` | Reemplazar vivo | "Solo se pueden reemplazar equipos dados de baja (status='dead')." |
-| `equipment ... is already dead` | Doble baja | "Este equipo ya fue dado de baja." |
-| `ticket_comments are append-only` | Editar/borrar comment | "Los comentarios no se pueden editar ni borrar. Agregá uno nuevo aclarando." |
+| Mensaje del DB                                                             | Causa                                   | Sugerencia UI                                                                                         |
+| -------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `... is immutable`                                                         | Se intentó modificar un campo inmutable | "Este dato no se puede modificar una vez creado. Si necesitás corregirlo, hablá con soporte."         |
+| `invalid ... status transition: X -> Y`                                    | Transición prohibida                    | "No se puede cambiar el estado de X a Y. Estados permitidos: [...]."                                  |
+| `key and equipment must belong to the same building`                       | Cross-building auth                     | "No se puede autorizar una llave para un equipo de otro edificio."                                    |
+| `cannot authorize an rfid_key with status=lost`                            | Autorizar llave no active               | "No se puede autorizar una llave perdida/desactivada."                                                |
+| `cannot authorize on equipment with status=dead`                           | Autorizar en equipo dead                | "No se puede autorizar en un equipo dado de baja."                                                    |
+| `unit ... belongs to administration ...`                                   | Unit de otra admin                      | "La unidad seleccionada no pertenece a esta administración."                                          |
+| `cannot produce more keys than requested for this line`                    | Sobre-producción                        | "Ya se produjeron todas las llaves solicitadas en esta línea. Aumentá la cantidad o creá otra línea." |
+| `cannot produce a key for a request in status ...`                         | Producir en status prohibido            | "No se pueden producir llaves para esta solicitud (estado: X)."                                       |
+| `pickup DNI ... does not match the authorized pickup person DNI ...`       | DNI no matchea                          | "El DNI no coincide con la persona autorizada a retirar. Verificá el documento."                      |
+| `cannot pickup a key while the request is in status ...`                   | Retiro en status prohibido              | "La solicitud no está lista para retirar (estado: X)."                                                |
+| `pickup person data is immutable once the request is authorized`           | Modificar retirador post-auth           | "No se puede cambiar la persona autorizada una vez que la solicitud está autorizada."                 |
+| `resolution_notes required when status=resolved`                           | Cerrar ticket sin notas                 | "Agregá una nota de resolución antes de cerrar el ticket."                                            |
+| `cancellation_reason required when status=cancelled`                       | Cancelar sin motivo                     | "Escribí un motivo antes de cancelar."                                                                |
+| `cannot cancel bill ... — it has ... payment(s) attached`                  | Cancelar bill con pago                  | "Esta factura ya fue pagada. Para anularla hay que revertir el pago primero."                         |
+| `payment amount ... must equal bill total ...`                             | Monto ≠ total                           | "El monto del pago debe ser exacto: X. No se aceptan pagos parciales."                                |
+| `cannot register payment for bill in status ...`                           | Pago en bill no confirmed               | "La factura debe estar confirmada antes de registrar el pago."                                        |
+| `product ... is inactive and cannot be referenced`                         | Producto inactivo                       | "El producto seleccionado está discontinuado. Elegí otro."                                            |
+| `individual requester must have surname, dni and contact`                  | Faltan datos particular                 | "Para solicitantes particulares, completá nombre, apellido, DNI y contacto."                          |
+| `pickup person (name, surname, dni) is required once status is authorized` | Autorizar sin retirador                 | "Antes de autorizar, completá los datos de la persona autorizada a retirar."                          |
+| `equipment.status transitions out of dead are forbidden`                   | Resucitar equipo                        | "Un equipo dado de baja no se puede reactivar. Registrá uno nuevo como reemplazo."                    |
+| `replacement must be at the same building`                                 | Reemplazo cross-building                | "El equipo de reemplazo debe estar en el mismo edificio que el original."                             |
+| `predecessor equipment ... must be status=dead to be replaced`             | Reemplazar vivo                         | "Solo se pueden reemplazar equipos dados de baja (status='dead')."                                    |
+| `equipment ... is already dead`                                            | Doble baja                              | "Este equipo ya fue dado de baja."                                                                    |
+| `ticket_comments are append-only`                                          | Editar/borrar comment                   | "Los comentarios no se pueden editar ni borrar. Agregá uno nuevo aclarando."                          |
 
 #### Foreign key violations (`23503` / `foreign_key_violation`)
 
-| Contexto | Mensaje | Sugerencia UI |
-|---|---|---|
+| Contexto                      | Mensaje                                   | Sugerencia UI                                                                                      |
+| ----------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | DELETE sobre parent con hijos | `... violates foreign key constraint ...` | "No se puede eliminar: existen registros que dependen de este. Marcalo como inactivo en su lugar." |
 
 #### RLS / privilegios (`42501` / `insufficient_privilege`)
 
-| Contexto | Sugerencia UI |
-|---|---|
-| Installer intenta acceder a sales | "No tenés permiso para ver esta información." |
+| Contexto                              | Sugerencia UI                                                           |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| Installer intenta acceder a sales     | "No tenés permiso para ver esta información."                           |
 | Installer intenta reasignar un ticket | "No tenés permiso para reasignar tickets. Solo un admin puede hacerlo." |
-| Cualquier operación denegada por RLS | "No tenés permiso para realizar esta acción." |
+| Cualquier operación denegada por RLS  | "No tenés permiso para realizar esta acción."                           |
 
 #### Not null violations (`23502` / `not_null_violation`)
 
@@ -1629,62 +1653,62 @@ tests y documentación.
 
 ### 17.1 Administrations
 
-| ID | Company | CUIT |
-|---|---|---|
+| ID                                     | Company                    | CUIT          |
+| -------------------------------------- | -------------------------- | ------------- |
 | `11111111-1111-1111-1111-111111111111` | Administracion Central SRL | 30-71234567-8 |
-| `22222222-2222-2222-2222-222222222222` | Consorcios del Sur SA | 30-70999888-1 |
+| `22222222-2222-2222-2222-222222222222` | Consorcios del Sur SA      | 30-70999888-1 |
 
 ### 17.2 Buildings
 
-| ID | Name | Administration |
-|---|---|---|
-| `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1` | Torre Callao | Admin Central |
-| `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2` | Edificio Palermo Loft | Admin Central |
-| `bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1` | Complejo Barracas | Consorcios del Sur |
+| ID                                     | Name                  | Administration     |
+| -------------------------------------- | --------------------- | ------------------ |
+| `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1` | Torre Callao          | Admin Central      |
+| `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2` | Edificio Palermo Loft | Admin Central      |
+| `bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1` | Complejo Barracas     | Consorcios del Sur |
 
 ### 17.3 Staff
 
-| ID | Nombre | Rol | Estado |
-|---|---|---|---|
-| `99999999-9999-9999-9999-999999999901` | Ana Alvarez | admin | active |
-| `99999999-9999-9999-9999-999999999902` | Bruno Benitez | installer | active |
-| `99999999-9999-9999-9999-999999999903` | Carla Cordoba | installer | active |
+| ID                                     | Nombre         | Rol       | Estado   |
+| -------------------------------------- | -------------- | --------- | -------- |
+| `99999999-9999-9999-9999-999999999901` | Ana Alvarez    | admin     | active   |
+| `99999999-9999-9999-9999-999999999902` | Bruno Benitez  | installer | active   |
+| `99999999-9999-9999-9999-999999999903` | Carla Cordoba  | installer | active   |
 | `99999999-9999-9999-9999-999999999905` | Elena Espinoza | installer | inactive |
 
 ### 17.4 Equipment
 
-| ID | Serial | Building | Status |
-|---|---|---|---|
-| `f0000000-0000-0000-0000-000000000001` | SN-TC-PEATONAL-01 | Torre Callao | active |
-| `f0000000-0000-0000-0000-000000000002` | SN-TC-COCHERA-01 | Torre Callao | active |
-| `f0000000-0000-0000-0000-000000000003` | SN-TC-SERVICE-OLD | Torre Callao | dead |
-| `f0000000-0000-0000-0000-000000000004` | SN-TC-SERVICE-02 | Torre Callao | active (reemplaza al 003) |
-| `f0000000-0000-0000-0000-000000000005` | SN-PL-PEATONAL-01 | Palermo Loft | maintenance |
-| `f0000000-0000-0000-0000-000000000006` | SN-CB-PEATONAL-01 | Complejo Barracas | active |
-| `f0000000-0000-0000-0000-000000000007` | SN-CB-LOCALES-01 | Complejo Barracas | active |
+| ID                                     | Serial            | Building          | Status                    |
+| -------------------------------------- | ----------------- | ----------------- | ------------------------- |
+| `f0000000-0000-0000-0000-000000000001` | SN-TC-PEATONAL-01 | Torre Callao      | active                    |
+| `f0000000-0000-0000-0000-000000000002` | SN-TC-COCHERA-01  | Torre Callao      | active                    |
+| `f0000000-0000-0000-0000-000000000003` | SN-TC-SERVICE-OLD | Torre Callao      | dead                      |
+| `f0000000-0000-0000-0000-000000000004` | SN-TC-SERVICE-02  | Torre Callao      | active (reemplaza al 003) |
+| `f0000000-0000-0000-0000-000000000005` | SN-PL-PEATONAL-01 | Palermo Loft      | maintenance               |
+| `f0000000-0000-0000-0000-000000000006` | SN-CB-PEATONAL-01 | Complejo Barracas | active                    |
+| `f0000000-0000-0000-0000-000000000007` | SN-CB-LOCALES-01  | Complejo Barracas | active                    |
 
 ### 17.5 Key requests (con sus estados)
 
-| Número | Requester type | Status |
-|---|---|---|
-| `REQ-2026-000001` | administration | delivered |
-| `REQ-2026-000002` | individual | pending_authorization |
-| `REQ-2026-000003` | administration | in_production |
+| Número            | Requester type | Status                |
+| ----------------- | -------------- | --------------------- |
+| `REQ-2026-000001` | administration | delivered             |
+| `REQ-2026-000002` | individual     | pending_authorization |
+| `REQ-2026-000003` | administration | in_production         |
 
 ### 17.6 Bills
 
-| Número | Total | Status | Payment |
-|---|---|---|---|
-| `VNT-2026-000001` | $51.000 | confirmed | Transfer (pendiente de facturar) |
-| `VNT-2026-000002` | $1.010.000 | confirmed | Cash (no requiere factura) |
-| `VNT-2026-000003` | $65.000 | confirmed | Sin pago (Admin Central debe) |
+| Número            | Total      | Status    | Payment                          |
+| ----------------- | ---------- | --------- | -------------------------------- |
+| `VNT-2026-000001` | $51.000    | confirmed | Transfer (pendiente de facturar) |
+| `VNT-2026-000002` | $1.010.000 | confirmed | Cash (no requiere factura)       |
+| `VNT-2026-000003` | $65.000    | confirmed | Sin pago (Admin Central debe)    |
 
 ### 17.7 Tickets
 
-| Número | Category | Status |
-|---|---|---|
-| `SOP-2026-000001` | maintenance | open (edificio Torre Callao completo) |
-| `SOP-2026-000002` | maintenance | in_progress (asignado a Carla, equipo CB-LOCALES) |
+| Número            | Category     | Status                                               |
+| ----------------- | ------------ | ---------------------------------------------------- |
+| `SOP-2026-000001` | maintenance  | open (edificio Torre Callao completo)                |
+| `SOP-2026-000002` | maintenance  | in_progress (asignado a Carla, equipo CB-LOCALES)    |
 | `SOP-2026-000003` | installation | resolved (asignado a Bruno, vinculado a bill 000002) |
 
 ### 17.8 Recurring charges
