@@ -69,6 +69,7 @@ The `resolve_equipment_update` RPC MUST, for each RFID key it successfully activ
 A client-side hook `usePendingKeysForEquipment(equipmentId)` MUST return exactly three groups (`to_activate`, `to_disable`, `unchanged`) for the given equipment, using PostgREST queries scoped via `rfid_key_intended_equipment` and `key_authorizations`. The query MUST NOT return keys belonging to a different equipment.
 
 Group definitions:
+
 - `to_activate`: `rfid_keys` with `status = 'pending_installation'` joined to `rfid_key_intended_equipment` for this equipment.
 - `to_disable`: `rfid_keys` with `status = 'pending_disable'` that have an `operations.key_authorizations` row for this equipment with `sync_state = 'installed'`.
 - `unchanged`: `rfid_keys` with `status = 'active'` that have an `operations.key_authorizations` row for this equipment with `sync_state = 'installed'` and `removed_at IS NULL`.
@@ -266,6 +267,7 @@ The following behaviors MUST remain unchanged after this delta is applied. They 
 ### Extending test_092_resolve_rpcs_dual_fk.sql — Scenario C (RED step)
 
 Scenario C MUST be extended to assert, after `resolve_equipment_update` resolves a new-path key:
+
 - `key_order_items.status = 'installed'` for the resolved key's item.
 - `key_orders.status = 'ready_for_pickup'` for the parent order (when it is the only item).
 
