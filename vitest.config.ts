@@ -17,7 +17,7 @@ import { defineConfig } from 'vitest/config';
  *   @vitalock/installer      79.13      64.92     70.64     79.13
  *   @vitalock/ui             66.29      88.88     66.66     66.29
  *   @vitalock/shared         67.51      83.07     68.42     67.51
- *   @vitalock/supabase       43.72      92.10     84.00     43.72
+ *   @vitalock/supabase       87.67      95.18     86.84     87.67   (re-measured 2026-09-10 after typing the RPC boundary + tests)
  *
  * RATCHET POLICY: when a workspace's measured coverage rises, raise its floor
  * here in the same PR. Never lower a floor to turn a red build green — fix the
@@ -28,7 +28,7 @@ export const coverageThresholds = {
   '@vitalock/installer': { statements: 76, branches: 62, functions: 67, lines: 76 },
   '@vitalock/ui': { statements: 63, branches: 85, functions: 63, lines: 63 },
   '@vitalock/shared': { statements: 64, branches: 80, functions: 65, lines: 64 },
-  '@vitalock/supabase': { statements: 40, branches: 88, functions: 80, lines: 40 },
+  '@vitalock/supabase': { statements: 84, branches: 92, functions: 83, lines: 84 },
 };
 
 export type CoverageWorkspace = keyof typeof coverageThresholds;

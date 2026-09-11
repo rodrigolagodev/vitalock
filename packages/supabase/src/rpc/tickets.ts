@@ -1,13 +1,14 @@
 import type { TypedSupabaseClient } from '../client';
+import { definedRpcArgs } from '../types/rpc';
 
 /**
  * Wrappers around the ticket-resolution RPCs.
  *
- * These RPCs accept nullable arguments at the SQL level (the function bodies
- * gate on `is not null`), but `supabase gen types` marks them non-nullable
- * because the SQL signature has no `default null` for those params. The
- * casts here are the single place where that mismatch is absorbed — callers
- * pass domain-shaped inputs and never see the shape divergence.
+ * Every argument these RPCs treat as "optional" is declared `DEFAULT NULL` in
+ * SQL, which `supabase gen types` renders as an *optional* property rather
+ * than a nullable one. `definedRpcArgs` drops the nullish entries so the key
+ * is omitted and the SQL default applies — exactly what sending an explicit
+ * null used to achieve, but expressible in the generated types.
  */
 
 export interface ResolveEquipmentInstallationInput {
@@ -25,13 +26,14 @@ export async function resolveEquipmentInstallation(
   const { data, error } = await client.rpc('resolve_equipment_installation', {
     p_ticket_id: input.ticketId,
     p_serial: input.serial,
-    // SQL accepts null; typegen omits the nullable flag → cast.
-    p_unit_id: (input.unitId ?? null) as unknown as string,
-    p_note: (input.note ?? null) as unknown as string,
-    ...(input.actorStaffId != null && { p_actor_staff_id: input.actorStaffId }),
+    ...definedRpcArgs({
+      p_unit_id: input.unitId,
+      p_note: input.note,
+      p_actor_staff_id: input.actorStaffId,
+    }),
   });
   if (error) throw error;
-  return data as string;
+  return data;
 }
 
 export interface ResolveEquipmentReplacementInput {
@@ -53,12 +55,14 @@ export async function resolveEquipmentReplacement(
     p_old_equipment_id: input.oldEquipmentId,
     p_new_serial: input.newSerial,
     p_new_model: input.newModel,
-    p_new_description: (input.newDescription ?? null) as unknown as string,
-    p_note: (input.note ?? null) as unknown as string,
-    ...(input.actorStaffId != null && { p_actor_staff_id: input.actorStaffId }),
+    ...definedRpcArgs({
+      p_new_description: input.newDescription,
+      p_note: input.note,
+      p_actor_staff_id: input.actorStaffId,
+    }),
   });
   if (error) throw error;
-  return data as string;
+  return data;
 }
 
 export interface ResolveTicketInput {
@@ -73,11 +77,13 @@ export async function resolveTicket(
 ): Promise<string> {
   const { data, error } = await client.rpc('resolve_ticket', {
     p_ticket_id: input.ticketId,
-    p_note: (input.note ?? null) as unknown as string,
-    ...(input.actorStaffId != null && { p_actor_staff_id: input.actorStaffId }),
+    ...definedRpcArgs({
+      p_note: input.note,
+      p_actor_staff_id: input.actorStaffId,
+    }),
   });
   if (error) throw error;
-  return data as string;
+  return data;
 }
 
 export interface CreateAndAssignEquipmentInput {
@@ -104,11 +110,13 @@ export async function createAndAssignEquipment(
     p_building_id: input.buildingId,
     p_serial: input.serial,
     p_model: input.model,
-    p_description: (input.description ?? '') as unknown as string,
+    // p_description is a required, non-nullable SQL parameter; '' is the
+    // sentinel the RPC expects for "no description".
+    p_description: input.description ?? '',
     p_access_type: input.accessType,
   });
   if (error) throw error;
-  return data as string;
+  return data;
 }
 
 export interface CompleteAuthorizationsInput {
@@ -155,7 +163,7 @@ export async function configureTechnicalTicketEquipment(
   const { error } = await client.rpc('configure_technical_ticket_equipment', {
     p_ticket_id: input.ticketId,
     p_new_serial: input.newSerial,
-    p_new_model: (input.newModel ?? null) as unknown as string,
+    ...definedRpcArgs({ p_new_model: input.newModel }),
   });
   if (error) throw error;
 }
