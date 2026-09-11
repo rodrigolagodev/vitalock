@@ -1,12 +1,7 @@
 import { LogOut, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Button, Switch } from '@vitalock/ui';
+import { Button, Popover, PopoverContent, PopoverTrigger, Switch } from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 
 function initialsFromName(name: string): string {
   return name
@@ -38,32 +33,23 @@ export function MobileTopbarUserButton() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="bg-muted text-muted-foreground hover:bg-muted/80 focus-visible:ring-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2"
           aria-label="Abrir menú de usuario"
         >
           {initials}
         </button>
       </PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="end"
-        sideOffset={8}
-        className="w-[248px] p-0"
-      >
+      <PopoverContent side="bottom" align="end" sideOffset={8} className="w-[248px] p-0">
         <div className="flex flex-col gap-0.5 border-b px-3 py-3">
           <span className="truncate text-sm font-medium">{name}</span>
-          {email && (
-            <span className="truncate text-xs text-muted-foreground">
-              {email}
-            </span>
-          )}
+          {email && <span className="text-muted-foreground truncate text-xs">{email}</span>}
         </div>
         <div className="flex items-center justify-between px-3 py-2.5">
           <div className="flex items-center gap-2 text-sm">
             {isDark ? (
-              <Moon className="h-4 w-4 text-muted-foreground" />
+              <Moon className="text-muted-foreground h-4 w-4" />
             ) : (
-              <Sun className="h-4 w-4 text-muted-foreground" />
+              <Sun className="text-muted-foreground h-4 w-4" />
             )}
             <span>Modo oscuro</span>
           </div>

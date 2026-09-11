@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Loader2 } from 'lucide-react';
-import { Badge } from '@vitalock/ui';
+import { Badge, Skeleton } from '@vitalock/ui';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
-import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConnectivityBanner } from '@/components/common/ConnectivityBanner';
 
@@ -25,23 +24,24 @@ const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> =
 
 function TaskRow({ ticket }: { ticket: AssignedTicket }) {
   const snapshot = ticket.equipmentUpdateSnapshot;
-  const hasKeys = !!snapshot && (snapshot.keys_to_activate.length + snapshot.keys_to_disable.length) > 0;
+  const hasKeys =
+    !!snapshot && snapshot.keys_to_activate.length + snapshot.keys_to_disable.length > 0;
 
   return (
     <li>
       <Link
         to={`/tareas/${ticket.id}`}
-        className="flex items-center gap-2 rounded-md border bg-card px-3 py-2.5 transition-colors hover:bg-muted/50"
+        className="bg-card hover:bg-muted/50 flex items-center gap-2 rounded-md border px-3 py-2.5 transition-colors"
       >
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-sm font-medium">{ticket.title}</span>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+          <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
             {ticket.building.name && <span className="truncate">{ticket.building.name}</span>}
             {hasKeys && (
-              <span className="shrink-0 text-muted-foreground">
-                {snapshot!.keys_to_activate.length} alta
+              <span className="text-muted-foreground shrink-0">
+                {snapshot.keys_to_activate.length} alta
                 {' / '}
-                {snapshot!.keys_to_disable.length} baja
+                {snapshot.keys_to_disable.length} baja
               </span>
             )}
           </span>
@@ -49,7 +49,7 @@ function TaskRow({ ticket }: { ticket: AssignedTicket }) {
         <Badge variant={statusVariant[ticket.status]} className="shrink-0">
           {statusLabel[ticket.status]}
         </Badge>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
       </Link>
     </li>
   );
@@ -59,7 +59,7 @@ function LoadingSkeletons() {
   return (
     <div className="flex flex-col gap-2">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="rounded-md border p-3 flex flex-col gap-2">
+        <div key={i} className="flex flex-col gap-2 rounded-md border p-3">
           <Skeleton className="h-4 w-2/3" />
           <Skeleton className="h-3 w-1/3" />
         </div>
@@ -95,11 +95,14 @@ export default function TareasPage() {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
+    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Mis tareas</h1>
         {isFetching && !isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Actualizando" />
+          <Loader2
+            className="text-muted-foreground h-4 w-4 animate-spin"
+            aria-label="Actualizando"
+          />
         )}
       </div>
 
