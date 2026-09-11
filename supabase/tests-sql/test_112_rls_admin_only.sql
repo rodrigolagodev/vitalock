@@ -61,7 +61,7 @@ BEGIN
   v_tech_order_id := public.create_technical_order_with_items(
     jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_org_id),
     ARRAY[
-      jsonb_build_object('item_type', 'installation', 'building_id', v_building_id,
+      jsonb_build_object('item_type', 'install_equipment', 'building_id', v_building_id,
                          'quantity', 1, 'unit_price', 300)
     ]::jsonb[],
     false

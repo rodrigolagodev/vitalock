@@ -25,17 +25,21 @@ SELECT lives_ok(
       v_order_id    uuid;
       v_item_id     uuid;
       v_ticket      record;
+      v_product_id  uuid;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test 110-S1 Admin') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 110-S1 Building', 'Calle 1', v_admin_id) RETURNING id INTO v_building_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 110 Product 1', 'equipment', 10, 0) RETURNING id INTO v_product_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 110-S1 Staff', 'installer') RETURNING id INTO v_staff_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'install_equipment',
+            'product_id', v_product_id,
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
@@ -89,7 +93,7 @@ SELECT lives_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'equipment',
+            'item_type', 'install_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
@@ -148,7 +152,7 @@ SELECT lives_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'equipment',
+            'item_type', 'install_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,

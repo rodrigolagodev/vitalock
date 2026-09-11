@@ -24,6 +24,7 @@ SELECT lives_ok(
       v_admin_id    uuid;
       v_building_id uuid;
       v_staff_id    uuid;
+      v_equipment_id uuid;
       v_ticket_id   uuid;
       v_status      text;
       v_by_staff    uuid;
@@ -32,11 +33,13 @@ SELECT lives_ok(
       INSERT INTO public.administrations (company_name) VALUES ('Test Admin ResolveTicket') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id) VALUES ('Test Building ResolveTicket', 'Street 1', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test Installer ResolveTicket', 'installer') RETURNING id INTO v_staff_id;
+      INSERT INTO operations.equipment (serial_number, building_id, description, status)
+        VALUES ('SN-RT-1', v_building_id, 'Equip ResolveTicket 1', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (
-        administration_id, building_id, category, description, status, assigned_to_staff_id
+        administration_id, building_id, category, description, status, assigned_to_staff_id, equipment_id
       ) VALUES (
-        v_admin_id, v_building_id, 'key_configuration', 'Configurar llave en lector', 'open', v_staff_id
+        v_admin_id, v_building_id, 'maintain_equipment', 'Configurar llave en lector', 'open', v_staff_id, v_equipment_id
       ) RETURNING id INTO v_ticket_id;
 
       PERFORM public.resolve_ticket(v_ticket_id, 'Instalada en el lector', v_staff_id);
@@ -63,17 +66,20 @@ SELECT lives_ok(
       v_admin_id    uuid;
       v_building_id uuid;
       v_staff_id    uuid;
+      v_equipment_id uuid;
       v_ticket_id   uuid;
       v_status      text;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test Admin ResolveInProgress') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id) VALUES ('Test Building ResolveInProgress', 'Street 2', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test Installer ResolveInProgress', 'installer') RETURNING id INTO v_staff_id;
+      INSERT INTO operations.equipment (serial_number, building_id, description, status)
+        VALUES ('SN-RT-ResolveInProgress', v_building_id, 'Equip ResolveInProgress', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (
-        administration_id, building_id, category, description, status, assigned_to_staff_id
+        administration_id, building_id, category, description, status, assigned_to_staff_id, equipment_id
       ) VALUES (
-        v_admin_id, v_building_id, 'key_configuration', 'Configurar llave (ya en progreso)', 'in_progress', v_staff_id
+        v_admin_id, v_building_id, 'maintain_equipment', 'Configurar llave (ya en progreso)', 'in_progress', v_staff_id, v_equipment_id
       ) RETURNING id INTO v_ticket_id;
 
       PERFORM public.resolve_ticket(v_ticket_id, NULL, v_staff_id);
@@ -95,16 +101,19 @@ SELECT throws_ok(
       v_admin_id    uuid;
       v_building_id uuid;
       v_staff_id    uuid;
+      v_equipment_id uuid;
       v_ticket_id   uuid;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test Admin ResolveTwice') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id) VALUES ('Test Building ResolveTwice', 'Street 3', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test Installer ResolveTwice', 'installer') RETURNING id INTO v_staff_id;
+      INSERT INTO operations.equipment (serial_number, building_id, description, status)
+        VALUES ('SN-RT-ResolveTwice', v_building_id, 'Equip ResolveTwice', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (
-        administration_id, building_id, category, description, status, assigned_to_staff_id
+        administration_id, building_id, category, description, status, assigned_to_staff_id, equipment_id
       ) VALUES (
-        v_admin_id, v_building_id, 'key_configuration', 'Configurar llave (ya resuelta)', 'open', v_staff_id
+        v_admin_id, v_building_id, 'maintain_equipment', 'Configurar llave (ya resuelta)', 'open', v_staff_id, v_equipment_id
       ) RETURNING id INTO v_ticket_id;
 
       PERFORM public.resolve_ticket(v_ticket_id, 'Primera vez', v_staff_id);
@@ -126,16 +135,19 @@ SELECT throws_ok(
       v_admin_id    uuid;
       v_building_id uuid;
       v_staff_id    uuid;
+      v_equipment_id uuid;
       v_ticket_id   uuid;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test Admin DirectHop') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id) VALUES ('Test Building DirectHop', 'Street 4', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test Installer DirectHop', 'installer') RETURNING id INTO v_staff_id;
+      INSERT INTO operations.equipment (serial_number, building_id, description, status)
+        VALUES ('SN-RT-DirectHop', v_building_id, 'Equip DirectHop', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (
-        administration_id, building_id, category, description, status, assigned_to_staff_id
+        administration_id, building_id, category, description, status, assigned_to_staff_id, equipment_id
       ) VALUES (
-        v_admin_id, v_building_id, 'key_configuration', 'Configurar llave (hop directo)', 'open', v_staff_id
+        v_admin_id, v_building_id, 'maintain_equipment', 'Configurar llave (hop directo)', 'open', v_staff_id, v_equipment_id
       ) RETURNING id INTO v_ticket_id;
 
       UPDATE support.tickets SET status = 'resolved' WHERE id = v_ticket_id;

@@ -64,7 +64,7 @@ SELECT lives_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'equipment_replacement',
+            'item_type', 'replace_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'intended_equipment_id', v_eq_old,
@@ -129,7 +129,7 @@ SELECT lives_ok(
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[jsonb_build_object(
-          'item_type', 'equipment_replacement',
+          'item_type', 'replace_equipment',
           'building_id', v_building_id,
           'intended_assignee_staff_id', v_staff_id,
           'intended_equipment_id', v_eq_old,
@@ -181,7 +181,7 @@ SELECT lives_ok(
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[jsonb_build_object(
-          'item_type', 'equipment_replacement',
+          'item_type', 'replace_equipment',
           'building_id', v_building_id,
           'intended_assignee_staff_id', v_staff_id,
           'intended_equipment_id', v_eq_old,
@@ -229,7 +229,7 @@ SELECT throws_ok(
         category, description, status, notes
       ) VALUES (
         v_admin_id, v_building_id, v_eq_target, v_staff_id,
-        'maintenance', 'Regular maintenance', 'open', 'test'
+        'maintain_equipment', 'Regular maintenance', 'open', 'test'
       ) RETURNING id INTO v_ticket_id;
 
       PERFORM public.configure_technical_ticket_equipment(v_ticket_id, 'SN-X', NULL);
@@ -266,7 +266,7 @@ SELECT throws_ok(
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[jsonb_build_object(
-          'item_type', 'equipment_replacement', 'building_id', v_building_id,
+          'item_type', 'replace_equipment', 'building_id', v_building_id,
           'intended_assignee_staff_id', v_staff_id, 'intended_equipment_id', v_eq_old,
           'product_id', v_product_id, 'quantity', 1, 'unit_price', 500
         )]::jsonb[], true
@@ -333,7 +333,7 @@ SELECT lives_ok(
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[jsonb_build_object(
-          'item_type', 'equipment_replacement', 'building_id', v_building_id,
+          'item_type', 'replace_equipment', 'building_id', v_building_id,
           'intended_assignee_staff_id', v_staff_id, 'intended_equipment_id', v_eq_old,
           'product_id', v_product_id, 'quantity', 1, 'unit_price', 500
         )]::jsonb[], true
@@ -429,7 +429,7 @@ SELECT lives_ok(
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[jsonb_build_object(
-          'item_type', 'equipment', 'building_id', v_building_id,
+          'item_type', 'install_equipment', 'building_id', v_building_id,
           'intended_assignee_staff_id', v_staff_id,
           'product_id', v_product_id, 'quantity', 1, 'unit_price', 500
         )]::jsonb[], true
@@ -506,7 +506,7 @@ SELECT lives_ok(
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[jsonb_build_object(
-          'item_type', 'equipment_replacement', 'building_id', v_building_id,
+          'item_type', 'replace_equipment', 'building_id', v_building_id,
           'intended_assignee_staff_id', v_staff_id, 'intended_equipment_id', v_eq_old,
           'product_id', v_product_id, 'quantity', 1, 'unit_price', 500
         )]::jsonb[], true

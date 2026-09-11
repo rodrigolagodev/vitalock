@@ -45,7 +45,7 @@ SELECT lives_ok(
         order_id, item_type, description, unit_price, product_id,
         status, quantity, building_id
       ) VALUES (
-        v_technical_order_id, 'installation', 'Instalación test 092-A', 100.00,
+        v_technical_order_id, 'install_equipment', 'Instalación test 092-A', 100.00,
         v_product_id, 'pending', 1, v_building_id
       ) RETURNING id INTO v_technical_item_id;
 
@@ -56,7 +56,7 @@ SELECT lives_ok(
         administration_id, building_id, category, description, status,
         assigned_to_staff_id, technical_order_item_id
       ) VALUES (
-        v_admin_id, v_building_id, 'equipment_installation', 'Instalar equipo 092-A',
+        v_admin_id, v_building_id, 'install_equipment', 'Instalar equipo 092-A',
         'open', v_staff_id, v_technical_item_id
       ) RETURNING id INTO v_ticket_id;
 
@@ -122,7 +122,7 @@ SELECT lives_ok(
         order_id, item_type, description, unit_price, product_id,
         intended_equipment_id, status, quantity, building_id
       ) VALUES (
-        v_technical_order_id, 'equipment_replacement', 'Reemplazo test 092-B', 200.00,
+        v_technical_order_id, 'replace_equipment', 'Reemplazo test 092-B', 200.00,
         v_product_id, v_old_equipment_id, 'pending', 1, v_building_id
       ) RETURNING id INTO v_technical_item_id;
 
@@ -133,7 +133,7 @@ SELECT lives_ok(
         administration_id, building_id, category, description, status,
         assigned_to_staff_id, technical_order_item_id, equipment_id
       ) VALUES (
-        v_admin_id, v_building_id, 'equipment_replacement', 'Reemplazar equipo 092-B',
+        v_admin_id, v_building_id, 'replace_equipment', 'Reemplazar equipo 092-B',
         'open', v_staff_id, v_technical_item_id, v_old_equipment_id
       ) RETURNING id INTO v_ticket_id;
 
@@ -276,26 +276,29 @@ SELECT lives_ok(
       v_technical_order_id    uuid;
       v_technical_item_id     uuid;
       v_ticket_id             uuid;
+      v_equipment_id          uuid;
       v_status                text;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test 092-D Admin') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id) VALUES ('Test 092-D Building', 'Calle 4', v_admin_id) RETURNING id INTO v_building_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 092-D Staff', 'admin') RETURNING id INTO v_staff_id;
+      INSERT INTO operations.equipment (serial_number, building_id, description, status)
+        VALUES ('SN-092-D', v_building_id, 'Equip 092-D', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO public.technical_orders (order_number, status, administration_id, client_type)
         VALUES ('ORD-TEC-092-D', 'confirmed', v_admin_id, 'administration')
         RETURNING id INTO v_technical_order_id;
 
       INSERT INTO public.technical_order_items (order_id, item_type, description, unit_price, status, quantity, building_id)
-        VALUES (v_technical_order_id, 'maintenance', 'Mant 092-D', 80.00, 'pending', 1, v_building_id)
+        VALUES (v_technical_order_id, 'maintain_equipment', 'Mant 092-D', 80.00, 'pending', 1, v_building_id)
         RETURNING id INTO v_technical_item_id;
 
       INSERT INTO support.tickets (
         administration_id, building_id, category, description, status,
-        assigned_to_staff_id, technical_order_item_id
+        assigned_to_staff_id, technical_order_item_id, equipment_id
       ) VALUES (
-        v_admin_id, v_building_id, 'key_configuration', 'Ticket 092-D',
-        'open', v_staff_id, v_technical_item_id
+        v_admin_id, v_building_id, 'maintain_equipment', 'Ticket 092-D',
+        'open', v_staff_id, v_technical_item_id, v_equipment_id
       ) RETURNING id INTO v_ticket_id;
 
       PERFORM public.resolve_ticket(v_ticket_id, 'Resuelto 092-D', v_staff_id);
@@ -308,38 +311,32 @@ SELECT lives_ok(
 );
 
 -- ============================================================
--- Scenario E (PASS 092-E): resolve_equipment_installation with no order link
+-- Scenario E (PASS 092-E): a standalone install ticket is no longer allowed
 -- ============================================================
+-- Until ticket-taxonomy-cleanup (2026-09-01) this scenario proved that
+-- resolve_equipment_installation worked on a ticket with no order link. That
+-- create path was removed on purpose: install/replace work must originate
+-- from a technical order item (CHECK tickets_equipment_required). The
+-- scenario now guards that decision.
 SELECT lives_ok(
   $q$
     DO $$
     DECLARE
-      v_admin_id     uuid;
-      v_building_id  uuid;
-      v_staff_id     uuid;
-      v_ticket_id    uuid;
-      v_equipment_id uuid;
-      v_status       text;
+      v_admin_id    uuid;
+      v_building_id uuid;
+      v_state       text := 'none';
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test 092-E Admin') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id) VALUES ('Test 092-E Building', 'Calle 5', v_admin_id) RETURNING id INTO v_building_id;
-      INSERT INTO identity.staff (full_name, role) VALUES ('Test 092-E Staff', 'admin') RETURNING id INTO v_staff_id;
-
-      INSERT INTO support.tickets (
-        administration_id, building_id, category, description, status, assigned_to_staff_id
-      ) VALUES (
-        v_admin_id, v_building_id, 'equipment_installation', 'Install freestanding 092-E', 'open', v_staff_id
-      ) RETURNING id INTO v_ticket_id;
-
-      SELECT public.resolve_equipment_installation(v_ticket_id, 'SN-FREE-092-E', NULL, 'Sin orden', v_staff_id) INTO v_equipment_id;
-
-      ASSERT v_equipment_id IS NOT NULL, 'FAIL 092-E: expected equipment_id, got NULL';
-
-      SELECT status INTO v_status FROM support.tickets WHERE id = v_ticket_id;
-      ASSERT v_status = 'resolved', 'FAIL 092-E: expected resolved, got ' || coalesce(v_status, 'NULL');
+      BEGIN
+        INSERT INTO support.tickets (administration_id, building_id, category, description, status)
+          VALUES (v_admin_id, v_building_id, 'install_equipment', 'Install freestanding 092-E', 'open');
+      EXCEPTION WHEN OTHERS THEN v_state := SQLSTATE;
+      END;
+      ASSERT v_state = '23514', 'FAIL 092-E: standalone install ticket should hit tickets_equipment_required (23514), got ' || v_state;
     END $$;
   $q$,
-  'PASS 092-E: resolve_equipment_installation with no order link still works'
+  'PASS 092-E: a standalone install_equipment ticket (no order item) is rejected'
 );
 
 SELECT * FROM finish();
