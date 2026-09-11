@@ -15,10 +15,7 @@ const initialState: AuthState = {
   error: null,
 };
 
-export function useAuth(
-  supabase: TypedSupabaseClient,
-  expectedRole: StaffRole,
-): UseAuthReturn {
+export function useAuth(supabase: TypedSupabaseClient, expectedRole: StaffRole): UseAuthReturn {
   const [state, setState] = useState<AuthState>(initialState);
   // Latest committed state, so async handlers can branch on it without
   // stale-closure reads (e.g. the auth event listener below).
@@ -138,7 +135,18 @@ export function useAuth(
           return;
         }
         setState((prev) => ({ ...prev, session, phase: 'fetching_profile' }));
-        await fetchProfile(session.user.id);
+        // supabase-js emits SIGNED_IN from inside _recoverAndRefresh() while it
+        // still holds its navigator lock (session restore on page load). Anything
+        // awaited here that re-enters the auth client — a PostgREST call reads
+        // the session, which takes that same lock — deadlocks until this
+        // callback returns, and this callback is waiting on it. The documented
+        // rule is to never await auth-client work inside onAuthStateChange;
+        // deferring to a macrotask lets the lock release first. It only bit on
+        // fast loads (cached production bundle), where React subscribes before
+        // initialization finishes: an infinite spinner on reload.
+        setTimeout(() => {
+          if (mounted) void fetchProfile(session.user.id);
+        }, 0);
       } else if (event === 'INITIAL_SESSION' && !session) {
         setState({ phase: 'anonymous', session: null, staff: null, error: null });
       } else if (event === 'SIGNED_OUT') {
@@ -149,9 +157,7 @@ export function useAuth(
           error: null,
         });
       } else if (event === 'TOKEN_REFRESHED' && session) {
-        setState((prev) =>
-          prev.phase === 'authenticated' ? { ...prev, session } : prev,
-        );
+        setState((prev) => (prev.phase === 'authenticated' ? { ...prev, session } : prev));
       }
     });
 
@@ -197,7 +203,9 @@ export function useAuth(
   }, [supabase]);
 
   const refresh = useCallback(async (): Promise<void> => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
       await fetchProfile(session.user.id);
     }
@@ -205,7 +213,9 @@ export function useAuth(
 
   return {
     ...state,
-    isLoading: LOADING_PHASES.has(state.phase as 'initializing' | 'authenticating' | 'fetching_profile'),
+    isLoading: LOADING_PHASES.has(
+      state.phase as 'initializing' | 'authenticating' | 'fetching_profile',
+    ),
     signIn,
     signOut,
     refresh,
