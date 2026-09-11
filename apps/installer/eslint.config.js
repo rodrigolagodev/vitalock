@@ -1,2 +1,4 @@
 import config from '@vitalock/config-eslint/react';
-export default config;
+import { boundaries } from '@vitalock/config-eslint/boundaries';
+
+export default [...config, boundaries('app')];
