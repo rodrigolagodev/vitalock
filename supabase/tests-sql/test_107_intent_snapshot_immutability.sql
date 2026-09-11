@@ -38,7 +38,7 @@ SELECT throws_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'maintenance',
+            'item_type', 'maintain_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'intended_equipment_id', v_eq_id,
@@ -88,7 +88,7 @@ SELECT lives_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'maintenance',
+            'item_type', 'maintain_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
@@ -133,7 +133,7 @@ SELECT throws_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'install_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,

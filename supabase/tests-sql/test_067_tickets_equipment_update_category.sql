@@ -27,7 +27,7 @@ SELECT lives_ok(
       INSERT INTO support.tickets (
         administration_id, building_id, category, description, status, equipment_id
       ) VALUES (
-        v_admin_id, v_building_id, 'equipment_update', 'Test 067-S1', 'open', v_equipment_id
+        v_admin_id, v_building_id, 'update_equipment', 'Test 067-S1', 'open', v_equipment_id
       ) RETURNING id INTO v_ticket_id;
 
       ASSERT v_ticket_id IS NOT NULL, 'FAIL 067-S1: equipment_update category not accepted';
@@ -75,7 +75,7 @@ SELECT lives_ok(
       INSERT INTO operations.equipment (serial_number, building_id, description, status) VALUES ('SN-067-S3', v_building_id, 'Equip 067-S3', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test 067-S3', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test 067-S3', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id;
 
       UPDATE support.tickets
@@ -106,7 +106,7 @@ SELECT throws_ok(
       INSERT INTO operations.equipment (serial_number, building_id, description, status) VALUES ('SN-067-S4', v_building_id, 'Equip 067-S4', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test 067-S4', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test 067-S4', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id;
 
       UPDATE support.tickets SET status = 'in_progress' WHERE id = v_ticket_id AND status = 'open';
@@ -139,7 +139,7 @@ SELECT lives_ok(
       INSERT INTO operations.equipment (serial_number, building_id, description, status) VALUES ('SN-067-S5', v_building_id, 'Equip 067-S5', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'maintenance', 'Test 067-S5', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'maintain_equipment', 'Test 067-S5', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id;
 
       UPDATE support.tickets SET status = 'in_progress' WHERE id = v_ticket_id AND status = 'open';
@@ -170,7 +170,7 @@ SELECT throws_ok(
       INSERT INTO public.buildings (name, address, administration_id) VALUES ('Building 067-S6', 'Calle 6', v_admin_id) RETURNING id INTO v_building_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test 067-S6', 'open')
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test 067-S6', 'open')
         RETURNING id INTO v_ticket_id;
 
       UPDATE support.tickets SET status = 'in_progress' WHERE id = v_ticket_id AND status = 'open';

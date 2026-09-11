@@ -97,7 +97,7 @@ SELECT throws_ok(
       PERFORM public.create_key_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
-          jsonb_build_object('item_type', 'equipment', 'building_id', v_building_id, 'quantity', 1, 'unit_price', 100)
+          jsonb_build_object('item_type', 'install_equipment', 'building_id', v_building_id, 'quantity', 1, 'unit_price', 100)
         ]::jsonb[],
         false
       );

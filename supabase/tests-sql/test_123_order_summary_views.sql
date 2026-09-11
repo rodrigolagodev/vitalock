@@ -65,9 +65,9 @@ BEGIN
     RETURNING id INTO v_to_norte_bld2;
 
   INSERT INTO public.technical_order_items (order_id, building_id, item_type, quantity, unit_price)
-    VALUES (v_to_sol_bld1, v_bld_1, 'maintenance', 1, 200.00);
+    VALUES (v_to_sol_bld1, v_bld_1, 'maintain_equipment', 1, 200.00);
   INSERT INTO public.technical_order_items (order_id, building_id, item_type, quantity, unit_price)
-    VALUES (v_to_norte_bld2, v_bld_2, 'maintenance', 1, 200.00);
+    VALUES (v_to_norte_bld2, v_bld_2, 'maintain_equipment', 1, 200.00);
 
   CREATE TEMP TABLE _t123 (k text primary key, v uuid) ON COMMIT DROP;
   INSERT INTO _t123 VALUES

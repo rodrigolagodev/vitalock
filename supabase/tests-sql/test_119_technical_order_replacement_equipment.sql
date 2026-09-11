@@ -50,7 +50,7 @@ SELECT lives_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'equipment_replacement',
+            'item_type', 'replace_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'intended_equipment_id', v_eq_old,
@@ -103,7 +103,7 @@ SELECT throws_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'equipment_replacement',
+            'item_type', 'replace_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'intended_equipment_id', v_eq_old,
@@ -146,7 +146,7 @@ SELECT throws_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'equipment_replacement',
+            'item_type', 'replace_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'intended_equipment_id', v_eq_old,
@@ -193,7 +193,7 @@ SELECT lives_ok(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'equipment_replacement',
+            'item_type', 'replace_equipment',
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'intended_equipment_id', v_eq_old,

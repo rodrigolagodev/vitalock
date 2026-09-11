@@ -42,12 +42,14 @@ BEGIN
     VALUES ('Test 122 Building', 'Calle 1', v_admin_org_id)
     RETURNING id INTO v_building_id;
 
+  -- maintain_equipment: since ticket-taxonomy-cleanup a standalone install ticket is
+  -- rejected by tickets_equipment_required; create_and_assign_equipment is category-agnostic.
   INSERT INTO support.tickets (administration_id, building_id, category, description, status)
-    VALUES (v_admin_org_id, v_building_id, 'installation', 'Test 122 ticket happy', 'open')
+    VALUES (v_admin_org_id, v_building_id, 'maintain_equipment', 'Test 122 ticket happy', 'open')
     RETURNING id INTO v_ticket_ok;
 
   INSERT INTO support.tickets (administration_id, building_id, category, description, status)
-    VALUES (v_admin_org_id, v_building_id, 'installation', 'Test 122 ticket dupe', 'open')
+    VALUES (v_admin_org_id, v_building_id, 'maintain_equipment', 'Test 122 ticket dupe', 'open')
     RETURNING id INTO v_ticket_dupe;
 
   -- Pre-existing equipment with a serial we will attempt to duplicate in S4.

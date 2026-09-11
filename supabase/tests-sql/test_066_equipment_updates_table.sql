@@ -32,7 +32,7 @@ SELECT lives_ok(
       INSERT INTO public.rfid_keys (rfid_code, unit_id, status) VALUES ('T066-S1-KEY', v_unit_id, 'pending_installation') RETURNING id INTO v_key_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test update S1', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test update S1', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id;
 
       INSERT INTO support.equipment_updates (
@@ -73,13 +73,13 @@ SELECT throws_ok(
       INSERT INTO public.rfid_keys (rfid_code, unit_id, status) VALUES ('T066-S2-KEY', v_unit_id, 'pending_installation') RETURNING id INTO v_key_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test update S2-A', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test update S2-A', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id1;
       INSERT INTO support.equipment_updates (ticket_id, equipment_id, mdb_storage_path, keys_to_activate)
         VALUES (v_ticket_id1, v_equipment_id, 'path/test1.mdb', array[v_key_id]);
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test update S2-B', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test update S2-B', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id2;
       INSERT INTO support.equipment_updates (ticket_id, equipment_id, mdb_storage_path, keys_to_activate)
         VALUES (v_ticket_id2, v_equipment_id, 'path/test2.mdb', array[v_key_id]);
@@ -113,7 +113,7 @@ SELECT lives_ok(
       INSERT INTO public.rfid_keys (rfid_code, unit_id, status) VALUES ('T066-S3-KEY', v_unit_id, 'pending_installation') RETURNING id INTO v_key_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test update S3-A', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test update S3-A', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id1;
       INSERT INTO support.equipment_updates (ticket_id, equipment_id, mdb_storage_path, keys_to_activate)
         VALUES (v_ticket_id1, v_equipment_id, 'path/test.mdb', array[v_key_id]);
@@ -121,7 +121,7 @@ SELECT lives_ok(
       UPDATE support.equipment_updates SET resolved_at = now() WHERE ticket_id = v_ticket_id1;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test update S3-B', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test update S3-B', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id2;
       INSERT INTO support.equipment_updates (ticket_id, equipment_id, mdb_storage_path, keys_to_activate)
         VALUES (v_ticket_id2, v_equipment_id, 'path/test2.mdb', array[v_key_id])
@@ -150,7 +150,7 @@ SELECT throws_ok(
       INSERT INTO operations.equipment (serial_number, building_id, description, status) VALUES ('SN-066-S4', v_building_id, 'Equip 066-S4', 'active') RETURNING id INTO v_equipment_id;
 
       INSERT INTO support.tickets (administration_id, building_id, category, description, status, equipment_id)
-        VALUES (v_admin_id, v_building_id, 'equipment_update', 'Test update S4', 'open', v_equipment_id)
+        VALUES (v_admin_id, v_building_id, 'update_equipment', 'Test update S4', 'open', v_equipment_id)
         RETURNING id INTO v_ticket_id;
 
       INSERT INTO support.equipment_updates (ticket_id, equipment_id, mdb_storage_path, keys_to_activate, keys_to_disable)

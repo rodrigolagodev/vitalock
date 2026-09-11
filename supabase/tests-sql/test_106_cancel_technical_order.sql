@@ -21,17 +21,21 @@ SELECT lives_ok(
       v_staff_id    uuid;
       v_order_id    uuid;
       v_status      text;
+      v_product_id  uuid;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test 106-S1 Admin') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 106-S1 Building', 'Calle 1', v_admin_id) RETURNING id INTO v_building_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 106 Product 1', 'equipment', 10, 0) RETURNING id INTO v_product_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 106-S1 Staff', 'installer') RETURNING id INTO v_staff_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'install_equipment',
+            'product_id', v_product_id,
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
@@ -62,17 +66,21 @@ SELECT lives_ok(
       v_staff_id    uuid;
       v_order_id    uuid;
       v_cancelled_tickets int;
+      v_product_id  uuid;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test 106-S2 Admin') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 106-S2 Building', 'Calle 2', v_admin_id) RETURNING id INTO v_building_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 106 Product 2', 'equipment', 10, 0) RETURNING id INTO v_product_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 106-S2 Staff', 'installer') RETURNING id INTO v_staff_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'install_equipment',
+            'product_id', v_product_id,
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
@@ -109,17 +117,21 @@ SELECT lives_ok(
       v_staff_id    uuid;
       v_order_id    uuid;
       v_status      text;
+      v_product_id  uuid;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test 106-S3 Admin') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 106-S3 Building', 'Calle 3', v_admin_id) RETURNING id INTO v_building_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 106 Product 3', 'equipment', 10, 0) RETURNING id INTO v_product_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 106-S3 Staff', 'installer') RETURNING id INTO v_staff_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'install_equipment',
+            'product_id', v_product_id,
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,
@@ -149,17 +161,21 @@ SELECT throws_ok(
       v_building_id uuid;
       v_staff_id    uuid;
       v_order_id    uuid;
+      v_product_id  uuid;
     BEGIN
       INSERT INTO public.administrations (company_name) VALUES ('Test 106-S4 Admin') RETURNING id INTO v_admin_id;
       INSERT INTO public.buildings (name, address, administration_id)
         VALUES ('Test 106-S4 Building', 'Calle 4', v_admin_id) RETURNING id INTO v_building_id;
+      INSERT INTO public.products (name, category, stock_total, stock_reservado)
+        VALUES ('Test 106 Product 4', 'equipment', 10, 0) RETURNING id INTO v_product_id;
       INSERT INTO identity.staff (full_name, role) VALUES ('Test 106-S4 Staff', 'installer') RETURNING id INTO v_staff_id;
 
       v_order_id := public.create_technical_order_with_items(
         jsonb_build_object('client_type', 'administration', 'administration_id', v_admin_id),
         ARRAY[
           jsonb_build_object(
-            'item_type', 'installation',
+            'item_type', 'install_equipment',
+            'product_id', v_product_id,
             'building_id', v_building_id,
             'intended_assignee_staff_id', v_staff_id,
             'quantity', 1,

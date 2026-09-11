@@ -63,19 +63,19 @@ BEGIN
     RETURNING id INTO v_order_1;
 
   INSERT INTO public.technical_order_items (order_id, item_type, description, unit_price, status, quantity, building_id)
-    VALUES (v_order_1, 'installation', 'Item 126-1A', 100.00, 'pending', 1, v_bld_id)
+    VALUES (v_order_1, 'install_equipment', 'Item 126-1A', 100.00, 'pending', 1, v_bld_id)
     RETURNING id INTO v_item_1a;
 
   INSERT INTO public.technical_order_items (order_id, item_type, description, unit_price, status, quantity, building_id)
-    VALUES (v_order_1, 'maintenance', 'Item 126-1B', 50.00, 'pending', 1, v_bld_id)
+    VALUES (v_order_1, 'maintain_equipment', 'Item 126-1B', 50.00, 'pending', 1, v_bld_id)
     RETURNING id INTO v_item_1b;
 
   INSERT INTO support.tickets (administration_id, building_id, category, description, status, assigned_to_staff_id, technical_order_item_id)
-    VALUES (v_adm_id, v_bld_id, 'maintenance', 'Ticket 126-1A', 'open', v_staff_id, v_item_1a)
+    VALUES (v_adm_id, v_bld_id, 'maintain_equipment', 'Ticket 126-1A', 'open', v_staff_id, v_item_1a)
     RETURNING id INTO v_tk_1a;
 
   INSERT INTO support.tickets (administration_id, building_id, category, description, status, assigned_to_staff_id, technical_order_item_id)
-    VALUES (v_adm_id, v_bld_id, 'maintenance', 'Ticket 126-1B', 'in_progress', v_staff_id, v_item_1b)
+    VALUES (v_adm_id, v_bld_id, 'maintain_equipment', 'Ticket 126-1B', 'in_progress', v_staff_id, v_item_1b)
     RETURNING id INTO v_tk_1b;
 
   -- Order 2 with one item and one ticket (isolation check)
@@ -84,16 +84,16 @@ BEGIN
     RETURNING id INTO v_order_2;
 
   INSERT INTO public.technical_order_items (order_id, item_type, description, unit_price, status, quantity, building_id)
-    VALUES (v_order_2, 'installation', 'Item 126-2A', 75.00, 'pending', 1, v_bld_id)
+    VALUES (v_order_2, 'install_equipment', 'Item 126-2A', 75.00, 'pending', 1, v_bld_id)
     RETURNING id INTO v_item_2a;
 
   INSERT INTO support.tickets (administration_id, building_id, category, description, status, assigned_to_staff_id, technical_order_item_id)
-    VALUES (v_adm_id, v_bld_id, 'maintenance', 'Ticket 126-2A', 'open', v_staff_id, v_item_2a)
+    VALUES (v_adm_id, v_bld_id, 'maintain_equipment', 'Ticket 126-2A', 'open', v_staff_id, v_item_2a)
     RETURNING id INTO v_tk_2a;
 
   -- Orphan ticket (no technical_order_item_id)
   INSERT INTO support.tickets (administration_id, building_id, category, description, status, assigned_to_staff_id)
-    VALUES (v_adm_id, v_bld_id, 'maintenance', 'Orphan Ticket 126', 'open', v_staff_id)
+    VALUES (v_adm_id, v_bld_id, 'maintain_equipment', 'Orphan Ticket 126', 'open', v_staff_id)
     RETURNING id INTO v_tk_orphan;
 
   -- Temp table readable by authenticated role

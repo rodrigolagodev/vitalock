@@ -44,13 +44,13 @@ BEGIN
     VALUES ('Test 125 Building', 'Calle 1', 'CABA', v_admin) RETURNING id INTO v_bld;
 
   INSERT INTO support.tickets (administration_id, building_id, category, description, status, assigned_to_staff_id)
-    VALUES (v_admin, v_bld, 'maintenance', 'Test 125 tk1 for I1', 'open', v_i1_id)
+    VALUES (v_admin, v_bld, 'maintain_equipment', 'Test 125 tk1 for I1', 'open', v_i1_id)
     RETURNING id INTO v_tk_1;
   INSERT INTO support.tickets (administration_id, building_id, category, description, status, assigned_to_staff_id)
-    VALUES (v_admin, v_bld, 'maintenance', 'Test 125 tk2 for I1', 'open', v_i1_id)
+    VALUES (v_admin, v_bld, 'maintain_equipment', 'Test 125 tk2 for I1', 'open', v_i1_id)
     RETURNING id INTO v_tk_2;
   INSERT INTO support.tickets (administration_id, building_id, category, description, status, assigned_to_staff_id)
-    VALUES (v_admin, v_bld, 'maintenance', 'Test 125 tk3 for I2', 'open', v_i2_id)
+    VALUES (v_admin, v_bld, 'maintain_equipment', 'Test 125 tk3 for I2', 'open', v_i2_id)
     RETURNING id INTO v_tk_3;
 
   CREATE TEMP TABLE _t125 (k text primary key, v uuid) ON COMMIT DROP;

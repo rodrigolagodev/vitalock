@@ -110,7 +110,7 @@ SELECT throws_ok(
       INSERT INTO public.key_order_items (
         order_id, item_type, building_id, quantity, unit_price
       ) VALUES (
-        v_order_id, 'maintenance', v_building_id, 1, 100
+        v_order_id, 'maintain_equipment', v_building_id, 1, 100
       );
     END $$;
   $q$,
