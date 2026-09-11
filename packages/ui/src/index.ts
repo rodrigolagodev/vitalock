@@ -60,6 +60,7 @@ export {
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './components/tabs';
 export { RadioGroup, RadioGroupItem } from './components/radio-group';
 export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
+export { Separator } from './components/separator';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/ConfirmDialog';
 export { Switch } from './components/switch';
 export { Tooltip, type TooltipProps } from './components/tooltip';
@@ -69,6 +70,7 @@ export { SearchInput, type SearchInputProps } from './components/patterns/Search
 export { SectionHeading, type SectionHeadingProps } from './components/patterns/SectionHeading';
 export { EmptyState, type EmptyStateProps } from './components/patterns/EmptyState';
 export { ErrorState, type ErrorStateProps } from './components/patterns/ErrorState';
+export { ErrorFallback, type ErrorFallbackProps } from './components/patterns/ErrorFallback';
 export { NotFoundState, type NotFoundStateProps } from './components/patterns/NotFoundState';
 export { Skeleton, type SkeletonProps } from './components/patterns/Skeleton';
 export { Topbar, type TopbarProps } from './components/patterns/Topbar';
