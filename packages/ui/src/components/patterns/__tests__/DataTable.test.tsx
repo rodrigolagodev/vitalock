@@ -3,9 +3,13 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { PencilLine, Eye } from 'lucide-react';
-import React from 'react';
 
-import { DataTable, type DataTableAction, type DataTableColumn, type DataTableProps } from '../DataTable';
+import {
+  DataTable,
+  type DataTableAction,
+  type DataTableColumn,
+  type DataTableProps,
+} from '../DataTable';
 
 interface Item {
   id: string;
@@ -56,7 +60,9 @@ describe('DataTable', () => {
 
     const skeletonRows = document.querySelectorAll('tbody tr');
     expect(skeletonRows).toHaveLength(3);
-    expect(document.querySelectorAll('tbody tr div.animate-pulse, tbody tr div.h-4')).not.toHaveLength(0);
+    expect(
+      document.querySelectorAll('tbody tr div.animate-pulse, tbody tr div.h-4'),
+    ).not.toHaveLength(0);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
@@ -162,24 +168,18 @@ describe('DataTable', () => {
   it('allows keyboard focus to reach each action button and activate it with Enter', async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
-    const actions: DataTableAction<Item>[] = [
-      { icon: PencilLine, label: 'Editar', onClick },
-    ];
+    const actions: DataTableAction<Item>[] = [{ icon: PencilLine, label: 'Editar', onClick }];
     renderTable({ actions });
 
     await user.tab();
-    expect(document.activeElement).toBe(
-      screen.getAllByRole('button', { name: 'Editar' })[0],
-    );
+    expect(document.activeElement).toBe(screen.getAllByRole('button', { name: 'Editar' })[0]);
     await user.keyboard('{Enter}');
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('renders custom content via the renderActions escape hatch', () => {
     renderTable({
-      renderActions: (row) => (
-        <button type="button">Toggle {row.name}</button>
-      ),
+      renderActions: (row) => <button type="button">Toggle {row.name}</button>,
     });
 
     expect(screen.getByRole('button', { name: 'Toggle Item 1' })).toBeInTheDocument();

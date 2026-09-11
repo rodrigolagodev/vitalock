@@ -1,11 +1,12 @@
 {
   "name": "@vitalock/config-eslint",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
     "./base": "./base.js",
-    "./react": "./react.js"
+    "./react": "./react.js",
+    "./boundaries": "./boundaries.js"
   },
   "peerDependencies": {
     "eslint": "^9.13.0"

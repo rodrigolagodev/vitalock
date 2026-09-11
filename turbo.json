@@ -1,7 +1,14 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalDependencies": ["tsconfig.json", ".env"],
+  "globalDependencies": [
+    "tsconfig.json",
+    "vitest.config.ts",
+    ".env",
+    "packages/config-eslint/**",
+    "packages/config-typescript/**",
+    "pnpm-workspace.yaml"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -12,11 +19,13 @@
         "tsconfig.json",
         "vite.config.ts",
         "tailwind.config.*",
+        "tailwind.preset.js",
         "postcss.config.*",
+        "globals.css",
         "package.json"
       ],
-      "outputs": ["dist/**", ".vite/**"],
-      "env": ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"]
+      "outputs": ["dist/**", ".vite/**", "*.tsbuildinfo"],
+      "env": ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "VITE_BASE_PATH"]
     },
     "dev": {
       "cache": false,
@@ -24,14 +33,17 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "inputs": [
-        "src/**",
-        "vitest.config.ts",
-        "vite.config.ts",
-        "tsconfig.json",
-        "package.json"
-      ],
+      "inputs": ["src/**", "vitest.config.ts", "vite.config.ts", "tsconfig.json", "package.json"],
       "outputs": ["coverage/**"]
+    },
+    "test:sql": {
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL", "PG*"]
+    },
+    "size": {
+      "dependsOn": ["build"],
+      "inputs": ["dist/**", "bundle-budget.json"],
+      "outputs": []
     },
     "lint": {
       "inputs": ["src/**", "eslint.config.*", ".eslintrc*", "package.json"],

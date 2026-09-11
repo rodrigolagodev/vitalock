@@ -7,7 +7,18 @@ import tseslint from 'typescript-eslint';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', '.turbo', 'node_modules'] },
+  {
+    ignores: [
+      'dist',
+      'coverage',
+      '.turbo',
+      'node_modules',
+      // vitest bundles its config to a short-lived `*.timestamp-*.mjs`; when
+      // turbo runs lint and test in parallel, eslint can enumerate the file
+      // and then fail with ENOENT once vitest removes it.
+      '**/*.timestamp-*.mjs',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

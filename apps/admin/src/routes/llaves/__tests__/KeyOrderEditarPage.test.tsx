@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import React from 'react';
 import type { KeyOrderDetailRow } from '@/hooks/useKeyOrder';
 
 // Hoist mock refs
@@ -137,10 +136,7 @@ function renderPage(keyOrderId = 'ko-1') {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/llaves/${keyOrderId}/editar`]}>
         <Routes>
-          <Route
-            path="/llaves/:keyOrderId/editar"
-            element={<KeyOrderEditarPage />}
-          />
+          <Route path="/llaves/:keyOrderId/editar" element={<KeyOrderEditarPage />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,

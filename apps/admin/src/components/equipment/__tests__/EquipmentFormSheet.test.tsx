@@ -101,7 +101,7 @@ describe('EquipmentFormSheet', () => {
     it('building_id field is NOT rendered in create form (pre-populated from prop)', () => {
       renderSheet();
       // building_id should not appear as an editable input
-      const inputs = screen.getAllByRole('textbox');
+      const inputs = screen.getAllByRole('textbox') as HTMLInputElement[];
       const inputValues = inputs.map((el) => (el as HTMLInputElement).value);
       // BUILDING_ID should not be in any text input value (it's passed as a prop, not rendered)
       expect(inputValues).not.toContain(BUILDING_ID);

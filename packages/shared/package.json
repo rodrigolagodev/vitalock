@@ -1,8 +1,9 @@
 {
   "name": "@vitalock/shared",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
@@ -29,7 +30,8 @@
     "vitest": "2.1.4"
   },
   "scripts": {
-    "test": "vitest run",
+    "build": "tsc -b",
+    "test": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   }

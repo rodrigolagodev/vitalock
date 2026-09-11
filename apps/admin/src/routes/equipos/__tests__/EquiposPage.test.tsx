@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock hooks
@@ -39,9 +38,7 @@ describe('EquiposPage rendering', () => {
 
   it('renders the "Crear orden técnica" shortcut button', () => {
     renderPage();
-    expect(
-      screen.getByRole('link', { name: /crear orden técnica/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /crear orden técnica/i })).toBeInTheDocument();
   });
 
   it('"Crear orden técnica" link points to /servicio-tecnico/nueva', () => {

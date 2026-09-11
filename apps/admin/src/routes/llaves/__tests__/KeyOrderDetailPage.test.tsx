@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import React from 'react';
 import type { KeyOrderDetailRow } from '@/hooks/useKeyOrder';
 
 // Hoist mocks for vi.mock hoisting requirement
