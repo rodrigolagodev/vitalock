@@ -1,0 +1,5 @@
+# archify output (interactive HTML diagrams, workflow JSON, visual-check PNGs).
+# Regenerable, large, and binary-heavy: kept local, out of version control.
+flow-*.html
+flow-*.workflow.json
+vitalock-runtime.*
