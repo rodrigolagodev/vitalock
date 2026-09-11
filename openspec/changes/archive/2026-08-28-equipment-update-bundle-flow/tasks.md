@@ -6,14 +6,14 @@
 
 ## Review Workload Forecast
 
-| Field | Value |
-|-------|-------|
+| Field                   | Value                                                                   |
+| ----------------------- | ----------------------------------------------------------------------- |
 | Estimated changed lines | ~920 (SQL migration ~250, hooks ~200, admin UI ~330, installer UI ~140) |
-| 400-line budget risk | High |
-| Chained PRs recommended | No |
-| Suggested split | Single PR — four surfaces are only coherent bundled |
-| Delivery strategy | single-pr |
-| Chain strategy | size-exception |
+| 400-line budget risk    | High                                                                    |
+| Chained PRs recommended | No                                                                      |
+| Suggested split         | Single PR — four surfaces are only coherent bundled                     |
+| Delivery strategy       | single-pr                                                               |
+| Chain strategy          | size-exception                                                          |
 
 Decision needed before apply: No
 Chained PRs recommended: No
@@ -22,8 +22,8 @@ Chain strategy: size-exception
 
 ### Suggested Work Units
 
-| Unit | Goal | Likely PR | Focused test command | Runtime harness | Rollback boundary |
-|------|------|-----------|----------------------|-----------------|-------------------|
+| Unit    | Goal                                             | Likely PR | Focused test command                                                                            | Runtime harness                   | Rollback boundary                                         |
+| ------- | ------------------------------------------------ | --------- | ----------------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------------------- |
 | 1 (all) | DB fix + pgTAP + hooks + admin UI + installer UI | single-pr | `pnpm test:sql && pnpm --filter @vitalock/admin test && pnpm --filter @vitalock/installer test` | local Supabase + admin dev server | `git revert` removes migration + all new files atomically |
 
 ## Test commands (verified from repo scripts)

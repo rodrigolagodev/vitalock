@@ -27,7 +27,7 @@ The correct join path already exists in the DB:
 rfid_keys.id → key_order_items.produced_key_id → key_order_items.order_id
 ```
 
-`mark_key_order_item_installed` (`supabase/migrations/20260823000097_key_orders_installation_stage.sql:153`) is already correct. It advances the item status and the 4-lane recompute trigger fires automatically. But it has zero UI callers. It does NOT need to become a UI action — the right place to call it is *inside `resolve_equipment_update`*, not from the frontend.
+`mark_key_order_item_installed` (`supabase/migrations/20260823000097_key_orders_installation_stage.sql:153`) is already correct. It advances the item status and the 4-lane recompute trigger fires automatically. But it has zero UI callers. It does NOT need to become a UI action — the right place to call it is _inside `resolve_equipment_update`_, not from the frontend.
 
 `recompute_key_order_status` (the 4-lane machine, migration 097) is triggered by `AFTER UPDATE OF status on key_order_items`. It correctly handles partial activation: if only some items are installed, the order stays in `pending_installation`. Do not modify it.
 
@@ -52,19 +52,25 @@ rfid_keys.id → key_order_items.produced_key_id → key_order_items.order_id
 ## Approaches
 
 ### Approach 1 — Minimal wire fix only (DB + tests, no UI)
+
 Wire `resolve_equipment_update` to update `key_order_items.status='installed'`. Extend 092-C and add new pgTAP tests. No UI changes.
+
 - Pros: smallest change set, solves the core functional gap, low blast radius.
 - Cons: admins still cannot generate the snapshot or see history.
 - Effort: Low (1 migration + 1-2 test files).
 
 ### Approach 2 — Full bundle (DB fix + snapshot UI + history UI + rollback download)
+
 All items as stated in the change intent. The DB fix is one migration. The UI is three independent slices: (a) pending-keys snapshot panel, (b) history panel, (c) rollback download.
+
 - Pros: complete implementation of the stated flow; admins get the snapshot tool they need.
 - Cons: higher total line count; rollback semantics require a product-owner decision; `EquipmentUpdatePanel` snapshot scope bug must be fixed before the snapshot UI can be correct.
 - Effort: Medium (1 migration + 2-3 test files + 3-4 UI components + 2 hooks).
 
 ### Approach 3 — DB fix + snapshot SQL only (no rollback UI)
+
 Approach 2 without the rollback slice. Deliver the DB fix and snapshot/history UI in one PR, defer rollback.
+
 - Pros: avoids the rollback decision blocker; most valuable pieces delivered together.
 - Cons: installer app history/rollback deferred; but installer currently has no history view at all so this is a new gap, not a regression.
 - Effort: Medium-low.
@@ -73,13 +79,13 @@ Approach 2 without the rollback slice. Deliver the DB fix and snapshot/history U
 
 ## Rollback Semantics — decision required
 
-| Aspect | Option A — Re-download only | Option B — Inverse equipment_update |
-|---|---|---|
-| Mechanism | Admin downloads old MDB from history panel; installer syncs device manually | Generate new equipment_update with keys_to_activate/disable swapped |
-| DB state | Diverges from device until next equipment_update corrects it | Stays in sync |
-| Validity checks needed | None | Must validate inverse is applicable (key not already picked up, etc.) |
-| New code | None beyond listing resolved rows with download links | New RPC + validation logic + UI |
-| Complexity | Low | High |
+| Aspect                 | Option A — Re-download only                                                 | Option B — Inverse equipment_update                                   |
+| ---------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Mechanism              | Admin downloads old MDB from history panel; installer syncs device manually | Generate new equipment_update with keys_to_activate/disable swapped   |
+| DB state               | Diverges from device until next equipment_update corrects it                | Stays in sync                                                         |
+| Validity checks needed | None                                                                        | Must validate inverse is applicable (key not already picked up, etc.) |
+| New code               | None beyond listing resolved rows with download links                       | New RPC + validation logic + UI                                       |
+| Complexity             | Low                                                                         | High                                                                  |
 
 ## Pending-Keys Snapshot SQL Shape
 
@@ -116,13 +122,13 @@ SELECT k.id, k.rfid_code, u.number AS unit_number, 'unchanged' AS "group"
 
 ## Test Coverage Impact
 
-| File | Action |
-|---|---|
-| `test_092_resolve_rpcs_dual_fk.sql` — scenario C | Extend: assert `key_order_items.status = 'installed'` AND `key_orders.status = 'ready_for_pickup'` after resolve |
-| New `test_095_resolve_equipment_update_advances_key_order_items.sql` | Full scenarios: single-item order advances to ready_for_pickup; multi-item order stays in pending_installation until all items installed across multiple equipment_updates |
-| New `apps/admin/src/hooks/__tests__/usePendingKeysForEquipment.test.ts` | Vitest; mock supabase; verify 3-group shape and equipment scoping |
-| `test_066_equipment_updates_table.sql` | No change needed |
-| `test_067_tickets_equipment_update_category.sql` | No change needed |
+| File                                                                    | Action                                                                                                                                                                     |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test_092_resolve_rpcs_dual_fk.sql` — scenario C                        | Extend: assert `key_order_items.status = 'installed'` AND `key_orders.status = 'ready_for_pickup'` after resolve                                                           |
+| New `test_095_resolve_equipment_update_advances_key_order_items.sql`    | Full scenarios: single-item order advances to ready_for_pickup; multi-item order stays in pending_installation until all items installed across multiple equipment_updates |
+| New `apps/admin/src/hooks/__tests__/usePendingKeysForEquipment.test.ts` | Vitest; mock supabase; verify 3-group shape and equipment scoping                                                                                                          |
+| `test_066_equipment_updates_table.sql`                                  | No change needed                                                                                                                                                           |
+| `test_067_tickets_equipment_update_category.sql`                        | No change needed                                                                                                                                                           |
 
 ## Blast Radius
 

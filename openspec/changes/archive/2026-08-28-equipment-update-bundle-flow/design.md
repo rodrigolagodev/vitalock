@@ -41,6 +41,7 @@ It (a) `create or replace`s the `public.resolve_equipment_update` function and
 (b) nothing else — no test-data seeding.
 
 **Rationale**:
+
 - Migrations must be idempotent on prod. Seeding test data inside a schema
   migration is a foot-gun (multi-tenant prod, dev with fixtures, CI with pgTAP
   fixtures all diverge).
@@ -50,9 +51,10 @@ It (a) `create or replace`s the `public.resolve_equipment_update` function and
   simple `create or replace` back to the prior body is the entire down-plan.
 
 **Rejected alternatives**:
-- *Split RPC and test seeding* — no seeding was ever needed at migration level;
+
+- _Split RPC and test seeding_ — no seeding was ever needed at migration level;
   moot.
-- *Multiple migrations (one per concern)* — the RPC has exactly one concern.
+- _Multiple migrations (one per concern)_ — the RPC has exactly one concern.
   Splitting would add noise.
 
 ### ADR-2: RPC code structure — parallel branches, NOT a unified helper
@@ -62,6 +64,7 @@ It (a) `create or replace`s the `public.resolve_equipment_update` function and
 extracted helper function.
 
 **Rationale**:
+
 - The two branches operate on different tables with different join paths
   (`rfid_keys.order_item_id` vs. `key_order_items.produced_key_id`) and different
   `recompute_*` targets (`recompute_order_status` vs. trigger-driven
@@ -94,14 +97,16 @@ update public.key_order_items
 ```
 
 **Rejected alternatives**:
-- *Replace legacy with unified helper* — breaks backward compat.
-- *Explicit `perform recompute_key_order_status(...)` after the UPDATE* — double-
+
+- _Replace legacy with unified helper_ — breaks backward compat.
+- _Explicit `perform recompute_key_order_status(...)` after the UPDATE_ — double-
   fires the recompute (once from trigger, once explicit). The trigger is the
   contract.
 
 ### ADR-3: Lock ordering — order-level, then keys, then items
 
 **Decision**: The RPC acquires locks in this order per iteration:
+
 1. `select … for update` on the `key_orders` row (implicit via trigger cascade —
    trigger `recompute_key_order_status` reads/writes `key_orders`).
 2. `update public.rfid_keys` (already present — acquires row lock on `rfid_keys`).
@@ -114,6 +119,7 @@ trigger). This is consistent across every RPC touching this graph
 `resolve_equipment_update`).
 
 **Rationale**:
+
 - All three RPCs that write `key_order_items.status` follow the same walk-down
   ordering (key → item → order) → no deadlock cycle.
 - `resolve_equipment_update` batches N keys per call. Within one transaction,
@@ -124,7 +130,8 @@ trigger). This is consistent across every RPC touching this graph
 not silently reorder.
 
 **Rejected alternatives**:
-- *Explicit `select … for update` on `key_orders` at the top of the loop* — the
+
+- _Explicit `select … for update` on `key_orders` at the top of the loop_ — the
   trigger already covers this; adding it opens the door to lock upgrade deadlock
   if a concurrent `cancel_key_order` happens to be running.
 
@@ -135,6 +142,7 @@ PostgREST queries and zips them into a `{ toActivate, toDisable, unchanged }`
 shape in the hook. NO SECURITY DEFINER RPC, NO view.
 
 **Rationale**:
+
 - Rejected the SECURITY DEFINER function alternative because:
   1. It bypasses RLS, forcing us to re-implement equipment-scoped visibility
      inside the function body (admin-only + org-scoped) — every future RLS change
@@ -152,6 +160,7 @@ shape in the hook. NO SECURITY DEFINER RPC, NO view.
   change." That escape hatch remains available if load ever demands it.
 
 **Query shape**:
+
 - Query 1 — `to_activate`: `rfid_keys` join `rfid_key_intended_equipment`
   filtered by `equipment_id` and `status='pending_installation'`.
 - Query 2 — `to_disable`: `rfid_keys` join `operations.key_authorizations`
@@ -165,10 +174,11 @@ Cross-schema joins to `units.number` follow the same pattern already used in
 on cross-schema FKs.
 
 **Rejected alternatives**:
-- *SECURITY DEFINER `public.pending_keys_for_equipment(uuid)`* — see rationale.
-- *SQL view* — a view still needs an RPC or PostgREST wrapper to accept the
+
+- _SECURITY DEFINER `public.pending_keys_for_equipment(uuid)`_ — see rationale.
+- _SQL view_ — a view still needs an RPC or PostgREST wrapper to accept the
   parameter; adds a migration for no isolation benefit.
-- *Single PostgREST UNION* — PostgREST does not support UNION in a single call.
+- _Single PostgREST UNION_ — PostgREST does not support UNION in a single call.
   Confirmed.
 
 ### ADR-5: History hook — new `useEquipmentUpdateHistory`, do NOT extend `useEquipmentUpdates`
@@ -178,6 +188,7 @@ on cross-schema FKs.
 unchanged.
 
 **Rationale**:
+
 - `useEquipmentUpdates` is already used by `EquipmentUpdatePanel` (2 callers).
   Its consumers care only about the **active train** (the panel filters to
   `open|in_progress`). Repurposing it for history would leak history-only concerns
@@ -190,6 +201,7 @@ unchanged.
   (batch lookup for a specific set) — one hook per query intent.
 
 **Contract**:
+
 ```typescript
 useEquipmentUpdateHistory(equipmentId: string | undefined): UseQueryResult<{
   rows: (EquipmentUpdateRow & { resolved_by_name: string | null })[];
@@ -202,9 +214,10 @@ Returns a `useQuery`-shaped result derived via `useMemo` so callers get the same
 `isLoading`/`isError` ergonomics.
 
 **Rejected alternatives**:
-- *Extend `useEquipmentUpdates` return* — leaks history-only fields onto the
+
+- _Extend `useEquipmentUpdates` return_ — leaks history-only fields onto the
   panel caller; larger blast radius.
-- *Duplicate the base query* — two Realtime subscriptions and two caches for
+- _Duplicate the base query_ — two Realtime subscriptions and two caches for
   the same underlying data.
 
 ### ADR-6: Admin UI layout on `EquipoDetailPage`
@@ -213,6 +226,7 @@ Returns a `useQuery`-shaped result derived via `useMemo` so callers get the same
 and before "Historial" (the existing synthesized timeline).
 
 **Section order (top-down)**:
+
 1. ...existing sections through "Llaves autorizadas"...
 2. ...existing "Órdenes técnicas asociadas"...
 3. **NEW** — "Estado de llaves pendientes" (snapshot, three tabs)
@@ -221,6 +235,7 @@ and before "Historial" (the existing synthesized timeline).
 
 **Snapshot layout**: Three **tabs** (not collapsibles) using `<Tabs>` from
 `@vitalock/ui`, with counts in each tab label:
+
 - "A activar (N)" · "A dar de baja (N)" · "Sin cambios (N)"
 
 Each tab renders a compact list of `RFID · Unidad`. When a group is empty, show
@@ -232,6 +247,7 @@ reduce vertical scroll. Collapsibles imply "expand to see more" which is wrong
 here — every row is small.
 
 **History layout**: `DataTable` from `@vitalock/ui`, columns:
+
 - Fecha (created_at, formatted es-AR)
 - Estado (ticket_status badge)
 - Altas (count of `keys_to_activate`)
@@ -242,15 +258,17 @@ here — every row is small.
 
 **MDB export in history**: Per-row "Descargar .mdb" button ONLY.
 No copy-to-clipboard, no CSV download for the whole table. Rationale:
+
 - The MDB is the artifact of value; CSV of metadata is a UI-tourist feature
   with zero use case identified in exploration.
 - One button per row keeps the UI mechanical and matches the installer's
   existing pattern (`EquipmentUpdateResolveDetail.handleDownload`).
 
 **Rejected alternatives**:
-- *Three collapsible sections* — vertical noise.
-- *CSV download* — no identified caller.
-- *Combined single "Actividad" panel* — snapshot (present state) and history
+
+- _Three collapsible sections_ — vertical noise.
+- _CSV download_ — no identified caller.
+- _Combined single "Actividad" panel_ — snapshot (present state) and history
   (past events) are semantically different; combining them is confusing.
 
 ### ADR-7: Installer rollback UI
@@ -259,6 +277,7 @@ No copy-to-clipboard, no CSV download for the whole table. Rationale:
 `EquipmentUpdateResolveDetail`'s `DialogContent`, above `DialogFooter`.
 
 **Layout**:
+
 ```
 <details>
   <summary>Actualizaciones previas de este equipo (N)</summary>
@@ -293,14 +312,16 @@ second round trip). This is a **one-line change** to
 not `equipment_updates` — confirmed in existing code.)
 
 **Rationale**:
+
 - Collapsed by default: rollback is exceptional; the primary CTA is "Resolver".
 - Warning banner appears only when the collapsible is open — no unnecessary
   friction on the happy path.
 - Native `<details>` avoids importing a heavier `Accordion` component.
 
 **Rejected alternatives**:
-- *Separate section above snapshot* — competes visually with primary CTA.
-- *Modal-in-modal* — dialog nesting is a known accessibility hazard.
+
+- _Separate section above snapshot_ — competes visually with primary CTA.
+- _Modal-in-modal_ — dialog nesting is a known accessibility hazard.
 
 ### ADR-8: Rollback semantics — Option A confirmed, DB-side is a no-op
 
@@ -309,6 +330,7 @@ historical `.mdb` files only. NO new RPC. NO inverse update logic. NO DB state
 mutation.
 
 **UI mandatory warning** (installer + admin history rows that offer the MDB):
+
 > "Cargar un archivo anterior desincronizará la base de datos hasta el próximo
 > update correctivo."
 
@@ -325,6 +347,7 @@ scope.
 ### ADR-9: Test data strategy
 
 **Decision**:
+
 - Extend `test_092_C` in-place (existing fixtures reused). This is the RED step.
 - **New pgTAP**:
   - `test_095_resolve_equipment_update_advances_key_order_items.sql` — builds
@@ -357,6 +380,7 @@ admin/installer conventions (`Crear tarea de actualización`, `Descargar .mdb`,
 `Sin llaves a activar.`). No i18n framework — inline strings only.
 
 Copy inventory (canonical wording, subject to per-slice refinement):
+
 - Snapshot section title: "Estado de llaves pendientes"
 - Snapshot tabs: "A activar (N)" · "A dar de baja (N)" · "Sin cambios (N)"
 - Snapshot empty: "Ninguna"
@@ -374,26 +398,27 @@ Copy inventory (canonical wording, subject to per-slice refinement):
 
 ### Files affected (structural)
 
-| File | Change kind |
-|---|---|
-| `supabase/migrations/20260827000104_resolve_equipment_update_advance_key_order_items.sql` | NEW |
-| `supabase/tests-sql/test_092_resolve_rpcs_dual_fk.sql` | EXTEND scenario C |
-| `supabase/tests-sql/test_095_resolve_equipment_update_advances_key_order_items.sql` | NEW |
-| `supabase/tests-sql/test_096_resolve_equipment_update_multi_item_order.sql` | NEW |
-| `apps/admin/src/hooks/usePendingKeysForEquipment.ts` | NEW |
-| `apps/admin/src/hooks/__tests__/usePendingKeysForEquipment.test.ts` | NEW |
-| `apps/admin/src/hooks/useEquipmentUpdateHistory.ts` | NEW |
-| `apps/admin/src/hooks/__tests__/useEquipmentUpdateHistory.test.ts` | NEW |
-| `apps/admin/src/components/equipment/EquipmentPendingKeysSnapshotPanel.tsx` | NEW |
-| `apps/admin/src/components/equipment/EquipmentUpdateHistoryPanel.tsx` | NEW |
-| `apps/admin/src/routes/equipos/EquipoDetailPage.tsx` | EXTEND (mount two new panels) |
-| `apps/installer/src/hooks/usePreviousEquipmentUpdates.ts` | NEW |
-| `apps/installer/src/hooks/useAssignedTickets.ts` | EXTEND (add `equipment_id` to snapshot select) |
-| `apps/installer/src/components/work/EquipmentUpdateResolveDetail.tsx` | EXTEND (add rollback section) |
+| File                                                                                      | Change kind                                    |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `supabase/migrations/20260827000104_resolve_equipment_update_advance_key_order_items.sql` | NEW                                            |
+| `supabase/tests-sql/test_092_resolve_rpcs_dual_fk.sql`                                    | EXTEND scenario C                              |
+| `supabase/tests-sql/test_095_resolve_equipment_update_advances_key_order_items.sql`       | NEW                                            |
+| `supabase/tests-sql/test_096_resolve_equipment_update_multi_item_order.sql`               | NEW                                            |
+| `apps/admin/src/hooks/usePendingKeysForEquipment.ts`                                      | NEW                                            |
+| `apps/admin/src/hooks/__tests__/usePendingKeysForEquipment.test.ts`                       | NEW                                            |
+| `apps/admin/src/hooks/useEquipmentUpdateHistory.ts`                                       | NEW                                            |
+| `apps/admin/src/hooks/__tests__/useEquipmentUpdateHistory.test.ts`                        | NEW                                            |
+| `apps/admin/src/components/equipment/EquipmentPendingKeysSnapshotPanel.tsx`               | NEW                                            |
+| `apps/admin/src/components/equipment/EquipmentUpdateHistoryPanel.tsx`                     | NEW                                            |
+| `apps/admin/src/routes/equipos/EquipoDetailPage.tsx`                                      | EXTEND (mount two new panels)                  |
+| `apps/installer/src/hooks/usePreviousEquipmentUpdates.ts`                                 | NEW                                            |
+| `apps/installer/src/hooks/useAssignedTickets.ts`                                          | EXTEND (add `equipment_id` to snapshot select) |
+| `apps/installer/src/components/work/EquipmentUpdateResolveDetail.tsx`                     | EXTEND (add rollback section)                  |
 
 ### Data flow
 
 **Snapshot query flow** (per admin page load):
+
 ```
 usePendingKeysForEquipment(equipmentId)
   ├─ queryFn (react-query cache key: ['admin','pending-keys',equipmentId])
@@ -406,6 +431,7 @@ usePendingKeysForEquipment(equipmentId)
 ```
 
 **History flow**:
+
 ```
 useEquipmentUpdateHistory(equipmentId)
   ├─ useEquipmentUpdates(equipmentId)  → cached list
@@ -415,6 +441,7 @@ useEquipmentUpdateHistory(equipmentId)
 ```
 
 **Resolve → advance flow (already correct after ADR-2)**:
+
 ```
 resolve_equipment_update(taskId, ticketId)
   loop over keys_to_activate:
@@ -430,14 +457,14 @@ resolve_equipment_update(taskId, ticketId)
 
 Six slices, ordered by dependency. Line estimates are rough — tasks phase will formalise.
 
-| # | Slice | Est. lines | Test file(s) written FIRST (RED) | Notes |
-|---|---|---|---|---|
-| 1 | DB migration + pgTAP (RED-first) | ~250 | `test_092_C` extension, `test_095`, `test_096` | Migration only lands AFTER all three pgTAP fail; then migration turns them green. |
-| 2 | Backend hook `usePendingKeysForEquipment` | ~120 | `usePendingKeysForEquipment.test.ts` | Vitest first. Depends on nothing else. |
-| 3 | Backend hook `useEquipmentUpdateHistory` | ~80 | `useEquipmentUpdateHistory.test.ts` | Vitest first. Depends on existing `useEquipmentUpdates` + `useStaffByIds`. |
-| 4 | Admin UI: snapshot panel | ~150 | Consumed by Vitest for the hook; component-level test optional | `EquipmentPendingKeysSnapshotPanel.tsx` + mount in `EquipoDetailPage`. |
-| 5 | Admin UI: history panel | ~180 | Same as (4) — hook is already covered | `EquipmentUpdateHistoryPanel.tsx` (DataTable) + mount in `EquipoDetailPage`. Includes rollback warning banner. |
-| 6 | Installer UI: rollback section | ~140 | Extend existing `EquipmentUpdateResolveDetail.test.tsx` | Adds `<details>` collapsible + warning + list. Requires one-line `useAssignedTickets` extension. |
+| #   | Slice                                     | Est. lines | Test file(s) written FIRST (RED)                               | Notes                                                                                                          |
+| --- | ----------------------------------------- | ---------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1   | DB migration + pgTAP (RED-first)          | ~250       | `test_092_C` extension, `test_095`, `test_096`                 | Migration only lands AFTER all three pgTAP fail; then migration turns them green.                              |
+| 2   | Backend hook `usePendingKeysForEquipment` | ~120       | `usePendingKeysForEquipment.test.ts`                           | Vitest first. Depends on nothing else.                                                                         |
+| 3   | Backend hook `useEquipmentUpdateHistory`  | ~80        | `useEquipmentUpdateHistory.test.ts`                            | Vitest first. Depends on existing `useEquipmentUpdates` + `useStaffByIds`.                                     |
+| 4   | Admin UI: snapshot panel                  | ~150       | Consumed by Vitest for the hook; component-level test optional | `EquipmentPendingKeysSnapshotPanel.tsx` + mount in `EquipoDetailPage`.                                         |
+| 5   | Admin UI: history panel                   | ~180       | Same as (4) — hook is already covered                          | `EquipmentUpdateHistoryPanel.tsx` (DataTable) + mount in `EquipoDetailPage`. Includes rollback warning banner. |
+| 6   | Installer UI: rollback section            | ~140       | Extend existing `EquipmentUpdateResolveDetail.test.tsx`        | Adds `<details>` collapsible + warning + list. Requires one-line `useAssignedTickets` extension.               |
 
 **Total estimate**: ~920 lines. This exceeds the 800-line budget by ~120 lines
 (15%). Slices 4 and 5 combined are ~330 lines of admin UI; if `sdd-tasks`
@@ -446,16 +473,16 @@ note. Do NOT split the bundle — the four surfaces are only meaningful together
 
 ## 5. Test file assignments (per slice)
 
-| Slice | Test file | Purpose | Location |
-|---|---|---|---|
-| 1 | `test_092_resolve_rpcs_dual_fk.sql` (extend C) | Assert `key_order_items.status='installed'` and `key_orders.status='ready_for_pickup'` after resolve on new-path fixture | `supabase/tests-sql/` |
-| 1 | `test_095_resolve_equipment_update_advances_key_order_items.sql` | Single-item new-path advancement | `supabase/tests-sql/` |
-| 1 | `test_096_resolve_equipment_update_multi_item_order.sql` | Multi-item partial advancement across 2 equipments | `supabase/tests-sql/` |
-| 2 | `usePendingKeysForEquipment.test.ts` | 3-group shape from mocked supabase | `apps/admin/src/hooks/__tests__/` |
-| 3 | `useEquipmentUpdateHistory.test.ts` | `resolved_by_name` projection from mocked useEquipmentUpdates + useStaffByIds | `apps/admin/src/hooks/__tests__/` |
-| 4 | (rely on hook test) | — | — |
-| 5 | (rely on hook test) | — | — |
-| 6 | `EquipmentUpdateResolveDetail.test.tsx` (extend) | Rollback collapsible renders warning + list; download button calls createSignedUrl | `apps/installer/src/components/work/__tests__/` |
+| Slice | Test file                                                        | Purpose                                                                                                                  | Location                                        |
+| ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| 1     | `test_092_resolve_rpcs_dual_fk.sql` (extend C)                   | Assert `key_order_items.status='installed'` and `key_orders.status='ready_for_pickup'` after resolve on new-path fixture | `supabase/tests-sql/`                           |
+| 1     | `test_095_resolve_equipment_update_advances_key_order_items.sql` | Single-item new-path advancement                                                                                         | `supabase/tests-sql/`                           |
+| 1     | `test_096_resolve_equipment_update_multi_item_order.sql`         | Multi-item partial advancement across 2 equipments                                                                       | `supabase/tests-sql/`                           |
+| 2     | `usePendingKeysForEquipment.test.ts`                             | 3-group shape from mocked supabase                                                                                       | `apps/admin/src/hooks/__tests__/`               |
+| 3     | `useEquipmentUpdateHistory.test.ts`                              | `resolved_by_name` projection from mocked useEquipmentUpdates + useStaffByIds                                            | `apps/admin/src/hooks/__tests__/`               |
+| 4     | (rely on hook test)                                              | —                                                                                                                        | —                                               |
+| 5     | (rely on hook test)                                              | —                                                                                                                        | —                                               |
+| 6     | `EquipmentUpdateResolveDetail.test.tsx` (extend)                 | Rollback collapsible renders warning + list; download button calls createSignedUrl                                       | `apps/installer/src/components/work/__tests__/` |
 
 ## 6. Rollback plan (if migration breaks pgTAP mid-apply)
 
@@ -483,19 +510,20 @@ the atomic unit of rollback is the file.
 
 ## 7. Architectural risks and open assumptions
 
-| Risk / assumption | Impact | Mitigation |
-|---|---|---|
-| PostgREST cross-schema embed rejects `units` from `public.rfid_keys` join | Snapshot Q1/Q2/Q3 need a fallback | Follow `useAssignedTickets` batch-fetch pattern (already the established convention) |
-| `equipment_id` not currently selected in `useAssignedTickets` snapshot fetch | Installer rollback section has no equipmentId to query | ADR-7: one-line extension to the `.select(...)` in `useAssignedTickets` |
-| Storage bucket name assumption (`equipment-updates-mdb` vs `equipment_updates`) | Signed URL fails silently | Confirmed from existing code — bucket is hyphenated `equipment-updates-mdb`. All new download paths use the same string |
-| `DataTable` from `@vitalock/ui` supports our column shape | History panel implementation | Confirmed — same component powers `EquipmentTable` with per-row actions |
-| React Query cache key collision between `useEquipmentUpdates` and `useEquipmentUpdateHistory` | Stale data | New hook does NOT create a second base cache — it composes; distinct query keys used only if we ever separate them |
-| Trigger `key_order_items_recompute_order_status_trigger` semantics for partial multi-item orders | test_096 could fail if trigger does not handle partial | Exploration confirms 4-lane machine handles partial correctly; test_096 is designed to exercise this exactly |
+| Risk / assumption                                                                                | Impact                                                 | Mitigation                                                                                                              |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| PostgREST cross-schema embed rejects `units` from `public.rfid_keys` join                        | Snapshot Q1/Q2/Q3 need a fallback                      | Follow `useAssignedTickets` batch-fetch pattern (already the established convention)                                    |
+| `equipment_id` not currently selected in `useAssignedTickets` snapshot fetch                     | Installer rollback section has no equipmentId to query | ADR-7: one-line extension to the `.select(...)` in `useAssignedTickets`                                                 |
+| Storage bucket name assumption (`equipment-updates-mdb` vs `equipment_updates`)                  | Signed URL fails silently                              | Confirmed from existing code — bucket is hyphenated `equipment-updates-mdb`. All new download paths use the same string |
+| `DataTable` from `@vitalock/ui` supports our column shape                                        | History panel implementation                           | Confirmed — same component powers `EquipmentTable` with per-row actions                                                 |
+| React Query cache key collision between `useEquipmentUpdates` and `useEquipmentUpdateHistory`    | Stale data                                             | New hook does NOT create a second base cache — it composes; distinct query keys used only if we ever separate them      |
+| Trigger `key_order_items_recompute_order_status_trigger` semantics for partial multi-item orders | test_096 could fail if trigger does not handle partial | Exploration confirms 4-lane machine handles partial correctly; test_096 is designed to exercise this exactly            |
 
 ## 8. Explicit non-decisions
 
 The following are outside this design's scope and MUST NOT be introduced during
 apply:
+
 - Modifying the `recompute_key_order_status` function (4-lane machine).
 - Modifying `mark_key_order_item_installed` or its callers.
 - Adding an inverse `equipment_update` RPC (Option B rollback).
