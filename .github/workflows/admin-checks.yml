@@ -2,25 +2,42 @@ name: admin-checks
 
 on:
   pull_request:
-    paths:
-      - 'apps/admin/**'
-      - 'packages/ui/**'
-      - 'packages/shared/**'
-      - 'packages/config-eslint/**'
-      - 'packages/config-typescript/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'turbo.json'
-      - 'tsconfig.json'
-      - '.github/workflows/admin-checks.yml'
 
 concurrency:
   group: admin-checks-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # Required status checks must report on every PR. Filtering happens here
+  # instead of on the trigger: a job skipped by `if:` still reports Success,
+  # while a workflow skipped by `paths:` never reports and leaves the PR stuck
+  # on an "expected" check (observed on DB-only PRs, 2026-09-11).
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.filter.outputs.admin }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            admin:
+              - 'apps/admin/**'
+              - 'packages/ui/**'
+              - 'packages/shared/**'
+              - 'packages/config-eslint/**'
+              - 'packages/config-typescript/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - '.github/workflows/admin-checks.yml'
+
   admin-checks:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
