@@ -1,5 +1,5 @@
 import type { TypedSupabaseClient } from '../client';
-import type { Database, Json } from '../database.types';
+import type { Database } from '../database.types';
 
 type KeyOrderRow = Database['public']['Tables']['key_orders']['Row'];
 type KeyOrderUpdate = Database['public']['Tables']['key_orders']['Update'];
@@ -7,7 +7,14 @@ type KeyOrderItemRow = Database['public']['Tables']['key_order_items']['Row'];
 
 export type KeyOrderClientType = 'administration' | 'particular';
 
-export interface KeyOrderPayload {
+/**
+ * The `p_order` / `p_items` RPC parameters are `jsonb`, i.e. `Json` in the
+ * generated types. These payloads are declared as type *aliases* rather than
+ * interfaces on purpose: TypeScript grants an implicit index signature to an
+ * object type alias but not to an interface, which is what makes them
+ * assignable to `Json` directly instead of through a cast.
+ */
+export type KeyOrderPayload = {
   client_type: KeyOrderClientType;
   administration_id?: string | null;
   particular_id?: string | null;
@@ -16,11 +23,11 @@ export interface KeyOrderPayload {
   particular_phone?: string | null;
   particular_email?: string | null;
   notes?: string | null;
-}
+};
 
 export type KeyOrderItemType = 'key';
 
-export interface KeyOrderItemPayload {
+export type KeyOrderItemPayload = {
   item_type: KeyOrderItemType;
   quantity: number;
   description?: string | null;
@@ -29,11 +36,11 @@ export interface KeyOrderItemPayload {
   unit_id?: string | null;
   pickup_particular_id?: string | null;
   product_id?: string | null;
-}
+};
 
-export interface KeyOrderItemUpdatePayload extends KeyOrderItemPayload {
+export type KeyOrderItemUpdatePayload = KeyOrderItemPayload & {
   id?: string;
-}
+};
 
 export interface UpdateDraftKeyOrderInput {
   orderId: string;
@@ -54,9 +61,7 @@ export interface ConfigureKeyOrderItemInput {
  * Collapse { data, error } into a single value, throwing on error.
  * Mirrors the pattern in orders.ts.
  */
-async function unwrap<T>(
-  promise: PromiseLike<{ data: T | null; error: unknown }>,
-): Promise<T> {
+async function unwrap<T>(promise: PromiseLike<{ data: T | null; error: unknown }>): Promise<T> {
   const { data, error } = await promise;
   if (error) throw error;
   return data as T;
@@ -76,25 +81,19 @@ export function createKeyOrderWithItems(
 ): Promise<string> {
   return unwrap(
     client.rpc('create_key_order_with_items', {
-      p_order: input.order as unknown as Json,
-      p_items: input.items as unknown as Json[],
+      p_order: input.order,
+      p_items: input.items,
       p_confirm_immediately: input.confirmImmediately ?? true,
     }),
   );
 }
 
-export async function confirmKeyOrder(
-  client: TypedSupabaseClient,
-  orderId: string,
-): Promise<void> {
+export async function confirmKeyOrder(client: TypedSupabaseClient, orderId: string): Promise<void> {
   const { error } = await client.rpc('confirm_key_order', { p_order_id: orderId });
   if (error) throw error;
 }
 
-export async function cancelKeyOrder(
-  client: TypedSupabaseClient,
-  orderId: string,
-): Promise<void> {
+export async function cancelKeyOrder(client: TypedSupabaseClient, orderId: string): Promise<void> {
   const { error } = await client.rpc('cancel_key_order', { p_order_id: orderId });
   if (error) throw error;
 }
@@ -107,8 +106,8 @@ export function updateDraftKeyOrderWithItems(
     client.rpc('update_draft_key_order_with_items', {
       p_order_id: input.orderId,
       p_expected_updated_at: input.expectedUpdatedAt,
-      p_patch: input.patch as unknown as Json,
-      p_items: input.items as unknown as Json[],
+      p_patch: input.patch,
+      p_items: input.items,
     }),
   );
 }

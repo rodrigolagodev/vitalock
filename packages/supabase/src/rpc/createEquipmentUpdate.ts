@@ -1,4 +1,5 @@
 import type { TypedSupabaseClient } from '../client';
+import { definedRpcArgs } from '../types/rpc';
 
 export interface CreateEquipmentUpdateInput {
   equipmentId: string;
@@ -23,11 +24,16 @@ export async function createEquipmentUpdate(
     p_building_id: input.buildingId,
     p_description: input.description,
     p_mdb_storage_path: input.mdbStoragePath,
-    p_keys_to_activate: (input.keysToActivate ?? []) as unknown as string[],
-    p_keys_to_disable: (input.keysToDisable ?? []) as unknown as string[],
-    p_actor_staff_id: (input.actorStaffId ?? null) as unknown as string,
-    p_assigned_to_staff_id: (input.assignedToStaffId ?? null) as unknown as string,
+    // These two DEFAULT '{}' in SQL; `?? []` reproduces that default verbatim.
+    p_keys_to_activate: input.keysToActivate ?? [],
+    p_keys_to_disable: input.keysToDisable ?? [],
+    // Both staff ids DEFAULT NULL in SQL, so omitting them is equivalent to
+    // sending an explicit null (see types/rpc.ts).
+    ...definedRpcArgs({
+      p_actor_staff_id: input.actorStaffId,
+      p_assigned_to_staff_id: input.assignedToStaffId,
+    }),
   });
   if (error) throw error;
-  return data as string;
+  return data;
 }

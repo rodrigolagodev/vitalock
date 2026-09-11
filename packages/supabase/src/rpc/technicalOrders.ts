@@ -1,12 +1,19 @@
 import type { TypedSupabaseClient } from '../client';
-import type { Database, Json } from '../database.types';
+import type { Database } from '../database.types';
 
 type TechnicalOrderRow = Database['public']['Tables']['technical_orders']['Row'];
 type TechnicalOrderItemRow = Database['public']['Tables']['technical_order_items']['Row'];
 
 export type TechnicalOrderClientType = 'administration' | 'particular';
 
-export interface TechnicalOrderPayload {
+/**
+ * The `p_order` / `p_items` RPC parameters are `jsonb`, i.e. `Json` in the
+ * generated types. These payloads are declared as type *aliases* rather than
+ * interfaces on purpose: TypeScript grants an implicit index signature to an
+ * object type alias but not to an interface, which is what makes them
+ * assignable to `Json` directly instead of through a cast.
+ */
+export type TechnicalOrderPayload = {
   client_type: TechnicalOrderClientType;
   administration_id?: string | null;
   particular_id?: string | null;
@@ -15,14 +22,14 @@ export interface TechnicalOrderPayload {
   particular_phone?: string | null;
   particular_email?: string | null;
   notes?: string | null;
-}
+};
 
 export type TechnicalOrderItemType =
   | 'install_equipment'
   | 'replace_equipment'
   | 'maintain_equipment';
 
-export interface TechnicalOrderItemPayload {
+export type TechnicalOrderItemPayload = {
   item_type: TechnicalOrderItemType;
   quantity: number;
   description?: string | null;
@@ -32,11 +39,11 @@ export interface TechnicalOrderItemPayload {
   intended_equipment_id?: string | null;
   intended_replacement_equipment_id?: string | null;
   intended_assignee_staff_id?: string | null;
-}
+};
 
-export interface TechnicalOrderItemUpdatePayload extends TechnicalOrderItemPayload {
+export type TechnicalOrderItemUpdatePayload = TechnicalOrderItemPayload & {
   id?: string;
-}
+};
 
 export interface UpdateDraftTechnicalOrderInput {
   orderId: string;
@@ -50,9 +57,7 @@ export interface UpdateDraftTechnicalOrderInput {
  * Collapse { data, error } into a single value, throwing on error.
  * Mirrors the pattern in orders.ts.
  */
-async function unwrap<T>(
-  promise: PromiseLike<{ data: T | null; error: unknown }>,
-): Promise<T> {
+async function unwrap<T>(promise: PromiseLike<{ data: T | null; error: unknown }>): Promise<T> {
   const { data, error } = await promise;
   if (error) throw error;
   return data as T;
@@ -72,8 +77,8 @@ export function createTechnicalOrderWithItems(
 ): Promise<string> {
   return unwrap(
     client.rpc('create_technical_order_with_items', {
-      p_order: input.order as unknown as Json,
-      p_items: input.items as unknown as Json[],
+      p_order: input.order,
+      p_items: input.items,
       p_confirm_immediately: input.confirmImmediately ?? true,
     }),
   );
@@ -103,8 +108,8 @@ export function updateDraftTechnicalOrderWithItems(
     client.rpc('update_draft_technical_order_with_items', {
       p_order_id: input.orderId,
       p_expected_updated_at: input.expectedUpdatedAt,
-      p_patch: input.patch as unknown as Json,
-      p_items: input.items as unknown as Json[],
+      p_patch: input.patch,
+      p_items: input.items,
     }),
   );
 }
