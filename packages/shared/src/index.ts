@@ -4,4 +4,6 @@ export * from './env';
 export * from './errors';
 export * from './hooks';
 export * from './logger';
+export * from './query';
+export * from './storage';
 export * from './types';

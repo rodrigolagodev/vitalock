@@ -29,10 +29,24 @@ export interface OrderListSummaryRawRow {
   [itemsField: string]: unknown;
 }
 
+/**
+ * Exactly the filter-builder surface this factory chains. Declared minimal so
+ * the real `TypedSupabaseClient` satisfies it structurally and tests can hand
+ * in a plain object — without an `any` in the middle.
+ */
+export interface OrderListQuery {
+  eq: (column: string, value: string) => OrderListQuery;
+  or: (filters: string) => OrderListQuery;
+  order: (
+    column: string,
+    options: { ascending: boolean },
+  ) => PromiseLike<{ data: unknown; error: unknown }>;
+}
+
 /** Minimal supabase client surface the factory needs. */
 export interface OrderListSupabaseClient {
   from: (view: string) => {
-    select: (cols: string) => unknown;
+    select: (cols: string) => OrderListQuery;
   };
 }
 
@@ -89,10 +103,7 @@ export function createUseOrderList<TStatus extends string, TRow>(
           ? `${itemsTable}!inner(id,building_id)`
           : `${itemsTable}(id)`;
 
-        // Build query chain — typed as unknown to allow chained method calls
-        // without fighting the minimal client interface type.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let query: any = (supabase as any)
+        let query: OrderListQuery = supabase
           .from(view)
           .select(
             `id, order_number, client_type, administration_id, company_name, particular_full_name, status, created_at, ${embed}`,

@@ -7,3 +7,4 @@ export {
   type Logger,
   type LogSink,
 } from './logger';
+export * from './sinks';
