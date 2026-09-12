@@ -14,6 +14,10 @@ interface AssignedEquipment {
 
 export type TareaDetailRow = TareaRow & {
   equipment: AssignedEquipment | null;
+  /** Set when the ticket was resolved; cancelled tickets keep it null. */
+  resolved_at: string | null;
+  resolved_by_staff_id: string | null;
+  resolved_by_name: string | null;
   /** Serial the operator loaded via configure_technical_ticket_equipment. */
   pending_new_serial: string | null;
   /** Model to use for the new equipment; may fall back to the linked product. */
@@ -39,6 +43,7 @@ export function useTarea(id: string | undefined) {
            administration_id, building_id, unit_id, equipment_id,
            assigned_to_staff_id, opened_by_staff_id,
            opened_at, updated_at,
+           resolved_at, resolved_by_staff_id,
            resolution_notes, cancellation_reason, notes,
            pending_new_serial, pending_new_model,
            technical_order_item_id`,
@@ -49,6 +54,8 @@ export function useTarea(id: string | undefined) {
       if (!data) return null;
 
       const row = data as unknown as TareaRow & {
+        resolved_at: string | null;
+        resolved_by_staff_id: string | null;
         pending_new_serial: string | null;
         pending_new_model: string | null;
         technical_order_item_id: string | null;
@@ -77,9 +84,13 @@ export function useTarea(id: string | undefined) {
         }
       }
 
-      const staffIds = [row.assigned_to_staff_id, row.opened_by_staff_id].filter((v): v is string =>
-        Boolean(v),
-      );
+      const staffIds = [
+        ...new Set(
+          [row.assigned_to_staff_id, row.opened_by_staff_id, row.resolved_by_staff_id].filter(
+            (v): v is string => Boolean(v),
+          ),
+        ),
+      ];
       const staffMap = new Map<string, string>();
       if (staffIds.length > 0) {
         const { data: staff } = await supabase
@@ -130,6 +141,9 @@ export function useTarea(id: string | undefined) {
           : null,
         opened_by_name: row.opened_by_staff_id
           ? (staffMap.get(row.opened_by_staff_id) ?? null)
+          : null,
+        resolved_by_name: row.resolved_by_staff_id
+          ? (staffMap.get(row.resolved_by_staff_id) ?? null)
           : null,
         equipment,
         intended_product_name,

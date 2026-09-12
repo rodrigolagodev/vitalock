@@ -11,12 +11,15 @@ import {
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@vitalock/ui';
 import { useTarea } from '@/hooks/useTarea';
+import { useTicketComments } from '@/hooks/useTicketComments';
+import { isTerminalTareaStatus, tareaClosedAt } from '@/lib/tareas/tareaTimeline';
 import { equipmentStatus } from '@/lib/status/equipmentStatus';
 import { accessTypeLabel } from '@/lib/status/accessType';
 import { tareaStatus } from '@/lib/status/tareaStatus';
 import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
 import { AssignEquipmentDialog } from '@/components/tareas/AssignEquipmentDialog';
 import { ConfigureEquipmentPanel } from '@/components/tareas/ConfigureEquipmentPanel';
+import { TareaTraceabilityCard } from '@/components/tareas/TareaTraceabilityCard';
 import type { TareaRow } from '@/hooks/useTareas';
 
 // Categories that use the two-step configure + finalize flow. AssignEquipmentDialog
@@ -47,10 +50,6 @@ const ASSIGN_BUTTON_LABEL: Record<TareaRow['category'], string> = {
   update_equipment: '—',
 };
 
-function isTerminalTicket(status: string): boolean {
-  return status === 'resolved' || status === 'cancelled';
-}
-
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
@@ -63,6 +62,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export default function TareaDetailPage() {
   const { tareaId } = useParams<{ tareaId: string }>();
   const { data: tarea, isLoading, isError } = useTarea(tareaId);
+  const { data: comments = [], isLoading: commentsLoading } = useTicketComments(tarea?.id);
   const [editOpen, setEditOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
 
@@ -109,7 +109,7 @@ export default function TareaDetailPage() {
         breadcrumbs={[{ label: 'Tareas', to: '/tareas' }, { label: tarea.ticket_number }]}
         titleAdornment={<tareaStatus.Badge status={tarea.status} />}
       >
-        {!isTerminalTicket(tarea.status) && (
+        {!isTerminalTareaStatus(tarea.status) && (
           <Button onClick={() => setEditOpen(true)}>Editar</Button>
         )}
       </PageHeader>
@@ -130,6 +130,15 @@ export default function TareaDetailPage() {
         <Row label="Abierta por" value={tarea.opened_by_name ?? '—'} />
         <Row label="Abierta" value={formatDateTime(tarea.opened_at)} />
         <Row label="Actualizada" value={formatDateTime(tarea.updated_at)} />
+        {tarea.status === 'resolved' && (
+          <>
+            <Row label="Finalizada por" value={tarea.resolved_by_name ?? '—'} />
+            <Row label="Finalizada el" value={formatDateTime(tareaClosedAt(tarea))} />
+          </>
+        )}
+        {tarea.status === 'cancelled' && (
+          <Row label="Cancelada el" value={formatDateTime(tareaClosedAt(tarea))} />
+        )}
         {tarea.resolution_notes && (
           <Row label="Notas de resolución" value={tarea.resolution_notes} />
         )}
@@ -184,6 +193,8 @@ export default function TareaDetailPage() {
       {CATEGORIES_TWO_STEP_CONFIGURE.has(tarea.category) &&
         tarea.status !== 'resolved' &&
         tarea.status !== 'cancelled' && <ConfigureEquipmentPanel tarea={tarea} />}
+
+      <TareaTraceabilityCard tarea={tarea} comments={comments} commentsLoading={commentsLoading} />
 
       <TareaFormSheet open={editOpen} onOpenChange={setEditOpen} tarea={tarea} />
 
