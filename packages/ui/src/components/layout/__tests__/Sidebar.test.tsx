@@ -15,10 +15,12 @@ function renderSidebar(props?: {
   onToggle?: () => void;
   footer?: React.ReactNode;
   brandMark?: React.ReactNode;
+  logo?: typeof logo & { icon?: { lightSrc: string; darkSrc: string } };
 }) {
+  const { logo: logoOverride, ...rest } = props ?? {};
   return render(
     <MemoryRouter initialEntries={['/inicio']}>
-      <Sidebar logo={logo} {...props}>
+      <Sidebar logo={logoOverride ?? logo} {...rest}>
         <SidebarGroup label="General" collapsed={props?.collapsed}>
           <NavItem label="Inicio" to="/inicio" icon={<Home />} collapsed={props?.collapsed} />
         </SidebarGroup>
@@ -75,6 +77,18 @@ describe('Sidebar', () => {
     expect(screen.queryByAltText('Acme')).not.toBeInTheDocument();
     // Labels stay in the DOM (stable layout) but are hidden from AT.
     expect(screen.getByText('Inicio')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('renders the brand icon variant when collapsed and the logo declares one', () => {
+    renderSidebar({
+      collapsed: true,
+      logo: { ...logo, icon: { lightSrc: '/icon-black.svg', darkSrc: '/icon-white.svg' } },
+    });
+    const light = screen.getByAltText('Acme');
+    expect(light).toHaveAttribute('src', '/icon-black.svg');
+    const dark = document.querySelector('img[src="/icon-white.svg"]');
+    expect(dark).toHaveAttribute('aria-hidden', 'true');
+    expect(document.querySelector('img[src="/logo-black.svg"]')).not.toBeInTheDocument();
   });
 
   it('renders a custom brand mark when collapsed', () => {

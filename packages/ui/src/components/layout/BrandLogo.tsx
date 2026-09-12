@@ -7,6 +7,12 @@ export interface BrandLogo {
   darkSrc: string;
   /** Accessible name of the brand. Defaults to `"Vitalock"`. */
   alt?: string;
+  /**
+   * Compact icon variant (light + dark) shown where the full wordmark does
+   * not fit, e.g. the collapsed sidebar header. Optional: consumers without
+   * an icon fall back to the generic `BrandMark`.
+   */
+  icon?: Pick<BrandLogo, 'lightSrc' | 'darkSrc'>;
 }
 
 export interface BrandLogoImagesProps {

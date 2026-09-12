@@ -10,7 +10,10 @@ export interface SidebarNavProps {
    * library never reads env. Only required while `showLogo` is true.
    */
   logo?: BrandLogo;
-  /** Icon mark rendered in the collapsed header instead of the logo. Defaults to a Building2 mark. */
+  /**
+   * Icon mark rendered in the collapsed header instead of the logo. Defaults
+   * to `logo.icon` when the brand declares one, else a generic Building2 mark.
+   */
   brandMark?: ReactNode;
   /**
    * Whether to render the brand logo header. Desktop sidebar shows it;
@@ -34,7 +37,7 @@ export interface SidebarProps extends Omit<SidebarNavProps, 'showLogo' | 'logo'>
   className?: string;
 }
 
-/** Small icon mark shown in the collapsed brand header in place of the logo. */
+/** Generic icon mark for the collapsed brand header when the logo has no icon variant. */
 export function BrandMark() {
   return (
     <span
@@ -73,7 +76,12 @@ export function SidebarNav({
           )}
         >
           {collapsed ? (
-            (brandMark ?? <BrandMark />)
+            (brandMark ??
+            (logo.icon ? (
+              <BrandLogoImages logo={{ ...logo.icon, alt: logo.alt }} className="h-8" />
+            ) : (
+              <BrandMark />
+            )))
           ) : (
             <BrandLogoImages logo={logo} className="h-8" />
           )}
