@@ -11,7 +11,7 @@ import { useEquipment } from '@/hooks/useEquipment';
 import { useKeys } from '@/hooks/useKeys';
 import { EquipmentTable } from '@/components/equipment/EquipmentTable';
 import { KeysTable } from '@/components/keys/KeysTable';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 
 export default function BuildingDetailPage() {
   const { buildingId } = useParams<{ buildingId: string }>();

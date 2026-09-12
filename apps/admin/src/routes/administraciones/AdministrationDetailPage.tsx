@@ -14,7 +14,7 @@ import { useBuildings } from '@/hooks/useBuildings';
 import { BuildingsTable } from '@/components/buildings/BuildingsTable';
 import { BuildingFormSheet } from '@/components/buildings/BuildingFormSheet';
 import { AdministrationFormSheet } from '@/components/administrations/AdministrationFormSheet';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import type { AdministrationRow } from '@/hooks/useAdministrations';
 
 export default function AdministrationDetailPage() {

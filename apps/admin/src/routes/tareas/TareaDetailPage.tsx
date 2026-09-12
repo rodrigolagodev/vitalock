@@ -9,7 +9,7 @@ import {
   Skeleton,
 } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { useTarea } from '@/hooks/useTarea';
 import { equipmentStatus } from '@/lib/status/equipmentStatus';
 import { accessTypeLabel } from '@/lib/status/accessType';

@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { Button, ErrorState, SearchInput } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { PageHeader } from '@vitalock/ui';
 import { usePersonal } from '@/hooks/usePersonal';
 import { useDebounce } from '@/hooks/useDebounce';
 import { StaffTable } from '@/components/personal/StaffTable';
@@ -29,7 +23,11 @@ export default function PersonalPage() {
 
   const hasFilters = debouncedSearch.trim() !== '' || role !== ALL;
 
-  const { data: staff = [], isFetching, isError } = usePersonal({
+  const {
+    data: staff = [],
+    isFetching,
+    isError,
+  } = usePersonal({
     search: debouncedSearch,
     role: role === ALL ? undefined : role,
   });
@@ -40,10 +38,7 @@ export default function PersonalPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Personal"
-        subtitle="Gestioná al equipo y su información."
-      >
+      <PageHeader title="Personal" subtitle="Gestioná al equipo y su información.">
         <Button onClick={() => setCreateOpen(true)}>Nuevo integrante</Button>
       </PageHeader>
 

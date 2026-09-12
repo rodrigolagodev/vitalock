@@ -1,17 +1,17 @@
 import type { ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { cn } from '@vitalock/ui';
+import { cn } from '../../lib/utils';
 
-interface Crumb {
+export interface PageHeaderCrumb {
   label: string;
   to?: string;
 }
 
-interface PageHeaderProps {
+export interface PageHeaderProps {
   title: ReactNode;
   subtitle?: ReactNode;
-  breadcrumbs?: Crumb[];
+  breadcrumbs?: PageHeaderCrumb[];
   /** Adornment rendered inline next to the title (e.g. a StatusBadge). */
   titleAdornment?: ReactNode;
   /** Extra classes applied to the title h1 (e.g. font-mono for identifiers). */

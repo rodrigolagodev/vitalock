@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { Badge, Button, ErrorState, SearchInput } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { PageHeader } from '@vitalock/ui';
 import { useTareas } from '@/hooks/useTareas';
 import { useStaff } from '@/hooks/useStaff';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -39,15 +33,16 @@ export default function TareasPage() {
   const debouncedSearch = useDebounce(search, 300);
 
   const hasFilters =
-    debouncedSearch.trim() !== '' ||
-    status !== 'all' ||
-    staffId !== '' ||
-    buildingId !== '';
+    debouncedSearch.trim() !== '' || status !== 'all' || staffId !== '' || buildingId !== '';
 
   const { data: staff = [] } = useStaff();
   const { data: buildings = [] } = useBuildings();
 
-  const { data: tareas = [], isFetching, isError } = useTareas({
+  const {
+    data: tareas = [],
+    isFetching,
+    isError,
+  } = useTareas({
     search: debouncedSearch,
     status: status === 'all' ? undefined : status,
     staffId: staffId || undefined,
@@ -60,10 +55,7 @@ export default function TareasPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Tareas"
-        subtitle="Gestioná las tareas de mantenimiento e instalación."
-      >
+      <PageHeader title="Tareas" subtitle="Gestioná las tareas de mantenimiento e instalación.">
         <Button onClick={() => setCreateOpen(true)}>Nueva tarea</Button>
       </PageHeader>
 
@@ -75,10 +67,7 @@ export default function TareasPage() {
           className="max-w-sm"
         />
 
-        <Select
-          value={staffId || ALL}
-          onValueChange={(v) => setStaffId(v === ALL ? '' : v)}
-        >
+        <Select value={staffId || ALL} onValueChange={(v) => setStaffId(v === ALL ? '' : v)}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Todos los asignados" />
           </SelectTrigger>
@@ -92,10 +81,7 @@ export default function TareasPage() {
           </SelectContent>
         </Select>
 
-        <Select
-          value={buildingId || ALL}
-          onValueChange={(v) => setBuildingId(v === ALL ? '' : v)}
-        >
+        <Select value={buildingId || ALL} onValueChange={(v) => setBuildingId(v === ALL ? '' : v)}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Todos los edificios" />
           </SelectTrigger>
@@ -112,11 +98,7 @@ export default function TareasPage() {
 
       <div className="flex flex-wrap gap-2">
         {STATUS_PILLS.map((pill) => (
-          <button
-            key={pill.value}
-            type="button"
-            onClick={() => setStatus(pill.value)}
-          >
+          <button key={pill.value} type="button" onClick={() => setStatus(pill.value)}>
             <Badge
               variant={status === pill.value ? 'default' : 'secondary'}
               className="cursor-pointer"

@@ -91,3 +91,26 @@ export {
   type DataTableAction,
   type DataTableBreakpoint,
 } from './components/patterns/DataTable';
+export { AppShell, type AppShellProps } from './components/layout/AppShell';
+export {
+  BrandLogoImages,
+  type BrandLogo,
+  type BrandLogoImagesProps,
+} from './components/layout/BrandLogo';
+export {
+  Sidebar,
+  SidebarNav,
+  BrandMark,
+  type SidebarProps,
+  type SidebarNavProps,
+} from './components/layout/Sidebar';
+export { MobileSidebar, type MobileSidebarProps } from './components/layout/MobileSidebar';
+export { NavItem, type NavItemProps } from './components/layout/NavItem';
+export {
+  PageHeader,
+  type PageHeaderProps,
+  type PageHeaderCrumb,
+} from './components/layout/PageHeader';
+export { EditableTitle, type EditableTitleProps } from './components/layout/EditableTitle';
+export { UserMenu, initialsFromName, type UserMenuProps } from './components/layout/UserMenu';
+export { useSidebarCollapsed, DEFAULT_SIDEBAR_STORAGE_KEY } from './hooks/useSidebarCollapsed';

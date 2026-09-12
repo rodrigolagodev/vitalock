@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { Button, EmptyState, ErrorState } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { Section } from '@/components/common/Section';
 import { useKeyById } from '@/hooks/useKeyById';
 import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';

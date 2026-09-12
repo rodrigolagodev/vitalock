@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import type { ReactNode } from 'react';
-import { PageHeader } from '../PageHeader';
+import { PageHeader } from '@vitalock/ui';
 
 function makeWrapper() {
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -22,9 +22,7 @@ describe('PageHeader', () => {
 
     expect(screen.getByRole('heading', { name: 'Administraciones' })).toBeInTheDocument();
     expect(screen.getByText('Gestioná las administraciones.')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Nueva administración' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nueva administración' })).toBeInTheDocument();
   });
 
   it('renders a breadcrumb link with the correct href and no trailing separator', () => {

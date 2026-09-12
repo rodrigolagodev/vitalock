@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { Check, PenLine, X } from 'lucide-react';
-import { IconButton, Input } from '@vitalock/ui';
-import { cn } from '@vitalock/ui';
+import { cn } from '../../lib/utils';
+import { IconButton } from '../icon-button';
+import { Input } from '../input';
 
-interface EditableTitleProps {
+export interface EditableTitleProps {
   /** Current value shown when not editing. */
   value: string;
   /** Persist the new value. Called with the trimmed draft on confirm. */
@@ -80,20 +81,13 @@ export function EditableTitle({
       <span className={cn('inline-flex items-center gap-2', className)}>
         <span className="max-w-[42ch] truncate">{value}</span>
         {adornment}
-        <IconButton
-          icon={PenLine}
-          label="Renombrar"
-          onClick={() => setEditing(true)}
-        />
+        <IconButton icon={PenLine} label="Renombrar" onClick={() => setEditing(true)} />
       </span>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={cn('inline-flex items-center gap-2', className)}
-    >
+    <form onSubmit={handleSubmit} className={cn('inline-flex items-center gap-2', className)}>
       <Input
         ref={inputRef}
         value={draft}
@@ -103,18 +97,8 @@ export function EditableTitle({
         className="h-9 text-2xl font-semibold"
         maxLength={120}
       />
-      <IconButton
-        icon={Check}
-        label="Guardar nombre"
-        type="submit"
-        loading={isSaving}
-      />
-      <IconButton
-        icon={X}
-        label="Cancelar"
-        type="button"
-        onClick={cancel}
-      />
+      <IconButton icon={Check} label="Guardar nombre" type="submit" loading={isSaving} />
+      <IconButton icon={X} label="Cancelar" type="button" onClick={cancel} />
     </form>
   );
 }

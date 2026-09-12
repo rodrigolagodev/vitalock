@@ -6,19 +6,10 @@ import { Button } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { Checkbox } from '@vitalock/ui';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@vitalock/ui';
-import {
-  ErrorState,
-  NotFoundState,
-  Skeleton,
-  StatCard,
-} from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { EditableTitle } from '@/components/layout/EditableTitle';
+import { Popover, PopoverContent, PopoverTrigger } from '@vitalock/ui';
+import { ErrorState, NotFoundState, Skeleton, StatCard } from '@vitalock/ui';
+import { PageHeader } from '@vitalock/ui';
+import { EditableTitle } from '@vitalock/ui';
 import { useProduct } from '@/hooks/useProduct';
 import { useMutateProduct } from '@/hooks/useMutateProduct';
 import { useStockMovements } from '@/hooks/useStockMovements';
@@ -40,10 +31,7 @@ const MOVEMENT_LABELS: Record<MovementType, string> = {
   liberacion_reserva: 'Liberación de reserva',
 };
 
-const MOVEMENT_TYPES = Object.entries(MOVEMENT_LABELS) as [
-  MovementType,
-  string,
-][];
+const MOVEMENT_TYPES = Object.entries(MOVEMENT_LABELS) as [MovementType, string][];
 
 function startOfDay(iso: string): number {
   const d = new Date(iso);
@@ -103,12 +91,10 @@ export default function StockDetailPage() {
     );
   }
 
-  const hasFilters =
-    typeFilter.length > 0 || dateFrom !== '' || dateTo !== '';
+  const hasFilters = typeFilter.length > 0 || dateFrom !== '' || dateTo !== '';
 
   const filteredMovements = movements.filter((movement) => {
-    if (typeFilter.length > 0 && !typeFilter.includes(movement.type))
-      return false;
+    if (typeFilter.length > 0 && !typeFilter.includes(movement.type)) return false;
     const ts = new Date(movement.created_at).getTime();
     if (dateFrom && ts < startOfDay(dateFrom)) return false;
     if (dateTo && ts > endOfDay(dateTo)) return false;
@@ -145,21 +131,9 @@ export default function StockDetailPage() {
 
       {/* ---- Live stock snapshot ---- */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-testid="product-stats">
-        <StatCard
-          label="Disponible"
-          value={product.stock_disponible}
-          icon={<Package />}
-        />
-        <StatCard
-          label="Reservado"
-          value={product.stock_reservado}
-          icon={<Lock />}
-        />
-        <StatCard
-          label="Total"
-          value={product.stock_total}
-          icon={<Boxes />}
-        />
+        <StatCard label="Disponible" value={product.stock_disponible} icon={<Package />} />
+        <StatCard label="Reservado" value={product.stock_reservado} icon={<Lock />} />
+        <StatCard label="Total" value={product.stock_total} icon={<Boxes />} />
         <StatCard
           label="Costo de compra"
           value={formatCurrency(product.cost_price)}
@@ -200,15 +174,13 @@ export default function StockDetailPage() {
                     return (
                       <label
                         key={value}
-                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm hover:bg-accent"
+                        className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-sm"
                       >
                         <Checkbox
                           checked={checked}
                           onCheckedChange={(c) => {
                             setTypeFilter((prev) =>
-                              c
-                                ? [...prev, value]
-                                : prev.filter((t) => t !== value),
+                              c ? [...prev, value] : prev.filter((t) => t !== value),
                             );
                           }}
                         />

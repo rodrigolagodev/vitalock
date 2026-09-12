@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useSidebarCollapsed } from '../useSidebarCollapsed';
+import { useSidebarCollapsed } from '@vitalock/ui';
 
 const STORAGE_KEY = 'vitalock-sidebar-collapsed';
 
@@ -64,9 +64,7 @@ describe('useSidebarCollapsed', () => {
   it('toggles on Ctrl+\\ keydown', () => {
     const { result } = renderHook(() => useSidebarCollapsed());
     act(() => {
-      window.dispatchEvent(
-        new KeyboardEvent('keydown', { key: '\\', ctrlKey: true }),
-      );
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '\\', ctrlKey: true }));
     });
     expect(result.current[0]).toBe(true);
   });
@@ -80,5 +78,20 @@ describe('useSidebarCollapsed', () => {
       );
     });
     expect(result.current[0]).toBe(false);
+  });
+});
+
+describe('useSidebarCollapsed with a custom storage key', () => {
+  it('reads and writes under the given key', () => {
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      configurable: true,
+    });
+    localStorageMock._store.clear();
+    localStorageMock.setItem('installer-sidebar', 'true');
+    const { result } = renderHook(() => useSidebarCollapsed('installer-sidebar'));
+    expect(result.current[0]).toBe(true);
+    act(() => result.current[1]());
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('installer-sidebar', 'false');
   });
 });

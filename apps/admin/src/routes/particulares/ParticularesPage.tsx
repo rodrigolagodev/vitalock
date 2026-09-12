@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, ErrorState, SearchInput } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { useParticulares } from '@/hooks/useParticulares';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ParticularTable } from '@/components/particulares/ParticularTable';
