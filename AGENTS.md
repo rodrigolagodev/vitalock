@@ -66,6 +66,8 @@ Rules that hold across the codebase. If your change would break one, name it exp
 - Every mutation goes through Postgres RLS + RPCs. No direct table writes from the client.
 - Terminal-state rows (resolved tickets, invoiced/cancelled orders) are immutable — enforced by `BEFORE UPDATE` trigger functions in `supabase/migrations/20260901170000_add_terminal_immutability_triggers.sql`. Do not add UI edit paths that bypass this.
 - Migrations are timestamp-prefixed (`YYYYMMDDHHMMSS_verb_object.sql`), additive where possible, reversible when it is cheap.
+- Migrations reach production **only** through `supabase db push`, and only after `pnpm db:rehearse` passes (applies the pending files to a local copy of production data, runs pgTAP, checks `SCHEMA.md`). Never apply SQL to the linked project through the MCP `apply_migration` tool, the dashboard or `psql` — it desyncs the migration history (happened 2026-09-02, cost a `migration repair`).
+- Every `SECURITY DEFINER` RPC carries a role guard, a pinned `search_path` and a server-derived actor — see `supabase/README.md` § Authorization convention. Lint-free is not enough; `test_131` must cover it.
 - SQL tests live in `supabase/tests-sql/`, run under `pg_prove`, and are part of the verifier gate.
 
 **Frontend**
@@ -89,6 +91,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm --filter @vitalock/supabase test:sql   # requires local Supabase up
+pnpm db:rehearse                            # before any `supabase db push` — rehearses pending migrations on production data
 ```
 
 For spec-driven work, structural validation of the OpenSpec change folder (proposal + design + tasks + delta specs with acceptance scenarios) is performed by the `sdd-verify` sub-agent — there is **no `openspec` CLI installed**; the `openspec` npm package is a placeholder and OpenSpec is used here as a file-system convention.
@@ -143,6 +146,7 @@ Under `.claude/skills/`, per-repo. Auto-invoked by Claude Code when the prompt m
 
 - **`admin-ui-patterns`** — recurring admin UI patterns (title-adornment badges, StatCard rows, EditableTitle, action buttons in SectionHeading, references-as-links, segmented-control category pickers).
 - **`openspec-workflow`** — how SDD changes are structured in this repo (phase files, task groups, size:exception, apply-progress, archive lifecycle).
+- **`rehearse-migration`** — mandatory before `supabase db push`: snapshot production, replay pending migrations on a local copy of its data, pgTAP + schema-doc drift, then push. Decision table for every failure code.
 
 ## Delegation (deferred)
 

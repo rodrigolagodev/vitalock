@@ -22,7 +22,8 @@
     "size": "turbo run size",
     "gen:schema-doc": "bash scripts/gen-schema-doc.sh",
     "e2e": "playwright test",
-    "e2e:install": "playwright install --with-deps chromium"
+    "e2e:install": "playwright install --with-deps chromium",
+    "db:rehearse": "bash scripts/rehearse-migration.sh"
   },
   "devDependencies": {
     "@playwright/test": "1.48.2",
