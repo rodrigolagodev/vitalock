@@ -8,13 +8,13 @@ export function ThemeToggle() {
 
   return (
     <div className="flex items-center gap-2" title="Cambiar tema">
-      <Sun className="h-4 w-4 text-muted-foreground" />
+      <Sun className="text-muted-foreground h-4 w-4" />
       <Switch
         checked={isDark}
         onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
         aria-label="Cambiar entre tema claro y oscuro"
       />
-      <Moon className="h-4 w-4 text-muted-foreground" />
+      <Moon className="text-muted-foreground h-4 w-4" />
     </div>
   );
 }

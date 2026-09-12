@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { TechnicalOrderForm } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import type { TechnicalOrderFormValues } from '@/components/servicio-tecnico/TechnicalOrderForm';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';

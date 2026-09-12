@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button, ErrorState } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { KeyOrderForm } from '@/components/llaves/KeyOrderForm';
 import type { KeyOrderFormValues } from '@/components/llaves/KeyOrderForm';
 import { useKeyOrder } from '@/hooks/useKeyOrder';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { NavItem } from '../NavItem';
+import { NavItem } from '@vitalock/ui';
 
 function renderNavItem(props: { collapsed?: boolean; badge?: number }) {
   return render(
@@ -40,5 +40,38 @@ describe('NavItem', () => {
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/ordenes');
     expect(link).toHaveAttribute('aria-label', 'Órdenes');
+  });
+});
+
+describe('NavItem active state', () => {
+  function renderAt(
+    pathname: string,
+    props: { to: string; end?: boolean; excludeSubpaths?: string[] },
+  ) {
+    return render(
+      <MemoryRouter initialEntries={[pathname]}>
+        <NavItem label="Item" {...props} />
+      </MemoryRouter>,
+    );
+  }
+
+  it('is active on a subpath by default (prefix match)', () => {
+    renderAt('/ordenes/42', { to: '/ordenes' });
+    expect(screen.getByRole('link').className).toContain('bg-primary');
+  });
+
+  it('is not active on a subpath when `end` is set', () => {
+    renderAt('/ordenes/42', { to: '/ordenes', end: true });
+    expect(screen.getByRole('link').className).not.toContain('bg-primary');
+  });
+
+  it('is active on the exact path when `end` is set', () => {
+    renderAt('/', { to: '/', end: true });
+    expect(screen.getByRole('link').className).toContain('bg-primary');
+  });
+
+  it('is not active on an excluded subpath', () => {
+    renderAt('/llaves/inventario', { to: '/llaves', excludeSubpaths: ['/llaves/inventario'] });
+    expect(screen.getByRole('link').className).not.toContain('bg-primary');
   });
 });

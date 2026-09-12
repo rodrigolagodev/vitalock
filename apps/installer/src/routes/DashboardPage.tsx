@@ -1,27 +1,12 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronRight, ListTodo, Loader2 } from 'lucide-react';
-import { Badge, Button, StatCard } from '@vitalock/ui';
+import { ArrowRight, Building2, ChevronRight, ListTodo, Loader2, Wrench } from 'lucide-react';
+import { Button, EmptyState, PageHeader, SectionHeading, StatCard } from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
-import type { AssignedTicket } from '@/hooks/useAssignedTickets';
+import { sortActiveTickets, tareaStatus } from '@/lib/status/tareaStatus';
 
 const QUICK_ACCESS_LIMIT = 5;
-
-const statusOrder: Record<AssignedTicket['status'], number> = {
-  in_progress: 0,
-  open: 1,
-};
-
-const statusLabel: Record<AssignedTicket['status'], string> = {
-  open: 'Pendiente',
-  in_progress: 'En curso',
-};
-
-const statusVariant: Record<AssignedTicket['status'], 'default' | 'secondary'> = {
-  open: 'default',
-  in_progress: 'secondary',
-};
 
 function firstName(fullName: string | undefined | null): string {
   if (!fullName) return '';
@@ -32,25 +17,20 @@ function firstName(fullName: string | undefined | null): string {
 /**
  * DashboardPage — the installer's home screen.
  *
- * Header greeting + pending-task StatCard + a short list of the next few
- * tasks with a "Ver todas" link to the full Tareas view. All numbers come
- * from useAssignedTickets so counts stay in sync with the live worklist.
+ * Greeting header + StatCard snapshot row + a short "Acceso rápido" list of
+ * the next few tasks with a "Ver todas" link to the full Tareas view. All
+ * numbers come from useAssignedTickets so counts stay in sync with the live
+ * worklist.
  */
 export default function DashboardPage() {
   const { staff } = useAuthContext();
   const assignedTickets = useAssignedTickets();
 
   const tickets = useMemo(() => assignedTickets.data ?? [], [assignedTickets.data]);
+  const sorted = useMemo(() => sortActiveTickets(tickets), [tickets]);
 
-  const sorted = useMemo(
-    () =>
-      [...tickets].sort((a, b) => {
-        const statusDiff = statusOrder[a.status] - statusOrder[b.status];
-        if (statusDiff !== 0) return statusDiff;
-        return a.opened_at.localeCompare(b.opened_at);
-      }),
-    [tickets],
-  );
+  const inProgressCount = tickets.filter((t) => t.status === 'in_progress').length;
+  const buildingCount = new Set(tickets.map((t) => t.building.id)).size;
 
   const quickAccess = sorted.slice(0, QUICK_ACCESS_LIMIT);
   const remaining = Math.max(sorted.length - quickAccess.length, 0);
@@ -59,75 +39,85 @@ export default function DashboardPage() {
   const greeting = greetingName ? `Hola, ${greetingName}` : 'Hola';
 
   const isLoading = assignedTickets.isLoading && !assignedTickets.data;
+  const placeholder = isLoading ? '…' : undefined;
 
   return (
-    <div className="flex flex-col gap-6 p-4 max-w-2xl mx-auto">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">{greeting}</h1>
-          <p className="text-sm text-muted-foreground">Resumen de tu jornada</p>
-        </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader title={greeting} subtitle="Resumen de tu jornada">
         {assignedTickets.isFetching && !isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Actualizando" />
+          <Loader2
+            className="text-muted-foreground h-4 w-4 animate-spin"
+            aria-label="Actualizando"
+          />
         )}
-      </header>
+      </PageHeader>
 
-      <StatCard
-        label="Tareas pendientes"
-        value={isLoading ? '…' : tickets.length}
-        icon={<ListTodo className="h-5 w-5" />}
-      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Tareas pendientes"
+          value={placeholder ?? tickets.length}
+          icon={<ListTodo className="h-5 w-5" />}
+        />
+        <StatCard
+          label="En curso"
+          value={placeholder ?? inProgressCount}
+          icon={<Wrench className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Edificios"
+          value={placeholder ?? buildingCount}
+          icon={<Building2 className="h-5 w-5" />}
+        />
+      </div>
 
       <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Acceso rápido
-          </h2>
+        <SectionHeading title="Acceso rápido" variant="secondary">
           {sorted.length > 0 && (
-            <Button asChild variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
+            <Button asChild variant="ghost" size="sm" className="gap-1">
               <Link to="/tareas">
                 Ver todas
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
           )}
-        </div>
+        </SectionHeading>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando tareas…</p>
+          <EmptyState message="Cargando tareas…" />
         ) : quickAccess.length === 0 ? (
-          <p className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
-            No tenés tareas pendientes. ¡Buen trabajo!
-          </p>
+          <EmptyState
+            message="No tenés tareas pendientes. ¡Buen trabajo!"
+            className="bg-card rounded-md border p-4"
+          />
         ) : (
-          <ul className="flex flex-col gap-2">
-            {quickAccess.map((ticket) => (
-              <li key={ticket.id}>
-                <Link
-                  to="/tareas"
-                  className="flex items-center gap-2 rounded-md border bg-card px-3 py-2 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-sm font-medium">{ticket.title}</span>
-                    {ticket.building.name && (
-                      <span className="truncate text-xs text-muted-foreground">
-                        {ticket.building.name}
-                      </span>
-                    )}
-                  </div>
-                  <Badge variant={statusVariant[ticket.status]} className="shrink-0">
-                    {statusLabel[ticket.status]}
-                  </Badge>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </Link>
-              </li>
-            ))}
+          <div className="flex flex-col gap-2">
+            <ul className="bg-card divide-y rounded-md border">
+              {quickAccess.map((ticket) => (
+                <li key={ticket.id}>
+                  <Link
+                    to={`/tareas/${ticket.id}`}
+                    className="hover:bg-muted/50 flex items-center gap-3 px-4 py-3 transition-colors"
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="truncate text-sm font-medium">{ticket.title}</span>
+                      {ticket.building.name && (
+                        <span className="text-muted-foreground truncate text-xs">
+                          {ticket.building.name}
+                        </span>
+                      )}
+                    </div>
+                    <tareaStatus.Badge status={ticket.status} />
+                    <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
             {remaining > 0 && (
-              <li className="text-center text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-center text-xs">
                 +{remaining} {remaining === 1 ? 'tarea más' : 'tareas más'}
-              </li>
+              </p>
             )}
-          </ul>
+          </div>
         )}
       </section>
     </div>

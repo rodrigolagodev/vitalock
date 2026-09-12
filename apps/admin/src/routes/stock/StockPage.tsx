@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Package, TriangleAlert } from 'lucide-react';
 import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { useProducts } from '@/hooks/useProducts';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ProductsTable } from '@/components/stock/ProductsTable';
@@ -49,17 +49,11 @@ export default function StockPage() {
       </PageHeader>
 
       <div className="flex max-w-full gap-4" data-testid="stat-cards">
-        <StatCard
-          label="Total productos"
-          value={String(products.length)}
-          icon={<Package />}
-        />
+        <StatCard label="Total productos" value={String(products.length)} icon={<Package />} />
         <StatCard
           label="Stock bajo"
           value={String(
-            products.filter(
-              (product) => product.stock_disponible <= LOW_STOCK_THRESHOLD,
-            ).length,
+            products.filter((product) => product.stock_disponible <= LOW_STOCK_THRESHOLD).length,
           )}
           icon={<TriangleAlert />}
         />
@@ -76,11 +70,7 @@ export default function StockPage() {
 
       <div className="flex flex-wrap gap-2">
         {CATEGORY_PILLS.map((pill) => (
-          <button
-            key={pill.value}
-            type="button"
-            onClick={() => setCategory(pill.value)}
-          >
+          <button key={pill.value} type="button" onClick={() => setCategory(pill.value)}>
             <Badge
               variant={category === pill.value ? 'default' : 'secondary'}
               className="cursor-pointer"
@@ -91,11 +81,7 @@ export default function StockPage() {
         ))}
       </div>
 
-      <ProductsTable
-        rows={products}
-        isFetching={isFetching}
-        hasFilters={hasFilters}
-      />
+      <ProductsTable rows={products} isFetching={isFetching} hasFilters={hasFilters} />
 
       <CargarProductoSheet open={createOpen} onOpenChange={setCreateOpen} />
     </div>

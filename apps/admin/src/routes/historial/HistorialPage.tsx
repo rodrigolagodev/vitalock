@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Badge, ErrorState, Input, SearchInput } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { useAllOrders } from '@/hooks/useAllOrders';
 import { useDebounce } from '@/hooks/useDebounce';
 import { HistorialTable } from '@/components/historial/HistorialTable';
@@ -72,7 +72,7 @@ export default function HistorialPage() {
 
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <label htmlFor="date-from" className="text-xs uppercase text-muted-foreground">
+          <label htmlFor="date-from" className="text-muted-foreground text-xs uppercase">
             Desde
           </label>
           <Input
@@ -84,7 +84,7 @@ export default function HistorialPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor="date-to" className="text-xs uppercase text-muted-foreground">
+          <label htmlFor="date-to" className="text-muted-foreground text-xs uppercase">
             Hasta
           </label>
           <Input
@@ -98,13 +98,9 @@ export default function HistorialPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs uppercase text-muted-foreground">Tipo:</span>
+        <span className="text-muted-foreground text-xs uppercase">Tipo:</span>
         {KIND_PILLS.map((pill) => (
-          <button
-            key={pill.value}
-            type="button"
-            onClick={() => setOrderKind(pill.value)}
-          >
+          <button key={pill.value} type="button" onClick={() => setOrderKind(pill.value)}>
             <Badge
               variant={orderKind === pill.value ? 'default' : 'secondary'}
               className="cursor-pointer"
@@ -116,13 +112,9 @@ export default function HistorialPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs uppercase text-muted-foreground">Estado:</span>
+        <span className="text-muted-foreground text-xs uppercase">Estado:</span>
         {STATUS_PILLS.map((pill) => (
-          <button
-            key={pill.value}
-            type="button"
-            onClick={() => setStatus(pill.value)}
-          >
+          <button key={pill.value} type="button" onClick={() => setStatus(pill.value)}>
             <Badge
               variant={status === pill.value ? 'default' : 'secondary'}
               className="cursor-pointer"
@@ -133,11 +125,7 @@ export default function HistorialPage() {
         ))}
       </div>
 
-      <HistorialTable
-        orders={orders}
-        isFetching={isFetching}
-        hasFilters={hasFilters}
-      />
+      <HistorialTable orders={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>
   );
 }

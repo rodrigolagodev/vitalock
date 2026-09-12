@@ -6,7 +6,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { AdministrationsTable } from '@/components/administrations/AdministrationsTable';
 import { AdministrationFormSheet } from '@/components/administrations/AdministrationFormSheet';
 import { ACTIVE_STATUS } from '@/lib/statThresholds';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 
 export default function AdministrationsPage() {
   const [search, setSearch] = useState('');
@@ -14,7 +14,11 @@ export default function AdministrationsPage() {
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const { data: administrations = [], isFetching, isError } = useAdministrations({
+  const {
+    data: administrations = [],
+    isFetching,
+    isError,
+  } = useAdministrations({
     search: debouncedSearch,
   });
 
@@ -40,9 +44,8 @@ export default function AdministrationsPage() {
         <StatCard
           label="Activas"
           value={String(
-            administrations.filter(
-              (administration) => administration.status === ACTIVE_STATUS,
-            ).length,
+            administrations.filter((administration) => administration.status === ACTIVE_STATUS)
+              .length,
           )}
           icon={<CircleCheck />}
         />
@@ -61,10 +64,7 @@ export default function AdministrationsPage() {
         search={debouncedSearch}
       />
 
-      <AdministrationFormSheet
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-      />
+      <AdministrationFormSheet open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   );
 }

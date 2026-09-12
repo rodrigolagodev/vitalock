@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, PackageCheck } from 'lucide-react';
 import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useKeyOrders } from '@/hooks/useKeyOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -42,7 +42,11 @@ export default function KeyOrdersPage() {
     administrationId !== undefined ||
     buildingId !== undefined;
 
-  const { data: orders = [], isFetching, isError } = useKeyOrders({
+  const {
+    data: orders = [],
+    isFetching,
+    isError,
+  } = useKeyOrders({
     search: debouncedSearch,
     status: status === 'all' ? undefined : status,
     administrationId,
@@ -62,28 +66,20 @@ export default function KeyOrdersPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stat-cards">
-        <StatCard
-          label="Total órdenes"
-          value={String(orders.length)}
-          icon={<ClipboardList />}
-        />
+        <StatCard label="Total órdenes" value={String(orders.length)} icon={<ClipboardList />} />
         <StatCard
           label="Abiertas"
           value={String(
             orders.filter(
               (o) =>
-                o.status !== 'completed' &&
-                o.status !== 'invoiced' &&
-                o.status !== 'cancelled',
+                o.status !== 'completed' && o.status !== 'invoiced' && o.status !== 'cancelled',
             ).length,
           )}
           icon={<Clock />}
         />
         <StatCard
           label="Completadas"
-          value={String(
-            orders.filter((o) => o.status === 'completed').length,
-          )}
+          value={String(orders.filter((o) => o.status === 'completed').length)}
           icon={<PackageCheck />}
         />
       </div>
@@ -116,13 +112,9 @@ export default function KeyOrdersPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs uppercase text-muted-foreground">Estado:</span>
+        <span className="text-muted-foreground text-xs uppercase">Estado:</span>
         {STATUS_PILLS.map((pill) => (
-          <button
-            key={pill.value}
-            type="button"
-            onClick={() => setStatus(pill.value)}
-          >
+          <button key={pill.value} type="button" onClick={() => setStatus(pill.value)}>
             <Badge
               variant={status === pill.value ? 'default' : 'secondary'}
               className="cursor-pointer"
@@ -133,11 +125,7 @@ export default function KeyOrdersPage() {
         ))}
       </div>
 
-      <LlavesTable
-        rows={orders}
-        isFetching={isFetching}
-        hasFilters={hasFilters}
-      />
+      <LlavesTable rows={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>
   );
 }

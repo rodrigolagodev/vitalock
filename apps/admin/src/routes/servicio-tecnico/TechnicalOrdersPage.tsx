@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, CheckCircle2 } from 'lucide-react';
 import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useTechnicalOrders } from '@/hooks/useTechnicalOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -41,7 +41,11 @@ export default function TechnicalOrdersPage() {
     administrationId !== undefined ||
     buildingId !== undefined;
 
-  const { data: orders = [], isFetching, isError } = useTechnicalOrders({
+  const {
+    data: orders = [],
+    isFetching,
+    isError,
+  } = useTechnicalOrders({
     search: debouncedSearch,
     status: status === 'all' ? undefined : status,
     administrationId,
@@ -49,7 +53,9 @@ export default function TechnicalOrdersPage() {
   });
 
   if (isError) {
-    return <ErrorState message="Error al cargar las órdenes de servicio técnico. Recargá la página." />;
+    return (
+      <ErrorState message="Error al cargar las órdenes de servicio técnico. Recargá la página." />
+    );
   }
 
   return (
@@ -61,28 +67,20 @@ export default function TechnicalOrdersPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stat-cards">
-        <StatCard
-          label="Total órdenes"
-          value={String(orders.length)}
-          icon={<ClipboardList />}
-        />
+        <StatCard label="Total órdenes" value={String(orders.length)} icon={<ClipboardList />} />
         <StatCard
           label="Abiertas"
           value={String(
             orders.filter(
               (o) =>
-                o.status !== 'completed' &&
-                o.status !== 'invoiced' &&
-                o.status !== 'cancelled',
+                o.status !== 'completed' && o.status !== 'invoiced' && o.status !== 'cancelled',
             ).length,
           )}
           icon={<Clock />}
         />
         <StatCard
           label="Listas para facturar"
-          value={String(
-            orders.filter((o) => o.status === 'completed').length,
-          )}
+          value={String(orders.filter((o) => o.status === 'completed').length)}
           icon={<CheckCircle2 />}
         />
       </div>
@@ -115,13 +113,9 @@ export default function TechnicalOrdersPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs uppercase text-muted-foreground">Estado:</span>
+        <span className="text-muted-foreground text-xs uppercase">Estado:</span>
         {STATUS_PILLS.map((pill) => (
-          <button
-            key={pill.value}
-            type="button"
-            onClick={() => setStatus(pill.value)}
-          >
+          <button key={pill.value} type="button" onClick={() => setStatus(pill.value)}>
             <Badge
               variant={status === pill.value ? 'default' : 'secondary'}
               className="cursor-pointer"
@@ -132,11 +126,7 @@ export default function TechnicalOrdersPage() {
         ))}
       </div>
 
-      <ServicioTecnicoTable
-        rows={orders}
-        isFetching={isFetching}
-        hasFilters={hasFilters}
-      />
+      <ServicioTecnicoTable rows={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>
   );
 }

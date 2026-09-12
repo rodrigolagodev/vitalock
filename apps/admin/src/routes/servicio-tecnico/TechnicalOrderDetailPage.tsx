@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Button, ConfirmDialog } from '@vitalock/ui';
 import { ErrorState, NotFoundState, SectionHeading, Skeleton } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { useTechnicalOrder } from '@/hooks/useTechnicalOrder';
 import { useMutateTechnicalOrder } from '@/hooks/useMutateTechnicalOrder';
 import { useTechnicalOrderTickets } from '@/hooks/useTechnicalOrderTickets';

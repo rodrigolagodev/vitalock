@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { AuthContext } from '@vitalock/shared';
@@ -26,6 +27,7 @@ function stubMatchMedia(matches: boolean) {
 
 beforeEach(() => {
   stubMatchMedia(false);
+  window.localStorage.removeItem('vitalock-sidebar-collapsed');
 });
 
 afterEach(() => {
@@ -90,31 +92,67 @@ describe('App shell — mobile topbar', () => {
     expect(imgs[1]?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('renders the user avatar button with initials in the topbar', () => {
+  it('renders the hamburger trigger that opens the mobile drawer with nav and user menu', async () => {
+    const user = userEvent.setup();
     const { container } = renderApp();
     const header = container.querySelector('header') as HTMLElement;
-    // "Juan Perez" -> "JP"
-    const button = within(header).getByRole('button', {
-      name: 'Abrir menú de usuario',
-    });
-    expect(button).toHaveTextContent('JP');
+    await user.click(within(header).getByRole('button', { name: 'Abrir menú' }));
+
+    // The drawer repeats the nav tree and pins the user menu to its bottom.
+    const drawerLinks = screen.getAllByRole('link', { name: 'Tareas' });
+    expect(drawerLinks).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: 'Abrir menú de usuario' })).toHaveLength(2);
+    // Backdrop + explicit X button both close the drawer.
+    expect(screen.getAllByRole('button', { name: 'Cerrar menú' })).toHaveLength(2);
   });
 });
 
-describe('App shell — bottom navigation (mobile)', () => {
-  it('renders the three primary nav items', () => {
+describe('App shell — desktop sidebar', () => {
+  it('renders the three primary nav items with the expected routes', () => {
     renderApp();
-    const nav = screen.getByRole('navigation', { name: 'Navegación principal' });
-    expect(within(nav).getByText('Dashboard')).toBeInTheDocument();
-    expect(within(nav).getByText('Tareas')).toBeInTheDocument();
-    expect(within(nav).getByText('Historial')).toBeInTheDocument();
+    const expected = [
+      ['Dashboard', '/'],
+      ['Tareas', '/tareas'],
+      ['Historial', '/historial'],
+    ] as const;
+    for (const [label, href] of expected) {
+      expect(screen.getByRole('link', { name: label })).toHaveAttribute('href', href);
+    }
   });
 
-  it('nav items link to the expected routes', () => {
+  it('renders the user menu trigger with initials and name', () => {
     renderApp();
-    const nav = screen.getByRole('navigation', { name: 'Navegación principal' });
-    const links = within(nav).getAllByRole('link');
-    const hrefs = links.map((l) => l.getAttribute('href'));
-    expect(hrefs).toEqual(['/', '/tareas', '/historial']);
+    // "Juan Perez" -> "JP"
+    const button = screen.getByRole('button', { name: 'Abrir menú de usuario' });
+    expect(button).toHaveTextContent('JP');
+    expect(button).toHaveTextContent('Juan Perez');
+  });
+
+  it('exposes theme toggle and sign-out inside the user menu popover', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Abrir menú de usuario' }));
+
+    expect(
+      screen.getByRole('switch', { name: 'Cambiar entre tema claro y oscuro' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Salir/ })).toBeInTheDocument();
+  });
+
+  it('expands by default and collapses when the toggle button is clicked', async () => {
+    const user = userEvent.setup();
+    renderApp();
+
+    const aside = screen.getByRole('complementary');
+    expect(aside).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Tareas')).not.toHaveAttribute('aria-hidden', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Toggle sidebar' }));
+    expect(aside).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Tareas')).toHaveAttribute('aria-hidden', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Toggle sidebar' }));
+    expect(aside).toHaveAttribute('aria-expanded', 'true');
   });
 });

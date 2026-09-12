@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -82,9 +82,15 @@ export default function InventarioPage() {
 
   const { data: admins = [] } = useAdministrations();
   const { data: buildings = [] } = useBuildings();
-  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId, { activeOnly: true });
+  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId, {
+    activeOnly: true,
+  });
 
-  const { data: rows = [], isFetching, isError } = useKeysInventory({
+  const {
+    data: rows = [],
+    isFetching,
+    isError,
+  } = useKeysInventory({
     administrationId: cascadeValue.administrationId,
     buildingId: cascadeValue.buildingId,
     equipmentId: cascadeValue.equipmentId,
@@ -135,16 +141,12 @@ export default function InventarioPage() {
           <div className="flex flex-col gap-1">
             <Label
               htmlFor="physical-status"
-              className="text-xs font-medium uppercase text-muted-foreground"
+              className="text-muted-foreground text-xs font-medium uppercase"
             >
               Estado físico
             </Label>
             <Select value={physicalStatus} onValueChange={setPhysicalStatus}>
-              <SelectTrigger
-                id="physical-status"
-                aria-label="Estado físico"
-                className="w-56"
-              >
+              <SelectTrigger id="physical-status" aria-label="Estado físico" className="w-56">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -160,16 +162,12 @@ export default function InventarioPage() {
           <div className="flex flex-col gap-1">
             <Label
               htmlFor="workflow-status"
-              className="text-xs font-medium uppercase text-muted-foreground"
+              className="text-muted-foreground text-xs font-medium uppercase"
             >
               Estado de orden
             </Label>
             <Select value={workflowStatus} onValueChange={setWorkflowStatus}>
-              <SelectTrigger
-                id="workflow-status"
-                aria-label="Estado de orden"
-                className="w-56"
-              >
+              <SelectTrigger id="workflow-status" aria-label="Estado de orden" className="w-56">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

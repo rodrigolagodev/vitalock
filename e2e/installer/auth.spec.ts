@@ -4,8 +4,9 @@ test.describe('installer — authentication', () => {
   test('installer signs in and sees the worklist shell', async ({ page }) => {
     await login(page, 'installer');
     await expect(page.getByText('Algo salió mal al mostrar esta pantalla.')).toHaveCount(0);
-    // Bottom navigation is the installer's primary chrome.
-    await expect(page.getByRole('navigation')).toBeVisible();
+    // On a phone the shared shell shows a hamburger that opens the nav drawer.
+    await page.getByRole('button', { name: 'Abrir menú' }).click();
+    await expect(page.getByRole('link', { name: 'Tareas' })).toBeVisible();
   });
 
   test('an admin account is rejected by the installer app', async ({ page }) => {

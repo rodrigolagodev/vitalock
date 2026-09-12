@@ -1,39 +1,41 @@
 import { useCallback, useEffect, useState } from 'react';
 
-const STORAGE_KEY = 'vitalock-sidebar-collapsed';
+export const DEFAULT_SIDEBAR_STORAGE_KEY = 'vitalock-sidebar-collapsed';
 
-function readStoredCollapsed(): boolean {
+function readStoredCollapsed(storageKey: string): boolean {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'true';
+    return window.localStorage.getItem(storageKey) === 'true';
   } catch {
     // localStorage unavailable (SSR, private browsing quota) — default expanded.
     return false;
   }
 }
 
-function writeStoredCollapsed(collapsed: boolean): void {
+function writeStoredCollapsed(storageKey: string, collapsed: boolean): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, String(collapsed));
+    window.localStorage.setItem(storageKey, String(collapsed));
   } catch {
     // Silently ignore persistence failures; in-memory state still works.
   }
 }
 
 /**
- * Tracks the admin sidebar collapsed state with localStorage persistence
- * (key `vitalock-sidebar-collapsed`) and a global Ctrl+\ / Cmd+\ shortcut.
- * Returns `[collapsed, toggle]`.
+ * Tracks the sidebar collapsed state with localStorage persistence under
+ * `storageKey` (default `vitalock-sidebar-collapsed`) and a global
+ * Ctrl+\ / Cmd+\ shortcut. Returns `[collapsed, toggle]`.
  */
-export function useSidebarCollapsed(): [boolean, () => void] {
-  const [collapsed, setCollapsed] = useState<boolean>(readStoredCollapsed);
+export function useSidebarCollapsed(
+  storageKey: string = DEFAULT_SIDEBAR_STORAGE_KEY,
+): [boolean, () => void] {
+  const [collapsed, setCollapsed] = useState<boolean>(() => readStoredCollapsed(storageKey));
 
   const toggle = useCallback(() => {
     setCollapsed((prev) => {
       const next = !prev;
-      writeStoredCollapsed(next);
+      writeStoredCollapsed(storageKey, next);
       return next;
     });
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     // navigator.platform is deprecated; userAgentData is the successor where

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { KeyOrderForm } from '@/components/llaves/KeyOrderForm';
 import type { KeyOrderFormValues } from '@/components/llaves/KeyOrderForm';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
@@ -49,10 +49,7 @@ export default function KeyOrderNuevaPage() {
       <PageHeader
         title="Nueva orden de llaves"
         subtitle="Completá los datos del cliente y las llaves. La orden se confirma automáticamente al guardar."
-        breadcrumbs={[
-          { label: 'Llaves', to: '/llaves' },
-          { label: 'Nueva orden' },
-        ]}
+        breadcrumbs={[{ label: 'Llaves', to: '/llaves' }, { label: 'Nueva orden' }]}
       />
 
       <KeyOrderForm

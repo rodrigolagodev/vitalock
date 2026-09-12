@@ -241,6 +241,41 @@ describe('TaskDetailPage', () => {
     expect(mockCreateSignedUrl).toHaveBeenCalledWith('task-001/equip.mdb', 300);
   });
 
+  it('lists prior updates with a download per record', async () => {
+    const user = userEvent.setup();
+    mockCreateSignedUrl.mockResolvedValueOnce({
+      data: { signedUrl: 'https://x/signed-prior' },
+      error: null,
+    });
+    mockUseEquipmentUpdateHistory.mockReturnValue({
+      data: [
+        {
+          id: 'upd-prev',
+          mdb_storage_path: 'task-000/equip.mdb',
+          created_at: '2026-08-01T10:00:00Z',
+        },
+      ],
+      isLoading: false,
+      isFetching: false,
+    });
+    renderDetail();
+
+    expect(screen.getByText('Actualizaciones anteriores (1)')).toBeInTheDocument();
+    expect(screen.getByText(/desincronizará la base de datos/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Descargar' }));
+    expect(mockCreateSignedUrl).toHaveBeenCalledWith('task-000/equip.mdb', 300);
+  });
+
+  it('shows a loading skeleton while the worklist is pending', () => {
+    mockUseAssignedTickets.mockReturnValue({
+      data: undefined as unknown as unknown[],
+      isLoading: true,
+      isFetching: true,
+    });
+    renderDetail();
+    expect(screen.getByLabelText('Cargando')).toBeInTheDocument();
+  });
+
   it('shows the comment history section and add-comment form', () => {
     mockUseTicketComments.mockReturnValue({
       data: [

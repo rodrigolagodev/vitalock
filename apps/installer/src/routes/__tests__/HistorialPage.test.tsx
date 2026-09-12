@@ -10,10 +10,7 @@ vi.mock('@/hooks/useTicketHistory', () => ({
   useTicketHistory: () => useTicketHistoryMock(),
 }));
 
-function makeHistorical(
-  id: string,
-  overrides: Partial<HistoricalTicket> = {},
-): HistoricalTicket {
+function makeHistorical(id: string, overrides: Partial<HistoricalTicket> = {}): HistoricalTicket {
   return {
     id,
     title: `Tarea ${id}`,
@@ -37,6 +34,19 @@ beforeEach(() => {
 });
 
 describe('HistorialPage', () => {
+  it('shows a loading skeleton while the query is pending', () => {
+    useTicketHistoryMock.mockReturnValue({ data: undefined, isLoading: true, isFetching: true });
+    render(<HistorialPage />);
+    expect(screen.getByRole('heading', { name: 'Historial' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Cargando historial')).toBeInTheDocument();
+  });
+
+  it('shows a refresh indicator on background refetch', () => {
+    useTicketHistoryMock.mockReturnValue({ data: [], isLoading: false, isFetching: true });
+    render(<HistorialPage />);
+    expect(screen.getByLabelText('Actualizando')).toBeInTheDocument();
+  });
+
   it('shows the empty state when there is no history', () => {
     useTicketHistoryMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
     render(<HistorialPage />);

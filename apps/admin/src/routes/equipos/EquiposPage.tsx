@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@vitalock/ui';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageHeader } from '@vitalock/ui';
 import { useEquipmentInventory } from '@/hooks/useEquipmentInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -32,9 +32,15 @@ export default function EquiposPage() {
 
   const { data: admins = [] } = useAdministrations();
   const { data: buildings = [] } = useBuildings();
-  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId, { activeOnly: true });
+  const { data: equipmentByBuilding = [] } = useEquipmentByBuilding(cascadeValue.buildingId, {
+    activeOnly: true,
+  });
 
-  const { data: rows = [], isFetching, isError } = useEquipmentInventory({
+  const {
+    data: rows = [],
+    isFetching,
+    isError,
+  } = useEquipmentInventory({
     administrationId: cascadeValue.administrationId,
     buildingId: cascadeValue.buildingId,
     status,
@@ -84,16 +90,12 @@ export default function EquiposPage() {
           <div className="flex flex-col gap-1">
             <Label
               htmlFor="equipment-status"
-              className="text-xs font-medium uppercase text-muted-foreground"
+              className="text-muted-foreground text-xs font-medium uppercase"
             >
               Estado del equipo
             </Label>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger
-                id="equipment-status"
-                aria-label="Estado del equipo"
-                className="w-56"
-              >
+              <SelectTrigger id="equipment-status" aria-label="Estado del equipo" className="w-56">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
