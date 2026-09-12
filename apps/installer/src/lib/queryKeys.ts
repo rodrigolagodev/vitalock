@@ -5,6 +5,8 @@ export const assignedTicketsKey = (staffId: string) =>
   ['installer', 'assigned-tickets', staffId] as const;
 export const historicalTicketsKey = (staffId: string) =>
   ['installer', 'historical-tickets', staffId] as const;
+/** Single ticket detail — status-agnostic, so closed tickets stay readable. */
+export const ticketKey = (ticketId: string) => ['installer', 'ticket', ticketId] as const;
 export const ticketCommentsKey = (ticketId: string) =>
   ['installer', 'ticket-comments', ticketId] as const;
 export const equipmentByIdKey = (equipmentId: string) =>

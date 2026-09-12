@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { createUseConfigureTechnicalTicketEquipment, useAuthContext } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
-import { assignedTicketsKey } from '@/lib/queryKeys';
+import { invalidateTicketQueries } from '@/lib/tickets/invalidateTicketQueries';
 import { toastMutationError } from '@/lib/errors/toast';
 
 /**
@@ -17,8 +17,8 @@ export function useConfigureTechnicalTicketEquipment() {
 
   return createUseConfigureTechnicalTicketEquipment({
     supabase,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
+    onSuccess: ({ ticketId }) => {
+      invalidateTicketQueries(queryClient, staffId, [ticketId]);
       toast.success('Equipo configurado. Marcá la tarea para finalizarla.');
     },
     mapMutationError: toastMutationError,

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@vitalock/shared';
-import { assignedTicketsKey } from '@/lib/queryKeys';
+import { invalidateTicketQueries } from '@/lib/tickets/invalidateTicketQueries';
 import { toastMutationError } from '@/lib/errors/toast';
 
 export interface ResolvePayload {
@@ -33,10 +33,8 @@ export function useResolveTickets() {
       if (firstError?.error) throw firstError.error;
     },
     onSuccess: (_data, { ids }) => {
-      void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
-      toast.success(
-        ids.length === 1 ? 'Ticket resuelto.' : `${ids.length} tickets resueltos.`,
-      );
+      invalidateTicketQueries(queryClient, staffId, ids);
+      toast.success(ids.length === 1 ? 'Ticket resuelto.' : `${ids.length} tickets resueltos.`);
     },
     onError: (err) => {
       toastMutationError(err);

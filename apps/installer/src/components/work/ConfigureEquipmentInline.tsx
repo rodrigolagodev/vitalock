@@ -4,7 +4,10 @@ import { useConfigureTechnicalTicketEquipment } from '@/hooks/useConfigureTechni
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
 
 interface ConfigureEquipmentInlineProps {
-  ticket: AssignedTicket;
+  ticket: Pick<
+    AssignedTicket,
+    'id' | 'category' | 'pending_new_serial' | 'pending_new_model' | 'intended_product_name'
+  >;
 }
 
 const HEADINGS: Record<'install_equipment' | 'replace_equipment', string> = {
