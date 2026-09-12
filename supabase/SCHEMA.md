@@ -1,6 +1,6 @@
 # Vitalock — Database Schema Reference
 
-> **Generated** by `scripts/gen-schema-doc.sh` from the database as of migration `20260911100000_revoke_anon_execute_on_internal_functions.sql`.
+> **Generated** by `scripts/gen-schema-doc.sh` from the database as of migration `20260912100000_fix_installer_mdb_storage_policy.sql`.
 > Do not edit by hand — re-run `pnpm gen:schema-doc` after a migration; CI fails if this file is stale. For narrative (flows, auth model, business rules) see `FLOWS.md`.
 
 ## Tables
