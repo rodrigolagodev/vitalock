@@ -20,7 +20,7 @@ const {
   mockUseResolveTickets,
   mockToastSuccess,
   mockToastWarning,
-  mockUseAssignedTickets,
+  mockUseTicket,
   mockUseRfidKeyCodeMap,
   mockUseTicketComments,
   mockUseEquipmentById,
@@ -53,13 +53,13 @@ const {
     })),
     mockToastSuccess: vi.fn(),
     mockToastWarning: vi.fn(),
-    mockUseAssignedTickets: vi.fn<
-      (ids?: never) => { data: unknown[]; isLoading: boolean; isFetching: boolean }
-    >(() => ({
-      data: [],
-      isLoading: false,
-      isFetching: false,
-    })),
+    mockUseTicket: vi.fn<(id?: string) => { data: unknown; isLoading: boolean; isError: boolean }>(
+      () => ({
+        data: null,
+        isLoading: false,
+        isError: false,
+      }),
+    ),
     mockUseRfidKeyCodeMap: vi.fn<(ids: string[]) => Map<string, string>>(() => new Map()),
     mockUseTicketComments: vi.fn<(id: string) => { data: unknown[] }>(() => ({ data: [] })),
     mockUseEquipmentById: vi.fn<() => { data: unknown; isLoading: boolean; isFetching: boolean }>(
@@ -99,8 +99,8 @@ vi.mock('sonner', () => ({
   toast: { success: mockToastSuccess, warning: mockToastWarning, error: vi.fn() },
 }));
 
-vi.mock('@/hooks/useAssignedTickets', () => ({
-  useAssignedTickets: () => mockUseAssignedTickets(),
+vi.mock('@/hooks/useTicket', () => ({
+  useTicket: (id?: string) => mockUseTicket(id),
 }));
 
 vi.mock('@/hooks/useResolveEquipmentUpdate', () => ({
@@ -134,13 +134,13 @@ vi.mock('@/components/work/ConfigureEquipmentInline', () => ({
 // ---------------------------------------------------------------------------
 
 import TaskDetailPage from '@/routes/TaskDetailPage';
-import type { AssignedTicket } from '@/hooks/useAssignedTickets';
+import type { TicketDetail } from '@/hooks/useAssignedTickets';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
+function makeTicket(overrides: Partial<TicketDetail> = {}): TicketDetail {
   return {
     id: 'ticket-001',
     title: 'Actualización SN-001',
@@ -148,6 +148,11 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     status: 'open',
     category: 'update_equipment',
     opened_at: '2026-08-17T00:00:00Z',
+    updated_at: '2026-08-17T00:00:00Z',
+    resolved_at: null,
+    resolved_by_staff_id: null,
+    resolution_notes: null,
+    cancellation_reason: null,
     building: {
       id: 'bld-001',
       name: 'Edificio Test',
@@ -167,6 +172,10 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
     intended_product_name: null,
     ...overrides,
   };
+}
+
+function mockTicket(ticket: TicketDetail | null) {
+  mockUseTicket.mockReturnValue({ data: ticket, isLoading: false, isError: false });
 }
 
 function renderDetail() {
@@ -189,11 +198,7 @@ function renderDetail() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseAssignedTickets.mockReturnValue({
-    data: [makeTicket()],
-    isLoading: false,
-    isFetching: false,
-  });
+  mockTicket(makeTicket());
   mockUseRfidKeyCodeMap.mockReturnValue(new Map([['key-uuid-activate-001', 'RFID-ACT-001']]));
   mockUseTicketComments.mockReturnValue({ data: [] });
   mockPriorUpdatesOrder.mockResolvedValue({ data: [], error: null });
@@ -266,12 +271,8 @@ describe('TaskDetailPage', () => {
     expect(mockCreateSignedUrl).toHaveBeenCalledWith('task-000/equip.mdb', 300);
   });
 
-  it('shows a loading skeleton while the worklist is pending', () => {
-    mockUseAssignedTickets.mockReturnValue({
-      data: undefined as unknown as unknown[],
-      isLoading: true,
-      isFetching: true,
-    });
+  it('shows a loading skeleton while the ticket is pending', () => {
+    mockUseTicket.mockReturnValue({ data: undefined, isLoading: true, isError: false });
     renderDetail();
     expect(screen.getByLabelText('Cargando')).toBeInTheDocument();
   });
@@ -316,27 +317,117 @@ describe('TaskDetailPage', () => {
   });
 
   it('shows a not-found message when the task is missing', () => {
-    mockUseAssignedTickets.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+    mockTicket(null);
     renderDetail();
-    expect(screen.getByText(/No se encontró la tarea/)).toBeInTheDocument();
+    expect(
+      screen.getByText('No se encontró la tarea. Puede que no tengas acceso a ella.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver a mis tareas' })).toHaveAttribute(
+      'href',
+      '/tareas',
+    );
+  });
+
+  it('shows an error state when the ticket query fails', () => {
+    mockUseTicket.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    renderDetail();
+    expect(screen.getByText('Error al cargar la tarea.')).toBeInTheDocument();
+  });
+
+  describe('closed tickets (read-only)', () => {
+    it('renders the resolution card and hides every action for a resolved ticket', () => {
+      mockTicket(
+        makeTicket({
+          status: 'resolved',
+          resolved_at: '2026-08-20T14:30:00Z',
+          resolution_notes: 'Actualización aplicada sin novedades.',
+        }),
+      );
+      mockUseTicketComments.mockReturnValue({
+        data: [
+          {
+            id: 'c1',
+            ticket_id: 'ticket-001',
+            body: 'Comentario previo',
+            created_at: '2026-08-17T01:00:00Z',
+            author_staff_id: 's1',
+            author_full_name: 'Pablo',
+          },
+        ],
+      });
+      renderDetail();
+
+      expect(screen.getByText('Resuelta')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Resolución' })).toBeInTheDocument();
+      expect(screen.getByText('Resuelta el')).toBeInTheDocument();
+      expect(screen.getByText('Actualización aplicada sin novedades.')).toBeInTheDocument();
+
+      expect(screen.queryByRole('button', { name: 'Resolver tarea' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Finalizar tarea' })).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('Escribí un comentario…')).not.toBeInTheDocument();
+      // Comments stay readable; the .mdb download remains available.
+      expect(screen.getByText('Comentario previo')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /descargar archivo/i })).toBeInTheDocument();
+    });
+
+    it('renders the cancellation card with the reason for a cancelled ticket', () => {
+      mockTicket(
+        makeTicket({
+          status: 'cancelled',
+          category: 'maintain_equipment',
+          updated_at: '2026-08-21T09:00:00Z',
+          cancellation_reason: 'El edificio dio de baja el servicio.',
+        }),
+      );
+      renderDetail();
+
+      expect(screen.getByText('Cancelada')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Cancelación' })).toBeInTheDocument();
+      expect(screen.getByText('Cancelada el')).toBeInTheDocument();
+      expect(screen.getByText('Motivo de cancelación')).toBeInTheDocument();
+      expect(screen.getByText('El edificio dio de baja el servicio.')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Finalizar tarea' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Resolución' })).not.toBeInTheDocument();
+    });
+
+    it('points the breadcrumb back to /historial when the ticket is closed', () => {
+      mockTicket(makeTicket({ status: 'resolved', resolved_at: '2026-08-20T14:30:00Z' }));
+      renderDetail();
+      expect(screen.getByRole('link', { name: 'Historial' })).toHaveAttribute('href', '/historial');
+      expect(screen.queryByRole('link', { name: /mis tareas/i })).not.toBeInTheDocument();
+    });
+
+    it('shows the configured equipment read-only instead of the configure form', () => {
+      mockTicket(
+        makeTicket({
+          status: 'resolved',
+          category: 'install_equipment',
+          resolved_at: '2026-08-20T14:30:00Z',
+          pending_new_serial: 'SN-NEW-777',
+          pending_new_model: null,
+          intended_product_name: 'Modelo X',
+        }),
+      );
+      renderDetail();
+      expect(screen.queryByTestId('configure-equipment-inline')).not.toBeInTheDocument();
+      expect(screen.getByText('Equipo instalado')).toBeInTheDocument();
+      expect(screen.getByText('SN-NEW-777')).toBeInTheDocument();
+      expect(screen.getByText('Modelo X')).toBeInTheDocument();
+    });
   });
 
   describe('install_equipment category', () => {
     it('shows configure equipment inline and Finalizar tarea button', () => {
-      mockUseAssignedTickets.mockReturnValue({
-        data: [
-          makeTicket({
-            category: 'install_equipment',
-            title: 'Instalación SN-002',
-            equipment_id: 'equip-new-001',
-            pending_new_serial: null,
-            pending_new_model: null,
-            intended_product_name: 'Modelo X',
-          }),
-        ],
-        isLoading: false,
-        isFetching: false,
-      });
+      mockTicket(
+        makeTicket({
+          category: 'install_equipment',
+          title: 'Instalación SN-002',
+          equipment_id: 'equip-new-001',
+          pending_new_serial: null,
+          pending_new_model: null,
+          intended_product_name: 'Modelo X',
+        }),
+      );
       renderDetail();
 
       expect(screen.getByText('Instalación de equipo')).toBeInTheDocument();
@@ -347,20 +438,16 @@ describe('TaskDetailPage', () => {
 
   describe('replace_equipment category', () => {
     it('shows old equipment details, configure equipment inline, and Finalizar tarea button', () => {
-      mockUseAssignedTickets.mockReturnValue({
-        data: [
-          makeTicket({
-            category: 'replace_equipment',
-            title: 'Reemplazo SN-003',
-            equipment_id: 'equip-old-001',
-            pending_new_serial: null,
-            pending_new_model: null,
-            intended_product_name: 'Modelo Y',
-          }),
-        ],
-        isLoading: false,
-        isFetching: false,
-      });
+      mockTicket(
+        makeTicket({
+          category: 'replace_equipment',
+          title: 'Reemplazo SN-003',
+          equipment_id: 'equip-old-001',
+          pending_new_serial: null,
+          pending_new_model: null,
+          intended_product_name: 'Modelo Y',
+        }),
+      );
       mockUseEquipmentById.mockReturnValue({
         data: { serial_number: 'OLD-12345', model: 'Old Model', access_type: 'principal' },
         isLoading: false,
@@ -378,17 +465,13 @@ describe('TaskDetailPage', () => {
 
   describe('maintain_equipment category', () => {
     it('shows equipment details and Finalizar tarea button', () => {
-      mockUseAssignedTickets.mockReturnValue({
-        data: [
-          makeTicket({
-            category: 'maintain_equipment',
-            title: 'Mantenimiento SN-004',
-            equipment_id: 'equip-maint-001',
-          }),
-        ],
-        isLoading: false,
-        isFetching: false,
-      });
+      mockTicket(
+        makeTicket({
+          category: 'maintain_equipment',
+          title: 'Mantenimiento SN-004',
+          equipment_id: 'equip-maint-001',
+        }),
+      );
       mockUseEquipmentById.mockReturnValue({
         data: { serial_number: 'MAINT-999', model: 'Maint Model', status: 'active' },
         isLoading: false,
@@ -404,17 +487,13 @@ describe('TaskDetailPage', () => {
     });
 
     it('shows maintenance history when prior records exist', () => {
-      mockUseAssignedTickets.mockReturnValue({
-        data: [
-          makeTicket({
-            category: 'maintain_equipment',
-            title: 'Mantenimiento SN-004',
-            equipment_id: 'equip-maint-001',
-          }),
-        ],
-        isLoading: false,
-        isFetching: false,
-      });
+      mockTicket(
+        makeTicket({
+          category: 'maintain_equipment',
+          title: 'Mantenimiento SN-004',
+          equipment_id: 'equip-maint-001',
+        }),
+      );
       mockUseEquipmentById.mockReturnValue({
         data: { serial_number: 'MAINT-999', model: 'Maint Model', status: 'active' },
         isLoading: false,
@@ -444,17 +523,13 @@ describe('TaskDetailPage', () => {
 
   describe('update_equipment without snapshot', () => {
     it('shows the not-found error message', () => {
-      mockUseAssignedTickets.mockReturnValue({
-        data: [
-          makeTicket({
-            category: 'update_equipment',
-            title: 'Actualización sin snapshot',
-            equipmentUpdateSnapshot: undefined,
-          }),
-        ],
-        isLoading: false,
-        isFetching: false,
-      });
+      mockTicket(
+        makeTicket({
+          category: 'update_equipment',
+          title: 'Actualización sin snapshot',
+          equipmentUpdateSnapshot: undefined,
+        }),
+      );
       renderDetail();
 
       expect(

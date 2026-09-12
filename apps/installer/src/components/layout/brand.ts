@@ -5,4 +5,8 @@ export const installerLogo: BrandLogo = {
   lightSrc: `${import.meta.env.BASE_URL}Vitalock_logo_vector_black.svg`,
   darkSrc: `${import.meta.env.BASE_URL}Vitalock_logo_vector_white.svg`,
   alt: 'Vitalock',
+  icon: {
+    lightSrc: `${import.meta.env.BASE_URL}Vitalock_logo_icon_vector.svg`,
+    darkSrc: `${import.meta.env.BASE_URL}Vitalock_logo_icon_vector_white.svg`,
+  },
 };

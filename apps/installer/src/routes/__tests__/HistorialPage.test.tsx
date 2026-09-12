@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import HistorialPage from '@/routes/HistorialPage';
 import type { HistoricalTicket } from '@/hooks/useTicketHistory';
 
@@ -29,6 +30,14 @@ function makeHistorical(id: string, overrides: Partial<HistoricalTicket> = {}): 
   };
 }
 
+function renderPage() {
+  return render(
+    <MemoryRouter initialEntries={['/historial']}>
+      <HistorialPage />
+    </MemoryRouter>,
+  );
+}
+
 beforeEach(() => {
   useTicketHistoryMock.mockReset();
 });
@@ -36,20 +45,20 @@ beforeEach(() => {
 describe('HistorialPage', () => {
   it('shows a loading skeleton while the query is pending', () => {
     useTicketHistoryMock.mockReturnValue({ data: undefined, isLoading: true, isFetching: true });
-    render(<HistorialPage />);
+    renderPage();
     expect(screen.getByRole('heading', { name: 'Historial' })).toBeInTheDocument();
     expect(screen.getByLabelText('Cargando historial')).toBeInTheDocument();
   });
 
   it('shows a refresh indicator on background refetch', () => {
     useTicketHistoryMock.mockReturnValue({ data: [], isLoading: false, isFetching: true });
-    render(<HistorialPage />);
+    renderPage();
     expect(screen.getByLabelText('Actualizando')).toBeInTheDocument();
   });
 
   it('shows the empty state when there is no history', () => {
     useTicketHistoryMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
-    render(<HistorialPage />);
+    renderPage();
     expect(screen.getByText('Todavía no tenés tareas cerradas.')).toBeInTheDocument();
   });
 
@@ -67,12 +76,25 @@ describe('HistorialPage', () => {
       isLoading: false,
       isFetching: false,
     });
-    render(<HistorialPage />);
+    renderPage();
     // Two day groups
     expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(2);
     expect(screen.getAllByText('Resuelta')).toHaveLength(2);
     expect(screen.getByText('Cancelada')).toBeInTheDocument();
     expect(screen.getByText('No estaba el equipo')).toBeInTheDocument();
+  });
+
+  it('links each row title to the task detail', () => {
+    useTicketHistoryMock.mockReturnValue({
+      data: [makeHistorical('abc-123', { title: 'Mantenimiento Torre' })],
+      isLoading: false,
+      isFetching: false,
+    });
+    renderPage();
+    expect(screen.getByRole('link', { name: 'Mantenimiento Torre' })).toHaveAttribute(
+      'href',
+      '/tareas/abc-123',
+    );
   });
 
   it('filters by status', async () => {
@@ -85,7 +107,7 @@ describe('HistorialPage', () => {
       isFetching: false,
     });
     const user = userEvent.setup();
-    render(<HistorialPage />);
+    renderPage();
 
     await user.selectOptions(screen.getByLabelText('Estado'), 'cancelled');
     expect(screen.queryByText('Resuelta')).not.toBeInTheDocument();
@@ -114,7 +136,7 @@ describe('HistorialPage', () => {
       isFetching: false,
     });
     const user = userEvent.setup();
-    render(<HistorialPage />);
+    renderPage();
 
     await user.selectOptions(screen.getByLabelText('Edificio'), 'b2');
     // Scope the assertions to the ticket list, not the <option> values.
@@ -132,7 +154,7 @@ describe('HistorialPage', () => {
       isFetching: false,
     });
     const user = userEvent.setup();
-    render(<HistorialPage />);
+    renderPage();
 
     await user.selectOptions(screen.getByLabelText('Estado'), 'cancelled');
     expect(screen.getByText('No hay tareas con esos filtros.')).toBeInTheDocument();

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { EmptyState, Label, PageHeader, SectionHeading, Skeleton, cn } from '@vitalock/ui';
 import { useTicketHistory } from '@/hooks/useTicketHistory';
@@ -52,7 +53,8 @@ function LoadingSkeletons() {
  *
  * Shows resolved + cancelled tickets grouped by close day, most recent
  * first. Filters by status and by building let the installer narrow the
- * view when the history grows.
+ * view when the history grows. Each title links to the read-only task
+ * detail at /tareas/:id.
  */
 export default function HistorialPage() {
   const { data, isLoading, isFetching } = useTicketHistory();
@@ -161,7 +163,12 @@ export default function HistorialPage() {
                   <li key={t.id} className="flex flex-col gap-1 px-4 py-3">
                     <div className="flex items-start gap-3">
                       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="truncate text-sm font-medium">{t.title}</span>
+                        <Link
+                          to={`/tareas/${t.id}`}
+                          className="truncate text-sm font-medium underline-offset-4 hover:underline focus-visible:underline"
+                        >
+                          {t.title}
+                        </Link>
                         {t.building.name && (
                           <span className="text-muted-foreground truncate text-xs">
                             {t.building.name}

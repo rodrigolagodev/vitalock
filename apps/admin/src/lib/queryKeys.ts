@@ -127,6 +127,8 @@ export const keyEventsKey = (keyId: string | undefined) =>
 
 // ── Detail / lookup keys ────────────────────────────────────────────────────
 export const tareaKey = (id: string) => ['admin', 'tarea', id] as const;
+export const ticketCommentsKey = (ticketId: string) =>
+  ['admin', 'ticket-comments', ticketId] as const;
 export const keyDetailKey = (keyId: string | undefined) =>
   ['admin', 'key-detail', keyId ?? 'none'] as const;
 export const equipmentDetailKey = (equipmentId: string | undefined) =>

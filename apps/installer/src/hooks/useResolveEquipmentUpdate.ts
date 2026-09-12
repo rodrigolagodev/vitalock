@@ -4,7 +4,7 @@ import { resolveEquipmentUpdate } from '@vitalock/supabase';
 import type { ResolveEquipmentUpdateResult } from '@vitalock/supabase';
 import { useAuthContext } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
-import { assignedTicketsKey } from '@/lib/queryKeys';
+import { invalidateTicketQueries } from '@/lib/tickets/invalidateTicketQueries';
 import { toastMutationError } from '@/lib/errors/toast';
 
 export type { ResolveEquipmentUpdateResult };
@@ -22,7 +22,7 @@ export interface ResolveEquipmentUpdatePayload {
  *  - Activates keys_to_activate (pending_installation → active)
  *  - Disables keys_to_disable (pending_disable → disabled)
  *  - Transitions the ticket open → in_progress → resolved
- * On success the assigned-tickets worklist is invalidated.
+ * On success the worklist, history and single-ticket detail are invalidated.
  * The mutation result exposes skipped_key_ids so the caller can surface a warning.
  */
 export function useResolveEquipmentUpdate() {
@@ -36,8 +36,8 @@ export function useResolveEquipmentUpdate() {
         taskId,
         actorStaffId: staffId || null,
       }),
-    onSuccess: (result: ResolveEquipmentUpdateResult) => {
-      void queryClient.invalidateQueries({ queryKey: assignedTicketsKey(staffId) });
+    onSuccess: (result: ResolveEquipmentUpdateResult, { ticketId }) => {
+      invalidateTicketQueries(queryClient, staffId, [ticketId]);
       const skipped = result.skipped_key_ids.length;
       if (skipped > 0) {
         toast.warning(

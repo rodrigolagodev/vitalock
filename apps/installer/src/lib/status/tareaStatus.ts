@@ -14,6 +14,20 @@ export const tareaStatus = createStatusHelpers<TareaStatus>({
   cancelled: { label: 'Cancelada', tone: 'danger' },
 });
 
+/** True once a ticket reached a terminal state: no more installer actions. */
+export function isClosedTareaStatus(status: TareaStatus): boolean {
+  return status === 'resolved' || status === 'cancelled';
+}
+
+/**
+ * Effective close time of a terminal ticket. Resolved tickets carry
+ * resolved_at; cancelled ones don't, so fall back to updated_at (set by the
+ * status-change trigger).
+ */
+export function ticketClosedAt(ticket: { resolved_at: string | null; updated_at: string }): string {
+  return ticket.resolved_at ?? ticket.updated_at;
+}
+
 /** Sort weight: in-progress work first, then untouched tasks. */
 const ACTIVE_STATUS_ORDER: Record<'in_progress' | 'open', number> = {
   in_progress: 0,

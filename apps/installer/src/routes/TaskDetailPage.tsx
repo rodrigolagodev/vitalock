@@ -5,6 +5,7 @@ import {
   Badge,
   Button,
   EmptyState,
+  ErrorState,
   NotFoundState,
   PageHeader,
   SectionHeading,
@@ -12,7 +13,7 @@ import {
 } from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
 import { useMdbDownload } from '@vitalock/shared';
-import { useAssignedTickets } from '@/hooks/useAssignedTickets';
+import { useTicket } from '@/hooks/useTicket';
 import { useResolveEquipmentUpdate } from '@/hooks/useResolveEquipmentUpdate';
 import { useResolveTickets } from '@/hooks/useResolveTickets';
 import { useRfidKeyCodeMap } from '@/hooks/useRfidKeyCodeMap';
@@ -22,10 +23,12 @@ import {
   useMaintenanceHistory,
   useEquipmentUpdateHistory,
 } from '@/hooks/useEquipmentDetail';
-import { categoryLabel, tareaStatus } from '@/lib/status/tareaStatus';
+import { formatDateTime as fmt } from '@/lib/format';
+import { categoryLabel, isClosedTareaStatus, tareaStatus } from '@/lib/status/tareaStatus';
 import { TicketCommentsList } from '@/components/work/TicketCommentsList';
 import { AddCommentForm } from '@/components/work/AddCommentForm';
 import { ConfigureEquipmentInline } from '@/components/work/ConfigureEquipmentInline';
+import { TaskResolutionCard } from '@/components/work/TaskResolutionCard';
 
 const EQUIPMENT_UPDATE = 'update_equipment';
 const EQUIPMENT_INSTALLATION = 'install_equipment';
@@ -37,14 +40,6 @@ const GENERIC_RESOLVE_CATEGORIES: readonly string[] = [
   EQUIPMENT_REPLACEMENT,
   MAINTENANCE,
 ];
-
-function fmt(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d.getTime())
-    ? iso
-    : d.toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
-}
 
 const accessTypeLabel: Record<string, string> = {
   principal: 'Principal',
@@ -88,6 +83,39 @@ function KeyChips({
   );
 }
 
+const CONFIGURED_EQUIPMENT_HEADING: Record<string, string> = {
+  [EQUIPMENT_INSTALLATION]: 'Equipo instalado',
+  [EQUIPMENT_REPLACEMENT]: 'Equipo de reemplazo',
+};
+
+/** Read-only view of the serial/model loaded through the configure flow. */
+function ConfiguredEquipmentSummary({
+  category,
+  serial,
+  model,
+}: {
+  category: string;
+  serial: string | null;
+  model: string | null;
+}) {
+  if (!serial) return null;
+  return (
+    <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
+      <SectionHeading
+        title={CONFIGURED_EQUIPMENT_HEADING[category] ?? 'Equipo'}
+        variant="secondary"
+      />
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <Row label="Serie" value={serial} />
+        <Row label="Modelo" value={model ?? '—'} />
+      </div>
+    </div>
+  );
+}
+
+/** Fallback back-link when the ticket cannot be loaded (status unknown, so the worklist). */
+const BACK_TO_TASKS = { label: 'Volver a mis tareas', to: '/tareas' };
+
 /**
  * TaskDetailPage — the individual view of one installer task at /tareas/:id.
  *
@@ -96,11 +124,15 @@ function KeyChips({
  * task category (equipment update / installation / replacement / maintenance
  * / generic), the task's history (comments), and the category-appropriate
  * resolve action in the page header.
+ *
+ * Closed tasks (resolved / cancelled) render in read-only mode: no resolve,
+ * configure or comment actions, plus a closing summary (TaskResolutionCard).
  */
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const assigned = useAssignedTickets();
-  const ticket = assigned.data?.find((t) => t.id === id);
+  const ticketQuery = useTicket(id);
+  const ticket = ticketQuery.data ?? null;
+  const isClosed = ticket ? isClosedTareaStatus(ticket.status) : false;
 
   const resolveBatch = useResolveTickets();
   const resolveUpdate = useResolveEquipmentUpdate();
@@ -124,7 +156,7 @@ export default function TaskDetailPage() {
 
   const { download: downloadMdb, downloadingId: downloadingPriorId } = useMdbDownload(supabase);
 
-  const isLoading = assigned.isLoading && !assigned.data;
+  const isLoading = ticketQuery.isLoading && !ticketQuery.data;
 
   if (isLoading) {
     return (
@@ -136,11 +168,15 @@ export default function TaskDetailPage() {
     );
   }
 
+  if (ticketQuery.isError) {
+    return <ErrorState message="Error al cargar la tarea." back={BACK_TO_TASKS} />;
+  }
+
   if (!ticket) {
     return (
       <NotFoundState
-        message="No se encontró la tarea. Puede que ya esté cerrada o que no tengas acceso a ella."
-        back={{ label: 'Volver a mis tareas', to: '/tareas' }}
+        message="No se encontró la tarea. Puede que no tengas acceso a ella."
+        back={BACK_TO_TASKS}
       />
     );
   }
@@ -165,26 +201,31 @@ export default function TaskDetailPage() {
   }
 
   const isGenericResolve = GENERIC_RESOLVE_CATEGORIES.includes(category);
+  const origin = isClosed
+    ? { label: 'Historial', to: '/historial' }
+    : { label: 'Mis tareas', to: '/tareas' };
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title={ticket.title}
         subtitle={categoryLabel(category)}
-        breadcrumbs={[{ label: 'Mis tareas', to: '/tareas' }, { label: ticket.title }]}
+        breadcrumbs={[origin, { label: ticket.title }]}
         titleAdornment={<tareaStatus.Badge status={ticket.status} />}
       >
-        {category === EQUIPMENT_UPDATE && snapshot && (
+        {!isClosed && category === EQUIPMENT_UPDATE && snapshot && (
           <Button onClick={handleResolve} disabled={resolveUpdate.isPending}>
             {resolveUpdate.isPending ? 'Resolviendo...' : 'Resolver tarea'}
           </Button>
         )}
-        {category !== EQUIPMENT_UPDATE && isGenericResolve && (
+        {!isClosed && category !== EQUIPMENT_UPDATE && isGenericResolve && (
           <Button onClick={handleFinalize} disabled={resolveBatch.isPending}>
             {resolveBatch.isPending ? 'Finalizando...' : 'Finalizar tarea'}
           </Button>
         )}
       </PageHeader>
+
+      <TaskResolutionCard ticket={ticket} />
 
       <div className="bg-card grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2">
         <Row
@@ -300,7 +341,15 @@ export default function TaskDetailPage() {
               </div>
             </div>
           )}
-          <ConfigureEquipmentInline ticket={ticket} />
+          {isClosed ? (
+            <ConfiguredEquipmentSummary
+              category={category}
+              serial={ticket.pending_new_serial}
+              model={ticket.pending_new_model ?? ticket.intended_product_name}
+            />
+          ) : (
+            <ConfigureEquipmentInline ticket={ticket} />
+          )}
         </section>
       )}
 
@@ -347,7 +396,7 @@ export default function TaskDetailPage() {
       <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
         <SectionHeading title="Historial" variant="secondary" />
         <TicketCommentsList comments={comments} />
-        <AddCommentForm ticketId={ticket.id} />
+        {!isClosed && <AddCommentForm ticketId={ticket.id} />}
       </div>
     </div>
   );
