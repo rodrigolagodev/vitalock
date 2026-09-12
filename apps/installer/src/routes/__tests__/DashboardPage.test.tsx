@@ -109,9 +109,7 @@ describe('DashboardPage', () => {
   it('shows an empty state when there are no pending tasks', () => {
     useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
     renderDashboard();
-    expect(
-      screen.getByText('No tenés tareas pendientes. ¡Buen trabajo!'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('No tenés tareas pendientes. ¡Buen trabajo!')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Ver todas/ })).not.toBeInTheDocument();
   });
 
@@ -124,6 +122,12 @@ describe('DashboardPage', () => {
     renderDashboard();
     const link = screen.getByRole('link', { name: /Ver todas/ });
     expect(link).toHaveAttribute('href', '/tareas');
+  });
+
+  it('shows a refresh indicator on background refetch', () => {
+    useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: true });
+    renderDashboard();
+    expect(screen.getByLabelText('Actualizando')).toBeInTheDocument();
   });
 
   it('shows a loading placeholder while the query is pending', () => {

@@ -1,6 +1,15 @@
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Download, Loader2 } from 'lucide-react';
-import { Badge, Button, Separator } from '@vitalock/ui';
+import type { ReactNode } from 'react';
+import { useParams } from 'react-router-dom';
+import { Download } from 'lucide-react';
+import {
+  Badge,
+  Button,
+  EmptyState,
+  NotFoundState,
+  PageHeader,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
 import { useMdbDownload } from '@vitalock/shared';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
@@ -13,26 +22,10 @@ import {
   useMaintenanceHistory,
   useEquipmentUpdateHistory,
 } from '@/hooks/useEquipmentDetail';
+import { categoryLabel, tareaStatus } from '@/lib/status/tareaStatus';
 import { TicketCommentsList } from '@/components/work/TicketCommentsList';
 import { AddCommentForm } from '@/components/work/AddCommentForm';
 import { ConfigureEquipmentInline } from '@/components/work/ConfigureEquipmentInline';
-
-const statusLabel: Record<string, string> = {
-  open: 'Pendiente',
-  in_progress: 'En curso',
-};
-
-const statusVariant: Record<string, 'default' | 'secondary'> = {
-  open: 'default',
-  in_progress: 'secondary',
-};
-
-const categorySubtitle: Record<string, string> = {
-  update_equipment: 'Actualización de equipo',
-  install_equipment: 'Instalación de equipo',
-  replace_equipment: 'Reemplazo de equipo',
-  maintain_equipment: 'Mantenimiento',
-};
 
 const EQUIPMENT_UPDATE = 'update_equipment';
 const EQUIPMENT_INSTALLATION = 'install_equipment';
@@ -63,6 +56,38 @@ const accessTypeLabel: Record<string, string> = {
   otro: 'Otro',
 };
 
+function Row({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-muted-foreground text-xs uppercase">{label}</span>
+      <span className="text-sm">{value}</span>
+    </div>
+  );
+}
+
+function KeyChips({
+  keyIds,
+  variant,
+  keyLabel,
+}: {
+  keyIds: string[];
+  variant: 'secondary' | 'outline';
+  keyLabel: (id: string) => string;
+}) {
+  if (keyIds.length === 0) {
+    return <span className="text-muted-foreground text-xs">Ninguna</span>;
+  }
+  return (
+    <span className="flex flex-wrap gap-1">
+      {keyIds.map((kid) => (
+        <Badge key={kid} variant={variant} className="font-mono text-xs">
+          {keyLabel(kid)}
+        </Badge>
+      ))}
+    </span>
+  );
+}
+
 /**
  * TaskDetailPage — the individual view of one installer task at /tareas/:id.
  *
@@ -70,7 +95,7 @@ const accessTypeLabel: Record<string, string> = {
  * renders the full picture of a task, with a work section that adapts to the
  * task category (equipment update / installation / replacement / maintenance
  * / generic), the task's history (comments), and the category-appropriate
- * resolve action.
+ * resolve action in the page header.
  */
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -103,25 +128,20 @@ export default function TaskDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
-        <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" aria-label="Cargando" />
+      <div className="flex flex-col gap-6" aria-busy="true" aria-label="Cargando">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
-        <Link
-          to="/tareas"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
-        >
-          <ArrowLeft className="h-4 w-4" /> Mis tareas
-        </Link>
-        <p className="bg-card text-muted-foreground rounded-md border p-4 text-sm">
-          No se encontró la tarea. Puede que ya esté cerrada o que no tengas acceso a ella.
-        </p>
-      </div>
+      <NotFoundState
+        message="No se encontró la tarea. Puede que ya esté cerrada o que no tengas acceso a ella."
+        back={{ label: 'Volver a mis tareas', to: '/tareas' }}
+      />
     );
   }
 
@@ -147,157 +167,137 @@ export default function TaskDetailPage() {
   const isGenericResolve = GENERIC_RESOLVE_CATEGORIES.includes(category);
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4 p-4">
-      <Link
-        to="/tareas"
-        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={ticket.title}
+        subtitle={categoryLabel(category)}
+        breadcrumbs={[{ label: 'Mis tareas', to: '/tareas' }, { label: ticket.title }]}
+        titleAdornment={<tareaStatus.Badge status={ticket.status} />}
       >
-        <ArrowLeft className="h-4 w-4" /> Mis tareas
-      </Link>
-
-      {/* Header */}
-      <header className="flex flex-col gap-1.5">
-        <div className="flex items-start justify-between gap-2">
-          <h1 className="text-xl font-bold">{ticket.title}</h1>
-          <Badge variant={statusVariant[ticket.status]} className="shrink-0">
-            {statusLabel[ticket.status]}
-          </Badge>
-        </div>
-        <p className="text-muted-foreground text-sm">{categorySubtitle[category] ?? 'Tarea'}</p>
-        {building?.name && (
-          <p className="text-muted-foreground text-sm">
-            {building.name}
-            {addressParts ? ` · ${addressParts}` : ''}
-          </p>
+        {category === EQUIPMENT_UPDATE && snapshot && (
+          <Button onClick={handleResolve} disabled={resolveUpdate.isPending}>
+            {resolveUpdate.isPending ? 'Resolviendo...' : 'Resolver tarea'}
+          </Button>
         )}
-        {adminName && <p className="text-muted-foreground text-sm">{adminName}</p>}
-        <p className="text-muted-foreground text-xs">Creada el {fmt(ticket.opened_at)}</p>
-      </header>
+        {category !== EQUIPMENT_UPDATE && isGenericResolve && (
+          <Button onClick={handleFinalize} disabled={resolveBatch.isPending}>
+            {resolveBatch.isPending ? 'Finalizando...' : 'Finalizar tarea'}
+          </Button>
+        )}
+      </PageHeader>
 
-      {ticket.description && category !== EQUIPMENT_UPDATE && (
-        <p className="text-muted-foreground text-sm">{ticket.description}</p>
-      )}
+      <div className="bg-card grid grid-cols-1 gap-4 rounded-md border p-4 md:grid-cols-2">
+        <Row
+          label="Edificio"
+          value={
+            building.name ? `${building.name}${addressParts ? ` · ${addressParts}` : ''}` : '—'
+          }
+        />
+        <Row label="Administración" value={adminName || '—'} />
+        <Row label="Creada" value={fmt(ticket.opened_at)} />
+        {ticket.description && category !== EQUIPMENT_UPDATE && (
+          <Row label="Descripción" value={ticket.description} />
+        )}
+      </div>
 
       {/* Work section — per category */}
-      {category === EQUIPMENT_UPDATE && (
-        <>
-          {snapshot ? (
-            <section className="bg-card flex flex-col gap-4 rounded-md border p-4">
-              {/* Keys to activate */}
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium">
-                  Llaves a activar ({snapshot.keys_to_activate.length})
-                </p>
-                {snapshot.keys_to_activate.length === 0 ? (
-                  <p className="text-muted-foreground text-xs">Ninguna</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1">
-                    {snapshot.keys_to_activate.map((kid) => (
-                      <Badge key={kid} variant="secondary" className="font-mono text-xs">
-                        {keyLabel(kid)}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
+      {category === EQUIPMENT_UPDATE &&
+        (snapshot ? (
+          <div className="bg-card flex flex-col gap-4 rounded-md border p-4">
+            <SectionHeading title="Actualización" variant="secondary">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void downloadMdb(snapshot.mdb_storage_path, 'current')}
+              >
+                <Download className="mr-1.5 h-4 w-4" />
+                Descargar archivo .mdb
+              </Button>
+            </SectionHeading>
 
-              {/* Keys to disable */}
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium">
-                  Llaves a dar de baja ({snapshot.keys_to_disable.length})
-                </p>
-                {snapshot.keys_to_disable.length === 0 ? (
-                  <p className="text-muted-foreground text-xs">Ninguna</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1">
-                    {snapshot.keys_to_disable.map((kid) => (
-                      <Badge key={kid} variant="outline" className="font-mono text-xs">
-                        {keyLabel(kid)}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Row
+                label={`Llaves a activar (${snapshot.keys_to_activate.length})`}
+                value={
+                  <KeyChips
+                    keyIds={snapshot.keys_to_activate}
+                    variant="secondary"
+                    keyLabel={keyLabel}
+                  />
+                }
+              />
+              <Row
+                label={`Llaves a dar de baja (${snapshot.keys_to_disable.length})`}
+                value={
+                  <KeyChips
+                    keyIds={snapshot.keys_to_disable}
+                    variant="outline"
+                    keyLabel={keyLabel}
+                  />
+                }
+              />
+            </div>
 
-              <div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => snapshot && void downloadMdb(snapshot.mdb_storage_path, 'current')}
-                >
-                  <Download className="mr-1.5 h-4 w-4" />
-                  Descargar archivo .mdb
-                </Button>
-              </div>
-
-              {/* Prior update history */}
-              {updatesHistory.length > 0 && (
-                <details className="border-border rounded-md border text-sm">
-                  <summary className="cursor-pointer select-none px-3 py-2 font-medium">
-                    Actualizaciones anteriores ({updatesHistory.length})
-                  </summary>
-                  <div className="flex flex-col gap-2 px-3 pb-3 pt-2">
-                    <p className="rounded border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
-                      Atención: cargar un archivo anterior desincronizará la base de datos hasta el
-                      próximo update correctivo.
-                    </p>
-                    <div className="flex flex-col gap-1">
-                      {updatesHistory.map((u) => (
-                        <div
-                          key={u.id}
-                          className="border-border flex items-center justify-between gap-2 rounded border px-2 py-1.5"
+            {/* Prior update history */}
+            {updatesHistory.length > 0 && (
+              <details className="rounded-md border text-sm">
+                <summary className="cursor-pointer select-none px-3 py-2 font-medium">
+                  Actualizaciones anteriores ({updatesHistory.length})
+                </summary>
+                <div className="flex flex-col gap-2 px-3 pb-3 pt-2">
+                  <p className="bg-warning/10 text-warning rounded px-3 py-2 text-xs">
+                    Atención: cargar un archivo anterior desincronizará la base de datos hasta el
+                    próximo update correctivo.
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {updatesHistory.map((u) => (
+                      <div
+                        key={u.id}
+                        className="flex items-center justify-between gap-2 rounded border px-2 py-1.5"
+                      >
+                        <span className="text-muted-foreground text-xs">{fmt(u.created_at)}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void downloadMdb(u.mdb_storage_path, u.id)}
+                          disabled={downloadingPriorId === u.id}
+                          className="h-7 px-2 text-xs"
                         >
-                          <span className="text-muted-foreground text-xs">{fmt(u.created_at)}</span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => void downloadMdb(u.mdb_storage_path, u.id)}
-                            disabled={downloadingPriorId === u.id}
-                            className="h-7 px-2 text-xs"
-                          >
-                            <Download className="mr-1 h-3 w-3" />
-                            {downloadingPriorId === u.id ? 'Generando…' : 'Descargar'}
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                          <Download className="mr-1 h-3 w-3" />
+                          {downloadingPriorId === u.id ? 'Generando…' : 'Descargar'}
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                </details>
-              )}
-            </section>
-          ) : (
-            <p className="bg-card text-muted-foreground rounded-md border p-4 text-sm">
-              No se encontró la tarea de actualización asociada a este ticket.
-            </p>
-          )}
-        </>
-      )}
+                </div>
+              </details>
+            )}
+          </div>
+        ) : (
+          <EmptyState
+            className="bg-card rounded-md border p-4"
+            message="No se encontró la tarea de actualización asociada a este ticket."
+          />
+        ))}
 
       {(category === EQUIPMENT_INSTALLATION ||
         category === EQUIPMENT_REPLACEMENT ||
         category === 'installation') && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-6">
           {category === EQUIPMENT_REPLACEMENT && equipment && (
-            <div className="bg-card flex flex-col gap-2 rounded-md border p-4">
-              <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
-                Equipo a reemplazar
-              </p>
-              <p className="text-sm">
-                <span className="text-muted-foreground">Serie:</span> {equipment.serial_number}
-              </p>
-              {equipment.model && (
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Modelo:</span> {equipment.model}
-                </p>
-              )}
-              {equipment.access_type && (
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Acceso:</span>{' '}
-                  {accessTypeLabel[equipment.access_type] ?? equipment.access_type}
-                </p>
-              )}
+            <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
+              <SectionHeading title="Equipo a reemplazar" variant="secondary" />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Row label="Serie" value={equipment.serial_number} />
+                {equipment.model && <Row label="Modelo" value={equipment.model} />}
+                {equipment.access_type && (
+                  <Row
+                    label="Acceso"
+                    value={accessTypeLabel[equipment.access_type] ?? equipment.access_type}
+                  />
+                )}
+              </div>
             </div>
           )}
           <ConfigureEquipmentInline ticket={ticket} />
@@ -305,42 +305,29 @@ export default function TaskDetailPage() {
       )}
 
       {category === MAINTENANCE && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-6">
           {equipment && (
-            <div className="bg-card flex flex-col gap-1 rounded-md border p-4">
-              <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
-                Equipo a mantener
-              </p>
-              <p className="text-sm">
-                <span className="text-muted-foreground">Serie:</span> {equipment.serial_number}
-              </p>
-              {equipment.model && (
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Modelo:</span> {equipment.model}
-                </p>
-              )}
-              {equipment.status !== 'active' && equipment.status && (
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Estado:</span> {equipment.status}
-                </p>
-              )}
-              {equipment.description && (
-                <p className="text-muted-foreground text-sm">{equipment.description}</p>
-              )}
+            <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
+              <SectionHeading title="Equipo a mantener" variant="secondary" />
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Row label="Serie" value={equipment.serial_number} />
+                {equipment.model && <Row label="Modelo" value={equipment.model} />}
+                {equipment.status !== 'active' && equipment.status && (
+                  <Row label="Estado" value={equipment.status} />
+                )}
+                {equipment.description && <Row label="Descripción" value={equipment.description} />}
+              </div>
             </div>
           )}
 
           {maintenanceHistory.length > 0 && (
-            <details className="border-border rounded-md border text-sm">
-              <summary className="cursor-pointer select-none px-3 py-2 font-medium">
+            <details className="bg-card rounded-md border text-sm">
+              <summary className="cursor-pointer select-none px-4 py-3 font-medium">
                 Mantenimientos anteriores del equipo ({maintenanceHistory.length})
               </summary>
-              <div className="flex flex-col gap-1.5 px-3 pb-3 pt-2">
+              <div className="flex flex-col gap-1.5 px-4 pb-4 pt-1">
                 {maintenanceHistory.map((m) => (
-                  <div
-                    key={m.id}
-                    className="border-border flex flex-col gap-0.5 rounded border px-2 py-1.5"
-                  >
+                  <div key={m.id} className="flex flex-col gap-0.5 rounded border px-3 py-2">
                     <span className="text-xs font-medium">{m.title || 'Mantenimiento'}</span>
                     <span className="text-muted-foreground text-xs">
                       Resuelto el {fmt(m.resolved_at)}
@@ -357,38 +344,11 @@ export default function TaskDetailPage() {
       )}
 
       {/* Task history — comments */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
-          Historial
-        </h2>
+      <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
+        <SectionHeading title="Historial" variant="secondary" />
         <TicketCommentsList comments={comments} />
         <AddCommentForm ticketId={ticket.id} />
-      </section>
-
-      <Separator />
-
-      {/* Resolve action — per category */}
-      {category === EQUIPMENT_UPDATE && snapshot && (
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={handleResolve}
-          disabled={resolveUpdate.isPending}
-        >
-          {resolveUpdate.isPending ? 'Resolviendo...' : 'Resolver tarea'}
-        </Button>
-      )}
-
-      {category !== EQUIPMENT_UPDATE && isGenericResolve && (
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={handleFinalize}
-          disabled={resolveBatch.isPending}
-        >
-          {resolveBatch.isPending ? 'Finalizando...' : 'Finalizar tarea'}
-        </Button>
-      )}
+      </div>
     </div>
   );
 }

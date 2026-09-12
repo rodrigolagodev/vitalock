@@ -59,9 +59,7 @@ describe('TareasPage', () => {
   it('shows the empty state when there are no tasks', () => {
     useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
     renderTareas();
-    expect(
-      screen.getByText('Estás al día. No tenés tareas pendientes.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Estás al día. No tenés tareas pendientes.')).toBeInTheDocument();
   });
 
   it('renders one row per task as a link to the individual detail route', () => {
@@ -113,7 +111,15 @@ describe('TareasPage', () => {
     });
     renderTareas();
 
-    expect(screen.getByText('Edificio Uno')).toBeInTheDocument();
+    // Rendered under the title on narrow screens and in the Edificio column
+    // on md+; both live in the DOM (responsive visibility is CSS-only).
+    expect(screen.getAllByText('Edificio Uno').length).toBeGreaterThan(0);
+  });
+
+  it('shows a refresh indicator on background refetch', () => {
+    useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: true });
+    renderTareas();
+    expect(screen.getByLabelText('Actualizando')).toBeInTheDocument();
   });
 
   it('shows a loading skeleton while the query is pending', () => {

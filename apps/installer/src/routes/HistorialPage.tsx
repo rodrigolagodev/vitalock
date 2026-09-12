@@ -1,20 +1,22 @@
 import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Badge } from '@vitalock/ui';
+import { EmptyState, Label, PageHeader, SectionHeading, Skeleton, cn } from '@vitalock/ui';
 import { useTicketHistory } from '@/hooks/useTicketHistory';
+import { tareaStatus } from '@/lib/status/tareaStatus';
 import type { HistoricalTicket } from '@/hooks/useTicketHistory';
 
 type StatusFilter = 'all' | 'resolved' | 'cancelled';
 
-const statusLabel: Record<HistoricalTicket['status'], string> = {
-  resolved: 'Resuelta',
-  cancelled: 'Cancelada',
-};
-
-const statusVariant: Record<HistoricalTicket['status'], 'default' | 'secondary'> = {
-  resolved: 'default',
-  cancelled: 'secondary',
-};
+/**
+ * Native `<select>` styled like the shared `Input`. Kept native (not the
+ * Radix `Select`) so it works with the OS picker on phones and stays
+ * keyboard/AT-friendly on flaky field connections.
+ */
+const NATIVE_SELECT_CLASS = cn(
+  'flex h-11 w-full min-w-40 rounded-lg border border-input bg-card px-3 py-2 text-base text-foreground',
+  'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+  'disabled:cursor-not-allowed disabled:opacity-50',
+);
 
 function formatDayHeading(isoDate: string): string {
   const date = new Date(isoDate);
@@ -33,6 +35,16 @@ function formatTime(iso: string): string {
 
 function dayKey(iso: string): string {
   return iso.slice(0, 10);
+}
+
+function LoadingSkeletons() {
+  return (
+    <div className="flex flex-col gap-3" aria-busy="true" aria-label="Cargando historial">
+      <Skeleton className="h-6 w-48" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
+    </div>
+  );
 }
 
 /**
@@ -81,37 +93,42 @@ export default function HistorialPage() {
   }, [filtered]);
 
   return (
-    <div className="flex flex-col gap-4 p-4 max-w-2xl mx-auto">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Historial</h1>
-          <p className="text-sm text-muted-foreground">Tareas cerradas</p>
-        </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Historial" subtitle="Tareas cerradas">
         {isFetching && !isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Actualizando" />
+          <Loader2
+            className="text-muted-foreground h-4 w-4 animate-spin"
+            aria-label="Actualizando"
+          />
         )}
-      </header>
+      </PageHeader>
 
-      <section className="flex flex-wrap gap-2" aria-label="Filtros">
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          <span>Estado</span>
+      <div className="flex flex-wrap items-center gap-4" aria-label="Filtros">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="historial-status" className="text-muted-foreground text-xs uppercase">
+            Estado
+          </Label>
           <select
+            id="historial-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as StatusFilter)}
-            className="h-9 rounded-md border bg-card px-2 text-sm text-foreground"
+            className={NATIVE_SELECT_CLASS}
           >
             <option value="all">Todas</option>
             <option value="resolved">Resueltas</option>
             <option value="cancelled">Canceladas</option>
           </select>
-        </label>
+        </div>
 
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          <span>Edificio</span>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="historial-building" className="text-muted-foreground text-xs uppercase">
+            Edificio
+          </Label>
           <select
+            id="historial-building"
             value={buildingId}
             onChange={(e) => setBuildingId(e.target.value)}
-            className="h-9 rounded-md border bg-card px-2 text-sm text-foreground"
+            className={NATIVE_SELECT_CLASS}
           >
             <option value="all">Todos</option>
             {buildingOptions.map((b) => (
@@ -120,35 +137,33 @@ export default function HistorialPage() {
               </option>
             ))}
           </select>
-        </label>
-      </section>
+        </div>
+      </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Cargando historial…</p>
+        <LoadingSkeletons />
       ) : grouped.length === 0 ? (
-        <p className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
-          {tickets.length === 0
-            ? 'Todavía no tenés tareas cerradas.'
-            : 'No hay tareas con esos filtros.'}
-        </p>
+        <EmptyState
+          className="bg-card rounded-md border p-4"
+          message={
+            tickets.length === 0
+              ? 'Todavía no tenés tareas cerradas.'
+              : 'No hay tareas con esos filtros.'
+          }
+        />
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           {grouped.map(([day, items]) => (
-            <section key={day} className="flex flex-col gap-2">
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {formatDayHeading(day)}
-              </h2>
-              <ul className="flex flex-col gap-2">
+            <section key={day} className="flex flex-col gap-3">
+              <SectionHeading title={formatDayHeading(day)} variant="secondary" />
+              <ul className="bg-card divide-y rounded-md border">
                 {items.map((t) => (
-                  <li
-                    key={t.id}
-                    className="flex flex-col gap-1 rounded-md border bg-card px-3 py-2"
-                  >
-                    <div className="flex items-start gap-2">
+                  <li key={t.id} className="flex flex-col gap-1 px-4 py-3">
+                    <div className="flex items-start gap-3">
                       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="truncate text-sm font-medium">{t.title}</span>
                         {t.building.name && (
-                          <span className="truncate text-xs text-muted-foreground">
+                          <span className="text-muted-foreground truncate text-xs">
                             {t.building.name}
                             {t.building.administration.company_name
                               ? ` · ${t.building.administration.company_name}`
@@ -156,18 +171,14 @@ export default function HistorialPage() {
                           </span>
                         )}
                       </div>
-                      <Badge variant={statusVariant[t.status]} className="shrink-0">
-                        {statusLabel[t.status]}
-                      </Badge>
+                      <tareaStatus.Badge status={t.status} />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{formatTime(t.closed_at)}</span>
-                    </div>
+                    <span className="text-muted-foreground text-xs">{formatTime(t.closed_at)}</span>
                     {t.status === 'resolved' && t.resolution_notes && (
-                      <p className="text-xs text-muted-foreground">{t.resolution_notes}</p>
+                      <p className="text-muted-foreground text-xs">{t.resolution_notes}</p>
                     )}
                     {t.status === 'cancelled' && t.cancellation_reason && (
-                      <p className="text-xs text-muted-foreground">{t.cancellation_reason}</p>
+                      <p className="text-muted-foreground text-xs">{t.cancellation_reason}</p>
                     )}
                   </li>
                 ))}
