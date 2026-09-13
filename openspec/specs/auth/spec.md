@@ -18,6 +18,7 @@ All user-visible messages in Spanish per the proposal's acceptance criteria.
 **Statement**: Every route in the admin app and installer app MUST redirect an unauthenticated visitor to `/login` before any protected content is rendered.
 
 #### SC-R1-1 — Fresh browser, admin app (automated)
+
 ```
 Given  a browser with no Supabase session in localStorage
 When   the user navigates directly to the admin app root URL
@@ -26,6 +27,7 @@ And    no protected content is visible
 ```
 
 #### SC-R1-2 — Fresh browser, installer app (automated)
+
 ```
 Given  a browser with no Supabase session in localStorage
 When   the user navigates directly to the installer app root URL
@@ -34,6 +36,7 @@ And    no protected content is visible
 ```
 
 #### SC-R1-3 — Expired token on reload (automated)
+
 ```
 Given  a browser that had a valid session that has since expired
 When   supabase-js fires onAuthStateChange(SIGNED_OUT)
@@ -44,26 +47,24 @@ Then   the app redirects to /login without a server-side page reload
 
 ### R2 — Successful Login and Role-Matched Home
 
-**Statement**: A staff member with valid credentials and the role expected by the target app MUST be authenticated, have their staff profile loaded, and see the app home page with their full name in the navbar.
+**Statement**: A staff member with a valid `username`, the correct password, active status, and a role matching the target app MUST be authenticated via `useAuth().signIn(username, password)`, which resolves `username` to the linked `auth.users.email` server-side (via `public.resolve_login_email`) before calling `signInWithPassword`. The staff profile MUST load and the app home page MUST render with the staff's full name in the navbar. The account menu (`UserMenu`) MUST display the staff `full_name` and `username`, and MUST NOT render `session.user.email` under any circumstance. (Previously: the identifier was a raw email passed straight to `signInWithPassword`; `UserMenu` displayed `session.user.email`.)
 
-#### SC-R2-1 — Admin user logs in to admin app
+#### SC-R2-1 — Admin user logs in to admin app with username
+
 ```
-Given  Ana Alvarez has a valid auth.users entry linked to her identity.staff row
-  And  her staff role is 'admin' and status is 'active'
-When   she submits the login form in the admin app with correct credentials
+Given  Ana Alvarez has identity.staff.username = 'ana.alvarez', active status, role 'admin', and a linked auth.users entry
+When   she submits the admin login form with 'ana.alvarez' and her correct password
 Then   she is redirected to the admin app home page
-  And  the navbar displays "Ana Alvarez"
-  And  the Supabase session is stored in localStorage
+  And  the account menu shows "Ana Alvarez" and "ana.alvarez", never her email
 ```
 
-#### SC-R2-2 — Installer user logs in to installer app
+#### SC-R2-2 — Installer user logs in to installer app with username
+
 ```
-Given  Bruno Benitez has a valid auth.users entry linked to his identity.staff row
-  And  his staff role is 'installer' and status is 'active'
-When   he submits the login form in the installer app with correct credentials
+Given  Bruno Benitez has identity.staff.username = 'bruno.benitez', active status, role 'installer', and a linked auth.users entry
+When   he submits the installer login form with 'bruno.benitez' and his correct password
 Then   he is redirected to the installer app home page
-  And  the navbar displays "Bruno Benitez"
-  And  the Supabase session is stored in localStorage
+  And  the account menu shows "Bruno Benitez" and "bruno.benitez", never his email
 ```
 
 ### R3 — Cross-App Role Enforcement
@@ -71,6 +72,7 @@ Then   he is redirected to the installer app home page
 **Statement**: A staff member whose role does not match the target application MUST be signed out automatically and shown "Esta cuenta no tiene acceso a esta aplicación". No protected content of the wrong app MUST ever be rendered.
 
 #### SC-R3-1 — Admin user on installer app
+
 ```
 Given  Ana Alvarez is authenticated with role 'admin'
 When   she opens the installer app
@@ -81,6 +83,7 @@ Then   the app calls signOut()
 ```
 
 #### SC-R3-2 — Installer user on admin app
+
 ```
 Given  Bruno Benitez is authenticated with role 'installer'
 When   he opens the admin app
@@ -92,31 +95,54 @@ Then   the app calls signOut()
 
 ### R4 — Authentication Error Handling
 
-**Statement**: The login form MUST handle authentication failures gracefully. Wrong credentials MUST show an inline Spanish error without redirect and without `signOut()`. Empty fields MUST be caught client-side before any network request.
+**Statement**: The login form MUST handle every authentication failure with the single inline message "Usuario o contraseña incorrectos.", no redirect, and no `signOut()` call. This message MUST cover, indistinguishably to the client: an unknown username, a wrong password for a known username, an inactive staff row, and a staff row with no linked `auth.users` account. `useAuth().signIn(username, password)` MUST first call `public.resolve_login_email(username)`; a `NULL` result MUST short-circuit before any `signInWithPassword` call and MUST set the same `AuthErrorCode.INVALID_CREDENTIALS` state as a rejected password. Empty fields MUST be caught client-side before any network request. (Previously: message was "Email o contraseña incorrectos." and only covered a Supabase Auth rejection; unknown/inactive/unlinked accounts had no pre-auth handling.)
 
-#### SC-R4-1 — Wrong password
+#### SC-R4-1 — Wrong password for a known username
+
 ```
-Given  a user submits the login form with a valid email and an incorrect password
-When   Supabase returns AuthApiError "Invalid login credentials"
-Then   "Email o contraseña incorrectos." is displayed inline
-  And  the form remains visible (no redirect)
-  And  signOut() is not called
+Given  a staff member submits a valid, resolvable username and an incorrect password
+When   public.resolve_login_email returns an email and signInWithPassword rejects it
+Then   "Usuario o contraseña incorrectos." is shown inline, the form stays visible, and signOut() is not called
 ```
 
-#### SC-R4-2 — Empty fields
+#### SC-R4-2 — Unknown username
+
+```
+Given  no identity.staff row has the submitted username
+When   the login form is submitted
+Then   public.resolve_login_email returns NULL, signInWithPassword is never called, and "Usuario o contraseña incorrectos." is shown inline
+```
+
+#### SC-R4-3 — Inactive staff username
+
+```
+Given  a staff row matches the submitted username but status != 'active'
+When   the login form is submitted
+Then   public.resolve_login_email returns NULL and "Usuario o contraseña incorrectos." is shown inline with no signOut() call
+```
+
+#### SC-R4-4 — Unlinked staff username
+
+```
+Given  a staff row matches the submitted username but auth_user_id IS NULL
+When   the login form is submitted
+Then   public.resolve_login_email returns NULL and "Usuario o contraseña incorrectos." is shown inline
+```
+
+#### SC-R4-5 — Empty fields
+
 ```
 Given  the login form is displayed
-When   the user submits with an empty email or empty password
-Then   client-side validation prevents the network request
-  And  an inline validation message is shown
+When   the user submits with an empty username or empty password
+Then   client-side validation prevents the network request and an inline validation message is shown
 ```
 
-#### SC-R4-3 — Network failure
+#### SC-R4-6 — Network failure
+
 ```
 Given  the network is unavailable when the login form is submitted
 When   the fetch attempt fails with a network error
-Then   "Error de conexión. Intentá de nuevo." is displayed inline
-  And  the form remains visible
+Then   "Error de conexión. Intentá de nuevo." is shown inline and the form stays visible
 ```
 
 ### R5 — Post-Login Staff Profile States
@@ -124,6 +150,7 @@ Then   "Error de conexión. Intentá de nuevo." is displayed inline
 **Statement**: After a successful Supabase auth event, the system MUST fetch the staff profile from `identity.staff`. If absent or inactive, the system MUST call `signOut()` and display an explanatory Spanish error. No half-authenticated state MUST persist.
 
 #### SC-R5-1 — No staff row
+
 ```
 Given  an auth.users entry exists with no matching identity.staff row
 When   that user successfully authenticates
@@ -134,6 +161,7 @@ Then   profile fetch returns empty
 ```
 
 #### SC-R5-2 — Inactive staff
+
 ```
 Given  Elena Espinoza has a valid auth.users entry
   And  her identity.staff record has status != 'active'
@@ -144,6 +172,7 @@ Then   signOut() is called
 ```
 
 #### SC-R5-3 — Loading state during profile fetch
+
 ```
 Given  a user has just authenticated
 When   the identity.staff profile fetch is in progress
@@ -156,6 +185,7 @@ Then   ProtectedRoute renders a loading indicator
 **Statement**: `supabase/seed.sql` MUST include local-dev `auth.users` entries for Ana Alvarez (admin) and Bruno Benitez (installer), each linked to the corresponding `identity.staff` row. Seed passwords MUST be commented as local-only and MUST NOT appear in any app source file.
 
 #### SC-R6-1 — Seed produces usable local users (manual)
+
 ```
 Given  `supabase db reset` is run against a clean local Supabase instance
 When   the seed completes
@@ -165,6 +195,7 @@ Then   auth.users contains entries for Ana and Bruno
 ```
 
 #### SC-R6-2 — Seed passwords not in app source code (automated)
+
 ```
 Given  the project source tree excluding supabase/seed.sql
 When   searched for the local-dev seed passwords
@@ -176,6 +207,7 @@ Then   no match is found in any .ts, .tsx, or .js file
 **Statement**: A session established via the login form MUST persist across browser reloads without re-authentication. An explicit logout MUST clear the session from `localStorage` and redirect to `/login`.
 
 #### SC-R7-1 — Session persists across reload
+
 ```
 Given  a user has successfully logged in
 When   the browser tab is refreshed
@@ -184,6 +216,7 @@ Then   the session is restored from localStorage without a new signIn call
 ```
 
 #### SC-R7-2 — Logout clears session
+
 ```
 Given  a user is authenticated and viewing the home page
 When   the user triggers the logout action
@@ -194,33 +227,30 @@ Then   signOut() is called
 
 ### R8 — Type Generation and Pipeline Health
 
-**Statement**: `packages/supabase/src/database.types.ts` MUST include typed definitions for the `identity` schema (including `identity.Tables.staff`) after `pnpm gen:types`. The full pipeline MUST exit green. The `useAuth` hook Vitest suite MUST include ≥5 passing tests covering happy path and each error branch.
+**Statement**: `packages/supabase/src/database.types.ts` MUST include typed definitions for the `identity` schema, and the generated `identity.Tables.staff` row type MUST include `username` alongside `id, auth_user_id, email, role, status, full_name`. The full pipeline MUST exit green. The `useAuth` hook Vitest suite MUST include ≥5 passing tests covering the happy path and each error branch, including the unknown/inactive/unlinked-username branches now resolved via `public.resolve_login_email`. (Previously: the staff row type list omitted `username`; coverage bullets did not name the pre-auth resolution branches.)
 
-#### SC-R8-1 — identity schema present in generated types
+#### SC-R8-1 — identity schema present in generated types with username
+
 ```
-Given  `pnpm gen:types` has been run against a running local Supabase instance
+Given  pnpm gen:types has run against a running local Supabase instance
 When   packages/supabase/src/database.types.ts is inspected
-Then   it exports a typed definition that includes identity.Tables.staff
-  And  the staff row type includes at minimum: id, auth_user_id, email, role, status, full_name
+Then   it exports identity.Tables.staff including username plus the existing minimum fields
 ```
 
 #### SC-R8-2 — Pipeline passes
+
 ```
 Given  all change artifacts are in place
-When   `pnpm install && pnpm build && pnpm typecheck && pnpm lint && pnpm test` is run
+When   pnpm install && pnpm build && pnpm typecheck && pnpm lint && pnpm test is run
 Then   every command exits with code 0
 ```
 
-#### SC-R8-3 — useAuth hook Vitest coverage
+#### SC-R8-3 — useAuth hook Vitest coverage includes resolution branches
+
 ```
 Given  the useAuth hook Vitest suite exists
-When   `pnpm test` is run
-Then   at least 5 test cases pass, covering:
-  - Happy path: successful sign-in with correct role
-  - Wrong credentials error path
-  - No staff row error path
-  - Inactive staff error path
-  - Wrong role error path
+When   pnpm test is run
+Then   at least 5 test cases pass, covering the happy path, wrong password, unknown/inactive/unlinked username (mocked resolve_login_email → NULL), and wrong role
 ```
 
 ## Out of Scope
@@ -234,20 +264,23 @@ Then   at least 5 test cases pass, covering:
 
 ## Requirement-to-Success-Criteria Traceability
 
-| Proposal criterion | Requirement | Scenario(s) |
-|---|---|---|
-| 1. Fresh browser → /login | R1 | SC-R1-1, SC-R1-2 |
-| 2. Ana on admin → home + "Ana Alvarez" | R2 | SC-R2-1 |
-| 3. Bruno on installer → home + "Bruno Benitez" | R2 | SC-R2-2 |
-| 4. Ana on installer → error + signOut | R3 | SC-R3-1 |
-| 5. Wrong password → inline, no redirect | R4 | SC-R4-1 |
-| 6. Elena (inactive) → error + signOut | R5 | SC-R5-2 |
-| 7. No staff row → error + signOut | R5 | SC-R5-1 |
-| 8. Reload → session persists | R7 | SC-R7-1 |
-| 9. Logout → /login + localStorage cleared | R7 | SC-R7-2 |
-| 10. database.types.ts has identity.Tables.staff | R8 | SC-R8-1 |
-| 11. ≥5 useAuth Vitest tests pass | R8 | SC-R8-3 |
-| 12. Pipeline green | R8 | SC-R8-2 |
+| Proposal criterion                                            | Requirement | Scenario(s)      |
+| ------------------------------------------------------------- | ----------- | ---------------- |
+| 1. Fresh browser → /login                                     | R1          | SC-R1-1, SC-R1-2 |
+| 2. Ana on admin → home + "Ana Alvarez" + username             | R2          | SC-R2-1          |
+| 3. Bruno on installer → home + "Bruno Benitez" + username     | R2          | SC-R2-2          |
+| 4. Ana on installer → error + signOut                         | R3          | SC-R3-1          |
+| 5. Wrong password → inline, no redirect                       | R4          | SC-R4-1          |
+| 6. Unknown username → inline error                            | R4          | SC-R4-2          |
+| 7. Inactive staff → inline error                              | R4          | SC-R4-3          |
+| 8. Unlinked staff → inline error                              | R4          | SC-R4-4          |
+| 9. Elena (inactive) → error + signOut                         | R5          | SC-R5-2          |
+| 10. No staff row → error + signOut                            | R5          | SC-R5-1          |
+| 11. Reload → session persists                                 | R7          | SC-R7-1          |
+| 12. Logout → /login + localStorage cleared                    | R7          | SC-R7-2          |
+| 13. database.types.ts has identity.Tables.staff with username | R8          | SC-R8-1          |
+| 14. ≥5 useAuth Vitest tests pass with resolution branches     | R8          | SC-R8-3          |
+| 15. Pipeline green                                            | R8          | SC-R8-2          |
 
 ## Key Learnings
 
