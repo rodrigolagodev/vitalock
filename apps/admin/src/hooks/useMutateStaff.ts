@@ -9,6 +9,7 @@ export type { StaffRole } from '@/lib/status/staffRole';
 
 export interface CreateStaffInput {
   full_name: string;
+  username: string;
   email?: string | null;
   phone?: string | null;
   role: StaffRole;
@@ -18,6 +19,7 @@ export interface CreateStaffInput {
 export interface UpdateStaffInput {
   id: string;
   full_name?: string;
+  username?: string;
   email?: string | null;
   phone?: string | null;
   role?: StaffRole;
@@ -42,6 +44,7 @@ export function useMutateStaff() {
         .from('staff')
         .insert({
           full_name: input.full_name,
+          username: input.username,
           email: input.email ?? null,
           phone: input.phone ?? null,
           role: input.role,

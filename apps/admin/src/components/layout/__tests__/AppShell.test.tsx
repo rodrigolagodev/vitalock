@@ -27,8 +27,7 @@ function renderShell() {
 
 beforeEach(() => {
   useAuthContextMock.mockReturnValue({
-    staff: { full_name: 'Ana Alvarez' },
-    session: { user: { email: 'ana@vitalock.com' } },
+    staff: { full_name: 'Ana Alvarez', username: 'ana.alvarez' },
     signOut: vi.fn(),
   });
   clearStoredCollapsed();
@@ -61,15 +60,14 @@ describe('AppShell', () => {
       screen.getByRole('switch', { name: 'Cambiar entre tema claro y oscuro' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Salir/ })).toBeInTheDocument();
-    // Email is rendered both on the trigger and inside the popover header.
-    expect(screen.getAllByText('ana@vitalock.com').length).toBeGreaterThan(0);
+    // Subtitle is rendered both on the trigger and inside the popover header.
+    expect(screen.getAllByText('@ana.alvarez').length).toBeGreaterThan(0);
   });
 
   it('signs out when the Salir action is clicked', async () => {
     const signOut = vi.fn();
     useAuthContextMock.mockReturnValue({
-      staff: { full_name: 'Ana Alvarez' },
-      session: { user: { email: 'ana@vitalock.com' } },
+      staff: { full_name: 'Ana Alvarez', username: 'ana.alvarez' },
       signOut,
     });
     const user = userEvent.setup();

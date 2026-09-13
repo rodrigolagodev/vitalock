@@ -19,6 +19,7 @@ const authStub: UseAuthReturn = {
     id: 'staff-1',
     auth_user_id: 'auth-1',
     full_name: 'Juan Perez',
+    username: 'juan.perez',
     role: 'installer',
     status: 'active',
   },

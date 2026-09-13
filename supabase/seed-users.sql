@@ -52,8 +52,8 @@ begin
      where id = v_admin_id;
   end if;
 
-  insert into identity.staff (auth_user_id, full_name, email, role, status)
-       values (v_admin_id, 'Admin Vitalock', 'admin@vitalock.local', 'admin', 'active')
+  insert into identity.staff (auth_user_id, full_name, email, role, status, username)
+       values (v_admin_id, 'Admin Vitalock', 'admin@vitalock.local', 'admin', 'active', 'admin')
   on conflict (email) do update
     set auth_user_id = excluded.auth_user_id,
         role         = excluded.role,
@@ -94,8 +94,8 @@ begin
      where id = v_installer_id;
   end if;
 
-  insert into identity.staff (auth_user_id, full_name, email, role, status)
-       values (v_installer_id, 'Installer Vitalock', 'installer@vitalock.local', 'installer', 'active')
+  insert into identity.staff (auth_user_id, full_name, email, role, status, username)
+       values (v_installer_id, 'Installer Vitalock', 'installer@vitalock.local', 'installer', 'active', 'installer')
   on conflict (email) do update
     set auth_user_id = excluded.auth_user_id,
         role         = excluded.role,

@@ -22,6 +22,7 @@ import type { StaffRow } from '@/hooks/usePersonal';
 const ana: StaffRow = {
   id: 's-1',
   full_name: 'Ana Gómez',
+  username: 'ana.gomez',
   email: 'ana@example.com',
   phone: '+54 9 11 5555-0101',
   role: 'admin',
@@ -33,6 +34,7 @@ const ana: StaffRow = {
 const sinContacto: StaffRow = {
   id: 's-2',
   full_name: 'Bruno Díaz',
+  username: 'bruno.diaz',
   email: null,
   phone: null,
   role: 'installer',
@@ -45,6 +47,7 @@ function makeStaff(count: number): StaffRow[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `s-${i + 1}`,
     full_name: `Staff ${i + 1}`,
+    username: `staff${i + 1}`,
     email: `staff${i + 1}@example.com`,
     phone: '+54 9 11 5555-0000',
     role: 'installer' as const,
@@ -69,6 +72,11 @@ describe('StaffTable', () => {
     mockDeactivateStaff.mockResolvedValue({ id: 's-1', status: 'inactive' });
   });
 
+  it('renders the Usuario column header', () => {
+    render(<StaffTable rows={[ana]} isFetching={false} />, { wrapper: makeWrapper() });
+    expect(screen.getByText('Usuario')).toBeInTheDocument();
+  });
+
   it('renders rows with the role badge and missing-field dashes', () => {
     render(<StaffTable rows={[ana, sinContacto]} isFetching={false} />, {
       wrapper: makeWrapper(),
@@ -76,6 +84,8 @@ describe('StaffTable', () => {
 
     expect(screen.getByText('Ana Gómez')).toBeInTheDocument();
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
+    expect(screen.getByText('ana.gomez')).toBeInTheDocument();
+    expect(screen.getByText('bruno.diaz')).toBeInTheDocument();
     expect(screen.getByText('Admin')).toBeInTheDocument();
     expect(screen.getByText('Instalador')).toBeInTheDocument();
     // phone + email columns both render the missing-value dash
@@ -118,13 +128,9 @@ describe('StaffTable', () => {
     const user = userEvent.setup();
     render(<StaffTable rows={[ana]} isFetching={false} />, { wrapper: makeWrapper() });
 
-    await user.click(
-      screen.getByRole('button', { name: /dar de baja a ana gómez/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /dar de baja a ana gómez/i }));
 
-    expect(
-      await screen.findByText('¿Dar de baja a Ana Gómez?'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('¿Dar de baja a Ana Gómez?')).toBeInTheDocument();
     expect(
       screen.getByText('El registro se conserva pero deja de aparecer y pierde acceso.'),
     ).toBeInTheDocument();
@@ -140,14 +146,10 @@ describe('StaffTable', () => {
     const user = userEvent.setup();
     render(<StaffTable rows={[ana]} isFetching={false} />, { wrapper: makeWrapper() });
 
-    await user.click(
-      screen.getByRole('button', { name: /dar de baja a ana gómez/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /dar de baja a ana gómez/i }));
     await user.click(screen.getByRole('button', { name: /cancelar/i }));
 
-    expect(
-      screen.queryByText('¿Dar de baja a Ana Gómez?'),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('¿Dar de baja a Ana Gómez?')).not.toBeInTheDocument();
     expect(mockDeactivateStaff).not.toHaveBeenCalled();
   });
 
@@ -155,10 +157,9 @@ describe('StaffTable', () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
 
-    const { rerender } = render(
-      <StaffTable rows={[ana]} isFetching={false} />,
-      { wrapper: makeWrapper() },
-    );
+    const { rerender } = render(<StaffTable rows={[ana]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
     expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument();
 
     rerender(<StaffTable rows={[ana]} isFetching={false} onEdit={onEdit} />);

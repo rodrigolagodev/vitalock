@@ -213,19 +213,35 @@ datos en el sistema.
 2. Retorna un `user.id` (UUID de `auth.users`).
 3. Admin lo linkea a un row de `identity.staff`:
    ```sql
-   insert into identity.staff (auth_user_id, full_name, email, role, status)
-   values ('<user.id>', 'Nombre completo', 'nuevo@vitalock.com', 'installer', 'active');
+   insert into identity.staff (auth_user_id, full_name, username, email, role, status)
+   values ('<user.id>', 'Nombre completo', 'nuevo.usuario', 'nuevo@vitalock.com', 'installer', 'active');
    ```
-   O si el row de staff ya existe (pre-provisioning):
+   O si el row de staff ya existe (pre-provisioning), se busca por `username`
+   (el identificador de login), no por `email`:
    ```sql
-   update identity.staff set auth_user_id = '<user.id>' where email = 'nuevo@vitalock.com';
+   update identity.staff set auth_user_id = '<user.id>' where username = 'nuevo.usuario';
    ```
+   `username` es `NOT NULL`, único y debe matchear `^[a-z0-9._-]{3,32}$` (ver
+   `staff-identity` spec); es el valor que el usuario tipea para loguearse,
+   distinto del `email` de `auth.users` que solo usa `signInWithPassword`.
 
 **Alternativa (self-service con invitación email)**: si Vitalock configura Supabase Auth con "magic link" o "invite email", el usuario recibe un email con un link que le pide setear password. Vale la pena para el caso staff pero requiere configuración extra en la app.
 
 ### 4.3 Login desde la app
 
+El usuario tipea `username` + `password`. `useAuth().signIn(username, password)`
+primero resuelve el `username` al `email` linkeado vía el RPC anon-callable
+`public.resolve_login_email`, y solo entonces llama a `signInWithPassword`:
+
 ```js
+const { data: email, error: rpcError } = await supabase.rpc('resolve_login_email', {
+  p_username: username,
+});
+// rpcError            -> error de infraestructura, nunca de credenciales -> NETWORK_ERROR
+// email === null      -> username desconocido/inactivo/sin auth_user_id -> INVALID_CREDENTIALS
+//                        (mismo mensaje que una contraseña incorrecta: no es un oráculo)
+// email (string)      -> continuar con signInWithPassword
+
 const { data, error } = await supabase.auth.signInWithPassword({
   email,
   password,
@@ -233,6 +249,11 @@ const { data, error } = await supabase.auth.signInWithPassword({
 // data.session.access_token es el JWT que se manda en cada request.
 // supabase-js lo persiste automáticamente en localStorage y lo adjunta.
 ```
+
+`resolve_login_email` normaliza (`lower(btrim(...))`) server-side y retorna
+`NULL` — nunca un error — para cualquier input inválido, username inexistente,
+staff inactivo o sin `auth_user_id`; el cliente no puede distinguir esos casos
+entre sí.
 
 ### 4.4 Cómo la app detecta el rol del usuario
 

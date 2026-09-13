@@ -1,5 +1,9 @@
 import { toast } from 'sonner';
-import { toastMutationError as _toastMutationError, type ExtraHandlersMap } from '@vitalock/shared';
+import {
+  toastMutationError as _toastMutationError,
+  isPostgrestError,
+  type ExtraHandlersMap,
+} from '@vitalock/shared';
 
 /**
  * Admin-specific extra handlers for 23505 unique constraint errors.
@@ -50,4 +54,18 @@ const adminExtraHandlers: ExtraHandlersMap = {
  */
 export function toastMutationError(err: unknown): void {
   _toastMutationError(err, { extraHandlers: adminExtraHandlers, toast: toast.error });
+}
+
+/**
+ * True when `err` is a unique-constraint violation on `staff_username_key`.
+ * `StaffFormSheet` checks this BEFORE calling `toastMutationError`, so a
+ * duplicate username surfaces as an inline field error instead of the
+ * generic toast every other 23505 falls back to.
+ */
+export function isDuplicateUsernameError(err: unknown): boolean {
+  return (
+    isPostgrestError(err) &&
+    err.code === '23505' &&
+    (err.details ?? '').includes('staff_username_key')
+  );
 }

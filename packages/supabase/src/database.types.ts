@@ -69,6 +69,7 @@ export type Database = {
           role: string
           status: string
           updated_at: string
+          username: string
         }
         Insert: {
           auth_user_id?: string | null
@@ -81,6 +82,7 @@ export type Database = {
           role: string
           status?: string
           updated_at?: string
+          username?: string
         }
         Update: {
           auth_user_id?: string | null
@@ -93,6 +95,7 @@ export type Database = {
           role?: string
           status?: string
           updated_at?: string
+          username?: string
         }
         Relationships: []
       }
@@ -1572,6 +1575,7 @@ export type Database = {
         Args: { p_actor_staff_id?: string; p_task_id: string }
         Returns: Json
       }
+      resolve_login_email: { Args: { p_username: string }; Returns: string }
       resolve_ticket: {
         Args: {
           p_actor_staff_id?: string

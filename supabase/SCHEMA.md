@@ -1,6 +1,6 @@
 # Vitalock — Database Schema Reference
 
-> **Generated** by `scripts/gen-schema-doc.sh` from the database as of migration `20260912100000_fix_installer_mdb_storage_policy.sql`.
+> **Generated** by `scripts/gen-schema-doc.sh` from the database as of migration `20260912120000_add_staff_username.sql`.
 > Do not edit by hand — re-run `pnpm gen:schema-doc` after a migration; CI fails if this file is stale. For narrative (flows, auth model, business rules) see `FLOWS.md`.
 
 ## Tables
@@ -8,7 +8,7 @@
 | Table                                | Columns | RLS | Policies |
 | ------------------------------------ | ------: | :-: | -------: |
 | `identity.audit_log`                 |       8 | ✅  |        1 |
-| `identity.staff`                     |      10 | ✅  |        2 |
+| `identity.staff`                     |      11 | ✅  |        2 |
 | `operations.equipment`               |      14 | ✅  |        2 |
 | `operations.key_authorizations`      |      13 | ✅  |        3 |
 | `public.administrations`             |      10 | ✅  |        2 |
@@ -66,6 +66,7 @@
 | `notes`        | text                     | yes  |                     |
 | `created_at`   | timestamp with time zone |  no  | `now()`             |
 | `updated_at`   | timestamp with time zone |  no  | `now()`             |
+| `username`     | text                     |  no  | `('staff-'::text `  |
 
 ### `operations.equipment`
 
@@ -623,6 +624,7 @@ Every `SECURITY DEFINER` RPC is wrapped by an authorization guard (see `README.m
 | `resolve_equipment_replacement_unguarded(p_ticket_id uuid, p_old_equipment_id uuid, p_new_serial text, p_new_model text, p_new_description text, p_note text, p_actor_staff_id uuid)`                                                                        | `uuid`                     | DEFINER  | revoked        |
 | `resolve_equipment_update(p_task_id uuid, p_actor_staff_id uuid)`                                                                                                                                                                                            | `jsonb`                    | DEFINER  | staff          |
 | `resolve_equipment_update_unguarded(p_task_id uuid, p_actor_staff_id uuid)`                                                                                                                                                                                  | `jsonb`                    | DEFINER  | revoked        |
+| `resolve_login_email(p_username text)`                                                                                                                                                                                                                       | `text`                     | DEFINER  |                |
 | `resolve_ticket(p_ticket_id uuid, p_note text, p_actor_staff_id uuid)`                                                                                                                                                                                       | `uuid`                     | DEFINER  | staff          |
 | `resolve_ticket_unguarded(p_ticket_id uuid, p_note text, p_actor_staff_id uuid)`                                                                                                                                                                             | `uuid`                     | DEFINER  | revoked        |
 | `update_draft_key_order_with_items(p_order_id uuid, p_patch jsonb, p_items jsonb[], p_expected_updated_at timestamp with time zone)`                                                                                                                         | `timestamp with time zone` | DEFINER  | admin          |

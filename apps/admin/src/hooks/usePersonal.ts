@@ -7,6 +7,7 @@ import type { StaffStatus } from '@/lib/status/staffStatus';
 export interface StaffRow {
   id: string;
   full_name: string;
+  username: string;
   email: string | null;
   phone: string | null;
   role: StaffRole;
@@ -34,7 +35,7 @@ export function usePersonal({ search, role }: UsePersonalFilters = {}) {
       let query = supabase
         .schema('identity')
         .from('staff')
-        .select('id, full_name, email, phone, role, status, notes, created_at')
+        .select('id, full_name, username, email, phone, role, status, notes, created_at')
         .eq('status', 'active');
 
       if (role) {
@@ -52,6 +53,7 @@ export function usePersonal({ search, role }: UsePersonalFilters = {}) {
           (row) =>
             row.id.toLowerCase().includes(q) ||
             row.full_name.toLowerCase().includes(q) ||
+            row.username.toLowerCase().includes(q) ||
             (row.email?.toLowerCase().includes(q) ?? false),
         );
       }

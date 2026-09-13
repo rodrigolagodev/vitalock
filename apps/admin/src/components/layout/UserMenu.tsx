@@ -7,12 +7,12 @@ import { ThemeToggle } from './ThemeToggle';
  * the app-owned theme toggle (next-themes lives in the app, not in ui).
  */
 export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
-  const { staff, session, signOut } = useAuthContext();
+  const { staff, signOut } = useAuthContext();
 
   return (
     <UserMenuBase
       name={staff?.full_name ?? 'Usuario'}
-      email={session?.user?.email ?? ''}
+      subtitle={staff?.username ? `@${staff.username}` : ''}
       onSignOut={signOut}
       collapsed={collapsed}
     >

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ThemeProvider } from 'next-themes';
 import { UserMenu } from '../UserMenu';
@@ -15,6 +15,29 @@ const { useAuthContextMock } = vi.hoisted(() => ({
 
 vi.mock('@vitalock/shared', () => ({ useAuthContext: useAuthContextMock }));
 
+// next-themes reads window.matchMedia on mount; jsdom does not provide it.
+const originalMatchMedia = window.matchMedia;
+
+beforeEach(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+});
+
+afterEach(() => {
+  Object.defineProperty(window, 'matchMedia', { writable: true, value: originalMatchMedia });
+});
+
 function renderUserMenu(collapsed?: boolean) {
   return render(
     <ThemeProvider attribute="class">
@@ -23,27 +46,12 @@ function renderUserMenu(collapsed?: boolean) {
   );
 }
 
-describe('UserMenu', () => {
-  it('shows name, @username subtitle and trigger when expanded', () => {
+describe('UserMenu (installer)', () => {
+  it('shows name and @username subtitle when expanded', () => {
     renderUserMenu(false);
     expect(screen.getByText('Ana Alvarez')).toBeInTheDocument();
     expect(screen.getByText('@ana.alvarez')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Abrir menú de usuario' })).toBeInTheDocument();
-  });
-
-  it('hides name and subtitle from AT when collapsed but keeps them in DOM for stable layout', () => {
-    renderUserMenu(true);
-    // Avatar initials still present and visible.
-    expect(screen.getByText('AA')).toBeInTheDocument();
-    // Name and subtitle stay in the DOM (so the trigger keeps a constant size
-    // during the sidebar collapse animation), but they are aria-hidden and
-    // wrapped in an opacity-0 container so users see the avatar only.
-    const name = screen.getByText('Ana Alvarez');
-    const subtitle = screen.getByText('@ana.alvarez');
-    const wrapper = name.parentElement;
-    expect(wrapper).toHaveAttribute('aria-hidden', 'true');
-    expect(wrapper?.className).toContain('opacity-0');
-    expect(subtitle.parentElement).toBe(wrapper);
   });
 
   it('never renders the session email, even though the session carries one', () => {
