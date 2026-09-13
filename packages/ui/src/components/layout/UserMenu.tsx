@@ -18,11 +18,11 @@ export function initialsFromName(name: string): string {
 export interface UserMenuProps {
   /** Display name of the signed-in user. */
   name: string;
-  /** Email shown under the name (trigger + popover header). Hidden when empty. */
-  email?: string;
+  /** Secondary line shown under the name (trigger + popover header), e.g. `@username`. Hidden when empty. */
+  subtitle?: string;
   /** Invoked by the "Salir" action. */
   onSignOut: () => void | Promise<void>;
-  /** When true, hides name/email visually and from AT; the avatar stays. Layout size never changes. */
+  /** When true, hides name/subtitle visually and from AT; the avatar stays. Layout size never changes. */
   collapsed?: boolean;
   /**
    * Theme-toggle row slot rendered inside the popover next to the "Tema"
@@ -33,12 +33,12 @@ export interface UserMenuProps {
 }
 
 /**
- * Sidebar user menu: initials avatar + name/email trigger that opens a
+ * Sidebar user menu: initials avatar + name/subtitle trigger that opens a
  * popover with the account header, an optional theme row and sign-out.
  */
 export function UserMenu({
   name,
-  email = '',
+  subtitle = '',
   onSignOut,
   collapsed = false,
   children,
@@ -64,7 +64,7 @@ export function UserMenu({
             aria-hidden={collapsed}
           >
             <span className="truncate text-sm font-medium">{name}</span>
-            {email && <span className="text-muted-foreground truncate text-xs">{email}</span>}
+            {subtitle && <span className="text-muted-foreground truncate text-xs">{subtitle}</span>}
           </div>
           <ChevronsUpDown
             className={cn(
@@ -78,7 +78,7 @@ export function UserMenu({
       <PopoverContent side="top" align="start" sideOffset={8} className="w-[248px] p-0">
         <div className="flex flex-col gap-0.5 border-b px-3 py-3">
           <span className="truncate text-sm font-medium">{name}</span>
-          {email && <span className="text-muted-foreground truncate text-xs">{email}</span>}
+          {subtitle && <span className="text-muted-foreground truncate text-xs">{subtitle}</span>}
         </div>
         {children != null && (
           <div className="flex items-center justify-between px-3 py-2.5">

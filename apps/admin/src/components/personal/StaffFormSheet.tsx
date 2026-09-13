@@ -8,10 +8,11 @@ import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { usernameSchema } from '@vitalock/shared';
 import { formatDate } from '@/lib/format';
 import { staffRole } from '@/lib/status/staffRole';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
-import { toastMutationError } from '@/lib/errors/toast';
+import { toastMutationError, isDuplicateUsernameError } from '@/lib/errors/toast';
 import type { StaffRole } from '@/hooks/useMutateStaff';
 import type { StaffRow } from '@/hooks/usePersonal';
 
@@ -20,6 +21,7 @@ import type { StaffRow } from '@/hooks/usePersonal';
 const schema = z
   .object({
     full_name: z.string().min(1, 'El nombre es obligatorio'),
+    username: usernameSchema,
     email: z.string().email('Email inválido').optional().or(z.literal('')),
     phone: z.string().optional(),
     role: z.string().optional(),
@@ -52,11 +54,13 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
     handleSubmit,
     control,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       full_name: '',
+      username: '',
       email: '',
       phone: '',
       role: '',
@@ -68,6 +72,7 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
     if (open) {
       reset({
         full_name: staff?.full_name ?? '',
+        username: staff?.username ?? '',
         email: staff?.email ?? '',
         phone: staff?.phone ?? '',
         role: staff?.role ?? '',
@@ -82,6 +87,7 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
         await updateStaff.mutateAsync({
           id: staff.id,
           full_name: values.full_name,
+          username: values.username,
           email: values.email || null,
           phone: values.phone || null,
           role: values.role as StaffRole,
@@ -90,6 +96,7 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
       } else {
         await createStaff.mutateAsync({
           full_name: values.full_name,
+          username: values.username,
           email: values.email || null,
           phone: values.phone || null,
           role: values.role as StaffRole,
@@ -98,6 +105,10 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
       }
       onOpenChange(false);
     } catch (err) {
+      if (isDuplicateUsernameError(err)) {
+        setError('username', { message: 'Ese usuario ya existe.' });
+        return;
+      }
       toastMutationError(err as Error);
     }
   };
@@ -129,6 +140,21 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
             <Input id="full_name" {...register('full_name')} placeholder="Ej. Juan Pérez" />
             {errors.full_name && (
               <p className="text-destructive text-sm">{errors.full_name.message}</p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="username">Usuario *</Label>
+            <Input
+              id="username"
+              {...register('username')}
+              placeholder="ej. juan.perez"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+            />
+            {errors.username && (
+              <p className="text-destructive text-sm">{errors.username.message}</p>
             )}
           </div>
 

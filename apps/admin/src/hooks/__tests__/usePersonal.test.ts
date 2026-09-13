@@ -34,6 +34,7 @@ const fakeStaff = [
   {
     id: 'b3b0f1a2-0000-0000-0000-000000000001',
     full_name: 'Garcia, Juan',
+    username: 'juan.garcia',
     email: 'juan@vitalock.com',
     phone: '+54 11 1234-5678',
     role: 'installer',
@@ -119,6 +120,16 @@ describe('usePersonal', () => {
   it('search by uuid id (client-side) keeps matching rows', async () => {
     // '000001' only matches the uuid id — not name/email — and must still hit.
     const { result } = renderHook(() => usePersonal({ search: '000001' }), {
+      wrapper: makeWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(result.current.data).toEqual(fakeStaff);
+  });
+
+  it('search by username (client-side) keeps matching rows', async () => {
+    const { result } = renderHook(() => usePersonal({ search: 'juan.garcia' }), {
       wrapper: makeWrapper(),
     });
 

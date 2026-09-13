@@ -78,6 +78,7 @@ describe('useMutateStaff', () => {
       await act(async () => {
         await result.current.createStaff.mutateAsync({
           full_name: 'Juan Perez',
+          username: 'juan.perez',
           email: 'juan@vitalock.com',
           role: 'installer',
         });
@@ -90,6 +91,7 @@ describe('useMutateStaff', () => {
       expect(mockInsert).toHaveBeenCalledWith(
         expect.objectContaining({
           full_name: 'Juan Perez',
+          username: 'juan.perez',
           email: 'juan@vitalock.com',
           role: 'installer',
           status: 'active',
@@ -112,6 +114,7 @@ describe('useMutateStaff', () => {
         try {
           await result.current.createStaff.mutateAsync({
             full_name: 'Otro',
+            username: 'otro',
             role: 'admin',
           });
         } catch {

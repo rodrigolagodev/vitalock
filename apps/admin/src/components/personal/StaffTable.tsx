@@ -59,6 +59,11 @@ export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: Sta
         columns={[
           { header: 'Nombre', cell: (staff) => staff.full_name },
           {
+            header: 'Usuario',
+            cell: (staff) => staff.username,
+            className: 'text-muted-foreground',
+          },
+          {
             header: 'Email',
             cell: (staff) => staff.email ?? '—',
             className: 'text-muted-foreground',

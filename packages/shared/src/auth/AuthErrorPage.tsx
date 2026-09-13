@@ -7,7 +7,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   [AuthErrorCode.INACTIVE_STAFF]: 'Cuenta desactivada.',
   [AuthErrorCode.WRONG_ROLE]: 'Esta cuenta no tiene acceso a esta aplicación.',
   [AuthErrorCode.SESSION_EXPIRED]: 'Tu sesión expiró. Iniciá sesión nuevamente.',
-  [AuthErrorCode.INVALID_CREDENTIALS]: 'Email o contraseña incorrectos.',
+  [AuthErrorCode.INVALID_CREDENTIALS]: 'Usuario o contraseña incorrectos.',
   [AuthErrorCode.NETWORK_ERROR]: 'Error de conexión. Intentá de nuevo.',
 };
 

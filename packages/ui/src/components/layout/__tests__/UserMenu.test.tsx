@@ -14,11 +14,11 @@ describe('initialsFromName', () => {
 });
 
 describe('UserMenu', () => {
-  it('shows initials, name, email and the trigger when expanded', () => {
-    render(<UserMenu name="Ana Alvarez" email="ana@vitalock.com" onSignOut={vi.fn()} />);
+  it('shows initials, name, subtitle and the trigger when expanded', () => {
+    render(<UserMenu name="Ana Alvarez" subtitle="@ana.alvarez" onSignOut={vi.fn()} />);
     expect(screen.getByText('AA')).toBeInTheDocument();
     expect(screen.getByText('Ana Alvarez')).toBeInTheDocument();
-    expect(screen.getByText('ana@vitalock.com')).toBeInTheDocument();
+    expect(screen.getByText('@ana.alvarez')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Abrir menú de usuario' })).toBeInTheDocument();
   });
 
@@ -27,19 +27,19 @@ describe('UserMenu', () => {
     expect(screen.getByText('US')).toBeInTheDocument();
   });
 
-  it('hides name and email from AT when collapsed but keeps them in DOM for stable layout', () => {
-    render(<UserMenu name="Ana Alvarez" email="ana@vitalock.com" onSignOut={vi.fn()} collapsed />);
+  it('hides name and subtitle from AT when collapsed but keeps them in DOM for stable layout', () => {
+    render(<UserMenu name="Ana Alvarez" subtitle="@ana.alvarez" onSignOut={vi.fn()} collapsed />);
     const wrapper = screen.getByText('Ana Alvarez').parentElement;
     expect(wrapper).toHaveAttribute('aria-hidden', 'true');
     expect(wrapper?.className).toContain('opacity-0');
-    expect(screen.getByText('ana@vitalock.com').parentElement).toBe(wrapper);
+    expect(screen.getByText('@ana.alvarez').parentElement).toBe(wrapper);
   });
 
   it('renders the theme row slot and calls onSignOut from the Salir action', async () => {
     const onSignOut = vi.fn();
     const user = userEvent.setup();
     render(
-      <UserMenu name="Ana Alvarez" email="ana@vitalock.com" onSignOut={onSignOut}>
+      <UserMenu name="Ana Alvarez" subtitle="@ana.alvarez" onSignOut={onSignOut}>
         <button type="button">toggle-theme</button>
       </UserMenu>,
     );
@@ -47,8 +47,8 @@ describe('UserMenu', () => {
     await user.click(screen.getByRole('button', { name: 'Abrir menú de usuario' }));
     expect(screen.getByText('Tema')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'toggle-theme' })).toBeInTheDocument();
-    // Email is rendered both on the trigger and inside the popover header.
-    expect(screen.getAllByText('ana@vitalock.com').length).toBeGreaterThan(1);
+    // Subtitle is rendered both on the trigger and inside the popover header.
+    expect(screen.getAllByText('@ana.alvarez').length).toBeGreaterThan(1);
 
     await user.click(screen.getByRole('button', { name: /Salir/ }));
     expect(onSignOut).toHaveBeenCalledTimes(1);

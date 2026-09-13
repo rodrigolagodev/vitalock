@@ -16,7 +16,7 @@ test.describe('admin — authentication', () => {
     // P0-5: the only role gate used to be this client check. It must still hold
     // (server guards are proven in pgTAP test_131); the user must see why.
     await page.goto('/login');
-    await page.getByLabel('Email').fill('installer@vitalock.local');
+    await page.getByLabel('Usuario').fill('installer');
     await page.getByLabel('Contraseña').fill('Installer123!');
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await expect(page).toHaveURL(/\/(login|error)/);

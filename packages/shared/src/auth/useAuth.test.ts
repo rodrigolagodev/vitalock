@@ -27,19 +27,28 @@ interface MockSupabase {
   signInMock: Mock;
   signOutMock: Mock;
   profileQueryMock: Mock;
+  rpcMock: Mock;
 }
 
+/**
+ * `rpcMock` defaults to resolving `resolve_login_email` to a fixed email —
+ * every pre-existing scenario (wrong password, no staff row, inactive,
+ * wrong role) only cares about what happens *after* resolution, so it
+ * doesn't need to override this default.
+ */
 function createMockSupabase(
   profileData: unknown = null,
   initialSession: unknown = null,
+  resolvedEmail: string | null = 'resolved@vitalock.example',
 ): MockSupabase {
   let authCallback: AuthStateChangeCallback | null = null;
 
   const signInMock = vi.fn();
   const signOutMock = vi.fn().mockResolvedValue({ error: null });
-  const profileQueryMock = vi.fn().mockReturnValue(
-    makeQueryResult({ data: profileData, error: null, status: 200 }),
-  );
+  const rpcMock = vi.fn().mockResolvedValue({ data: resolvedEmail, error: null });
+  const profileQueryMock = vi
+    .fn()
+    .mockReturnValue(makeQueryResult({ data: profileData, error: null, status: 200 }));
 
   const mockSelectChain = {
     select: vi.fn().mockReturnThis(),
@@ -64,13 +73,14 @@ function createMockSupabase(
       signOut: signOutMock,
     },
     schema: vi.fn().mockReturnValue(mockFromChain),
+    rpc: rpcMock,
   } as unknown as TypedSupabaseClient;
 
   const triggerAuthEvent = (event: string, session: unknown) => {
     if (authCallback) authCallback(event, session);
   };
 
-  return { client, triggerAuthEvent, signInMock, signOutMock, profileQueryMock };
+  return { client, triggerAuthEvent, signInMock, signOutMock, profileQueryMock, rpcMock };
 }
 
 function makeSession(userId = 'user-1') {
@@ -82,10 +92,23 @@ function makeProfile(overrides: Record<string, unknown> = {}) {
     id: 'staff-1',
     auth_user_id: 'user-1',
     full_name: 'Ana Alvarez',
+    username: 'ana.alvarez',
     role: 'admin',
     status: 'active',
     ...overrides,
   };
+}
+
+/** Wires signInMock to fire SIGNED_IN (mirroring real supabase-js) on success. */
+function signInFiresSignedIn(
+  signInMock: Mock,
+  triggerAuthEvent: MockSupabase['triggerAuthEvent'],
+  session: unknown,
+) {
+  signInMock.mockImplementation(async () => {
+    setTimeout(() => triggerAuthEvent('SIGNED_IN', session), 0);
+    return { data: { session }, error: null };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -104,15 +127,14 @@ describe('useAuth', () => {
     vi.restoreAllMocks();
   });
 
-  it('1. happy path — admin login sets phase=authenticated with staff profile', async () => {
-    const { client, triggerAuthEvent, signInMock } = createMockSupabase(makeProfile());
+  it('1. happy path — admin login sets phase=authenticated with staff profile (incl. username)', async () => {
+    const { client, triggerAuthEvent, signInMock, rpcMock } = createMockSupabase(
+      makeProfile(),
+      null,
+      'ana@vitalock.example',
+    );
     const session = makeSession();
-
-    signInMock.mockImplementation(async () => {
-      // Simulate supabase firing SIGNED_IN after successful login
-      setTimeout(() => triggerAuthEvent('SIGNED_IN', session), 0);
-      return { data: { session }, error: null };
-    });
+    signInFiresSignedIn(signInMock, triggerAuthEvent, session);
 
     const { result } = renderHook(() => useAuth(client, 'admin'));
 
@@ -120,16 +142,22 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('ana@vitalock.example', 'test-password');
+      await result.current.signIn('ana.alvarez', 'test-password');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('authenticated'));
 
+    expect(rpcMock).toHaveBeenCalledWith('resolve_login_email', { p_username: 'ana.alvarez' });
+    expect(signInMock).toHaveBeenCalledWith({
+      email: 'ana@vitalock.example',
+      password: 'test-password',
+    });
     expect(result.current.staff?.full_name).toBe('Ana Alvarez');
+    expect(result.current.staff?.username).toBe('ana.alvarez');
     expect(result.current.error).toBeNull();
   });
 
-  it('2. wrong password sets phase=error with INVALID_CREDENTIALS', async () => {
+  it('2. wrong password for a resolved username sets phase=error with INVALID_CREDENTIALS', async () => {
     const { client, signInMock } = createMockSupabase();
     const { AuthApiError } = await import('@supabase/supabase-js');
     signInMock.mockResolvedValue({
@@ -141,29 +169,58 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('ana@vitalock.example', 'wrong');
+      await result.current.signIn('ana.alvarez', 'wrong');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));
     expect(result.current.error?.code).toBe(AuthErrorCode.INVALID_CREDENTIALS);
   });
 
-  it('3. no staff row sets phase=error with NO_STAFF_ROW and calls signOut', async () => {
-    const { client, triggerAuthEvent, signInMock, signOutMock } =
-      createMockSupabase(null);
-    const session = makeSession();
+  it('3. unknown/inactive/unlinked username (RPC resolves NULL) sets INVALID_CREDENTIALS without calling signInWithPassword', async () => {
+    const { client, signInMock, rpcMock } = createMockSupabase(null, null, null);
 
-    // profile query returns null (no row)
-    signInMock.mockImplementation(async () => {
-      setTimeout(() => triggerAuthEvent('SIGNED_IN', session), 0);
-      return { data: { session }, error: null };
+    const { result } = renderHook(() => useAuth(client, 'admin'));
+    await waitFor(() => expect(result.current.phase).toBe('anonymous'));
+
+    await act(async () => {
+      await result.current.signIn('nonexistent-user', 'pass');
+    });
+
+    await waitFor(() => expect(result.current.phase).toBe('error'));
+    expect(rpcMock).toHaveBeenCalledWith('resolve_login_email', { p_username: 'nonexistent-user' });
+    expect(result.current.error?.code).toBe(AuthErrorCode.INVALID_CREDENTIALS);
+    expect(signInMock).not.toHaveBeenCalled();
+  });
+
+  it('4. resolve_login_email RPC error sets NETWORK_ERROR without calling signInWithPassword', async () => {
+    const { client, signInMock, rpcMock } = createMockSupabase();
+    rpcMock.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'fetch failed' },
     });
 
     const { result } = renderHook(() => useAuth(client, 'admin'));
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('unknown@example.com', 'pass');
+      await result.current.signIn('ana.alvarez', 'pass');
+    });
+
+    await waitFor(() => expect(result.current.phase).toBe('error'));
+    expect(result.current.error?.code).toBe(AuthErrorCode.NETWORK_ERROR);
+    expect(signInMock).not.toHaveBeenCalled();
+  });
+
+  it('5. no staff row sets phase=error with NO_STAFF_ROW and calls signOut', async () => {
+    const { client, triggerAuthEvent, signInMock, signOutMock } = createMockSupabase(null);
+    const session = makeSession();
+    signInFiresSignedIn(signInMock, triggerAuthEvent, session);
+
+    const { result } = renderHook(() => useAuth(client, 'admin'));
+    await waitFor(() => expect(result.current.phase).toBe('anonymous'));
+
+    await act(async () => {
+      await result.current.signIn('unknown-but-resolved', 'pass');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));
@@ -171,22 +228,18 @@ describe('useAuth', () => {
     expect(signOutMock).toHaveBeenCalled();
   });
 
-  it('4. inactive staff sets phase=error with INACTIVE_STAFF and calls signOut', async () => {
+  it('6. inactive staff (after password succeeds) sets phase=error with INACTIVE_STAFF and calls signOut', async () => {
     const { client, triggerAuthEvent, signInMock, signOutMock } = createMockSupabase(
       makeProfile({ status: 'inactive' }),
     );
     const session = makeSession();
-
-    signInMock.mockImplementation(async () => {
-      setTimeout(() => triggerAuthEvent('SIGNED_IN', session), 0);
-      return { data: { session }, error: null };
-    });
+    signInFiresSignedIn(signInMock, triggerAuthEvent, session);
 
     const { result } = renderHook(() => useAuth(client, 'admin'));
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('elena@example.com', 'pass');
+      await result.current.signIn('elena.gomez', 'pass');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));
@@ -194,7 +247,26 @@ describe('useAuth', () => {
     expect(signOutMock).toHaveBeenCalled();
   });
 
-  it('5. session restore on mount sets phase=authenticated without calling signIn', async () => {
+  it('7. wrong role sets phase=error with WRONG_ROLE and calls signOut', async () => {
+    const { client, triggerAuthEvent, signInMock, signOutMock } = createMockSupabase(
+      makeProfile({ role: 'installer' }),
+    );
+    const session = makeSession();
+    signInFiresSignedIn(signInMock, triggerAuthEvent, session);
+
+    const { result } = renderHook(() => useAuth(client, 'admin'));
+    await waitFor(() => expect(result.current.phase).toBe('anonymous'));
+
+    await act(async () => {
+      await result.current.signIn('ana.alvarez', 'pass');
+    });
+
+    await waitFor(() => expect(result.current.phase).toBe('error'));
+    expect(result.current.error?.code).toBe(AuthErrorCode.WRONG_ROLE);
+    expect(signOutMock).toHaveBeenCalled();
+  });
+
+  it('8. session restore on mount sets phase=authenticated without calling signIn', async () => {
     const session = makeSession();
     const { client } = createMockSupabase(makeProfile(), session);
 
@@ -204,7 +276,7 @@ describe('useAuth', () => {
     expect(result.current.staff?.full_name).toBe('Ana Alvarez');
   });
 
-  it('6. signOut sets phase=anonymous with null staff and session', async () => {
+  it('9. signOut sets phase=anonymous with null staff and session', async () => {
     const session = makeSession();
     const { client, triggerAuthEvent } = createMockSupabase(makeProfile(), session);
 
@@ -225,7 +297,7 @@ describe('useAuth', () => {
     expect(result.current.session).toBeNull();
   });
 
-  it('7. SIGNED_IN while authenticated updates the session without refetching the profile', async () => {
+  it('10. SIGNED_IN while authenticated updates the session without refetching the profile', async () => {
     const session = makeSession();
     const { client, triggerAuthEvent, profileQueryMock } = createMockSupabase(
       makeProfile(),
@@ -241,19 +313,14 @@ describe('useAuth', () => {
     const refreshedSession = { ...session, access_token: 'token-2' };
     act(() => triggerAuthEvent('SIGNED_IN', refreshedSession));
 
-    await waitFor(() =>
-      expect(result.current.session?.access_token).toBe('token-2'),
-    );
+    await waitFor(() => expect(result.current.session?.access_token).toBe('token-2'));
     expect(result.current.phase).toBe('authenticated');
     expect(profileQueryMock).toHaveBeenCalledTimes(1);
   });
 
-  it('8. profile fetch network failure sets NETWORK_ERROR without signOut', async () => {
+  it('11. profile fetch network failure sets NETWORK_ERROR without signOut', async () => {
     const session = makeSession();
-    const { client, signOutMock, profileQueryMock } = createMockSupabase(
-      makeProfile(),
-      session,
-    );
+    const { client, signOutMock, profileQueryMock } = createMockSupabase(makeProfile(), session);
     // postgrest-js surfaces fetch rejections (timeout/abort/network) as status 0.
     profileQueryMock.mockReturnValue(
       makeQueryResult({

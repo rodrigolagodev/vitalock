@@ -44,10 +44,14 @@ testing:
       tool: vitest + @testing-library/react
     integration:
       available: true
-      tool: "@testing-library/react + @testing-library/user-event"
+      tool: '@testing-library/react + @testing-library/user-event'
     e2e:
-      available: false
-      tool: null
+      available: true
+      tool: '@playwright/test 1.48 (e2e/, playwright.config.ts; run: pnpm e2e; CI job: e2e)'
+      note: >
+        Journeys force VITE_SUPABASE_URL=http://127.0.0.1:54321 and sign in
+        with the users seeded by supabase/seed-users.sql. Any change to the
+        login form labels or seed users must update e2e/fixtures.ts.
   quality:
     linter: pnpm lint (eslint 9)
     type_checker: pnpm typecheck (tsc --noEmit)
