@@ -13,7 +13,7 @@ export interface MobileSidebarProps {
 }
 
 /**
- * Mobile-only navigation: hamburger trigger + slide-over drawer anchored
+ * Mobile-only navigation: floating trigger + slide-over drawer anchored
  * to the left, matching the desktop sidebar's spatial model. Hidden on md+
  * where the desktop `Sidebar` takes over. Closes itself on every location
  * change so tapping a link dismisses the drawer.
@@ -29,9 +29,16 @@ export function MobileSidebar({ children, footer }: MobileSidebarProps) {
 
   return (
     <div className="md:hidden">
-      <Button variant="ghost" size="icon" onClick={() => setOpen(true)} aria-label="Abrir menú">
-        <Menu className="h-5 w-5" />
-      </Button>
+      {!open && (
+        <Button
+          size="icon"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú"
+          className="fixed bottom-6 left-4 z-40 h-14 w-14 rounded-full shadow-lg"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50">
@@ -53,7 +60,7 @@ export function MobileSidebar({ children, footer }: MobileSidebarProps) {
               </Button>
             </div>
             <div className="min-h-0 flex-1">
-              <SidebarNav showLogo={false} footer={footer}>
+              <SidebarNav showLogo={false} showToggle={false} footer={footer}>
                 {children}
               </SidebarNav>
             </div>
