@@ -16,11 +16,7 @@ interface EquipmentKeySnapshotPanelProps {
   administrationId?: string;
 }
 
-function formatSnapshotForClipboard(
-  toActivate: PendingKey[],
-  toDisable: PendingKey[],
-  unchanged: PendingKey[],
-): string {
+function formatSnapshotForClipboard(toActivate: PendingKey[], toDisable: PendingKey[]): string {
   const section = (title: string, keys: PendingKey[]) => {
     if (keys.length === 0) return `${title}\n  (ninguna)`;
     const rows = keys
@@ -28,11 +24,7 @@ function formatSnapshotForClipboard(
       .join('\n');
     return `${title}\n${rows}`;
   };
-  return [
-    section('A activar', toActivate),
-    section('A dar de baja', toDisable),
-    section('Sin cambios', unchanged),
-  ].join('\n\n');
+  return [section('A activar', toActivate), section('A dar de baja', toDisable)].join('\n\n');
 }
 
 function KeyTable({ keys, emptyMessage }: { keys: PendingKey[]; emptyMessage: string }) {
@@ -65,8 +57,8 @@ function KeyTable({ keys, emptyMessage }: { keys: PendingKey[]; emptyMessage: st
 }
 
 /**
- * Shows the 3-group key snapshot for a single equipment:
- * "A activar" / "A dar de baja" / "Sin cambios"
+ * Shows the pending key snapshot for a single equipment: "A activar" / "A dar de baja".
+ * Keys with no pending change are omitted — equipment can have hundreds of keys.
  *
  * When `buildingId` and `administrationId` are provided, also renders a
  * "Nueva actualización" button that opens the create-ticket sheet, disabled
@@ -85,7 +77,6 @@ export function EquipmentKeySnapshotPanel({
 
   const toActivate = useMemo(() => data?.toActivate ?? [], [data?.toActivate]);
   const toDisable = useMemo(() => data?.toDisable ?? [], [data?.toDisable]);
-  const unchanged = useMemo(() => data?.unchanged ?? [], [data?.unchanged]);
 
   const activeTrain = updates.find(
     (u) => u.ticket_status === 'open' || u.ticket_status === 'in_progress',
@@ -119,7 +110,7 @@ export function EquipmentKeySnapshotPanel({
   }
 
   const handleCopy = async () => {
-    const text = formatSnapshotForClipboard(toActivate, toDisable, unchanged);
+    const text = formatSnapshotForClipboard(toActivate, toDisable);
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -160,14 +151,6 @@ export function EquipmentKeySnapshotPanel({
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="unchanged">
-              Sin cambios
-              {unchanged.length > 0 && (
-                <span className="bg-muted text-muted-foreground ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold">
-                  {unchanged.length}
-                </span>
-              )}
-            </TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleCopy} className="shrink-0">
@@ -195,13 +178,6 @@ export function EquipmentKeySnapshotPanel({
 
         <TabsContent value="disable">
           <KeyTable keys={toDisable} emptyMessage="No hay llaves pendientes de baja." />
-        </TabsContent>
-
-        <TabsContent value="unchanged">
-          <KeyTable
-            keys={unchanged}
-            emptyMessage="No hay llaves activas sin cambios programados."
-          />
         </TabsContent>
       </Tabs>
 
