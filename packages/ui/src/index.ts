@@ -107,7 +107,7 @@ export {
   type DataCardListProps,
   type CardListDensity,
 } from './components/patterns/DataCardList';
-export { dayKey, formatDayHeading } from './lib/date';
+export { dayKey, formatDayHeading, monthKey, formatMonthHeading } from './lib/date';
 export { AppShell, type AppShellProps } from './components/layout/AppShell';
 export {
   BrandLogoImages,
