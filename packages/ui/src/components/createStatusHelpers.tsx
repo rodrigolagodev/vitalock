@@ -1,9 +1,16 @@
 import type { JSX } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { StatusBadge, type StatusTone } from './StatusBadge';
 
 export interface StatusMeta {
   label: string;
   tone: StatusTone;
+  /**
+   * Optional icon rendered inside the badge alongside color, so status is
+   * never conveyed by color alone (WCAG 1.4.1). Backward compatible —
+   * omitting it renders the badge exactly as before.
+   */
+  icon?: LucideIcon;
 }
 
 export interface StatusHelpers<T extends string> {
@@ -35,8 +42,15 @@ export function createStatusHelpers<T extends string>(
     return meta[value as T]?.tone ?? 'neutral';
   };
 
+  const icon = (value: string | null | undefined): LucideIcon | undefined => {
+    if (value == null) return undefined;
+    return meta[value as T]?.icon;
+  };
+
   const Badge = ({ status }: { status: string | null | undefined }) => (
-    <StatusBadge tone={tone(status)}>{label(status)}</StatusBadge>
+    <StatusBadge tone={tone(status)} icon={icon(status)}>
+      {label(status)}
+    </StatusBadge>
   );
 
   return { meta, label, tone, Badge };

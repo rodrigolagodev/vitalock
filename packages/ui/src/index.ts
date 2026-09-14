@@ -10,6 +10,16 @@ export {
   TableCaption,
 } from './components/table';
 export { Badge, badgeVariants, type BadgeProps } from './components/badge';
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardAction,
+  CardContent,
+  CardFooter,
+  cardVariants,
+  type CardProps,
+} from './components/card';
 export { StatusBadge, type StatusBadgeProps, type StatusTone } from './components/StatusBadge';
 export {
   createStatusHelpers,
@@ -59,7 +69,7 @@ export {
 } from './components/sheet';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './components/tabs';
 export { RadioGroup, RadioGroupItem } from './components/radio-group';
-export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
+export { Popover, PopoverTrigger, PopoverContent, PopoverClose } from './components/popover';
 export { Separator } from './components/separator';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/ConfirmDialog';
 export { Switch } from './components/switch';
@@ -90,7 +100,14 @@ export {
   type DataTableColumn,
   type DataTableAction,
   type DataTableBreakpoint,
+  type CardSlot,
 } from './components/patterns/DataTable';
+export {
+  DataCardList,
+  type DataCardListProps,
+  type CardListDensity,
+} from './components/patterns/DataCardList';
+export { dayKey, formatDayHeading } from './lib/date';
 export { AppShell, type AppShellProps } from './components/layout/AppShell';
 export {
   BrandLogoImages,

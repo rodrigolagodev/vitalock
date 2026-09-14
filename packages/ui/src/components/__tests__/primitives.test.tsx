@@ -1,3 +1,4 @@
+import { createRef } from 'react';
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 
@@ -6,6 +7,12 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import {
   Badge,
   Button,
+  Card,
+  CardAction,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
   Checkbox,
   Dialog,
   DialogContent,
@@ -86,5 +93,76 @@ describe('shared primitives from @vitalock/ui', () => {
   it('renders a Badge variant with its label', () => {
     render(<Badge variant="destructive">Error</Badge>);
     expect(screen.getByText('Error')).toBeInTheDocument();
+  });
+});
+
+describe('Card primitives from @vitalock/ui', () => {
+  it('renders Card content and merges a custom className', () => {
+    render(<Card className="custom-card">Contenido</Card>);
+    const card = screen.getByText('Contenido');
+    expect(card).toHaveClass('custom-card');
+    expect(card).toHaveClass('rounded-xl');
+  });
+
+  it('forwards a ref to the underlying div on Card', () => {
+    const ref = createRef<HTMLDivElement>();
+    render(<Card ref={ref}>Contenido</Card>);
+    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+  });
+
+  it('adds interactive hover/focus-visible classes when variant="interactive"', () => {
+    render(
+      <Card variant="interactive" data-testid="card">
+        Contenido
+      </Card>,
+    );
+    const card = screen.getByTestId('card');
+    expect(card).toHaveClass('hover:bg-accent/50');
+    expect(card).toHaveClass('focus-visible:ring-2');
+  });
+
+  it('does not add interactive classes for the default variant', () => {
+    render(<Card data-testid="card">Contenido</Card>);
+    const card = screen.getByTestId('card');
+    expect(card).not.toHaveClass('hover:bg-accent/50');
+  });
+
+  it('renders CardHeader, CardTitle, CardAction, CardContent and CardFooter, each forwarding refs and merging className', () => {
+    const headerRef = createRef<HTMLDivElement>();
+    const titleRef = createRef<HTMLHeadingElement>();
+    const actionRef = createRef<HTMLDivElement>();
+    const contentRef = createRef<HTMLDivElement>();
+    const footerRef = createRef<HTMLDivElement>();
+
+    render(
+      <Card>
+        <CardHeader ref={headerRef} className="custom-header">
+          <CardTitle ref={titleRef} className="custom-title">
+            Título
+          </CardTitle>
+          <CardAction ref={actionRef} className="custom-action">
+            Acción
+          </CardAction>
+        </CardHeader>
+        <CardContent ref={contentRef} className="custom-content">
+          Contenido
+        </CardContent>
+        <CardFooter ref={footerRef} className="custom-footer">
+          Pie
+        </CardFooter>
+      </Card>,
+    );
+
+    expect(screen.getByText('Título')).toBeInTheDocument();
+    expect(screen.getByText('Acción')).toBeInTheDocument();
+    expect(screen.getByText('Contenido')).toBeInTheDocument();
+    expect(screen.getByText('Pie')).toBeInTheDocument();
+
+    expect(headerRef.current).toBeInstanceOf(HTMLDivElement);
+    expect(headerRef.current).toHaveClass('custom-header');
+    expect(titleRef.current).toHaveClass('custom-title');
+    expect(actionRef.current).toHaveClass('custom-action');
+    expect(contentRef.current).toHaveClass('custom-content');
+    expect(footerRef.current).toHaveClass('custom-footer');
   });
 });

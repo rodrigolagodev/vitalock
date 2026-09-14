@@ -15,6 +15,14 @@ import { PaginationFooter } from './PaginationFooter';
  */
 export type DataTableBreakpoint = 'sm' | 'md' | 'lg' | 'xl';
 
+/**
+ * Card-rendering slot for a column when consumed by `DataCardList` instead
+ * of `DataTable`. Purely additive metadata — `DataTable` ignores it.
+ * When absent, `DataCardList` infers: index 0 → `title`, everything else →
+ * `meta` (declaration order preserved).
+ */
+export type CardSlot = 'title' | 'status' | 'meta' | 'hidden';
+
 export interface DataTableColumn<T> {
   header: string;
   cell: (row: T) => React.ReactNode;
@@ -26,6 +34,15 @@ export interface DataTableColumn<T> {
    * disappear on narrow screens without breaking the primary task.
    */
   hideBelow?: DataTableBreakpoint;
+  /**
+   * Card-rendering slot; see `CardSlot`. Ignored by `DataTable`.
+   * A `meta` column's cell renders inside `DataCardList`'s `CardContent`,
+   * which has no `z-10`. If a `meta`/`hidden` column's `cell` ever returns
+   * its own interactive element (link, button, checkbox), that element
+   * needs `relative z-10` or the card's stretched-link title overlay will
+   * silently swallow its clicks — see `DataCardList`'s doc comment.
+   */
+  card?: CardSlot;
 }
 
 export interface DataTableAction<T> {
@@ -38,6 +55,12 @@ export interface DataTableAction<T> {
   /** Disables the button and pulses the icon while true. */
   loading?: (row: T) => boolean;
   className?: string | ((row: T) => string);
+  /**
+   * When rendered by `DataCardList`, forces this action into the footer's
+   * visible primary slot instead of the overflow menu. Ignored by
+   * `DataTable`. See `DataCardList`'s primary/overflow default split.
+   */
+  primary?: boolean;
 }
 
 export interface DataTableProps<T> {
@@ -106,10 +129,7 @@ export function DataTable<T>({
     const content = firstColumn.cell(row);
     if (firstCell === 'link' && getRowHref) {
       return (
-        <Link
-          to={getRowHref(row)}
-          className="font-medium text-foreground hover:underline"
-        >
+        <Link to={getRowHref(row)} className="text-foreground font-medium hover:underline">
           {content}
         </Link>
       );
@@ -119,7 +139,7 @@ export function DataTable<T>({
         <button
           type="button"
           onClick={() => onFirstCellClick(row)}
-          className="font-medium text-foreground hover:underline"
+          className="text-foreground font-medium hover:underline"
         >
           {content}
         </button>
@@ -161,7 +181,7 @@ export function DataTable<T>({
     // overflow-x-auto keeps horizontal overflow scoped to the table card:
     // wide tables scroll inside their rounded border instead of stretching
     // the surrounding layout. Requires min-w-0 on the flex ancestor.
-    <div className="overflow-x-auto rounded-xl border bg-card">
+    <div className="bg-card overflow-x-auto rounded-xl border">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -182,12 +202,12 @@ export function DataTable<T>({
               <TableRow key={rowIndex}>
                 {columns.map((column, cellIndex) => (
                   <TableCell key={cellIndex} className={responsiveClass(column.hideBelow)}>
-                    <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                    <div className="bg-muted h-4 w-24 animate-pulse rounded" />
                   </TableCell>
                 ))}
                 {hasActions && (
                   <TableCell className="text-right">
-                    <div className="ml-auto h-4 w-16 animate-pulse rounded bg-muted" />
+                    <div className="bg-muted ml-auto h-4 w-16 animate-pulse rounded" />
                   </TableCell>
                 )}
               </TableRow>
@@ -195,7 +215,7 @@ export function DataTable<T>({
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={columnCount}>
-                <div className="flex justify-center rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex justify-center rounded-md border border-dashed px-4 py-8 text-center text-sm">
                   {hasFilters ? (filteredEmptyMessage ?? emptyMessage) : emptyMessage}
                 </div>
               </TableCell>
@@ -214,7 +234,9 @@ export function DataTable<T>({
                     {column.cell(row)}
                   </TableCell>
                 ))}
-                {hasActions && <TableCell className="text-right">{renderActionsCell(row)}</TableCell>}
+                {hasActions && (
+                  <TableCell className="text-right">{renderActionsCell(row)}</TableCell>
+                )}
               </TableRow>
             ))
           )}
