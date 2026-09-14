@@ -54,33 +54,28 @@ describe('ServicioTecnicoTable', () => {
   });
 
   it('renders skeleton rows when isFetching is true', () => {
-    const { container } = render(
-      <ServicioTecnicoTable rows={[]} isFetching={true} />,
-      { wrapper: makeWrapper() },
-    );
+    const { container } = render(<ServicioTecnicoTable rows={[]} isFetching={true} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('renders empty state message when no rows and no filters', () => {
-    render(
-      <ServicioTecnicoTable rows={[]} isFetching={false} hasFilters={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<ServicioTecnicoTable rows={[]} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText(/no hay órdenes de servicio técnico/i)).toBeInTheDocument();
   });
 
   it('renders filtered-empty-state when no rows but filters active', () => {
-    render(
-      <ServicioTecnicoTable rows={[]} isFetching={false} hasFilters={true} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<ServicioTecnicoTable rows={[]} isFetching={false} hasFilters={true} />, {
+      wrapper: makeWrapper(),
+    });
 
-    expect(
-      screen.getByText(/no se encontraron órdenes con los filtros/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no se encontraron órdenes con los filtros/i)).toBeInTheDocument();
   });
 
   it('renders status badge for each row', () => {
@@ -103,5 +98,17 @@ describe('ServicioTecnicoTable', () => {
 
     const link2 = screen.getByRole('link', { name: 'ORD-TEC-000002' });
     expect(link2).toHaveAttribute('href', '/servicio-tecnico/to-2');
+  });
+
+  it('renders one card per order instead of a table, as a flat worklist with no date grouping', () => {
+    const { container } = render(<ServicioTecnicoTable rows={sampleRows} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    // no `<section>` group wrappers — this is a flat worklist, not a
+    // date/month-grouped view like admin HistorialTable.
+    expect(container.querySelectorAll('section')).toHaveLength(0);
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 });
