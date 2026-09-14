@@ -69,7 +69,7 @@ export {
 } from './components/sheet';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './components/tabs';
 export { RadioGroup, RadioGroupItem } from './components/radio-group';
-export { Popover, PopoverTrigger, PopoverContent } from './components/popover';
+export { Popover, PopoverTrigger, PopoverContent, PopoverClose } from './components/popover';
 export { Separator } from './components/separator';
 export { ConfirmDialog, type ConfirmDialogProps } from './components/ConfirmDialog';
 export { Switch } from './components/switch';

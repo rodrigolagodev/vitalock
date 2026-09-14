@@ -5,7 +5,7 @@ import { MoreVertical } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../button';
 import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from '../card';
-import { Popover, PopoverContent, PopoverTrigger } from '../popover';
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from '../popover';
 import { SectionHeading } from './SectionHeading';
 import { DEFAULT_PAGE_SIZE, getPageSlice } from './pagination';
 import { PaginationFooter } from './PaginationFooter';
@@ -94,6 +94,14 @@ function splitActions<T>(
  * a `<table>`. See design Decision 1 (slot inference), 3 (grid mechanics),
  * 4 (status/actions), 5 (row navigation), 6 (day grouping) and 7
  * (pagination/loading/empty parity with `DataTable`).
+ *
+ * IMPORTANT — no nested interactive elements without `z-10`: the card
+ * title renders a stretched link (`after:absolute after:inset-0`) that
+ * overlays the entire card, and `CardFooter` already counters it with
+ * `relative z-10` so primary/overflow action buttons stay clickable. Any
+ * future interactive element added to `CardContent`/meta rows (a link,
+ * button, checkbox, etc.) MUST get the same `relative z-10` treatment, or
+ * the stretched-link overlay will silently swallow its clicks.
  */
 export function DataCardList<T>({
   rows,
@@ -144,7 +152,7 @@ export function DataCardList<T>({
       return (
         <Link
           to={getRowHref(row)}
-          className="text-foreground truncate font-medium after:absolute after:inset-0 hover:underline"
+          className="text-primary truncate font-medium after:absolute after:inset-0 hover:underline"
         >
           {content}
         </Link>
@@ -155,7 +163,7 @@ export function DataCardList<T>({
         <button
           type="button"
           onClick={() => onFirstCellClick(row)}
-          className="text-foreground truncate text-left font-medium after:absolute after:inset-0 hover:underline"
+          className="text-primary truncate text-left font-medium after:absolute after:inset-0 hover:underline"
         >
           {content}
         </button>
@@ -167,6 +175,8 @@ export function DataCardList<T>({
   const renderCard = (row: T) => {
     const { primary, overflow } = splitActions(actions, row);
     const hasFooter = Boolean(renderActions) || primary.length > 0 || overflow.length > 0;
+    const titleContent = titleColumn?.cell(row);
+    const primaryFieldValue = typeof titleContent === 'string' ? titleContent : rowKey(row);
 
     return (
       <li key={rowKey(row)} role="listitem">
@@ -233,7 +243,7 @@ export function DataCardList<T>({
                           variant="ghost"
                           size="sm"
                           className="ml-auto px-2"
-                          aria-label="Más acciones"
+                          aria-label={`Más acciones para ${primaryFieldValue}`}
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
@@ -247,18 +257,19 @@ export function DataCardList<T>({
                             const isLoading = action.loading?.(row) ?? false;
                             const Icon = action.icon;
                             return (
-                              <Button
-                                key={index}
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                disabled={isDisabled || isLoading}
-                                onClick={() => action.onClick(row)}
-                                className="w-full justify-start gap-2"
-                              >
-                                <Icon className={cn('h-4 w-4', isLoading && 'animate-pulse')} />
-                                {label}
-                              </Button>
+                              <PopoverClose asChild key={index}>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={isDisabled || isLoading}
+                                  onClick={() => action.onClick(row)}
+                                  className="w-full justify-start gap-2"
+                                >
+                                  <Icon className={cn('h-4 w-4', isLoading && 'animate-pulse')} />
+                                  {label}
+                                </Button>
+                              </PopoverClose>
                             );
                           })}
                         </div>

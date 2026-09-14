@@ -11,7 +11,7 @@ export default {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         content: 'hsl(var(--content))',
-                popover: {
+        popover: {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
         },
@@ -51,6 +51,7 @@ export default {
           DEFAULT: 'hsl(var(--warning))',
           foreground: 'hsl(var(--warning-foreground))',
         },
+        'status-neutral': 'hsl(var(--status-neutral-foreground))',
         brand: {
           50: 'hsl(var(--brand-50))',
           100: 'hsl(var(--brand-100))',

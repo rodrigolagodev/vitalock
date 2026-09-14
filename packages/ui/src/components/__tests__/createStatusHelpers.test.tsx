@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { CheckCircle } from 'lucide-react';
 
 import { createStatusHelpers } from '@vitalock/ui';
 
@@ -7,7 +8,7 @@ type TestStatus = 'open' | 'done' | 'cancelled';
 
 const testStatus = createStatusHelpers<TestStatus>({
   open: { label: 'Abierto', tone: 'info' },
-  done: { label: 'Hecho', tone: 'success' },
+  done: { label: 'Hecho', tone: 'success', icon: CheckCircle },
   cancelled: { label: 'Cancelado', tone: 'danger' },
 });
 
@@ -52,6 +53,16 @@ describe('createStatusHelpers', () => {
       const badge = container.querySelector('[class*="rounded-full"]');
       expect(badge).not.toBeNull();
       expect(badge!.className).toContain('bg-destructive/10');
+    });
+
+    it('renders the icon from meta when the status declares one', () => {
+      const { container } = render(<testStatus.Badge status="done" />);
+      expect(container.querySelector('svg')).toBeInTheDocument();
+    });
+
+    it('renders without an icon when the status meta omits it (backward compatible)', () => {
+      const { container } = render(<testStatus.Badge status="open" />);
+      expect(container.querySelector('svg')).not.toBeInTheDocument();
     });
   });
 

@@ -195,7 +195,47 @@ describe('DataCardList', () => {
 
     expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ver' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Más acciones' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Más acciones/ })).toBeInTheDocument();
+  });
+
+  it('gives the overflow trigger a per-row aria-label including the row identifier', () => {
+    const onEdit = vi.fn();
+    const onView = vi.fn();
+    const onDelete = vi.fn();
+    const actions: DataTableAction<Item>[] = [
+      { icon: PencilLine, label: 'Editar', onClick: onEdit, primary: true },
+      { icon: Eye, label: 'Ver', onClick: onView },
+      { icon: Trash2, label: 'Eliminar', onClick: onDelete },
+    ];
+    renderList({
+      rows: [makeRow(0, { name: 'Torre Norte' }), makeRow(1, { name: 'Torre Sur' })],
+      actions,
+    });
+
+    expect(
+      screen.getByRole('button', { name: 'Más acciones para Torre Norte' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Más acciones para Torre Sur' })).toBeInTheDocument();
+  });
+
+  it('closes the overflow popover after selecting an action', async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    const onView = vi.fn();
+    const onDelete = vi.fn();
+    const actions: DataTableAction<Item>[] = [
+      { icon: PencilLine, label: 'Editar', onClick: onEdit, primary: true },
+      { icon: Eye, label: 'Ver', onClick: onView },
+      { icon: Trash2, label: 'Eliminar', onClick: onDelete },
+    ];
+    renderList({ rows: makeRows(1), actions });
+
+    await user.click(screen.getByRole('button', { name: /Más acciones/ }));
+    const overflowAction = await screen.findByRole('button', { name: 'Ver' });
+    await user.click(overflowAction);
+
+    expect(onView).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'Ver' })).not.toBeInTheDocument();
   });
 
   it('defaults up to 2 visible actions to primary when none set primary explicitly', () => {
@@ -209,7 +249,7 @@ describe('DataCardList', () => {
 
     expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ver' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Más acciones' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Más acciones/ })).not.toBeInTheDocument();
   });
 
   it('renders the title as a stretched link using getRowHref', () => {
@@ -218,6 +258,15 @@ describe('DataCardList', () => {
     expect(link).toHaveAttribute('href', '/items/r-1');
     expect(link).toHaveClass('after:absolute');
     expect(link).toHaveClass('after:inset-0');
+  });
+
+  it('gives an interactive title a persistent tap affordance instead of hover-only underline', () => {
+    renderList({ rows: makeRows(1), firstCell: 'link', getRowHref: (row) => `/items/${row.id}` });
+    const link = screen.getByRole('link', { name: 'Item 1' });
+    // Hover doesn't exist on touch devices, so the interactive title needs a
+    // persistent visual signal (color), not only `hover:underline`.
+    expect(link).toHaveClass('text-primary');
+    expect(link).not.toHaveClass('text-foreground');
   });
 
   it('does not navigate when clicking an action even though the title is a stretched link', async () => {

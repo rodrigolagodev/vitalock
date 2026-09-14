@@ -55,15 +55,31 @@
     --brand-900: 242 45% 34.5%;
     --brand-950: 243 41% 20.4%;
 
-    /* Semantics (light) */
-    --destructive: 0 84.2% 60.2%;
+    /* Semantics (light)
+     * `--destructive` / `--info` / `--success` / `--warning` are darkened
+     * relative to a "designer default" mid-tone hue so `text-<tone>` on a
+     * white `--card` clears WCAG 1.4.3 (>=4.5:1). Verified sRGB relative
+     * luminance contrast against `#fff`: destructive ~4.69:1, info ~4.75:1,
+     * success ~5.03:1, warning ~4.87:1. Solid-background usages
+     * (`bg-<tone> text-<tone>-foreground` buttons/badges) only gain
+     * contrast from a darker background, so this is a no-regression change.
+     */
+    --destructive: 0 84.2% 49%;
     --destructive-foreground: 210 20% 98%;
-    --info: 217 91% 60%;
+    --info: 217 91% 52%;
     --info-foreground: 210 40% 98%;
-    --success: 160 84% 39%;
+    --success: 160 84% 27%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 38 92% 32%;
     --warning-foreground: 0 0% 100%;
+
+    /*
+     * Dedicated to StatusBadge's `neutral` tone text only — intentionally
+     * NOT `--muted-foreground`, which stays lighter for the app's broader
+     * de-emphasized/secondary text (300+ call sites unrelated to status
+     * badges). ~5.23:1 against white `--card`.
+     */
+    --status-neutral-foreground: 215.3 25% 45%;
   }
 
   .dark {
@@ -110,5 +126,9 @@
     --success-foreground: 0 0% 100%;
     --warning: 48 96% 53%;
     --warning-foreground: 0 0% 100%;
+
+    /* Reuses the existing dark-mode --muted-foreground value; dark `--card`
+     * already gives it ample contrast, so no separate audit was needed. */
+    --status-neutral-foreground: 224 12% 68%;
   }
 }

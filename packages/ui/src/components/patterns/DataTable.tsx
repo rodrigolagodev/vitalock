@@ -34,7 +34,14 @@ export interface DataTableColumn<T> {
    * disappear on narrow screens without breaking the primary task.
    */
   hideBelow?: DataTableBreakpoint;
-  /** Card-rendering slot; see `CardSlot`. Ignored by `DataTable`. */
+  /**
+   * Card-rendering slot; see `CardSlot`. Ignored by `DataTable`.
+   * A `meta` column's cell renders inside `DataCardList`'s `CardContent`,
+   * which has no `z-10`. If a `meta`/`hidden` column's `cell` ever returns
+   * its own interactive element (link, button, checkbox), that element
+   * needs `relative z-10` or the card's stretched-link title overlay will
+   * silently swallow its clicks — see `DataCardList`'s doc comment.
+   */
   card?: CardSlot;
 }
 
