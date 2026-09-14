@@ -10,6 +10,16 @@ export {
   TableCaption,
 } from './components/table';
 export { Badge, badgeVariants, type BadgeProps } from './components/badge';
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardAction,
+  CardContent,
+  CardFooter,
+  cardVariants,
+  type CardProps,
+} from './components/card';
 export { StatusBadge, type StatusBadgeProps, type StatusTone } from './components/StatusBadge';
 export {
   createStatusHelpers,
@@ -90,7 +100,14 @@ export {
   type DataTableColumn,
   type DataTableAction,
   type DataTableBreakpoint,
+  type CardSlot,
 } from './components/patterns/DataTable';
+export {
+  DataCardList,
+  type DataCardListProps,
+  type CardListDensity,
+} from './components/patterns/DataCardList';
+export { dayKey, formatDayHeading } from './lib/date';
 export { AppShell, type AppShellProps } from './components/layout/AppShell';
 export {
   BrandLogoImages,
