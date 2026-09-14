@@ -1,4 +1,4 @@
-import { DataTable } from '@vitalock/ui';
+import { DataCardList } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
 import type { KeyOrderListRow } from '@/hooks/useKeyOrders';
@@ -16,9 +16,16 @@ function clientLabel(row: KeyOrderListRow): string {
   return row.particular_full_name ?? '—';
 }
 
+/**
+ * Card list of open key orders — a worklist (`KeyOrdersPage` filters by
+ * `STATUS_PILLS`, not a date range), not a chronological history feed. No
+ * `groupBy` here on purpose: `HistorialTable` is the dedicated grouped view
+ * for closed/all orders, so this stays a flat list like installer's
+ * `TareasTable` and admin's `EquipmentUpdateHistoryPanel`.
+ */
 export function LlavesTable({ rows, isFetching, hasFilters = false }: LlavesTableProps) {
   return (
-    <DataTable<KeyOrderListRow>
+    <DataCardList<KeyOrderListRow>
       rows={rows}
       isFetching={isFetching}
       columns={[
@@ -38,6 +45,7 @@ export function LlavesTable({ rows, isFetching, hasFilters = false }: LlavesTabl
         {
           header: 'Estado',
           cell: (row) => <keyOrderStatus.Badge status={row.status} />,
+          card: 'status',
         },
         {
           header: 'Fecha',

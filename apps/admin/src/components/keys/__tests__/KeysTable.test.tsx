@@ -115,13 +115,23 @@ describe('KeysTable', () => {
 
     expect(screen.getByText('K-0001')).toBeInTheDocument();
     expect(screen.getByText('1A')).toBeInTheDocument();
-    // both fixture keys share the unit type
-    expect(screen.getAllByText(/apartment/)).toHaveLength(2);
+    // both fixture keys share the unit type, each in its own meta field
+    expect(screen.getAllByText('apartment')).toHaveLength(2);
     expect(screen.getByText('Admin')).toBeInTheDocument();
     expect(screen.getByText('Activa')).toBeInTheDocument();
     expect(screen.getByText('Ana Gómez')).toBeInTheDocument();
     expect(screen.getByText('Dada de baja')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    // keyDadaDeBaja: no pickup name, not administrative — two dashes
+    expect(screen.getAllByText('—')).toHaveLength(2);
+  });
+
+  it('renders one card per key instead of a table, with the unit fields as separate meta rows', () => {
+    render(<KeysTable buildingId="b-1" keys={[keyActiva, keyDadaDeBaja]} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
   it('navigates to the key detail page when the first-cell button is clicked', async () => {
@@ -149,10 +159,12 @@ describe('KeysTable', () => {
   });
 
   it('renders the loading skeleton while fetching', () => {
-    render(<KeysTable buildingId="b-1" keys={[]} isFetching />, { wrapper: makeWrapper() });
+    const { container } = render(<KeysTable buildingId="b-1" keys={[]} isFetching />, {
+      wrapper: makeWrapper(),
+    });
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByText('RFID')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('shows the empty state when there are no keys', () => {
@@ -165,6 +177,6 @@ describe('KeysTable', () => {
     render(<KeysTable buildingId="b-1" keys={makeKeys(15)} />, { wrapper: makeWrapper() });
 
     expect(screen.getByText('1–10 de 15')).toBeInTheDocument();
-    expect(screen.getAllByRole('row')).toHaveLength(11); // 1 header + 10 body rows
+    expect(screen.getAllByRole('listitem')).toHaveLength(10);
   });
 });
