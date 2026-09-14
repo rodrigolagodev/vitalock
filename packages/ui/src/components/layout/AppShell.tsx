@@ -17,15 +17,16 @@ export interface AppShellProps {
 }
 
 /**
- * Full-height application frame: a mobile-only topbar (hamburger + brand),
- * the desktop sidebar and the scrolling `<main>` content area.
+ * Full-height application frame: a mobile-only topbar (brand only — the
+ * drawer trigger floats over the content, see `MobileSidebar`), the desktop
+ * sidebar and the scrolling `<main>` content area.
  */
 export function AppShell({ sidebar, mobileSidebar, logo, mainClassName, children }: AppShellProps) {
   return (
     <div className="flex h-screen flex-col">
-      {/* Mobile-only topbar: hamburger on the left (matches the desktop
-          sidebar's spatial model) followed by the brand. Hidden on md+
-          where the desktop sidebar carries brand + nav + user menu. */}
+      {/* Mobile-only topbar: just the brand. Hidden on md+ where the desktop
+          sidebar carries brand + nav + user menu. `mobileSidebar` renders
+          the drawer (and its floating trigger) but takes no layout space here. */}
       <header className="bg-card flex h-14 shrink-0 items-center gap-2 border-b px-2 md:hidden">
         {mobileSidebar}
         <div className="flex items-center gap-2.5">

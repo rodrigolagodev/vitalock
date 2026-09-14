@@ -50,8 +50,8 @@ export function PageHeader({
           ))}
         </nav>
       )}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
+        <div className="flex min-w-0 flex-col gap-1">
           <div className="flex items-center gap-3">
             <h1 className={cn('text-foreground text-2xl font-semibold', titleClassName)}>
               {title}
@@ -60,7 +60,11 @@ export function PageHeader({
           </div>
           {subtitle != null && <div className="text-muted-foreground text-sm">{subtitle}</div>}
         </div>
-        {children != null && <div className="flex shrink-0 items-center gap-2">{children}</div>}
+        {children != null && (
+          <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:flex-row sm:items-center">
+            {children}
+          </div>
+        )}
       </div>
     </div>
   );

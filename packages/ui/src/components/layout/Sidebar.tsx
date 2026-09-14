@@ -25,6 +25,11 @@ export interface SidebarNavProps {
   collapsed?: boolean;
   /** Called when the collapse toggle button is activated. */
   onToggle?: () => void;
+  /**
+   * Whether to render the collapse toggle button. Desktop sidebar shows it;
+   * the mobile drawer hides it since collapsing doesn't apply there.
+   */
+  showToggle?: boolean;
   /** Nav content: the app's `<SidebarGroup>` / `<NavItem>` tree. */
   children: ReactNode;
   /** Rendered pinned to the bottom, above the collapse toggle (e.g. a `<UserMenu>`). */
@@ -63,6 +68,7 @@ export function SidebarNav({
   showLogo = true,
   collapsed = false,
   onToggle,
+  showToggle = true,
   children,
   footer,
 }: SidebarNavProps) {
@@ -94,19 +100,21 @@ export function SidebarNav({
 
       <div className="shrink-0 border-t">
         {footer}
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-pressed={collapsed}
-          aria-label="Toggle sidebar"
-          className="text-muted-foreground hover:bg-muted focus-visible:bg-muted flex h-11 w-full items-center justify-center border-t transition-colors focus-visible:outline-none"
-        >
-          {collapsed ? (
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          )}
-        </button>
+        {showToggle && (
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-pressed={collapsed}
+            aria-label="Toggle sidebar"
+            className="text-muted-foreground hover:bg-muted focus-visible:bg-muted flex h-11 w-full items-center justify-center border-t transition-colors focus-visible:outline-none"
+          >
+            {collapsed ? (
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
