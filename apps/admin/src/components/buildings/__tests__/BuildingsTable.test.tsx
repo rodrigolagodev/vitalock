@@ -69,11 +69,15 @@ describe('BuildingsTable', () => {
     vi.clearAllMocks();
   });
 
+  it('renders one card per building instead of a table', () => {
+    render(<BuildingsTable buildings={sampleBuildings} />, { wrapper: makeWrapper() });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+
   it('renders each building name as an anchor link to /buildings/:id', () => {
-    render(
-      <BuildingsTable buildings={sampleBuildings} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<BuildingsTable buildings={sampleBuildings} />, { wrapper: makeWrapper() });
 
     const link1 = screen.getByRole('link', { name: 'Torre Norte' });
     expect(link1).toBeInTheDocument();
@@ -85,10 +89,7 @@ describe('BuildingsTable', () => {
   });
 
   it('renders building names as links (not plain text)', () => {
-    render(
-      <BuildingsTable buildings={sampleBuildings} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<BuildingsTable buildings={sampleBuildings} />, { wrapper: makeWrapper() });
 
     // Ensure the name is wrapped in an <a>, not a bare text node
     const link = screen.getByRole('link', { name: 'Torre Norte' });
@@ -96,21 +97,18 @@ describe('BuildingsTable', () => {
   });
 
   it('renders empty state when buildings list is empty', () => {
-    render(
-      <BuildingsTable buildings={[]} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<BuildingsTable buildings={[]} />, { wrapper: makeWrapper() });
 
     expect(screen.getByText(/no hay edificios registrados/i)).toBeInTheDocument();
   });
 
   it('renders skeleton rows when isFetching is true', () => {
-    const { container } = render(
-      <BuildingsTable buildings={[]} isFetching={true} />,
-      { wrapper: makeWrapper() },
-    );
+    const { container } = render(<BuildingsTable buildings={[]} isFetching={true} />, {
+      wrapper: makeWrapper(),
+    });
 
-    // Should show skeleton rows (animate-pulse elements), not links
+    // Should show skeleton cards (animate-pulse elements), not links or a table
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });

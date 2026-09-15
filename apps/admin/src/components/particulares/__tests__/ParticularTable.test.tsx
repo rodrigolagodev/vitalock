@@ -36,11 +36,7 @@ function makeWrapper() {
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
-    return React.createElement(
-      QueryClientProvider,
-      { client: queryClient },
-      children,
-    );
+    return React.createElement(QueryClientProvider, { client: queryClient }, children);
   };
 }
 
@@ -48,6 +44,13 @@ describe('ParticularTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDeactivateParticular.mockResolvedValue({ id: 'p-1', status: 'inactive' });
+  });
+
+  it('renders one card per particular instead of a table', () => {
+    render(<ParticularTable rows={[garcia]} isFetching={false} />, { wrapper: makeWrapper() });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(1);
   });
 
   it('renders rows with the unit display and missing-field dashes', () => {
@@ -60,10 +63,9 @@ describe('ParticularTable', () => {
       email: null,
     };
 
-    render(
-      <ParticularTable rows={[garcia, withoutUnit]} isFetching={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<ParticularTable rows={[garcia, withoutUnit]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText('García Juan')).toBeInTheDocument();
     expect(screen.getByText('30111222')).toBeInTheDocument();
@@ -76,10 +78,12 @@ describe('ParticularTable', () => {
   });
 
   it('renders the loading skeleton while fetching', () => {
-    render(<ParticularTable rows={[]} isFetching />, { wrapper: makeWrapper() });
+    const { container } = render(<ParticularTable rows={[]} isFetching />, {
+      wrapper: makeWrapper(),
+    });
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByText('Nombre')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('shows the empty state when there are no rows and no filters', () => {
@@ -87,9 +91,7 @@ describe('ParticularTable', () => {
       wrapper: makeWrapper(),
     });
 
-    expect(
-      screen.getByText('No hay particulares registrados.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('No hay particulares registrados.')).toBeInTheDocument();
   });
 
   it('shows the filtered empty state when filters are applied', () => {
@@ -108,13 +110,9 @@ describe('ParticularTable', () => {
       wrapper: makeWrapper(),
     });
 
-    await user.click(
-      screen.getByRole('button', { name: /dar de baja a garcía juan/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /dar de baja a garcía juan/i }));
 
-    expect(
-      await screen.findByText('¿Dar de baja a García Juan?'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('¿Dar de baja a García Juan?')).toBeInTheDocument();
     expect(
       screen.getByText(
         'El registro se conserva pero deja de aparecer y no puede vincularse a nuevas órdenes.',
@@ -134,14 +132,10 @@ describe('ParticularTable', () => {
       wrapper: makeWrapper(),
     });
 
-    await user.click(
-      screen.getByRole('button', { name: /dar de baja a garcía juan/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /dar de baja a garcía juan/i }));
     await user.click(screen.getByRole('button', { name: /cancelar/i }));
 
-    expect(
-      screen.queryByText('¿Dar de baja a García Juan?'),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('¿Dar de baja a García Juan?')).not.toBeInTheDocument();
     expect(mockDeactivateParticular).not.toHaveBeenCalled();
   });
 
@@ -149,15 +143,12 @@ describe('ParticularTable', () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
 
-    const { rerender } = render(
-      <ParticularTable rows={[garcia]} isFetching={false} />,
-      { wrapper: makeWrapper() },
-    );
+    const { rerender } = render(<ParticularTable rows={[garcia]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
     expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument();
 
-    rerender(
-      <ParticularTable rows={[garcia]} isFetching={false} onEdit={onEdit} />,
-    );
+    rerender(<ParticularTable rows={[garcia]} isFetching={false} onEdit={onEdit} />);
     await user.click(screen.getByRole('button', { name: /editar/i }));
     expect(onEdit).toHaveBeenCalledWith(garcia);
   });
