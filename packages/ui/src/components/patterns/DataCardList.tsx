@@ -18,6 +18,14 @@ import type { DataTableAction, DataTableColumn } from './DataTable';
  * horizontal scroll. `22rem` would not. `auto-fit` (not `auto-fill`)
  * collapses empty tracks so a short list fills the width instead of
  * leaving cards beside dead space.
+ *
+ * `compact`/`comfortable` tracks end in `1fr` on purpose: whatever number
+ * of columns fits at the minimum width, each one then grows to fill the
+ * row evenly (fluid, no dead gutter) — 2, 3, 4+ per row all fill the full
+ * row width. `full` is the one preset with no per-track upper bound of
+ * its own (a single column spans the whole container at any width), so
+ * `FULL_CARD_MAX_WIDTH` below caps just that case to avoid one giant
+ * full-bleed card.
  */
 export type CardListDensity = 'compact' | 'comfortable' | 'full';
 
@@ -28,6 +36,8 @@ const GRID_CLASS: Record<CardListDensity, string> = {
   comfortable: 'grid-cols-[repeat(auto-fit,minmax(22rem,1fr))]',
   full: 'grid-cols-1',
 };
+
+const FULL_CARD_MAX_WIDTH = 'max-w-xl';
 
 const SKELETON_CARDS = 3;
 
@@ -95,6 +105,12 @@ function splitActions<T>(
  * 4 (status/actions), 5 (row navigation), 6 (day grouping) and 7
  * (pagination/loading/empty parity with `DataTable`).
  *
+ * Slots: `title` (card header, stretched link), `status` (card header,
+ * right-aligned action area), `meta` (card content rows), `hidden` (never
+ * rendered), and `icon` (card header, top-left of the title — a decorative,
+ * `aria-hidden` glyph so the card's category/type is scannable before
+ * reading the title text; never inferred, must be set explicitly).
+ *
  * IMPORTANT — no nested interactive elements without `z-10`: the card
  * title renders a stretched link (`after:absolute after:inset-0`) that
  * overlays the entire card, and `CardFooter` already counters it with
@@ -137,6 +153,7 @@ export function DataCardList<T>({
   }));
   const titleColumn = slots.find((entry) => entry.slot === 'title')?.column;
   const statusColumn = slots.find((entry) => entry.slot === 'status')?.column;
+  const iconColumn = slots.find((entry) => entry.slot === 'icon')?.column;
   const metaColumns = slots.filter((entry) => entry.slot === 'meta').map((entry) => entry.column);
 
   const hasNav =
@@ -182,10 +199,16 @@ export function DataCardList<T>({
       <li key={rowKey(row)} role="listitem">
         <Card
           variant={hasNav ? 'interactive' : 'default'}
-          className="relative flex h-full flex-col"
+          className={cn(
+            'relative flex h-full w-full flex-col',
+            density === 'full' && FULL_CARD_MAX_WIDTH,
+          )}
         >
           <CardHeader>
-            <CardTitle>{renderTitle(row)}</CardTitle>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              {iconColumn && <span className="shrink-0">{iconColumn.cell(row)}</span>}
+              <CardTitle className="min-w-0 flex-1">{renderTitle(row)}</CardTitle>
+            </div>
             {statusColumn && <CardAction>{statusColumn.cell(row)}</CardAction>}
           </CardHeader>
           {metaColumns.length > 0 && (
@@ -290,7 +313,7 @@ export function DataCardList<T>({
       <ul role="list" className={gridClassName}>
         {Array.from({ length: SKELETON_CARDS }, (_, index) => (
           <li key={index} role="listitem" data-testid="card-skeleton">
-            <Card>
+            <Card className={cn('w-full', density === 'full' && FULL_CARD_MAX_WIDTH)}>
               <CardHeader>
                 <div className="bg-muted h-4 w-32 animate-pulse rounded" />
               </CardHeader>

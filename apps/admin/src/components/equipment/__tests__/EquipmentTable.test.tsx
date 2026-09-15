@@ -80,7 +80,10 @@ describe('EquipmentTable', () => {
 
   it('renders rows with status labels and missing-model dash', () => {
     render(
-      <EquipmentTable buildingId="b-1" equipment={[equipoActivo, equipoMantenimiento, equipoDadoDeBaja]} />,
+      <EquipmentTable
+        buildingId="b-1"
+        equipment={[equipoActivo, equipoMantenimiento, equipoDadoDeBaja]}
+      />,
       { wrapper: makeWrapper() },
     );
 
@@ -93,12 +96,12 @@ describe('EquipmentTable', () => {
   });
 
   it('renders the loading skeleton while fetching', () => {
-    render(<EquipmentTable buildingId="b-1" equipment={[]} isFetching />, {
+    const { container } = render(<EquipmentTable buildingId="b-1" equipment={[]} isFetching />, {
       wrapper: makeWrapper(),
     });
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByText('Modelo')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('shows the empty state when there is no equipment', () => {
@@ -120,13 +123,9 @@ describe('EquipmentTable', () => {
 
   it('offers Reemplazar only for non-dead equipment and opens the dialog', async () => {
     const user = userEvent.setup();
-    render(
-      <EquipmentTable
-        buildingId="b-1"
-        equipment={[equipoActivo, equipoDadoDeBaja]}
-      />,
-      { wrapper: makeWrapper() },
-    );
+    render(<EquipmentTable buildingId="b-1" equipment={[equipoActivo, equipoDadoDeBaja]} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByRole('button', { name: 'Reemplazar Lector X1' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /reemplazar sn-0003/i })).not.toBeInTheDocument();
@@ -142,6 +141,15 @@ describe('EquipmentTable', () => {
     });
 
     expect(screen.getByText('1–10 de 12')).toBeInTheDocument();
-    expect(screen.getAllByRole('row')).toHaveLength(11); // 1 header + 10 body rows
+    expect(screen.getAllByRole('listitem')).toHaveLength(10);
+  });
+
+  it('renders one card per equipment instead of a table', () => {
+    render(<EquipmentTable buildingId="b-1" equipment={[equipoActivo, equipoMantenimiento]} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 });

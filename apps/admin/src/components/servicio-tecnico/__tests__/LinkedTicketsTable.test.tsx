@@ -51,14 +51,14 @@ beforeEach(() => {
 });
 
 describe('LinkedTicketsTable — row rendering', () => {
-  it('renders a row for each ticket', () => {
+  it('renders a card per ticket instead of a table', () => {
     const tickets = [
       makeTicket({ id: 'ticket-1', ticket_number: 'TKT-001' }),
       makeTicket({ id: 'ticket-2', ticket_number: 'TKT-002' }),
     ];
     render(<LinkedTicketsTable tickets={tickets} isLoading={false} />, { wrapper: makeWrapper() });
-    const rows = screen.getAllByRole('row');
-    expect(rows.length).toBeGreaterThanOrEqual(3);
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
   it('renders ticket_number in the table', () => {
@@ -90,6 +90,37 @@ describe('LinkedTicketsTable — row rendering', () => {
       { wrapper: makeWrapper() },
     );
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+  });
+});
+
+describe('LinkedTicketsTable — category label bugfix', () => {
+  it('never renders the raw category enum string, and renders its human label instead', () => {
+    render(
+      <LinkedTicketsTable
+        tickets={[makeTicket({ category: 'install_equipment' })]}
+        isLoading={false}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    // Pre-existing bug: this view used to render `t.category` raw and
+    // unlabeled (e.g. literally "install_equipment"), leaking the enum
+    // string to the UI. It must now go through `categoryLabel`.
+    expect(screen.queryByText('install_equipment')).not.toBeInTheDocument();
+    expect(screen.getByText('Instalación de equipo')).toBeInTheDocument();
+  });
+
+  it('renders a decorative category icon in the card', () => {
+    const { container } = render(
+      <LinkedTicketsTable
+        tickets={[makeTicket({ category: 'maintain_equipment' })]}
+        isLoading={false}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    const icon = container.querySelector('svg[aria-hidden="true"]');
+    expect(icon).toBeInTheDocument();
   });
 });
 

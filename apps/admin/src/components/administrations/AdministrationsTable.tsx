@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PencilLine } from 'lucide-react';
-import { DataTable, IconButton } from '@vitalock/ui';
+import { DataCardList, IconButton } from '@vitalock/ui';
 import { administrationStatus } from '@/lib/status/administrationStatus';
 import { AdministrationFormSheet } from './AdministrationFormSheet';
 import { AdministrationStatusToggle } from './AdministrationStatusToggle';
@@ -21,7 +21,7 @@ export function AdministrationsTable({
 
   return (
     <>
-      <DataTable<AdministrationRow>
+      <DataCardList<AdministrationRow>
         rows={administrations}
         isFetching={isFetching}
         columns={[
@@ -34,6 +34,7 @@ export function AdministrationsTable({
           {
             header: 'Estado',
             cell: (admin) => <administrationStatus.Badge status={admin.status} />,
+            card: 'status',
           },
         ]}
         rowKey={(admin) => admin.id}

@@ -96,9 +96,7 @@ export function StockMovementsTable({
           cell: (m) => (
             <span
               className={
-                m.quantity > 0
-                  ? 'font-medium text-success'
-                  : 'font-medium text-destructive'
+                m.quantity > 0 ? 'text-success font-medium' : 'text-destructive font-medium'
               }
             >
               {formatQuantity(m.quantity)}
@@ -109,21 +107,25 @@ export function StockMovementsTable({
           header: 'Costo unitario',
           className: 'text-muted-foreground',
           cell: (m) => formatCurrency(m.unit_cost),
+          hideBelow: 'lg',
         },
         {
           header: 'Personal',
           className: 'text-muted-foreground',
           cell: (m) => m.staff_name ?? '—',
+          hideBelow: 'md',
         },
         {
           header: 'Referencia',
           className: 'text-muted-foreground',
           cell: (m) => <ReferenceCell row={m} />,
+          hideBelow: 'lg',
         },
         {
           header: 'Notas',
           className: 'max-w-xs truncate text-muted-foreground',
           cell: (m) => m.note ?? '—',
+          hideBelow: 'xl',
         },
       ]}
     />
