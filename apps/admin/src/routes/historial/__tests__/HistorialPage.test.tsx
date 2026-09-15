@@ -114,18 +114,29 @@ describe('HistorialPage error state', () => {
 });
 
 describe('HistorialPage date-range filter', () => {
-  it('renders a "Desde" date input', () => {
+  // FilterBar.DateRange is a compact popover trigger now (see
+  // packages/ui's FilterBar.tsx) — the Desde/Hasta inputs only exist in
+  // the DOM once that trigger is opened, so every case here opens it
+  // first via its accessible name ("Fecha") before querying the inputs.
+  async function openDateRangePopover() {
+    await userEvent.click(screen.getByRole('button', { name: /fecha/i }));
+  }
+
+  it('renders a "Desde" date input once the Fecha trigger is opened', async () => {
     renderPage();
+    await openDateRangePopover();
     expect(screen.getByLabelText(/desde/i)).toBeInTheDocument();
   });
 
-  it('renders a "Hasta" date input', () => {
+  it('renders a "Hasta" date input once the Fecha trigger is opened', async () => {
     renderPage();
+    await openDateRangePopover();
     expect(screen.getByLabelText(/hasta/i)).toBeInTheDocument();
   });
 
   it('changing dateFrom passes it to useAllOrders', async () => {
     renderPage();
+    await openDateRangePopover();
     const desdeInput = screen.getByLabelText(/desde/i);
     await userEvent.type(desdeInput, '2026-08-01');
     const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
@@ -134,6 +145,7 @@ describe('HistorialPage date-range filter', () => {
 
   it('changing dateTo passes it to useAllOrders', async () => {
     renderPage();
+    await openDateRangePopover();
     const hastaInput = screen.getByLabelText(/hasta/i);
     await userEvent.type(hastaInput, '2026-08-31');
     const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
@@ -143,6 +155,7 @@ describe('HistorialPage date-range filter', () => {
   it('hasFilters becomes true when dateFrom is set', async () => {
     // When hasFilters=true the "filtered empty" message appears
     renderPage();
+    await openDateRangePopover();
     const desdeInput = screen.getByLabelText(/desde/i);
     // Simulate the user typing a date value
     await userEvent.type(desdeInput, '2026-08-01');
