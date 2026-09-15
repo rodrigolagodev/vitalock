@@ -1,5 +1,13 @@
 import { PlusCircle } from 'lucide-react';
-import { Badge, Select, SelectContent, SelectItem, SelectTrigger, Separator } from '@vitalock/ui';
+import {
+  Badge,
+  cn,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Separator,
+} from '@vitalock/ui';
 
 /**
  * Radix Select disallows empty string as a value, so we use a sentinel token
@@ -30,6 +38,23 @@ export interface CascadeFilterProps {
   disabled?: boolean;
 }
 
+/** Position of a trigger within the visually-joined cascade group. */
+type GroupPosition = 'only' | 'first' | 'middle' | 'last';
+
+/**
+ * Squares off the shared edge between adjacent triggers and overlaps their
+ * 1px borders (`-ml-px`) so the group reads as one connected control instead
+ * of the border doubling up — the standard grouped-button/segmented-control
+ * technique. `focus:z-10` lifts the focused trigger's own ring above its
+ * neighbors, since the overlap would otherwise clip half of it.
+ */
+const GROUP_POSITION_CLASS: Record<GroupPosition, string> = {
+  only: '',
+  first: 'rounded-r-none',
+  middle: '-ml-px rounded-none',
+  last: '-ml-px rounded-l-none',
+};
+
 /**
  * Compact dashed-border trigger, same visual family as
  * `FilterBar.Select`/`FilterBar.MultiSelect` (packages/ui) — a leading icon,
@@ -43,6 +68,12 @@ export interface CascadeFilterProps {
  * line below the trigger) so a disabled level doesn't reintroduce the
  * stacked-label height mismatch `FilterBar.DateRange` had before its own
  * popover-trigger fix.
+ *
+ * `groupPosition` visually joins administration/building/equipment into one
+ * connected control (shared borders, no gap) instead of 3 independent-
+ * looking dashed chips like Estado/Tipo — these levels are hierarchically
+ * coupled (picking one filters the next), unlike a page's other, genuinely
+ * independent filters, and the visual should say so.
  */
 function CascadeSelectTrigger({
   id,
@@ -50,12 +81,14 @@ function CascadeSelectTrigger({
   value,
   selectedLabel,
   hint,
+  groupPosition,
 }: {
   id: string;
   label: string;
   value: string;
   selectedLabel: string | undefined;
   hint?: string;
+  groupPosition: GroupPosition;
 }) {
   const hintId = hint ? `${id}-hint` : undefined;
   return (
@@ -64,7 +97,10 @@ function CascadeSelectTrigger({
         id={id}
         aria-label={label}
         aria-describedby={hintId}
-        className="w-auto justify-start gap-2 border-dashed px-3 text-sm font-medium"
+        className={cn(
+          'relative w-auto justify-start gap-2 border-dashed px-3 text-sm font-medium focus:z-10',
+          GROUP_POSITION_CLASS[groupPosition],
+        )}
       >
         <PlusCircle className="h-4 w-4 shrink-0" />
         {label}
@@ -98,6 +134,20 @@ export function CascadeFilter({
   const showAdmin = levels.includes('administration');
   const showBuilding = levels.includes('building');
   const showEquipment = levels.includes('equipment');
+
+  // Position within the visually-joined group, computed from which levels
+  // are actually rendered (`levels` can be just one, e.g. a page that only
+  // ever filters by administration) rather than assuming all three.
+  const shownCount = [showAdmin, showBuilding, showEquipment].filter(Boolean).length;
+  const positionFor = (index: number): GroupPosition => {
+    if (shownCount === 1) return 'only';
+    if (index === 0) return 'first';
+    if (index === shownCount - 1) return 'last';
+    return 'middle';
+  };
+  const adminPosition = positionFor(0);
+  const buildingPosition = positionFor(showAdmin ? 1 : 0);
+  const equipmentPosition = positionFor((showAdmin ? 1 : 0) + (showBuilding ? 1 : 0));
 
   const filteredBuildings = value.administrationId
     ? buildings.filter((b) => b.parentId === value.administrationId)
@@ -142,7 +192,7 @@ export function CascadeFilter({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center">
       {showAdmin && (
         <Select
           value={value.administrationId ?? ALL_VALUE}
@@ -154,6 +204,7 @@ export function CascadeFilter({
             label="Administración"
             value={value.administrationId ?? ALL_VALUE}
             selectedLabel={administrations.find((a) => a.id === value.administrationId)?.label}
+            groupPosition={adminPosition}
           />
           <SelectContent>
             <SelectItem value={ALL_VALUE}>Todas</SelectItem>
@@ -182,6 +233,7 @@ export function CascadeFilter({
                 ? 'Seleccioná una administración primero'
                 : undefined
             }
+            groupPosition={buildingPosition}
           />
           <SelectContent>
             <SelectItem value={ALL_VALUE}>Todos</SelectItem>
@@ -205,6 +257,7 @@ export function CascadeFilter({
             label="Equipo"
             value={value.equipmentId ?? ALL_VALUE}
             selectedLabel={filteredEquipment.find((e) => e.id === value.equipmentId)?.label}
+            groupPosition={equipmentPosition}
           />
           <SelectContent>
             <SelectItem value={ALL_VALUE}>Todos</SelectItem>
