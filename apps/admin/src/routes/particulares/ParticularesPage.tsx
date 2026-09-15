@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Button, ErrorState, SearchInput } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useParticulares } from '@/hooks/useParticulares';
-import { useDebounce } from '@/hooks/useDebounce';
 import { ParticularTable } from '@/components/particulares/ParticularTable';
 import { ParticularFormSheet } from '@/components/particulares/ParticularFormSheet';
 import type { ParticularRow } from '@/hooks/useParticulares';
@@ -12,15 +11,9 @@ export default function ParticularesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<ParticularRow | null>(null);
 
-  const debouncedSearch = useDebounce(search, 300);
+  const hasFilters = search.trim() !== '';
 
-  const hasFilters = debouncedSearch.trim() !== '';
-
-  const {
-    data: particulares = [],
-    isFetching,
-    isError,
-  } = useParticulares({ search: debouncedSearch });
+  const { data: particulares = [], isFetching, isError } = useParticulares({ search });
 
   if (isError) {
     return <ErrorState message="Error al cargar los particulares. Recargá la página." />;
@@ -35,14 +28,16 @@ export default function ParticularesPage() {
         <Button onClick={() => setCreateOpen(true)}>Nuevo particular</Button>
       </PageHeader>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
+      <FilterBar>
+        <FilterBar.Search
           placeholder="Buscar por nombre o DNI..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           className="max-w-sm"
         />
-      </div>
+
+        <FilterBar.Summary />
+      </FilterBar>
 
       <ParticularTable
         rows={particulares}

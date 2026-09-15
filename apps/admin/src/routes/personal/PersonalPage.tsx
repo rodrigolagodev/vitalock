@@ -1,35 +1,33 @@
 import { useState } from 'react';
-import { Button, ErrorState, SearchInput } from '@vitalock/ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { usePersonal } from '@/hooks/usePersonal';
-import { useDebounce } from '@/hooks/useDebounce';
 import { StaffTable } from '@/components/personal/StaffTable';
 import { StaffFormSheet } from '@/components/personal/StaffFormSheet';
 import type { StaffRow } from '@/hooks/usePersonal';
 import type { StaffRole } from '@/hooks/useMutateStaff';
 
-const ALL = 'all';
-
-type RoleFilter = StaffRole | typeof ALL;
+const ROLE_OPTIONS: { value: string; label: string }[] = [
+  { value: '', label: 'Todos' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'installer', label: 'Instalador' },
+];
 
 export default function PersonalPage() {
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState<RoleFilter>(ALL);
+  const [role, setRole] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<StaffRow | null>(null);
 
-  const debouncedSearch = useDebounce(search, 300);
-
-  const hasFilters = debouncedSearch.trim() !== '' || role !== ALL;
+  const hasFilters = search.trim() !== '' || role !== '';
 
   const {
     data: staff = [],
     isFetching,
     isError,
   } = usePersonal({
-    search: debouncedSearch,
-    role: role === ALL ? undefined : role,
+    search,
+    role: role === '' ? undefined : (role as StaffRole),
   });
 
   if (isError) {
@@ -42,25 +40,24 @@ export default function PersonalPage() {
         <Button onClick={() => setCreateOpen(true)}>Nuevo integrante</Button>
       </PageHeader>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
+      <FilterBar>
+        <FilterBar.Search
           placeholder="Buscar por nombre, email o id..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           className="max-w-sm"
         />
 
-        <Select value={role} onValueChange={(v) => setRole(v as RoleFilter)}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Todos los roles" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>Todos</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="installer">Instalador</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <FilterBar.Select
+          facet="role"
+          label="Rol"
+          options={ROLE_OPTIONS}
+          value={role}
+          onChange={setRole}
+        />
+
+        <FilterBar.Summary />
+      </FilterBar>
 
       <StaffTable
         rows={staff}
