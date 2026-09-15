@@ -19,9 +19,11 @@ export type DataTableBreakpoint = 'sm' | 'md' | 'lg' | 'xl';
  * Card-rendering slot for a column when consumed by `DataCardList` instead
  * of `DataTable`. Purely additive metadata — `DataTable` ignores it.
  * When absent, `DataCardList` infers: index 0 → `title`, everything else →
- * `meta` (declaration order preserved).
+ * `meta` (declaration order preserved). `icon` is never inferred — it must
+ * be set explicitly — and renders to the left of the title in the card
+ * header, decorative (`aria-hidden`).
  */
-export type CardSlot = 'title' | 'status' | 'meta' | 'hidden';
+export type CardSlot = 'title' | 'status' | 'meta' | 'hidden' | 'icon';
 
 export interface DataTableColumn<T> {
   header: string;

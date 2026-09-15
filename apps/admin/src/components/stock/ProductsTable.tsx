@@ -18,14 +18,14 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
         { header: 'Nombre', cell: (product) => product.name },
         {
           header: 'Categoría',
-          cell: (product) => (
-            <Badge variant="secondary">{CATEGORY_LABELS[product.category]}</Badge>
-          ),
+          cell: (product) => <Badge variant="secondary">{CATEGORY_LABELS[product.category]}</Badge>,
+          hideBelow: 'lg',
         },
         {
           header: 'Precio de costo',
           cell: (product) => formatCurrency(product.cost_price),
           className: 'text-muted-foreground',
+          hideBelow: 'lg',
         },
         { header: 'Stock total', cell: (product) => product.stock_total },
         {
@@ -38,9 +38,7 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
           cell: (product) => (
             <span
               className={
-                product.stock_disponible < 0
-                  ? 'font-medium text-destructive'
-                  : 'font-medium'
+                product.stock_disponible < 0 ? 'text-destructive font-medium' : 'font-medium'
               }
             >
               {product.stock_disponible}
@@ -51,6 +49,7 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
           header: 'Actualizado',
           cell: (product) => formatDateTime(product.updated_at),
           className: 'text-muted-foreground',
+          hideBelow: 'xl',
         },
       ]}
       rowKey={(product) => product.id}

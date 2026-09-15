@@ -1,4 +1,4 @@
-import { DataTable } from '@vitalock/ui';
+import { DataCardList } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { technicalOrderStatus } from '@/lib/status/technicalOrderStatus';
 import type { TechnicalOrderListRow } from '@/hooks/useTechnicalOrders';
@@ -16,13 +16,20 @@ function clientLabel(row: TechnicalOrderListRow): string {
   return row.particular_full_name ?? '—';
 }
 
+/**
+ * Card list of open technical-service orders — a worklist
+ * (`TechnicalOrdersPage` filters by `STATUS_PILLS`, not a date range), not a
+ * chronological history feed. No `groupBy` here on purpose, matching admin
+ * `LlavesTable`'s identical flat-worklist treatment (structurally the same
+ * shape: order_number title, client meta, status badge).
+ */
 export function ServicioTecnicoTable({
   rows,
   isFetching,
   hasFilters = false,
 }: ServicioTecnicoTableProps) {
   return (
-    <DataTable<TechnicalOrderListRow>
+    <DataCardList<TechnicalOrderListRow>
       rows={rows}
       isFetching={isFetching}
       columns={[
@@ -42,6 +49,7 @@ export function ServicioTecnicoTable({
         {
           header: 'Estado',
           cell: (row) => <technicalOrderStatus.Badge status={row.status} />,
+          card: 'status',
         },
         {
           header: 'Fecha',
