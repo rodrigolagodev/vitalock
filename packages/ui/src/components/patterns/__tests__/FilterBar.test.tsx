@@ -413,6 +413,39 @@ describe('FilterBar.Cascade', () => {
       equipmentId: '',
     });
   });
+
+  // Regression test for a real bug: Cascade used to register 3 independent
+  // facets (one per level), each with its own onClear. When all 3 clear in
+  // the same "Limpiar todo" batch, the building/equipment levels'
+  // onClear read a stale valueRef.current snapshot (React hadn't re-
+  // rendered mid-batch) and re-sent the OLD administrationId right after
+  // administration's own clear had just removed it — resurrecting a param
+  // the user just cleared. Asserting onChange fires exactly once locks in
+  // the single-facet fix; 3 calls would mean the bug is back.
+  it('calls onChange exactly once when "Limpiar todo" clears a cascade with multiple levels set', () => {
+    const onChange = vi.fn();
+    render(
+      <FilterBar>
+        <FilterBar.Cascade
+          value={{ administrationId: 'a1', buildingId: 'b1', equipmentId: 'e1' }}
+          onChange={onChange}
+          labels={{ administration: 'Administración', building: 'Edificio', equipment: 'Equipo' }}
+        >
+          <div>Cascade stub</div>
+        </FilterBar.Cascade>
+        <FilterBar.Summary />
+      </FilterBar>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar todo' }));
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith({
+      administrationId: '',
+      buildingId: '',
+      equipmentId: '',
+    });
+  });
 });
 
 describe('FilterBar.DateRange', () => {
