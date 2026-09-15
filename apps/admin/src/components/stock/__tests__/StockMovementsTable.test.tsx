@@ -90,10 +90,9 @@ describe('StockMovementsTable', () => {
   });
 
   it('renders movement rows with labels, quantities, cost, staff and reference', () => {
-    render(
-      <StockMovementsTable rows={[entrada, egresoKey]} isFetching={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<StockMovementsTable rows={[entrada, egresoKey]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText('Compra')).toBeInTheDocument();
     expect(screen.getByText('Egreso por instalación')).toBeInTheDocument();
@@ -119,10 +118,7 @@ describe('StockMovementsTable', () => {
       wrapper: makeWrapper(),
     });
 
-    expect(screen.getByText('Orden abcdef12…')).toHaveAttribute(
-      'href',
-      '/llaves/abcdef1234567890',
-    );
+    expect(screen.getByText('Orden abcdef12…')).toHaveAttribute('href', '/llaves/abcdef1234567890');
   });
 
   it('links the reference to the technical order detail', () => {
@@ -164,20 +160,41 @@ describe('StockMovementsTable', () => {
       wrapper: makeWrapper(),
     });
 
-    expect(
-      screen.getByText('No hay movimientos de stock para este producto.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('No hay movimientos de stock para este producto.')).toBeInTheDocument();
   });
 
   it('shows the filtered empty state when filters are applied', () => {
-    render(
-      <StockMovementsTable rows={[]} isFetching={false} hasFilters />,
-      { wrapper: makeWrapper() },
-    );
+    render(<StockMovementsTable rows={[]} isFetching={false} hasFilters />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(
       screen.getByText('No se encontraron movimientos con los filtros aplicados.'),
     ).toBeInTheDocument();
+  });
+
+  it('hides Costo unitario/Referencia below lg, Personal below md, Notas below xl, keeps Fecha/Tipo/Cantidad always visible', () => {
+    render(<StockMovementsTable rows={[entrada]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByRole('columnheader', { name: 'Costo unitario' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Personal' }).className).toContain(
+      'md:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Referencia' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Notas' }).className).toContain(
+      'xl:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Fecha' }).className).not.toContain('hidden');
+    expect(screen.getByRole('columnheader', { name: 'Tipo' }).className).not.toContain('hidden');
+    expect(screen.getByRole('columnheader', { name: 'Cantidad' }).className).not.toContain(
+      'hidden',
+    );
   });
 
   it('renders the pagination footer and only the first 10 rows', () => {

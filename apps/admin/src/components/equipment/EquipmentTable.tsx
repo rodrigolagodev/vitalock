@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilLine, RefreshCw } from 'lucide-react';
-import { DataTable, type DataTableAction } from '@vitalock/ui';
+import { DataCardList, type DataTableAction } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import { equipmentStatus } from '@/lib/status/equipmentStatus';
@@ -35,7 +35,7 @@ export function EquipmentTable({ buildingId, equipment, isFetching = false }: Eq
 
   return (
     <>
-      <DataTable<EquipmentRow>
+      <DataCardList<EquipmentRow>
         rows={equipment}
         isFetching={isFetching}
         rowKey={(i) => i.id}
@@ -52,6 +52,7 @@ export function EquipmentTable({ buildingId, equipment, isFetching = false }: Eq
           {
             header: 'Estado',
             cell: (i) => <equipmentStatus.Badge status={i.status} />,
+            card: 'status',
           },
           {
             header: 'Instalado',

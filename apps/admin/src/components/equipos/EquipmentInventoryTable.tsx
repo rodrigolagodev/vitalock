@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { DataTable } from '@vitalock/ui';
+import { DataCardList } from '@vitalock/ui';
 import type { EquipmentInventoryRow } from '@/hooks/useEquipmentInventory';
 import { equipmentStatus } from '@/lib/status/equipmentStatus';
 
@@ -8,6 +8,13 @@ interface EquipmentInventoryTableProps {
   isFetching?: boolean;
 }
 
+/**
+ * Card list of the cross-building equipment inventory — click-through only,
+ * no row actions today. Flagged in the design as "hybrid, card-default":
+ * this browse view could grow to hundreds of rows across every building, so
+ * an optional table/compact-view toggle for large datasets is a documented
+ * future follow-up, not part of this conversion.
+ */
 export function EquipmentInventoryTable({
   rows,
   isFetching = false,
@@ -15,7 +22,7 @@ export function EquipmentInventoryTable({
   const navigate = useNavigate();
 
   return (
-    <DataTable<EquipmentInventoryRow>
+    <DataCardList<EquipmentInventoryRow>
       rows={rows}
       isFetching={isFetching}
       rowKey={(r) => r.id ?? ''}
@@ -36,6 +43,7 @@ export function EquipmentInventoryTable({
         {
           header: 'Estado',
           cell: (r) => <equipmentStatus.Badge status={r.status} />,
+          card: 'status',
         },
         {
           header: 'Edificio',

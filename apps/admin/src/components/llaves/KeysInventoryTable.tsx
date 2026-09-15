@@ -41,10 +41,12 @@ export function KeysInventoryTable({
         {
           header: 'Edificio',
           cell: (r) => r.building_name ?? '—',
+          hideBelow: 'md',
         },
         {
           header: 'Administración',
           cell: (r) => r.administration_company_name ?? '—',
+          hideBelow: 'lg',
         },
         {
           header: 'Estado físico',
@@ -53,11 +55,13 @@ export function KeysInventoryTable({
         {
           header: 'Equipo asignado',
           cell: (r) => r.equipment_serial_number ?? '—',
+          hideBelow: 'lg',
         },
         {
           header: 'Orden activa',
           cell: (r) =>
             r.active_order_id ? keyOrderStatus.label(r.active_order_status) : 'Sin orden',
+          hideBelow: 'xl',
         },
       ]}
     />

@@ -1,7 +1,7 @@
 import { PencilLine } from 'lucide-react';
-import { DataTable, type DataTableAction } from '@vitalock/ui';
+import { DataCardList, type DataTableAction } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { tareaStatus } from '@/lib/status/tareaStatus';
+import { categoryIcon, categoryLabel, tareaStatus } from '@/lib/status/tareaStatus';
 import type { TareaRow } from '@/hooks/useTareas';
 
 interface TareasTableProps {
@@ -11,13 +11,15 @@ interface TareasTableProps {
   onEdit?: (tarea: TareaRow) => void;
 }
 
-const CATEGORY_LABELS: Record<TareaRow['category'], string> = {
-  install_equipment: 'Instalación de equipo',
-  replace_equipment: 'Cambio de equipo',
-  update_equipment: 'Actualización de equipo',
-  maintain_equipment: 'Mantenimiento',
-};
-
+/**
+ * Card list of admin's open/in-progress tasks. Unlike the installer pilot,
+ * the ticket number is already a clean identifier — it stays the card
+ * title. A decorative `card: 'icon'` column (via `categoryIcon`) renders
+ * next to the title so the task type is scannable before reading any text;
+ * the "Categoría" field stays visible as card meta (not `card: 'hidden'`)
+ * so the type has a real accessible text label too, not just the
+ * `aria-hidden` icon (WCAG 1.4.1 — never color/icon-only).
+ */
 export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTableProps) {
   const actions: DataTableAction<TareaRow>[] | undefined = onEdit
     ? [
@@ -30,11 +32,19 @@ export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTabl
     : undefined;
 
   return (
-    <DataTable<TareaRow>
+    <DataCardList<TareaRow>
       rows={rows}
       isFetching={isFetching}
       columns={[
         { header: 'Ticket', cell: (tarea) => tarea.ticket_number },
+        {
+          header: 'Tipo',
+          cell: (tarea) => {
+            const Icon = categoryIcon(tarea.category);
+            return <Icon aria-hidden="true" className="text-muted-foreground h-5 w-5" />;
+          },
+          card: 'icon',
+        },
         {
           header: 'Descripción',
           cell: (tarea) => (
@@ -64,13 +74,14 @@ export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTabl
         },
         {
           header: 'Categoría',
-          cell: (tarea) => CATEGORY_LABELS[tarea.category],
+          cell: (tarea) => categoryLabel(tarea.category),
           className: 'text-muted-foreground',
           hideBelow: 'sm',
         },
         {
           header: 'Estado',
           cell: (tarea) => <tareaStatus.Badge status={tarea.status} />,
+          card: 'status',
         },
         {
           header: 'Abierta',
