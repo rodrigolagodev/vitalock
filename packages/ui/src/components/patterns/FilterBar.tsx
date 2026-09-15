@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronDown, PlusCircle, X } from 'lucide-react';
+import { CalendarRange, ChevronDown, PlusCircle, X } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
 import { Badge } from '../badge';
@@ -538,10 +538,12 @@ function FilterBarDateRange({
   const onChangeRef = React.useRef(onChange);
   onChangeRef.current = onChange;
 
+  const active = value.from !== '' || value.to !== '';
+
   useRegisterFacet({
     id: facet,
     label,
-    active: value.from !== '' || value.to !== '',
+    active,
     chipLabel: `${label}: ${value.from || '…'} – ${value.to || '…'}`,
     onClear: () => onChangeRef.current({ from: '', to: '' }),
   });
@@ -549,42 +551,74 @@ function FilterBarDateRange({
   const fromId = `${facet}-from`;
   const toId = `${facet}-to`;
 
-  // Labels sit inline (never stacked above the input) so this control's
-  // total height stays h-11 like every sibling in the row — a stacked
-  // label+input column here was the exact bug reported: DateRange was
-  // the only control with a visible label, making its own flex item
-  // taller than the rest and throwing off `items-center` alignment
-  // across the whole bar.
+  // A two-labeled-native-date-input row measured ~450-500px wide in
+  // practice (two "dd/mm/yyyy" inputs plus "Desde"/"Hasta" text) - by far
+  // the widest control in the bar, so it was almost always the item that
+  // got pushed onto its own line once a couple of other filters were
+  // active, reading as "misaligned" even though its own box was correctly
+  // h-11-aligned. Collapsing it into the same dashed-border popover-
+  // trigger button family as `MultiSelect` gives it the same compact,
+  // near-fixed footprint as every other filter chip, which is what
+  // actually keeps the row from wrapping the trailing Summary button onto
+  // an orphan line. The two labeled inputs still exist - inside the
+  // popover, where a taller stacked layout has no alignment cost.
   return (
-    <div className={cn('flex h-11 items-center gap-2', className)}>
-      <div className="flex items-center gap-1.5">
-        <Label htmlFor={fromId} className="text-muted-foreground whitespace-nowrap text-sm">
-          {fromLabel}
-        </Label>
-        <Input
-          id={fromId}
-          type="date"
-          value={value.from}
-          onChange={(event) => onChange({ ...value, from: event.target.value })}
-          className="h-11 w-auto"
-        />
-      </div>
-      <span className="text-muted-foreground" aria-hidden="true">
-        –
-      </span>
-      <div className="flex items-center gap-1.5">
-        <Label htmlFor={toId} className="text-muted-foreground whitespace-nowrap text-sm">
-          {toLabel}
-        </Label>
-        <Input
-          id={toId}
-          type="date"
-          value={value.to}
-          onChange={(event) => onChange({ ...value, to: event.target.value })}
-          className="h-11 w-auto"
-        />
-      </div>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn('border-dashed', className)}
+        >
+          <CalendarRange className="h-4 w-4" />
+          {label}
+          {active && (
+            <>
+              <Separator orientation="vertical" className="mx-2 h-4" />
+              <Badge variant="secondary" className="rounded-sm px-1.5 font-normal">
+                {value.from || '…'} – {value.to || '…'}
+              </Badge>
+            </>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-3">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor={fromId} className="text-muted-foreground text-sm">
+              {fromLabel}
+            </Label>
+            <Input
+              id={fromId}
+              type="date"
+              value={value.from}
+              onChange={(event) => onChange({ ...value, from: event.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor={toId} className="text-muted-foreground text-sm">
+              {toLabel}
+            </Label>
+            <Input
+              id={toId}
+              type="date"
+              value={value.to}
+              onChange={(event) => onChange({ ...value, to: event.target.value })}
+            />
+          </div>
+          {active && (
+            <button
+              type="button"
+              onClick={() => onChangeRef.current({ from: '', to: '' })}
+              className="text-muted-foreground hover:bg-accent w-full rounded-md px-2 py-1.5 text-center text-sm"
+            >
+              Limpiar filtro
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
