@@ -8,7 +8,7 @@ import { Checkbox } from '../checkbox';
 import { Input } from '../input';
 import { Label } from '../label';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '../select';
 import { Separator } from '../separator';
 import { SearchInput, type SearchInputProps } from './SearchInput';
 
@@ -230,11 +230,12 @@ function FilterBarSelect({
   onChangeRef.current = onChange;
 
   const selectedOption = options.find((option) => option.value === value);
+  const active = value !== allValue;
 
   useRegisterFacet({
     id: facet,
     label,
-    active: value !== allValue,
+    active,
     chipLabel: `${label}: ${selectedOption?.label ?? value}`,
     onClear: () => onChangeRef.current(allValue),
   });
@@ -262,10 +263,34 @@ function FilterBarSelect({
     );
   }
 
+  // Same dashed-border/leading-icon/inline-badge language as MultiSelect
+  // (see below) instead of Radix's own wide, w-full SelectTrigger with an
+  // inline SelectValue — a page with several single-value Selects (the
+  // CascadeFilter levels, a category/role dropdown, etc.) was burning a
+  // lot of horizontal row space on filters that are structurally no
+  // different from a MultiSelect capped at one choice. SelectValue is
+  // dropped entirely; the selected option renders as our own Badge so
+  // both control types read as one visual family.
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger aria-label={label} className={cn('w-auto min-w-[10rem]', className)}>
-        <SelectValue placeholder={placeholder ?? label} />
+      <SelectTrigger
+        aria-label={label}
+        title={placeholder}
+        className={cn(
+          'border-input h-11 w-auto justify-start gap-2 border-dashed px-3 text-sm font-medium',
+          className,
+        )}
+      >
+        <PlusCircle className="h-4 w-4 shrink-0" />
+        {label}
+        {active && (
+          <>
+            <Separator orientation="vertical" className="mx-1 h-4" />
+            <Badge variant="secondary" className="rounded-sm px-1.5 font-normal">
+              {selectedOption?.label ?? value}
+            </Badge>
+          </>
+        )}
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (

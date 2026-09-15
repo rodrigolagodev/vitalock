@@ -103,6 +103,51 @@ describe('FilterBar.Select', () => {
     expect(container.querySelector('select')).toBeInTheDocument();
   });
 
+  // Radix's own SelectTrigger is w-full and shows the selection inline via
+  // SelectValue — wide enough that a page with several single-value
+  // Selects (CascadeFilter's levels, a role/category dropdown, etc.) burns
+  // a lot of row space on filters no different from a MultiSelect capped
+  // at one choice. This asserts variant="radix" uses the same compact,
+  // dashed-border, badge-in-trigger language as MultiSelect instead.
+  it('renders a compact dashed-border trigger with the selection as an inline badge (variant="radix")', () => {
+    render(
+      <FilterBar>
+        <FilterBar.Select
+          facet="status"
+          label="Estado"
+          options={[
+            { value: 'draft', label: 'Borrador' },
+            { value: 'confirmed', label: 'Confirmado' },
+          ]}
+          value="confirmed"
+          onChange={() => {}}
+        />
+      </FilterBar>,
+    );
+
+    const trigger = screen.getByRole('combobox', { name: 'Estado' });
+    expect(trigger).toHaveClass('border-dashed');
+    expect(within(trigger).getByText('Estado')).toBeInTheDocument();
+    expect(within(trigger).getByText('Confirmado')).toBeInTheDocument();
+  });
+
+  it('shows no selection badge when the value equals allValue', () => {
+    render(
+      <FilterBar>
+        <FilterBar.Select
+          facet="status"
+          label="Estado"
+          options={[{ value: 'draft', label: 'Borrador' }]}
+          value=""
+          onChange={() => {}}
+        />
+      </FilterBar>,
+    );
+
+    const trigger = screen.getByRole('combobox', { name: 'Estado' });
+    expect(within(trigger).queryByText('Borrador')).not.toBeInTheDocument();
+  });
+
   it('replaces the prior selection rather than accumulating it (variant="radix")', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
