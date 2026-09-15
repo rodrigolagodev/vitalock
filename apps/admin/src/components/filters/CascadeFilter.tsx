@@ -1,4 +1,5 @@
-import { Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { PlusCircle } from 'lucide-react';
+import { Badge, Select, SelectContent, SelectItem, SelectTrigger, Separator } from '@vitalock/ui';
 
 /**
  * Radix Select disallows empty string as a value, so we use a sentinel token
@@ -29,6 +30,62 @@ export interface CascadeFilterProps {
   disabled?: boolean;
 }
 
+/**
+ * Compact dashed-border trigger, same visual family as
+ * `FilterBar.Select`/`FilterBar.MultiSelect` (packages/ui) — a leading icon,
+ * the level's own label always visible, and the selected option rendered as
+ * an inline Badge once picked, instead of Radix's wide `SelectValue`. Not
+ * built on `FilterBar.Select` itself: that component self-registers a facet
+ * into `FilterBar`'s summary/chip registry, and `FilterBar.Cascade` (the
+ * wrapper this component is always rendered inside) already registers one
+ * facet per level — reusing `FilterBar.Select` here would double-register.
+ * `hint`, when given, is a screen-reader-only explanation (not a visible
+ * line below the trigger) so a disabled level doesn't reintroduce the
+ * stacked-label height mismatch `FilterBar.DateRange` had before its own
+ * popover-trigger fix.
+ */
+function CascadeSelectTrigger({
+  id,
+  label,
+  value,
+  selectedLabel,
+  hint,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  selectedLabel: string | undefined;
+  hint?: string;
+}) {
+  const hintId = hint ? `${id}-hint` : undefined;
+  return (
+    <>
+      <SelectTrigger
+        id={id}
+        aria-label={label}
+        aria-describedby={hintId}
+        className="w-auto justify-start gap-2 border-dashed px-3 text-sm font-medium"
+      >
+        <PlusCircle className="h-4 w-4 shrink-0" />
+        {label}
+        {value !== ALL_VALUE && selectedLabel && (
+          <>
+            <Separator orientation="vertical" className="mx-1 h-4" />
+            <Badge variant="secondary" className="rounded-sm px-1.5 font-normal">
+              {selectedLabel}
+            </Badge>
+          </>
+        )}
+      </SelectTrigger>
+      {hint && (
+        <span id={hintId} className="sr-only">
+          {hint}
+        </span>
+      )}
+    </>
+  );
+}
+
 export function CascadeFilter({
   value,
   onChange,
@@ -49,6 +106,9 @@ export function CascadeFilter({
   const filteredEquipment = value.buildingId
     ? equipment.filter((e) => e.parentId === value.buildingId)
     : equipment;
+
+  const buildingDisabled = disabled || !value.administrationId;
+  const equipmentDisabled = disabled || !value.buildingId;
 
   function handleAdminChange(adminId: string) {
     if (!adminId) {
@@ -82,101 +142,79 @@ export function CascadeFilter({
   }
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       {showAdmin && (
-        <div className="flex flex-col gap-1">
-          <Label
-            htmlFor="cascade-admin"
-            className="text-muted-foreground text-xs font-medium uppercase"
-          >
-            Administración
-          </Label>
-          <Select
+        <Select
+          value={value.administrationId ?? ALL_VALUE}
+          disabled={disabled}
+          onValueChange={(v) => handleAdminChange(v === ALL_VALUE ? '' : v)}
+        >
+          <CascadeSelectTrigger
+            id="cascade-admin"
+            label="Administración"
             value={value.administrationId ?? ALL_VALUE}
-            disabled={disabled}
-            onValueChange={(v) => handleAdminChange(v === ALL_VALUE ? '' : v)}
-          >
-            <SelectTrigger id="cascade-admin" aria-label="Administración" className="w-56">
-              <SelectValue placeholder="Todas" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>Todas</SelectItem>
-              {administrations.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            selectedLabel={administrations.find((a) => a.id === value.administrationId)?.label}
+          />
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>Todas</SelectItem>
+            {administrations.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {showBuilding && (
-        <div className="flex flex-col gap-1">
-          <Label
-            htmlFor="cascade-building"
-            className="text-muted-foreground text-xs font-medium uppercase"
-          >
-            Edificio
-          </Label>
-          <Select
+        <Select
+          value={value.buildingId ?? ALL_VALUE}
+          disabled={buildingDisabled}
+          onValueChange={(v) => handleBuildingChange(v === ALL_VALUE ? '' : v)}
+        >
+          <CascadeSelectTrigger
+            id="cascade-building"
+            label="Edificio"
             value={value.buildingId ?? ALL_VALUE}
-            disabled={disabled || !value.administrationId}
-            onValueChange={(v) => handleBuildingChange(v === ALL_VALUE ? '' : v)}
-          >
-            <SelectTrigger
-              id="cascade-building"
-              aria-label="Edificio"
-              aria-describedby={
-                !disabled && !value.administrationId ? 'cascade-building-hint' : undefined
-              }
-              className="w-56"
-            >
-              <SelectValue placeholder="Todos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>Todos</SelectItem>
-              {filteredBuildings.map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  {b.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {!disabled && !value.administrationId && (
-            <p id="cascade-building-hint" className="text-muted-foreground text-xs">
-              Seleccioná una administración primero
-            </p>
-          )}
-        </div>
+            selectedLabel={filteredBuildings.find((b) => b.id === value.buildingId)?.label}
+            hint={
+              !disabled && !value.administrationId
+                ? 'Seleccioná una administración primero'
+                : undefined
+            }
+          />
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>Todos</SelectItem>
+            {filteredBuildings.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {showEquipment && (
-        <div className="flex flex-col gap-1">
-          <Label
-            htmlFor="cascade-equipment"
-            className="text-muted-foreground text-xs font-medium uppercase"
-          >
-            Equipo
-          </Label>
-          <Select
+        <Select
+          value={value.equipmentId ?? ALL_VALUE}
+          disabled={equipmentDisabled}
+          onValueChange={(v) => handleEquipmentChange(v === ALL_VALUE ? '' : v)}
+        >
+          <CascadeSelectTrigger
+            id="cascade-equipment"
+            label="Equipo"
             value={value.equipmentId ?? ALL_VALUE}
-            disabled={disabled || !value.buildingId}
-            onValueChange={(v) => handleEquipmentChange(v === ALL_VALUE ? '' : v)}
-          >
-            <SelectTrigger id="cascade-equipment" aria-label="Equipo" className="w-56">
-              <SelectValue placeholder="Todos" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>Todos</SelectItem>
-              {filteredEquipment.map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {e.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            selectedLabel={filteredEquipment.find((e) => e.id === value.equipmentId)?.label}
+          />
+          <SelectContent>
+            <SelectItem value={ALL_VALUE}>Todos</SelectItem>
+            {filteredEquipment.map((e) => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
     </div>
   );

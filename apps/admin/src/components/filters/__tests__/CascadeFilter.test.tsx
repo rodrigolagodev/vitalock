@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
@@ -83,6 +83,32 @@ describe('CascadeFilter rendering', () => {
     expect(screen.getByRole('combobox', { name: /edificio/i })).not.toHaveAttribute(
       'aria-describedby',
     );
+  });
+});
+
+describe('CascadeFilter compact trigger style', () => {
+  // Each level used to be a stacked <Label> + full-width Select — the same
+  // "visible label eats vertical space its neighbors don't have" shape
+  // FilterBar.DateRange had before its own popover-trigger fix, and wide
+  // enough on its own to burn a lot of row space. Now matches
+  // FilterBar.Select/MultiSelect's dashed-border, badge-in-trigger language.
+  it('renders each level as a dashed-border trigger with no stacked label above it', () => {
+    renderFilter();
+    const adminTrigger = screen.getByRole('combobox', { name: /administración/i });
+    expect(adminTrigger).toHaveClass('border-dashed');
+    expect(screen.queryByText('Administración', { selector: 'label' })).not.toBeInTheDocument();
+  });
+
+  it('shows the selected option as an inline badge on the trigger once picked', () => {
+    renderFilter({ value: { administrationId: 'adm-1' } });
+    const adminTrigger = screen.getByRole('combobox', { name: /administración/i });
+    expect(within(adminTrigger).getByText('Garcia S.A.')).toBeInTheDocument();
+  });
+
+  it('shows no badge when nothing is selected', () => {
+    renderFilter();
+    const adminTrigger = screen.getByRole('combobox', { name: /administración/i });
+    expect(within(adminTrigger).queryByText(/garcia|torres/i)).not.toBeInTheDocument();
   });
 });
 
