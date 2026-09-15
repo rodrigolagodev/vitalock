@@ -1,5 +1,5 @@
-import { DataTable } from '@vitalock/ui';
-import { categoryLabel, tareaStatus } from '@/lib/status/tareaStatus';
+import { DataCardList } from '@vitalock/ui';
+import { categoryIcon, categoryLabel, tareaStatus } from '@/lib/status/tareaStatus';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
 
 interface TareasTableProps {
@@ -14,27 +14,34 @@ function formatDate(iso: string): string {
 }
 
 /**
- * Flat list of the installer's assigned tasks, one row per ticket linking to
- * its detail at /tareas/:id. Secondary columns collapse on narrow screens;
- * the building name is repeated under the title there so the row still
- * answers "where do I go" on a phone.
+ * Card list of the installer's assigned tasks, one card per ticket linking
+ * to its detail at /tareas/:id. `DataCardList` renders every column at every
+ * width, so the building name only ever appears once — in the Edificio
+ * meta field, not repeated as a hand-rolled sub-line under the title.
+ *
+ * The card title is the ticket's `category` (via `categoryLabel`), not its
+ * free-text `title`/`description` — the admin's description is inconsistent
+ * prose, while the category is a small controlled vocabulary. A decorative
+ * `card: 'icon'` column (via `categoryIcon`) renders next to the title so
+ * the task type is scannable before reading any text.
  */
 export function TareasTable({ rows, isLoading }: TareasTableProps) {
   return (
-    <DataTable<AssignedTicket>
+    <DataCardList<AssignedTicket>
       rows={rows}
       isFetching={isLoading}
       columns={[
         {
           header: 'Tarea',
-          cell: (ticket) => (
-            <span className="flex flex-col">
-              <span>{ticket.title}</span>
-              <span className="text-muted-foreground text-xs font-normal md:hidden">
-                {ticket.building.name}
-              </span>
-            </span>
-          ),
+          cell: (ticket) => categoryLabel(ticket.category),
+        },
+        {
+          header: 'Tipo',
+          cell: (ticket) => {
+            const Icon = categoryIcon(ticket.category);
+            return <Icon aria-hidden="true" className="text-muted-foreground h-5 w-5" />;
+          },
+          card: 'icon',
         },
         {
           header: 'Edificio',
@@ -49,12 +56,6 @@ export function TareasTable({ rows, isLoading }: TareasTableProps) {
             </div>
           ),
           hideBelow: 'md',
-        },
-        {
-          header: 'Categoría',
-          cell: (ticket) => categoryLabel(ticket.category),
-          className: 'text-muted-foreground',
-          hideBelow: 'lg',
         },
         {
           header: 'Llaves',
@@ -76,6 +77,7 @@ export function TareasTable({ rows, isLoading }: TareasTableProps) {
         {
           header: 'Estado',
           cell: (ticket) => <tareaStatus.Badge status={ticket.status} />,
+          card: 'status',
         },
         {
           header: 'Abierta',
