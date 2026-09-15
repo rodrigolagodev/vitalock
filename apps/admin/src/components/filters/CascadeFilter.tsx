@@ -1,11 +1,4 @@
-import {
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 
 /**
  * Radix Select disallows empty string as a value, so we use a sentinel token
@@ -94,16 +87,14 @@ export function CascadeFilter({
         <div className="flex flex-col gap-1">
           <Label
             htmlFor="cascade-admin"
-            className="text-xs font-medium uppercase text-muted-foreground"
+            className="text-muted-foreground text-xs font-medium uppercase"
           >
             Administración
           </Label>
           <Select
             value={value.administrationId ?? ALL_VALUE}
             disabled={disabled}
-            onValueChange={(v) =>
-              handleAdminChange(v === ALL_VALUE ? '' : v)
-            }
+            onValueChange={(v) => handleAdminChange(v === ALL_VALUE ? '' : v)}
           >
             <SelectTrigger id="cascade-admin" aria-label="Administración" className="w-56">
               <SelectValue placeholder="Todas" />
@@ -124,18 +115,23 @@ export function CascadeFilter({
         <div className="flex flex-col gap-1">
           <Label
             htmlFor="cascade-building"
-            className="text-xs font-medium uppercase text-muted-foreground"
+            className="text-muted-foreground text-xs font-medium uppercase"
           >
             Edificio
           </Label>
           <Select
             value={value.buildingId ?? ALL_VALUE}
             disabled={disabled || !value.administrationId}
-            onValueChange={(v) =>
-              handleBuildingChange(v === ALL_VALUE ? '' : v)
-            }
+            onValueChange={(v) => handleBuildingChange(v === ALL_VALUE ? '' : v)}
           >
-            <SelectTrigger id="cascade-building" aria-label="Edificio" className="w-56">
+            <SelectTrigger
+              id="cascade-building"
+              aria-label="Edificio"
+              aria-describedby={
+                !disabled && !value.administrationId ? 'cascade-building-hint' : undefined
+              }
+              className="w-56"
+            >
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -147,6 +143,11 @@ export function CascadeFilter({
               ))}
             </SelectContent>
           </Select>
+          {!disabled && !value.administrationId && (
+            <p id="cascade-building-hint" className="text-muted-foreground text-xs">
+              Seleccioná una administración primero
+            </p>
+          )}
         </div>
       )}
 
@@ -154,16 +155,14 @@ export function CascadeFilter({
         <div className="flex flex-col gap-1">
           <Label
             htmlFor="cascade-equipment"
-            className="text-xs font-medium uppercase text-muted-foreground"
+            className="text-muted-foreground text-xs font-medium uppercase"
           >
             Equipo
           </Label>
           <Select
             value={value.equipmentId ?? ALL_VALUE}
             disabled={disabled || !value.buildingId}
-            onValueChange={(v) =>
-              handleEquipmentChange(v === ALL_VALUE ? '' : v)
-            }
+            onValueChange={(v) => handleEquipmentChange(v === ALL_VALUE ? '' : v)}
           >
             <SelectTrigger id="cascade-equipment" aria-label="Equipo" className="w-56">
               <SelectValue placeholder="Todos" />

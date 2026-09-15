@@ -1,22 +1,16 @@
 import { useState } from 'react';
-import { Badge, ErrorState, Input, SearchInput } from '@vitalock/ui';
+import { ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useAllOrders } from '@/hooks/useAllOrders';
-import { useDebounce } from '@/hooks/useDebounce';
 import { HistorialTable } from '@/components/historial/HistorialTable';
 import type { AllOrderKind } from '@/hooks/useAllOrders';
 
-type OrderKindFilter = 'all' | AllOrderKind;
-type StatusFilter = string;
-
-const KIND_PILLS: { value: OrderKindFilter; label: string }[] = [
-  { value: 'all', label: 'Todos' },
+const KIND_OPTIONS: { value: AllOrderKind; label: string }[] = [
   { value: 'key', label: 'Llaves' },
   { value: 'technical', label: 'Servicio técnico' },
 ];
 
-const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'Todos' },
+const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'draft', label: 'Borrador' },
   { value: 'confirmed', label: 'Confirmada' },
   { value: 'in_progress', label: 'En proceso' },
@@ -29,30 +23,27 @@ const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
 
 export default function HistorialPage() {
   const [search, setSearch] = useState('');
-  const [orderKind, setOrderKind] = useState<OrderKindFilter>('all');
-  const [status, setStatus] = useState<StatusFilter>('all');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-
-  const debouncedSearch = useDebounce(search, 300);
+  const [kinds, setKinds] = useState<AllOrderKind[]>([]);
+  const [statuses, setStatuses] = useState<string[]>([]);
+  const [dates, setDates] = useState({ from: '', to: '' });
 
   const hasFilters =
-    debouncedSearch.trim() !== '' ||
-    orderKind !== 'all' ||
-    status !== 'all' ||
-    dateFrom !== '' ||
-    dateTo !== '';
+    search.trim() !== '' ||
+    kinds.length > 0 ||
+    statuses.length > 0 ||
+    dates.from !== '' ||
+    dates.to !== '';
 
   const {
     data: orders = [],
     isFetching,
     isError,
   } = useAllOrders({
-    search: debouncedSearch,
-    status: status === 'all' ? undefined : status,
-    orderKind: orderKind === 'all' ? undefined : orderKind,
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
+    search,
+    status: statuses,
+    orderKind: kinds,
+    dateFrom: dates.from || undefined,
+    dateTo: dates.to || undefined,
   });
 
   if (isError) {
@@ -63,67 +54,30 @@ export default function HistorialPage() {
     <div className="flex flex-col gap-6">
       <PageHeader title="Órdenes" />
 
-      <SearchInput
-        placeholder="Buscar por número de orden, cliente..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-sm"
-      />
-
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2">
-          <label htmlFor="date-from" className="text-muted-foreground text-xs uppercase">
-            Desde
-          </label>
-          <Input
-            id="date-from"
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="w-40"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label htmlFor="date-to" className="text-muted-foreground text-xs uppercase">
-            Hasta
-          </label>
-          <Input
-            id="date-to"
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="w-40"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-muted-foreground text-xs uppercase">Tipo:</span>
-        {KIND_PILLS.map((pill) => (
-          <button key={pill.value} type="button" onClick={() => setOrderKind(pill.value)}>
-            <Badge
-              variant={orderKind === pill.value ? 'default' : 'secondary'}
-              className="cursor-pointer"
-            >
-              {pill.label}
-            </Badge>
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-muted-foreground text-xs uppercase">Estado:</span>
-        {STATUS_PILLS.map((pill) => (
-          <button key={pill.value} type="button" onClick={() => setStatus(pill.value)}>
-            <Badge
-              variant={status === pill.value ? 'default' : 'secondary'}
-              className="cursor-pointer"
-            >
-              {pill.label}
-            </Badge>
-          </button>
-        ))}
-      </div>
+      <FilterBar>
+        <FilterBar.Search
+          placeholder="Buscar por número de orden, cliente..."
+          value={search}
+          onChange={setSearch}
+          className="max-w-sm"
+        />
+        <FilterBar.DateRange value={dates} onChange={setDates} />
+        <FilterBar.MultiSelect
+          facet="kind"
+          label="Tipo"
+          options={KIND_OPTIONS}
+          value={kinds}
+          onChange={(next) => setKinds(next as AllOrderKind[])}
+        />
+        <FilterBar.MultiSelect
+          facet="status"
+          label="Estado"
+          options={STATUS_OPTIONS}
+          value={statuses}
+          onChange={setStatuses}
+        />
+        <FilterBar.Summary />
+      </FilterBar>
 
       <HistorialTable orders={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>
