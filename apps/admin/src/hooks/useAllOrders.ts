@@ -22,8 +22,10 @@ export interface AllOrderRow {
 
 export interface UseAllOrdersFilters {
   search?: string;
-  status?: string;
-  orderKind?: AllOrderKind | 'all';
+  /** Zero-or-more statuses filtered by set-membership. Empty/undefined = no filter. */
+  status?: string[];
+  /** Zero-or-more order kinds filtered by set-membership. Empty/undefined = no filter. */
+  orderKind?: AllOrderKind[];
   /** Inclusive start date (ISO date string YYYY-MM-DD). Applied as gte on created_at. */
   dateFrom?: string;
   /** Inclusive end date (ISO date string YYYY-MM-DD). Applied as lte on created_at at end-of-day (T23:59:59.999Z). */
@@ -52,12 +54,12 @@ export function useAllOrders({
           'id, order_number, order_kind, client_type, administration_id, particular_id, particular_full_name, status, notes, created_at, updated_at',
         );
 
-      if (status && status !== 'all') {
-        query = query.eq('status', status);
+      if (status?.length) {
+        query = query.in('status', status);
       }
 
-      if (orderKind && orderKind !== 'all') {
-        query = query.eq('order_kind', orderKind);
+      if (orderKind?.length) {
+        query = query.in('order_kind', orderKind);
       }
 
       if (dateFrom) {

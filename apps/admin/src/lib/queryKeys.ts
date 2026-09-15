@@ -48,19 +48,26 @@ export const technicalOrdersKey = (
     buildingId ?? 'all',
   ] as const;
 export const technicalOrderKey = (id: string) => ['admin', 'technical-order', id] as const;
+/**
+ * Order-insensitive normalizer for array-valued (multi-select) filters, so
+ * `['a','b']` and `['b','a']` share one cache entry for the same filter set.
+ */
+const normalizeArrayFilter = (values?: string[]) =>
+  values?.length ? [...values].sort().join(',') : 'all';
+
 export const allOrdersKey = (
-  status?: string,
+  status?: string[],
   search?: string,
-  orderKind?: string,
+  orderKind?: string[],
   dateFrom?: string,
   dateTo?: string,
 ) =>
   [
     'admin',
     'all-orders',
-    status ?? 'all',
+    normalizeArrayFilter(status),
     search ?? '',
-    orderKind ?? 'all',
+    normalizeArrayFilter(orderKind),
     dateFrom ?? '',
     dateTo ?? '',
   ] as const;

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -41,40 +41,55 @@ describe('HistorialPage heading and search', () => {
 
   it('renders a search input', () => {
     renderPage();
-    expect(
-      screen.getByPlaceholderText(/buscar por número de orden/i),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/buscar por número de orden/i)).toBeInTheDocument();
   });
 });
 
-describe('HistorialPage order_kind filter pills', () => {
-  it('renders order_kind pills: Todos, Llaves, Servicio técnico', () => {
+describe('HistorialPage order_kind filter', () => {
+  it('renders a "Tipo" multi-select facet with Llaves and Servicio técnico options', async () => {
     renderPage();
-    // Two "Todos" buttons exist (one per filter group), so we assert at least one
-    const todosPills = screen.getAllByRole('button', { name: /^todos$/i });
-    expect(todosPills.length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole('button', { name: /^llaves$/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^servicio técnico$/i })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /^tipo$/i }));
+    const group = screen.getByRole('group', { name: /^tipo$/i });
+    expect(within(group).getByRole('checkbox', { name: /^llaves$/i })).toBeInTheDocument();
+    expect(
+      within(group).getByRole('checkbox', { name: /^servicio técnico$/i }),
+    ).toBeInTheDocument();
   });
 
-  it('passes orderKind filter to useAllOrders when a kind pill is clicked', async () => {
+  it('passes orderKind filter to useAllOrders when the Llaves checkbox is checked', async () => {
     renderPage();
 
-    const llavesPill = screen.getByRole('button', { name: /^llaves$/i });
-    await userEvent.click(llavesPill);
+    await userEvent.click(screen.getByRole('button', { name: /^tipo$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^llaves$/i }));
 
     const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
-    expect(lastCall?.orderKind).toBe('key');
+    expect(lastCall?.orderKind).toEqual(['key']);
   });
 });
 
 describe('HistorialPage status filter', () => {
-  it('renders status filter pills', () => {
+  it('renders an "Estado" multi-select facet with all 8 live statuses', async () => {
     renderPage();
-    // 'Todos' appears as both order_kind pill and status pill
-    const todosPills = screen.getAllByRole('button', { name: /^todos$/i });
-    expect(todosPills.length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByRole('button', { name: /facturado/i })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    const group = screen.getByRole('group', { name: /^estado$/i });
+    expect(within(group).getByRole('checkbox', { name: /^facturado$/i })).toBeInTheDocument();
+    expect(
+      within(group).getByRole('checkbox', { name: /^pendiente instalación$/i }),
+    ).toBeInTheDocument();
+    expect(within(group).getAllByRole('checkbox')).toHaveLength(8);
+  });
+
+  it('passes statuses to useAllOrders when Facturado and one more status are checked', async () => {
+    renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^facturado$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^confirmada$/i }));
+
+    const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
+    expect(lastCall?.status).toEqual(['invoiced', 'confirmed']);
   });
 });
 
@@ -99,18 +114,29 @@ describe('HistorialPage error state', () => {
 });
 
 describe('HistorialPage date-range filter', () => {
-  it('renders a "Desde" date input', () => {
+  // FilterBar.DateRange is a compact popover trigger now (see
+  // packages/ui's FilterBar.tsx) — the Desde/Hasta inputs only exist in
+  // the DOM once that trigger is opened, so every case here opens it
+  // first via its accessible name ("Fecha") before querying the inputs.
+  async function openDateRangePopover() {
+    await userEvent.click(screen.getByRole('button', { name: /fecha/i }));
+  }
+
+  it('renders a "Desde" date input once the Fecha trigger is opened', async () => {
     renderPage();
+    await openDateRangePopover();
     expect(screen.getByLabelText(/desde/i)).toBeInTheDocument();
   });
 
-  it('renders a "Hasta" date input', () => {
+  it('renders a "Hasta" date input once the Fecha trigger is opened', async () => {
     renderPage();
+    await openDateRangePopover();
     expect(screen.getByLabelText(/hasta/i)).toBeInTheDocument();
   });
 
   it('changing dateFrom passes it to useAllOrders', async () => {
     renderPage();
+    await openDateRangePopover();
     const desdeInput = screen.getByLabelText(/desde/i);
     await userEvent.type(desdeInput, '2026-08-01');
     const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
@@ -119,6 +145,7 @@ describe('HistorialPage date-range filter', () => {
 
   it('changing dateTo passes it to useAllOrders', async () => {
     renderPage();
+    await openDateRangePopover();
     const hastaInput = screen.getByLabelText(/hasta/i);
     await userEvent.type(hastaInput, '2026-08-31');
     const lastCall = useAllOrdersMock.mock.calls.at(-1)?.[0];
@@ -128,6 +155,7 @@ describe('HistorialPage date-range filter', () => {
   it('hasFilters becomes true when dateFrom is set', async () => {
     // When hasFilters=true the "filtered empty" message appears
     renderPage();
+    await openDateRangePopover();
     const desdeInput = screen.getByLabelText(/desde/i);
     // Simulate the user typing a date value
     await userEvent.type(desdeInput, '2026-08-01');
@@ -148,10 +176,7 @@ describe('/historial → /ordenes redirect', () => {
         <MemoryRouter initialEntries={['/historial']}>
           <Routes>
             <Route path="historial" element={<Navigate to="/ordenes" replace />} />
-            <Route
-              path="ordenes"
-              element={<HistorialPage />}
-            />
+            <Route path="ordenes" element={<HistorialPage />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
