@@ -10,6 +10,7 @@ const { usePersonalMock } = vi.hoisted(() => ({
 vi.mock('@/hooks/usePersonal', () => ({
   usePersonal: usePersonalMock,
 }));
+vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
 import PersonalPage from '../PersonalPage';
 

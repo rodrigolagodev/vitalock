@@ -10,6 +10,7 @@ const { useParticularesMock } = vi.hoisted(() => ({
 vi.mock('@/hooks/useParticulares', () => ({
   useParticulares: useParticularesMock,
 }));
+vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
 import ParticularesPage from '../ParticularesPage';
 
