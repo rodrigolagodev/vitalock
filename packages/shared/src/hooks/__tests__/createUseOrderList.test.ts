@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 const mockOrder = vi.fn();
 const mockOr = vi.fn();
 const mockEq = vi.fn();
+const mockIn = vi.fn();
 const mockSelect = vi.fn();
 const mockFrom = vi.fn();
 
@@ -31,8 +32,15 @@ import { createUseOrderList } from '../createUseOrderList';
 // ---------------------------------------------------------------------------
 
 const mockQueryKeyFn = vi.fn(
-  (status?: string, search?: string, administrationId?: string, buildingId?: string) =>
-    ['test', 'orders', status ?? 'all', search ?? '', administrationId ?? 'all', buildingId ?? 'all'] as const,
+  (status?: string[], search?: string, administrationId?: string, buildingId?: string) =>
+    [
+      'test',
+      'orders',
+      status?.length ? [...status].sort().join(',') : 'all',
+      search ?? '',
+      administrationId ?? 'all',
+      buildingId ?? 'all',
+    ] as const,
 );
 
 const mockMapRow = vi.fn((row: { id: string; [key: string]: unknown }, _itemsField: string) => ({
@@ -77,8 +85,9 @@ describe('createUseOrderList (factory)', () => {
 
     mockOrder.mockResolvedValue({ data: fakeRawRows, error: null });
     mockOr.mockReturnValue({ order: mockOrder });
-    mockEq.mockReturnValue({ eq: mockEq, or: mockOr, order: mockOrder });
-    mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder });
+    mockEq.mockReturnValue({ eq: mockEq, in: mockIn, or: mockOr, order: mockOrder });
+    mockIn.mockReturnValue({ eq: mockEq, in: mockIn, or: mockOr, order: mockOrder });
+    mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, in: mockIn, order: mockOrder });
     mockFrom.mockReturnValue({ select: mockSelect });
     mockMapRow.mockImplementation((row) => ({ id: (row as { id: string }).id, mapped: true }));
   });
@@ -99,22 +108,40 @@ describe('createUseOrderList (factory)', () => {
   // -------------------------------------------------------------------------
   // B.2 test-2: status filter
   // -------------------------------------------------------------------------
-  it('REQ-SHARED-ORDER-LIST-FACTORY-1.2: status filter applies .eq("status", value)', async () => {
+  it('REQ-SHARED-ORDER-LIST-FACTORY-1.2: status filter applies .in("status", [values])', async () => {
     const useHook = createUseOrderList(makeOptions());
-    const { result } = renderHook(() => useHook({ status: 'pending' }), {
+    const { result } = renderHook(() => useHook({ status: ['pending'] }), {
       wrapper: makeWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockEq).toHaveBeenCalledWith('status', 'pending');
+    expect(mockIn).toHaveBeenCalledWith('status', ['pending']);
   });
 
-  it('status="all" does not call .eq()', async () => {
+  it('multiple statuses call .in("status", [...]) with every selected value', async () => {
     const useHook = createUseOrderList(makeOptions());
-    const { result } = renderHook(() => useHook({ status: 'all' }), {
+    const { result } = renderHook(() => useHook({ status: ['pending', 'draft'] }), {
       wrapper: makeWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockEq).not.toHaveBeenCalled();
+    expect(mockIn).toHaveBeenCalledWith('status', ['pending', 'draft']);
+  });
+
+  it('empty status array does not call .in()', async () => {
+    const useHook = createUseOrderList(makeOptions());
+    const { result } = renderHook(() => useHook({ status: [] }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockIn).not.toHaveBeenCalled();
+  });
+
+  it('undefined status does not call .in()', async () => {
+    const useHook = createUseOrderList(makeOptions());
+    const { result } = renderHook(() => useHook(), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockIn).not.toHaveBeenCalled();
   });
 
   // -------------------------------------------------------------------------
@@ -185,11 +212,17 @@ describe('createUseOrderList (factory)', () => {
   it('all-four filters combined apply all corresponding calls', async () => {
     const useHook = createUseOrderList(makeOptions());
     const { result } = renderHook(
-      () => useHook({ search: 'sol', status: 'draft', administrationId: 'adm-1', buildingId: 'bld-1' }),
+      () =>
+        useHook({
+          search: 'sol',
+          status: ['draft'],
+          administrationId: 'adm-1',
+          buildingId: 'bld-1',
+        }),
       { wrapper: makeWrapper() },
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockEq).toHaveBeenCalledWith('status', 'draft');
+    expect(mockIn).toHaveBeenCalledWith('status', ['draft']);
     expect(mockEq).toHaveBeenCalledWith('administration_id', 'adm-1');
     expect(mockEq).toHaveBeenCalledWith('test_order_items.building_id', 'bld-1');
     expect(mockOr).toHaveBeenCalledWith(
@@ -203,11 +236,17 @@ describe('createUseOrderList (factory)', () => {
   it('REQ-SHARED-ORDER-LIST-INVALIDATION-1: queryKeyFn is called with (status, trimmedSearch, administrationId, buildingId)', async () => {
     const useHook = createUseOrderList(makeOptions());
     const { result } = renderHook(
-      () => useHook({ status: 'draft', search: '  foo  ', administrationId: 'adm-1', buildingId: 'bld-1' }),
+      () =>
+        useHook({
+          status: ['draft'],
+          search: '  foo  ',
+          administrationId: 'adm-1',
+          buildingId: 'bld-1',
+        }),
       { wrapper: makeWrapper() },
     );
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockQueryKeyFn).toHaveBeenCalledWith('draft', 'foo', 'adm-1', 'bld-1');
+    expect(mockQueryKeyFn).toHaveBeenCalledWith(['draft'], 'foo', 'adm-1', 'bld-1');
   });
 
   it('queryKeyFn is called with default values when no filters', async () => {

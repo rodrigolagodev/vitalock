@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 const mockOrder = vi.fn();
 const mockOr = vi.fn();
 const mockEq = vi.fn();
+const mockIn = vi.fn();
 const mockSelect = vi.fn();
 const mockFrom = vi.fn();
 
@@ -19,6 +20,7 @@ vi.mock('@/lib/supabase', () => {
   const order = vi.fn();
   const or = vi.fn();
   const eq = vi.fn();
+  const inFn = vi.fn();
   const select = vi.fn();
   const from = vi.fn();
   return {
@@ -26,7 +28,7 @@ vi.mock('@/lib/supabase', () => {
       return { from };
     },
     // expose handles so beforeEach can rewire them
-    _mocks: { order, or, eq, select, from },
+    _mocks: { order, or, eq, in: inFn, select, from },
   };
 });
 
@@ -44,6 +46,7 @@ function getMocks() {
     order: ReturnType<typeof vi.fn>;
     or: ReturnType<typeof vi.fn>;
     eq: ReturnType<typeof vi.fn>;
+    in: ReturnType<typeof vi.fn>;
     select: ReturnType<typeof vi.fn>;
     from: ReturnType<typeof vi.fn>;
   };
@@ -80,14 +83,16 @@ describe('useKeyOrders', () => {
 
     m.order.mockResolvedValue({ data: fakeSummaryRows, error: null });
     m.or.mockReturnValue({ order: m.order });
-    m.eq.mockReturnValue({ eq: m.eq, or: m.or, order: m.order });
-    m.select.mockReturnValue({ or: m.or, eq: m.eq, order: m.order });
+    m.eq.mockReturnValue({ eq: m.eq, in: m.in, or: m.or, order: m.order });
+    m.in.mockReturnValue({ eq: m.eq, in: m.in, or: m.or, order: m.order });
+    m.select.mockReturnValue({ or: m.or, eq: m.eq, in: m.in, order: m.order });
     m.from.mockReturnValue({ select: m.select });
 
     // Sync outer handles for assertions
     mockOrder.mockImplementation(m.order);
     mockOr.mockImplementation(m.or);
     mockEq.mockImplementation(m.eq);
+    mockIn.mockImplementation(m.in);
     mockSelect.mockImplementation(m.select);
     mockFrom.mockImplementation(m.from);
   });
@@ -125,20 +130,28 @@ describe('useKeyOrders', () => {
     expect(getMocks().or).not.toHaveBeenCalled();
   });
 
-  it('status filter calls .eq("status", value)', async () => {
-    const { result } = renderHook(() => useKeyOrders({ status: 'draft' }), {
+  it('status filter calls .in("status", value)', async () => {
+    const { result } = renderHook(() => useKeyOrders({ status: ['draft'] }), {
       wrapper: makeWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(getMocks().eq).toHaveBeenCalledWith('status', 'draft');
+    expect(getMocks().in).toHaveBeenCalledWith('status', ['draft']);
   });
 
-  it('status="all" does not call .eq()', async () => {
-    const { result } = renderHook(() => useKeyOrders({ status: 'all' }), {
+  it('multiple statuses call .in("status", [...]) with every selected value', async () => {
+    const { result } = renderHook(() => useKeyOrders({ status: ['draft', 'confirmed'] }), {
       wrapper: makeWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(getMocks().eq).not.toHaveBeenCalled();
+    expect(getMocks().in).toHaveBeenCalledWith('status', ['draft', 'confirmed']);
+  });
+
+  it('empty status array does not call .in()', async () => {
+    const { result } = renderHook(() => useKeyOrders({ status: [] }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(getMocks().in).not.toHaveBeenCalled();
   });
 
   it('buildingId filter uses embed inner-join on key_order_items (no pre-query)', async () => {
@@ -202,7 +215,7 @@ describe('useKeyOrders', () => {
 
   // REQ-SHARED-ORDER-LIST-INVALIDATION-1.3 — queryKey shape snapshot lock
   it('keyOrdersKey shape is locked by inline snapshot', () => {
-    expect(keyOrdersKey('draft', 'foo', 'admin-1', 'bld-1')).toMatchInlineSnapshot(`
+    expect(keyOrdersKey(['draft'], 'foo', 'admin-1', 'bld-1')).toMatchInlineSnapshot(`
       [
         "admin",
         "key-orders",
@@ -212,5 +225,9 @@ describe('useKeyOrders', () => {
         "bld-1",
       ]
     `);
+  });
+
+  it('keyOrdersKey normalizes multi-value status arrays order-insensitively', () => {
+    expect(keyOrdersKey(['confirmed', 'draft'])).toEqual(keyOrdersKey(['draft', 'confirmed']));
   });
 });

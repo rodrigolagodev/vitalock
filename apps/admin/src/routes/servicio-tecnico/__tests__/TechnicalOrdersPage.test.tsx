@@ -86,16 +86,12 @@ describe('TechnicalOrdersPage stat cards', () => {
 describe('TechnicalOrdersPage list', () => {
   it('renders the page heading', () => {
     renderPage();
-    expect(
-      screen.getByRole('heading', { name: /servicio técnico/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /servicio técnico/i })).toBeInTheDocument();
   });
 
   it('renders empty state when no data', () => {
     renderPage();
-    expect(
-      screen.getByText(/no hay órdenes de servicio técnico/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no hay órdenes de servicio técnico/i)).toBeInTheDocument();
   });
 
   it('renders the Nueva orden link pointing to /servicio-tecnico/nueva', () => {
@@ -106,7 +102,19 @@ describe('TechnicalOrdersPage list', () => {
 });
 
 describe('TechnicalOrdersPage status filter', () => {
-  it('passes status filter to useTechnicalOrders when a status pill is clicked', async () => {
+  it('renders an "Estado" multi-select facet with all 6 live statuses (no ready_for_pickup)', async () => {
+    renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    const group = screen.getByRole('group', { name: /^estado$/i });
+    expect(within(group).getByRole('checkbox', { name: /^facturado$/i })).toBeInTheDocument();
+    expect(
+      within(group).queryByRole('checkbox', { name: /^listo para retirar$/i }),
+    ).not.toBeInTheDocument();
+    expect(within(group).getAllByRole('checkbox')).toHaveLength(6);
+  });
+
+  it('passes status filter to useTechnicalOrders when the Confirmada checkbox is checked', async () => {
     useTechnicalOrdersMock.mockReturnValue({
       data: [],
       isFetching: false,
@@ -115,11 +123,28 @@ describe('TechnicalOrdersPage status filter', () => {
 
     renderPage();
 
-    const confirmedPill = screen.getByRole('button', { name: /confirmada/i });
-    await userEvent.click(confirmedPill);
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^confirmada$/i }));
 
     const lastCall = useTechnicalOrdersMock.mock.calls.at(-1)?.[0];
-    expect(lastCall?.status).toBe('confirmed');
+    expect(lastCall?.status).toEqual(['confirmed']);
+  });
+
+  it('passes multiple statuses to useTechnicalOrders when two checkboxes are checked', async () => {
+    useTechnicalOrdersMock.mockReturnValue({
+      data: [],
+      isFetching: false,
+      isError: false,
+    });
+
+    renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^confirmada$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^en proceso$/i }));
+
+    const lastCall = useTechnicalOrdersMock.mock.calls.at(-1)?.[0];
+    expect(lastCall?.status).toEqual(['confirmed', 'in_progress']);
   });
 });
 
