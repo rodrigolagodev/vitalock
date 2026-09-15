@@ -549,24 +549,39 @@ function FilterBarDateRange({
   const fromId = `${facet}-from`;
   const toId = `${facet}-to`;
 
+  // Labels sit inline (never stacked above the input) so this control's
+  // total height stays h-11 like every sibling in the row — a stacked
+  // label+input column here was the exact bug reported: DateRange was
+  // the only control with a visible label, making its own flex item
+  // taller than the rest and throwing off `items-center` alignment
+  // across the whole bar.
   return (
-    <div className={cn('flex items-end gap-2', className)}>
-      <div className="flex flex-col gap-1">
-        <Label htmlFor={fromId}>{fromLabel}</Label>
+    <div className={cn('flex h-11 items-center gap-2', className)}>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={fromId} className="text-muted-foreground whitespace-nowrap text-sm">
+          {fromLabel}
+        </Label>
         <Input
           id={fromId}
           type="date"
           value={value.from}
           onChange={(event) => onChange({ ...value, from: event.target.value })}
+          className="h-11 w-auto"
         />
       </div>
-      <div className="flex flex-col gap-1">
-        <Label htmlFor={toId}>{toLabel}</Label>
+      <span className="text-muted-foreground" aria-hidden="true">
+        –
+      </span>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={toId} className="text-muted-foreground whitespace-nowrap text-sm">
+          {toLabel}
+        </Label>
         <Input
           id={toId}
           type="date"
           value={value.to}
           onChange={(event) => onChange({ ...value, to: event.target.value })}
+          className="h-11 w-auto"
         />
       </div>
     </div>
