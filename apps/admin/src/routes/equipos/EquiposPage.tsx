@@ -1,15 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Button,
-  ErrorState,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Button, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useEquipmentInventory } from '@/hooks/useEquipmentInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -76,39 +67,51 @@ export default function EquiposPage() {
         </Button>
       </PageHeader>
 
-      <div className="flex flex-col gap-4">
-        <CascadeFilter
-          value={cascadeValue}
-          onChange={setCascadeValue}
-          levels={['administration', 'building']}
-          administrations={adminOptions}
-          buildings={buildingOptions}
-          equipment={equipmentOptions}
+      <FilterBar>
+        <FilterBar.Cascade
+          value={{
+            administrationId: cascadeValue.administrationId ?? '',
+            buildingId: cascadeValue.buildingId ?? '',
+            equipmentId: '',
+          }}
+          onChange={(next) =>
+            setCascadeValue({
+              administrationId: next.administrationId || undefined,
+              buildingId: next.buildingId || undefined,
+            })
+          }
+          labels={{ administration: 'Administración', building: 'Edificio', equipment: 'Equipo' }}
+          resolveLabel={(level, id) => {
+            if (level === 'administration') {
+              return adminOptions.find((a) => a.id === id)?.label ?? id;
+            }
+            if (level === 'building') {
+              return buildingOptions.find((b) => b.id === id)?.label ?? id;
+            }
+            return id;
+          }}
+        >
+          <CascadeFilter
+            value={cascadeValue}
+            onChange={setCascadeValue}
+            levels={['administration', 'building']}
+            administrations={adminOptions}
+            buildings={buildingOptions}
+            equipment={equipmentOptions}
+          />
+        </FilterBar.Cascade>
+
+        <FilterBar.Select
+          facet="status"
+          label="Estado del equipo"
+          options={EQUIPMENT_STATUS_OPTIONS}
+          value={status}
+          onChange={setStatus}
+          allValue="all"
         />
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-col gap-1">
-            <Label
-              htmlFor="equipment-status"
-              className="text-muted-foreground text-xs font-medium uppercase"
-            >
-              Estado del equipo
-            </Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="equipment-status" aria-label="Estado del equipo" className="w-56">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {EQUIPMENT_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
+        <FilterBar.Summary />
+      </FilterBar>
 
       <EquipmentInventoryTable rows={rows} isFetching={isFetching} />
     </div>
