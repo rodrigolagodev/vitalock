@@ -1,5 +1,5 @@
 import { PencilLine } from 'lucide-react';
-import { DataCardList, type DataTableAction } from '@vitalock/ui';
+import { Button, DataCardList } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { categoryIcon, categoryLabel, tareaStatus } from '@/lib/status/tareaStatus';
 import type { TareaRow } from '@/hooks/useTareas';
@@ -21,16 +21,6 @@ interface TareasTableProps {
  * `aria-hidden` icon (WCAG 1.4.1 — never color/icon-only).
  */
 export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTableProps) {
-  const actions: DataTableAction<TareaRow>[] | undefined = onEdit
-    ? [
-        {
-          icon: PencilLine,
-          label: (tarea) => `Editar a ${tarea.ticket_number}`,
-          onClick: (tarea) => onEdit(tarea),
-        },
-      ]
-    : undefined;
-
   return (
     <DataCardList<TareaRow>
       rows={rows}
@@ -93,7 +83,23 @@ export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTabl
       rowKey={(tarea) => tarea.id}
       firstCell="link"
       getRowHref={(tarea) => `/tareas/${tarea.id}`}
-      actions={actions}
+      renderActions={
+        onEdit
+          ? (tarea) => (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                aria-label={`Editar a ${tarea.ticket_number}`}
+                onClick={() => onEdit(tarea)}
+              >
+                <PencilLine className="h-4 w-4" />
+                Editar
+              </Button>
+            )
+          : undefined
+      }
       emptyMessage="No hay tareas registradas."
       filteredEmptyMessage="No se encontraron tareas con los filtros aplicados."
       hasFilters={hasFilters}

@@ -3,7 +3,6 @@ import { Trash2, PencilLine } from 'lucide-react';
 import {
   DataCardList,
   Button,
-  type DataTableAction,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -48,21 +47,6 @@ export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: Sta
     }
   };
 
-  const actions: DataTableAction<StaffRow>[] = [];
-  if (onEdit) {
-    actions.push({
-      icon: PencilLine,
-      label: (staff) => `Editar a ${staff.full_name}`,
-      onClick: (staff) => onEdit(staff),
-    });
-  }
-  actions.push({
-    icon: Trash2,
-    label: (staff) => `Dar de baja a ${staff.full_name}`,
-    onClick: (staff) => setDeactivating(staff),
-    className: 'text-destructive hover:text-destructive',
-  });
-
   return (
     <>
       <DataCardList<StaffRow>
@@ -92,7 +76,34 @@ export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: Sta
           },
         ]}
         rowKey={(staff) => staff.id}
-        actions={actions}
+        renderActions={(staff) => (
+          <div className="flex w-full items-center gap-2">
+            {onEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2"
+                aria-label={`Editar a ${staff.full_name}`}
+                onClick={() => onEdit(staff)}
+              >
+                <PencilLine className="h-4 w-4" />
+                Editar
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive flex-1 gap-2"
+              aria-label={`Dar de baja a ${staff.full_name}`}
+              onClick={() => setDeactivating(staff)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Dar de baja
+            </Button>
+          </div>
+        )}
         emptyMessage="No hay personal registrado."
         filteredEmptyMessage="No se encontró personal con los filtros aplicados."
         hasFilters={hasFilters}

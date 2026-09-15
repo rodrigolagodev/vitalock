@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Power } from 'lucide-react';
-import { IconButton, Button } from '@vitalock/ui';
+import { Button, cn } from '@vitalock/ui';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +17,7 @@ interface AdministrationStatusToggleProps {
   administration: Pick<AdministrationRow, 'id' | 'company_name' | 'status'>;
 }
 
-export function AdministrationStatusToggle({
-  administration,
-}: AdministrationStatusToggleProps) {
+export function AdministrationStatusToggle({ administration }: AdministrationStatusToggleProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: buildings = [] } = useBuildings({ administrationId: administration.id });
@@ -43,13 +41,18 @@ export function AdministrationStatusToggle({
 
   return (
     <>
-      <IconButton
-        icon={Power}
-        label={`Desactivar ${administration.company_name}`}
-        iconClassName="text-destructive hover:text-destructive"
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="text-destructive hover:text-destructive flex-1 gap-2"
+        aria-label={`Desactivar ${administration.company_name}`}
         onClick={handleClick}
-        loading={deactivateAdministration.isPending}
-      />
+        disabled={deactivateAdministration.isPending}
+      >
+        <Power className={cn('h-4 w-4', deactivateAdministration.isPending && 'animate-pulse')} />
+        Desactivar
+      </Button>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
@@ -61,14 +64,14 @@ export function AdministrationStatusToggle({
               {hasActiveBuildings ? (
                 <>
                   La administración <strong>{administration.company_name}</strong> tiene{' '}
-                  {activeBuildings} edificio{activeBuildings !== 1 ? 's' : ''} activo{activeBuildings !== 1 ? 's' : ''}.
-                  Desactivá los edificios primero.
+                  {activeBuildings} edificio{activeBuildings !== 1 ? 's' : ''} activo
+                  {activeBuildings !== 1 ? 's' : ''}. Desactivá los edificios primero.
                 </>
               ) : (
                 <>
                   ¿Confirmás que querés desactivar la administración{' '}
-                  <strong>{administration.company_name}</strong>? Esta acción cambiará su
-                  estado a inactivo.
+                  <strong>{administration.company_name}</strong>? Esta acción cambiará su estado a
+                  inactivo.
                 </>
               )}
             </DialogDescription>

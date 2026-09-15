@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PencilLine } from 'lucide-react';
-import { DataCardList, IconButton } from '@vitalock/ui';
+import { Button, DataCardList } from '@vitalock/ui';
 import { administrationStatus } from '@/lib/status/administrationStatus';
 import { AdministrationFormSheet } from './AdministrationFormSheet';
 import { AdministrationStatusToggle } from './AdministrationStatusToggle';
@@ -44,12 +44,18 @@ export function AdministrationsTable({
         hasFilters={search !== ''}
         filteredEmptyMessage={`No se encontraron resultados para \u201C${search}\u201D.`}
         renderActions={(admin) => (
-          <div className="flex items-center justify-end gap-1">
-            <IconButton
-              icon={PencilLine}
-              label={`Editar a ${admin.company_name}`}
+          <div className="flex w-full items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2"
+              aria-label={`Editar a ${admin.company_name}`}
               onClick={() => setEditingAdmin(admin)}
-            />
+            >
+              <PencilLine className="h-4 w-4" />
+              Editar
+            </Button>
             <AdministrationStatusToggle administration={admin} />
           </div>
         )}

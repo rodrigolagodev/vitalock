@@ -69,27 +69,24 @@ describe('AdministrationStatusToggle', () => {
   });
 
   it('renders nothing for inactive administration', () => {
-    const { container } = render(
-      <AdministrationStatusToggle administration={inactiveAdmin} />,
-      { wrapper: makeWrapper() },
-    );
+    const { container } = render(<AdministrationStatusToggle administration={inactiveAdmin} />, {
+      wrapper: makeWrapper(),
+    });
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders icon-only Power button with aria-label for active administration', () => {
+  it('renders a full-width Power button with a short visible label and a descriptive aria-label', () => {
     render(<AdministrationStatusToggle administration={activeAdmin} />, {
       wrapper: makeWrapper(),
     });
     const trigger = screen.getByRole('button', { name: 'Desactivar Garcia S.A.' });
     expect(trigger).toBeInTheDocument();
-    expect(within(trigger).queryByText(/desactivar/i)).not.toBeInTheDocument();
+    expect(within(trigger).getByText('Desactivar')).toBeInTheDocument();
+    expect(trigger).toHaveClass('flex-1');
   });
 
   it('shows blocking dialog with active buildings count when activeBuildings > 0', async () => {
-    mockBuildings = [
-      makeBuilding('b-1', 'active'),
-      makeBuilding('b-2', 'active'),
-    ];
+    mockBuildings = [makeBuilding('b-1', 'active'), makeBuilding('b-2', 'active')];
 
     const user = userEvent.setup();
     render(<AdministrationStatusToggle administration={activeAdmin} />, {

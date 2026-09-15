@@ -175,4 +175,17 @@ describe('StaffTable', () => {
     await user.click(screen.getByRole('button', { name: 'Editar a Ana Gómez' }));
     expect(onEdit).toHaveBeenCalledWith(ana);
   });
+
+  it('renders both action buttons with short visible labels, each sharing the row width equally', () => {
+    render(<StaffTable rows={[ana]} isFetching={false} onEdit={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const editButton = screen.getByRole('button', { name: 'Editar a Ana Gómez' });
+    const deactivateButton = screen.getByRole('button', { name: 'Dar de baja a Ana Gómez' });
+    expect(editButton).toHaveTextContent('Editar');
+    expect(deactivateButton).toHaveTextContent('Dar de baja');
+    expect(editButton).toHaveClass('flex-1');
+    expect(deactivateButton).toHaveClass('flex-1');
+  });
 });

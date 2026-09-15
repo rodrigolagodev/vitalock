@@ -176,4 +176,15 @@ describe('TareasTable', () => {
     await user.click(screen.getByRole('button', { name: 'Editar a T-0001' }));
     expect(onEdit).toHaveBeenCalledWith(tareaAbierta);
   });
+
+  it('renders the Editar button with a short visible label spanning the full row width', () => {
+    render(
+      <TareasTable rows={[tareaAbierta]} isFetching={false} hasFilters={false} onEdit={vi.fn()} />,
+      { wrapper: makeWrapper() },
+    );
+
+    const editButton = screen.getByRole('button', { name: 'Editar a T-0001' });
+    expect(editButton).toHaveTextContent('Editar');
+    expect(editButton).toHaveClass('w-full');
+  });
 });

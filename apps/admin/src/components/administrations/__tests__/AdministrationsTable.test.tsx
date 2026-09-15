@@ -143,4 +143,17 @@ describe('AdministrationsTable', () => {
     expect(screen.getByRole('button', { name: 'Editar a García S.A.' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Desactivar García S.A.' })).toBeInTheDocument();
   });
+
+  it('renders both action buttons with short visible labels, each sharing the row width equally', () => {
+    render(<AdministrationsTable administrations={[activeAdmin]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const editButton = screen.getByRole('button', { name: 'Editar a García S.A.' });
+    const deactivateButton = screen.getByRole('button', { name: 'Desactivar García S.A.' });
+    expect(editButton).toHaveTextContent('Editar');
+    expect(deactivateButton).toHaveTextContent('Desactivar');
+    expect(editButton).toHaveClass('flex-1');
+    expect(deactivateButton).toHaveClass('flex-1');
+  });
 });
