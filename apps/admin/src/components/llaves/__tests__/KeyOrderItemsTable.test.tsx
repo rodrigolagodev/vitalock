@@ -145,6 +145,28 @@ describe('KeyOrderItemsTable — configure action', () => {
   });
 });
 
+describe('KeyOrderItemsTable — responsive column hiding', () => {
+  it('hides Edificio and Precio below md, Retira below lg, keeps Cantidad and Estado always visible', () => {
+    render(<KeyOrderItemsTable items={[makeItem()]} orderId="ko-1" orderStatus="confirmed" />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByRole('columnheader', { name: 'Edificio' }).className).toContain(
+      'md:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Precio' }).className).toContain(
+      'md:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Retira' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Cantidad' }).className).not.toContain(
+      'hidden',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Estado' }).className).not.toContain('hidden');
+  });
+});
+
 describe('KeyOrderItemsTable — building name resolution', () => {
   it('renders resolved building name when useBuildingsByIds provides a Map', () => {
     useBuildingsByIdsMock.mockReturnValue({

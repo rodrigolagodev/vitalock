@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Power } from 'lucide-react';
 import { Badge } from '@vitalock/ui';
-import { DataTable, type DataTableAction } from '@vitalock/ui';
+import { DataCardList, type DataTableAction } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
 import type { KeyRow } from '@/hooks/useKeys';
@@ -15,6 +15,16 @@ interface KeysTableProps {
   hasFilters?: boolean;
 }
 
+/**
+ * Card list of a building's key roster. The `Unidad` column used to hand-
+ * build a mini-card inside a single table cell (unit number + unit type +
+ * an "Admin" `Badge` all composed with manual flex markup) — the same
+ * already-faking-a-card tell found and removed from installer's and
+ * admin's `TareasTable`. Each constituent part is now its own
+ * `DataTableColumn`/meta row (`Unidad`, `Tipo de unidad`, `Unidad
+ * administrativa`) so `DataCardList` renders them as ordinary card content
+ * instead of hand-rolled JSX.
+ */
 export function KeysTable({
   keys,
   buildingId,
@@ -40,7 +50,7 @@ export function KeysTable({
 
   return (
     <>
-      <DataTable<KeyRow>
+      <DataCardList<KeyRow>
         rows={keys}
         isFetching={isFetching}
         rowKey={(k) => k.id}
@@ -57,23 +67,28 @@ export function KeysTable({
           },
           {
             header: 'Unidad',
-            cell: (k) => (
-              <div className="flex items-center gap-2">
-                <span>{k.unit.number}</span>
-                {k.unit.unit_type && (
-                  <span className="text-muted-foreground text-xs">· {k.unit.unit_type}</span>
-                )}
-                {k.unit.is_administrative && (
-                  <Badge variant="secondary" className="text-xs">
-                    Admin
-                  </Badge>
-                )}
-              </div>
-            ),
+            cell: (k) => k.unit.number,
+          },
+          {
+            header: 'Tipo de unidad',
+            className: 'text-muted-foreground',
+            cell: (k) => k.unit.unit_type ?? '—',
+          },
+          {
+            header: 'Unidad administrativa',
+            cell: (k) =>
+              k.unit.is_administrative ? (
+                <Badge variant="secondary" className="text-xs">
+                  Admin
+                </Badge>
+              ) : (
+                '—'
+              ),
           },
           {
             header: 'Estado',
             cell: (k) => <keyStatus.Badge status={k.status} />,
+            card: 'status',
           },
           {
             header: 'Activada',

@@ -123,7 +123,7 @@ export {
   type FilterBarDateRangeValue,
   type FilterBarSummaryProps,
 } from './components/patterns/FilterBar';
-export { dayKey, formatDayHeading } from './lib/date';
+export { dayKey, formatDayHeading, monthKey, formatMonthHeading } from './lib/date';
 export { AppShell, type AppShellProps } from './components/layout/AppShell';
 export {
   BrandLogoImages,

@@ -74,5 +74,25 @@ describe('EquipmentInventoryTable rendering', () => {
     renderTable(<EquipmentInventoryTable rows={[]} />);
     expect(screen.getByText(/no hay equipos/i)).toBeInTheDocument();
   });
-});
 
+  it('renders one card per equipment instead of a table', () => {
+    renderTable(<EquipmentInventoryTable rows={fakeRows} />);
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+
+  it('renders the status badge for each row', () => {
+    renderTable(<EquipmentInventoryTable rows={fakeRows} />);
+
+    expect(screen.getByText('Activo')).toBeInTheDocument();
+    expect(screen.getByText('Mantenimiento')).toBeInTheDocument();
+  });
+
+  it('renders the loading skeleton while fetching', () => {
+    const { container } = renderTable(<EquipmentInventoryTable rows={[]} isFetching />);
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
+  });
+});
