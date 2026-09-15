@@ -107,6 +107,22 @@ export {
   type DataCardListProps,
   type CardListDensity,
 } from './components/patterns/DataCardList';
+export {
+  FilterBar,
+  type FilterBarProps,
+  type FacetRegistration,
+  type FilterBarSearchProps,
+  type FilterBarSelectProps,
+  type FilterBarSelectOption,
+  type FilterBarMultiSelectProps,
+  type FilterBarMultiSelectOption,
+  type FilterBarCascadeProps,
+  type FilterBarCascadeValue,
+  type FilterBarCascadeLabels,
+  type FilterBarDateRangeProps,
+  type FilterBarDateRangeValue,
+  type FilterBarSummaryProps,
+} from './components/patterns/FilterBar';
 export { dayKey, formatDayHeading } from './lib/date';
 export { AppShell, type AppShellProps } from './components/layout/AppShell';
 export {
