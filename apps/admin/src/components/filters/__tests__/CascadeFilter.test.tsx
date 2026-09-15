@@ -112,6 +112,61 @@ describe('CascadeFilter compact trigger style', () => {
   });
 });
 
+describe('CascadeFilter grouping (administration/building/equipment read as one connected control)', () => {
+  // The three levels are hierarchically coupled (picking one filters the
+  // next) — unlike a page's other, genuinely independent filters (Estado,
+  // Tipo), so they should visually read as one unit rather than 3 separate-
+  // looking dashed chips. Joined via shared borders (squared-off shared
+  // edges, -ml-px overlap) rather than a wrapping box, matching the
+  // shadcn-derived "no boxed container" convention the rest of FilterBar
+  // already committed to.
+  it('squares off the shared edge between adjacent levels and overlaps their borders', () => {
+    renderFilter();
+    const admin = screen.getByRole('combobox', { name: /administración/i });
+    const building = screen.getByRole('combobox', { name: /edificio/i });
+    const equipment = screen.getByRole('combobox', { name: /equipo/i });
+
+    expect(admin).toHaveClass('rounded-r-none');
+    expect(admin).not.toHaveClass('-ml-px');
+
+    expect(building).toHaveClass('rounded-none', '-ml-px');
+
+    expect(equipment).toHaveClass('rounded-l-none', '-ml-px');
+  });
+
+  it('keeps the sole level unrounded-off when only one level is rendered', () => {
+    render(
+      <CascadeFilter
+        value={{}}
+        onChange={vi.fn()}
+        levels={['administration']}
+        administrations={MOCK_ADMINS}
+        buildings={MOCK_BUILDINGS}
+        equipment={MOCK_EQUIPMENT}
+      />,
+    );
+    const admin = screen.getByRole('combobox', { name: /administración/i });
+    expect(admin).not.toHaveClass('rounded-r-none', 'rounded-l-none', 'rounded-none', '-ml-px');
+  });
+
+  it('treats the first rendered level as the group edge when levels=["building","equipment"]', () => {
+    render(
+      <CascadeFilter
+        value={{}}
+        onChange={vi.fn()}
+        levels={['building', 'equipment']}
+        administrations={MOCK_ADMINS}
+        buildings={MOCK_BUILDINGS}
+        equipment={MOCK_EQUIPMENT}
+      />,
+    );
+    const building = screen.getByRole('combobox', { name: /edificio/i });
+    const equipment = screen.getByRole('combobox', { name: /equipo/i });
+    expect(building).toHaveClass('rounded-r-none');
+    expect(equipment).toHaveClass('rounded-l-none', '-ml-px');
+  });
+});
+
 describe('CascadeFilter interactions', () => {
   it('calls onChange with administrationId when admin is selected', async () => {
     const { onChange } = renderFilter();
