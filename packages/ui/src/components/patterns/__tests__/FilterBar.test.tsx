@@ -385,15 +385,50 @@ describe('FilterBar.DateRange', () => {
     expect(onChange).toHaveBeenCalledWith({ from: '', to: '' });
   });
 
-  it('renders Desde/Hasta labeled date inputs', () => {
+  // Two always-visible native date inputs (each with its own "Desde"/
+  // "Hasta" label above it) measured ~450-500px wide in practice — by far
+  // the widest control in the bar — so it was almost always the item that
+  // got pushed onto its own line once a couple of other filters were also
+  // active, and its own label+input stacking made that line taller than
+  // its neighbors besides. Collapsing it into the same dashed-border
+  // popover-trigger family as MultiSelect gives every filter the same
+  // compact, near-fixed footprint, which is what actually keeps the row
+  // from wrapping the trailing Summary button onto an orphan line.
+  it('renders as a compact trigger button, not always-visible inputs', () => {
     render(
       <FilterBar>
         <FilterBar.DateRange value={{ from: '', to: '' }} onChange={() => {}} />
       </FilterBar>,
     );
 
+    expect(screen.getByRole('button', { name: /fecha/i })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Desde')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Hasta')).not.toBeInTheDocument();
+  });
+
+  it('reveals Desde/Hasta labeled date inputs once the trigger opens', async () => {
+    const user = userEvent.setup();
+    render(
+      <FilterBar>
+        <FilterBar.DateRange value={{ from: '', to: '' }} onChange={() => {}} />
+      </FilterBar>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /fecha/i }));
+
     expect(screen.getByLabelText('Desde')).toBeInTheDocument();
     expect(screen.getByLabelText('Hasta')).toBeInTheDocument();
+  });
+
+  it('shows the active range as a badge on the trigger itself', () => {
+    render(
+      <FilterBar>
+        <FilterBar.DateRange value={{ from: '2026-08-01', to: '' }} onChange={() => {}} />
+      </FilterBar>,
+    );
+
+    const trigger = screen.getByRole('button', { name: /fecha/i });
+    expect(within(trigger).getByText(/2026-08-01/)).toBeInTheDocument();
   });
 });
 
