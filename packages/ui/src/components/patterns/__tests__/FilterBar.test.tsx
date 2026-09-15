@@ -12,8 +12,8 @@ const KIND_OPTIONS = [
   { value: 'technical', label: 'Técnico' },
 ];
 
-describe('FilterBar registry & Summary — facet-counted active filters', () => {
-  it('counts a multi-select facet with 3 selected values as 1 active filter, not 3', () => {
+describe('FilterBar registry & Summary — "Limpiar todo" visibility', () => {
+  it('shows exactly one "Limpiar todo" control for a multi-select facet with several selected values', () => {
     render(
       <FilterBar>
         <FilterBar.MultiSelect
@@ -31,11 +31,10 @@ describe('FilterBar registry & Summary — facet-counted active filters', () => 
       </FilterBar>,
     );
 
-    expect(screen.getByText('1 filtro activo')).toBeInTheDocument();
-    expect(screen.getByText('Estado (3)')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Limpiar todo' })).toHaveLength(1);
   });
 
-  it('drops a facet chip from Summary when its sub-component unmounts', () => {
+  it('hides the "Limpiar todo" control once the only active facet unmounts', () => {
     function Wrapper({ showSearch }: { showSearch: boolean }) {
       return (
         <FilterBar>
@@ -48,10 +47,10 @@ describe('FilterBar registry & Summary — facet-counted active filters', () => 
     }
 
     const { rerender } = render(<Wrapper showSearch />);
-    expect(screen.getByText('1 filtro activo')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Limpiar todo' })).toBeInTheDocument();
 
     rerender(<Wrapper showSearch={false} />);
-    expect(screen.getByText('0 filtros activos')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Limpiar todo' })).not.toBeInTheDocument();
   });
 });
 
@@ -131,7 +130,7 @@ describe('FilterBar.Select', () => {
 });
 
 describe('FilterBar.MultiSelect', () => {
-  it('shows the facet label with no badge when 0 selected, and registers inactive', () => {
+  it('shows the facet label on a dashed trigger with no badge when 0 selected, and registers inactive', () => {
     render(
       <FilterBar>
         <FilterBar.MultiSelect
@@ -145,12 +144,14 @@ describe('FilterBar.MultiSelect', () => {
       </FilterBar>,
     );
 
-    expect(screen.getByRole('button', { name: 'Tipo' })).toBeInTheDocument();
+    const trigger = screen.getByRole('button', { name: 'Tipo' });
+    expect(trigger).toBeInTheDocument();
+    expect(trigger).toHaveClass('border-dashed');
     expect(screen.queryByText(/seleccionados/)).not.toBeInTheDocument();
-    expect(screen.getByText('0 filtros activos')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Limpiar todo' })).not.toBeInTheDocument();
   });
 
-  it('shows the single option label when exactly 1 is selected', () => {
+  it('shows the single option label as an inline badge when exactly 1 is selected', () => {
     render(
       <FilterBar>
         <FilterBar.MultiSelect
@@ -166,7 +167,7 @@ describe('FilterBar.MultiSelect', () => {
     expect(screen.getByText('Llaves')).toBeInTheDocument();
   });
 
-  it('shows "N seleccionados" when more than one option is selected', () => {
+  it('shows each selected option as its own badge when exactly 2 are selected, without collapsing', () => {
     render(
       <FilterBar>
         <FilterBar.MultiSelect
@@ -179,7 +180,31 @@ describe('FilterBar.MultiSelect', () => {
       </FilterBar>,
     );
 
-    expect(screen.getByText('2 seleccionados')).toBeInTheDocument();
+    expect(screen.getByText('Llaves')).toBeInTheDocument();
+    expect(screen.getByText('Técnico')).toBeInTheDocument();
+    expect(screen.queryByText(/seleccionados/)).not.toBeInTheDocument();
+  });
+
+  it('collapses to "N seleccionados" once more than 2 options are selected', () => {
+    const options = [
+      { value: 'key', label: 'Llaves' },
+      { value: 'technical', label: 'Técnico' },
+      { value: 'billing', label: 'Facturación' },
+    ];
+    render(
+      <FilterBar>
+        <FilterBar.MultiSelect
+          facet="kind"
+          label="Tipo"
+          options={options}
+          value={['key', 'technical', 'billing']}
+          onChange={() => {}}
+        />
+      </FilterBar>,
+    );
+
+    expect(screen.getByText('3 seleccionados')).toBeInTheDocument();
+    expect(screen.queryByText('Facturación')).not.toBeInTheDocument();
   });
 
   it('renders a checkbox group with real checkbox semantics, not a listbox', async () => {
@@ -260,10 +285,49 @@ describe('FilterBar.MultiSelect', () => {
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('group', { name: 'Tipo' })).not.toBeInTheDocument();
   });
+
+  it('clears just this facet via "Limpiar filtro" inside the popover', async () => {
+    const user = userEvent.setup();
+    const onChangeKind = vi.fn();
+    render(
+      <FilterBar>
+        <FilterBar.MultiSelect
+          facet="kind"
+          label="Tipo"
+          options={KIND_OPTIONS}
+          value={['key']}
+          onChange={onChangeKind}
+        />
+      </FilterBar>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Tipo/ }));
+    await user.click(screen.getByRole('button', { name: 'Limpiar filtro' }));
+
+    expect(onChangeKind).toHaveBeenCalledWith([]);
+  });
+
+  it('does not render "Limpiar filtro" when no option is selected', async () => {
+    const user = userEvent.setup();
+    render(
+      <FilterBar>
+        <FilterBar.MultiSelect
+          facet="kind"
+          label="Tipo"
+          options={KIND_OPTIONS}
+          value={[]}
+          onChange={() => {}}
+        />
+      </FilterBar>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Tipo' }));
+    expect(screen.queryByRole('button', { name: 'Limpiar filtro' })).not.toBeInTheDocument();
+  });
 });
 
 describe('FilterBar.Cascade', () => {
-  it('is a registration-only wrapper: renders children untouched and registers one chip per non-empty level', () => {
+  it('is a registration-only wrapper: renders children untouched and shows "Limpiar todo" once a level is set', () => {
     render(
       <FilterBar>
         <FilterBar.Cascade
@@ -278,15 +342,16 @@ describe('FilterBar.Cascade', () => {
     );
 
     expect(screen.getByTestId('cascade-stub')).toBeInTheDocument();
-    expect(screen.getByText('1 filtro activo')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Limpiar todo' })).toBeInTheDocument();
   });
 
-  it('registers a chip per non-empty level when multiple levels are set', () => {
+  it('clicking "Limpiar todo" clears every registered cascade level via onChange', () => {
+    const onChange = vi.fn();
     render(
       <FilterBar>
         <FilterBar.Cascade
           value={{ administrationId: 'a1', buildingId: 'b1', equipmentId: '' }}
-          onChange={() => {}}
+          onChange={onChange}
           labels={{ administration: 'Administración', building: 'Edificio', equipment: 'Equipo' }}
         >
           <div>Cascade stub</div>
@@ -295,12 +360,18 @@ describe('FilterBar.Cascade', () => {
       </FilterBar>,
     );
 
-    expect(screen.getByText('2 filtros activos')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar todo' }));
+
+    expect(onChange).toHaveBeenCalledWith({
+      administrationId: '',
+      buildingId: '',
+      equipmentId: '',
+    });
   });
 });
 
 describe('FilterBar.DateRange', () => {
-  it('is active when either from or to is non-empty, and clearing resets both to empty', () => {
+  it('is active when either from or to is non-empty, and "Limpiar todo" resets both to empty', () => {
     const onChange = vi.fn();
     render(
       <FilterBar>
@@ -309,8 +380,8 @@ describe('FilterBar.DateRange', () => {
       </FilterBar>,
     );
 
-    expect(screen.getByText('1 filtro activo')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Quitar filtro/i }));
+    expect(screen.getByRole('button', { name: 'Limpiar todo' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar todo' }));
     expect(onChange).toHaveBeenCalledWith({ from: '', to: '' });
   });
 
@@ -327,7 +398,21 @@ describe('FilterBar.DateRange', () => {
 });
 
 describe('FilterBar.Summary — "Limpiar todo"', () => {
-  it('invokes every registered clear callback and resets the active count to 0', () => {
+  it('renders nothing when no filters are active', () => {
+    const { container } = render(
+      <FilterBar>
+        <FilterBar.Search value="" onChange={() => {}} placeholder="Buscar..." />
+        <FilterBar.Summary />
+      </FilterBar>,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Limpiar todo' })).not.toBeInTheDocument();
+    // Only the Search control's own markup should be present — Summary
+    // contributes no empty wrapper/container to the DOM.
+    expect(container.querySelectorAll('button')).toHaveLength(0);
+  });
+
+  it('invokes every registered clear callback and hides itself again once no facet remains active', () => {
     function Harness() {
       const [search, setSearch] = useState('llaves');
       const [statuses, setStatuses] = useState<string[]>(['draft']);
@@ -348,8 +433,8 @@ describe('FilterBar.Summary — "Limpiar todo"', () => {
 
     render(<Harness />);
 
-    expect(screen.getByText('2 filtros activos')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Limpiar todo' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Limpiar todo' }));
-    expect(screen.getByText('0 filtros activos')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Limpiar todo' })).not.toBeInTheDocument();
   });
 });
