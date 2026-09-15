@@ -1,15 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-  Button,
-  ErrorState,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Button, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -52,8 +43,25 @@ export default function InventarioPage() {
   const physicalStatus = searchParams.get('physicalStatus') ?? 'all';
   const workflowStatus = searchParams.get('workflowStatus') ?? 'all';
 
+  // `FilterBar.Summary`'s "Limpiar todo" fires one independent onChange per
+  // active facet, synchronously, in a single event handler (e.g. cascade +
+  // physicalStatus + workflowStatus all at once). `setSearchParams` resolves
+  // against the per-render `searchParams` snapshot and navigates
+  // imperatively, so calling it more than once in the same tick does NOT
+  // compose — only the last call's URL would survive. This ref chains each
+  // call's output as the next call's base within the same tick, so multiple
+  // synchronous filter clears merge into the URL correctly instead of
+  // clobbering each other. It is cleared once `searchParams` itself commits,
+  // so it never becomes a second source of truth — the URL still is.
+  const pendingParamsRef = useRef<URLSearchParams | null>(null);
+
+  useEffect(() => {
+    pendingParamsRef.current = null;
+  }, [searchParams]);
+
   const updateParams = (updates: Record<string, string | undefined>) => {
-    const next = new URLSearchParams(searchParams);
+    const base = pendingParamsRef.current ?? searchParams;
+    const next = new URLSearchParams(base);
     for (const [k, v] of Object.entries(updates)) {
       if (v == null || v === '') {
         next.delete(k);
@@ -61,6 +69,7 @@ export default function InventarioPage() {
         next.set(k, v);
       }
     }
+    pendingParamsRef.current = next;
     setSearchParams(next, { replace: true });
   };
 
@@ -119,6 +128,13 @@ export default function InventarioPage() {
     return <ErrorState message="Error al cargar el inventario de llaves. Recargá la página." />;
   }
 
+  const hasFilters =
+    cascadeValue.administrationId != null ||
+    cascadeValue.buildingId != null ||
+    cascadeValue.equipmentId != null ||
+    physicalStatus !== 'all' ||
+    workflowStatus !== 'all';
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Inventario de llaves">
@@ -127,72 +143,57 @@ export default function InventarioPage() {
         </Button>
       </PageHeader>
 
-      <div className="flex flex-col gap-4">
-        <CascadeFilter
-          value={cascadeValue}
+      <FilterBar>
+        <FilterBar.Cascade
+          value={{
+            administrationId: cascadeValue.administrationId ?? '',
+            buildingId: cascadeValue.buildingId ?? '',
+            equipmentId: cascadeValue.equipmentId ?? '',
+          }}
           onChange={setCascadeValue}
-          levels={['administration', 'building', 'equipment']}
-          administrations={adminOptions}
-          buildings={buildingOptions}
-          equipment={equipmentOptions}
+          labels={{ administration: 'Administración', building: 'Edificio', equipment: 'Equipo' }}
+          resolveLabel={(level, id) => {
+            if (level === 'administration') {
+              return adminOptions.find((a) => a.id === id)?.label ?? id;
+            }
+            if (level === 'building') {
+              return buildingOptions.find((b) => b.id === id)?.label ?? id;
+            }
+            return equipmentOptions.find((e) => e.id === id)?.label ?? id;
+          }}
+        >
+          <CascadeFilter
+            value={cascadeValue}
+            onChange={setCascadeValue}
+            levels={['administration', 'building', 'equipment']}
+            administrations={adminOptions}
+            buildings={buildingOptions}
+            equipment={equipmentOptions}
+          />
+        </FilterBar.Cascade>
+
+        <FilterBar.Select
+          facet="physicalStatus"
+          label="Estado físico"
+          options={PHYSICAL_STATUS_OPTIONS}
+          value={physicalStatus}
+          onChange={setPhysicalStatus}
+          allValue="all"
         />
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-col gap-1">
-            <Label
-              htmlFor="physical-status"
-              className="text-muted-foreground text-xs font-medium uppercase"
-            >
-              Estado físico
-            </Label>
-            <Select value={physicalStatus} onValueChange={setPhysicalStatus}>
-              <SelectTrigger id="physical-status" aria-label="Estado físico" className="w-56">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PHYSICAL_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <FilterBar.Select
+          facet="workflowStatus"
+          label="Estado de orden"
+          options={WORKFLOW_STATUS_OPTIONS}
+          value={workflowStatus}
+          onChange={setWorkflowStatus}
+          allValue="all"
+        />
 
-          <div className="flex flex-col gap-1">
-            <Label
-              htmlFor="workflow-status"
-              className="text-muted-foreground text-xs font-medium uppercase"
-            >
-              Estado de orden
-            </Label>
-            <Select value={workflowStatus} onValueChange={setWorkflowStatus}>
-              <SelectTrigger id="workflow-status" aria-label="Estado de orden" className="w-56">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {WORKFLOW_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
+        <FilterBar.Summary />
+      </FilterBar>
 
-      <KeysInventoryTable
-        rows={rows}
-        isFetching={isFetching}
-        hasFilters={
-          cascadeValue.administrationId != null ||
-          cascadeValue.buildingId != null ||
-          cascadeValue.equipmentId != null ||
-          physicalStatus !== 'all' ||
-          workflowStatus !== 'all'
-        }
-      />
+      <KeysInventoryTable rows={rows} isFetching={isFetching} hasFilters={hasFilters} />
     </div>
   );
 }
