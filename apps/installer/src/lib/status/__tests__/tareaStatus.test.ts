@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { isClosedTareaStatus, ticketClosedAt } from '../tareaStatus';
+import { ArrowLeftRight, ClipboardList, PackagePlus, RefreshCcw, Wrench } from 'lucide-react';
+import { categoryIcon, isClosedTareaStatus, ticketClosedAt } from '../tareaStatus';
 
 describe('isClosedTareaStatus', () => {
   it('is true only for terminal statuses', () => {
@@ -21,5 +22,18 @@ describe('ticketClosedAt', () => {
     expect(ticketClosedAt({ resolved_at: null, updated_at: '2026-08-21T00:00:00Z' })).toBe(
       '2026-08-21T00:00:00Z',
     );
+  });
+});
+
+describe('categoryIcon', () => {
+  it('maps each known category to its own icon', () => {
+    expect(categoryIcon('install_equipment')).toBe(PackagePlus);
+    expect(categoryIcon('replace_equipment')).toBe(ArrowLeftRight);
+    expect(categoryIcon('update_equipment')).toBe(RefreshCcw);
+    expect(categoryIcon('maintain_equipment')).toBe(Wrench);
+  });
+
+  it('falls back to a generic clipboard icon for an unknown category', () => {
+    expect(categoryIcon('unknown_category')).toBe(ClipboardList);
   });
 });

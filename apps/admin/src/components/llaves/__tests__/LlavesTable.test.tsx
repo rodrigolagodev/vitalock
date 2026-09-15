@@ -54,33 +54,28 @@ describe('LlavesTable', () => {
   });
 
   it('renders skeleton rows when isFetching is true', () => {
-    const { container } = render(
-      <LlavesTable rows={[]} isFetching={true} />,
-      { wrapper: makeWrapper() },
-    );
+    const { container } = render(<LlavesTable rows={[]} isFetching={true} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('renders empty state message when no rows and no filters', () => {
-    render(
-      <LlavesTable rows={[]} isFetching={false} hasFilters={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<LlavesTable rows={[]} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText(/no hay órdenes de llave/i)).toBeInTheDocument();
   });
 
   it('renders filtered-empty-state when no rows but filters active', () => {
-    render(
-      <LlavesTable rows={[]} isFetching={false} hasFilters={true} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<LlavesTable rows={[]} isFetching={false} hasFilters={true} />, {
+      wrapper: makeWrapper(),
+    });
 
-    expect(
-      screen.getByText(/no se encontraron órdenes con los filtros/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no se encontraron órdenes con los filtros/i)).toBeInTheDocument();
   });
 
   it('renders status badge for each row', () => {
@@ -91,6 +86,18 @@ describe('LlavesTable', () => {
     // 'confirmed' → 'Confirmada', 'ready_for_pickup' → 'Lista para retirar'
     expect(screen.getByText('Confirmada')).toBeInTheDocument();
     expect(screen.getByText('Lista para retirar')).toBeInTheDocument();
+  });
+
+  it('renders one card per key order instead of a table, as a flat worklist with no date grouping', () => {
+    const { container } = render(<LlavesTable rows={sampleRows} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    // no `<section>` group wrappers — this is a flat worklist, not a
+    // date/month-grouped view like admin HistorialTable.
+    expect(container.querySelectorAll('section')).toHaveLength(0);
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
   it('renders order_number as a link to /llaves/:id', () => {

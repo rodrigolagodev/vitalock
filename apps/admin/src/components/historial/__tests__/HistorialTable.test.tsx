@@ -68,23 +68,19 @@ describe('HistorialTable', () => {
   });
 
   it('renders empty state message when no rows and no filters', () => {
-    render(
-      <HistorialTable orders={[]} isFetching={false} hasFilters={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<HistorialTable orders={[]} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText(/no hay órdenes en el historial/i)).toBeInTheDocument();
   });
 
   it('renders filtered-empty-state when no rows but filters active', () => {
-    render(
-      <HistorialTable orders={[]} isFetching={false} hasFilters={true} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<HistorialTable orders={[]} isFetching={false} hasFilters={true} />, {
+      wrapper: makeWrapper(),
+    });
 
-    expect(
-      screen.getByText(/no se encontraron órdenes con los filtros/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/no se encontraron órdenes con los filtros/i)).toBeInTheDocument();
   });
 
   it('renders order_kind badge: key → "Llaves", technical → "Servicio técnico"', () => {
@@ -106,5 +102,42 @@ describe('HistorialTable', () => {
 
     const link2 = screen.getByRole('link', { name: 'ORD-TEC-000001' });
     expect(link2).toHaveAttribute('href', '/servicio-tecnico/to-1');
+  });
+
+  it('renders one card per order instead of a table', () => {
+    render(<HistorialTable orders={sampleRows} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+
+  it('renders a decorative kind icon in the card, distinct from the Estado badge slot', () => {
+    render(<HistorialTable orders={sampleRows} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const [card] = screen.getAllByRole('listitem');
+    expect(card!.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument();
+    // Estado badge still renders — Kind moved to the icon slot, freeing
+    // card: 'status' for Estado alone.
+    expect(screen.getByText('Facturada')).toBeInTheDocument();
+  });
+
+  it('groups entries by month heading, most recent month first', () => {
+    const rows: AllOrderRow[] = [
+      { ...sampleRows[0]!, id: 'a', order_number: 'A', created_at: '2026-07-05T10:00:00Z' },
+      { ...sampleRows[0]!, id: 'b', order_number: 'B', created_at: '2026-08-10T10:00:00Z' },
+    ];
+    render(<HistorialTable orders={rows} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const headings = screen.getAllByRole('heading').map((h) => h.textContent);
+    const augustIndex = headings.findIndex((h) => h?.includes('agosto de 2026'));
+    const julyIndex = headings.findIndex((h) => h?.includes('julio de 2026'));
+    expect(augustIndex).toBeGreaterThanOrEqual(0);
+    expect(julyIndex).toBeGreaterThan(augustIndex);
   });
 });

@@ -7,12 +7,20 @@ import { cn } from '../lib/utils';
 // a plain composable div — no Radix primitive. `interactive` adds the
 // hover/focus-visible affordance for cards that act as a navigation target
 // (see DataCardList's stretched-link title).
+//
+// Uses `--muted` (neutral), not `--accent` (a vivid brand color paired
+// elsewhere with `accent-foreground` text, e.g. Button/NavItem): a Card's
+// hover wash sits behind several independently-colored children (muted
+// labels, the title, status badges) that can't all be swapped to a single
+// foreground color, so the hover background must stay neutral or those
+// children lose contrast against it — table.tsx's row hover uses the same
+// `hover:bg-muted/50` for the same reason.
 const cardVariants = cva('rounded-xl border bg-card text-card-foreground shadow-sm', {
   variants: {
     variant: {
       default: '',
       interactive:
-        'transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
     },
   },
   defaultVariants: {

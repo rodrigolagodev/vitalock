@@ -49,16 +49,11 @@ export function TechnicalOrderItemsTable({
   );
   const staffIds = useMemo(
     () =>
-      items
-        .map((it) => it.intended_assignee_staff_id)
-        .filter((id): id is string => Boolean(id)),
+      items.map((it) => it.intended_assignee_staff_id).filter((id): id is string => Boolean(id)),
     [items],
   );
   const productIds = useMemo(
-    () =>
-      items
-        .map((it) => it.product_id)
-        .filter((id): id is string => Boolean(id)),
+    () => items.map((it) => it.product_id).filter((id): id is string => Boolean(id)),
     [items],
   );
   const { data: equipmentMap } = useEquipmentByIds(equipmentIds);
@@ -87,16 +82,17 @@ export function TechnicalOrderItemsTable({
           header: 'Descripción',
           cell: (item) => item.description ?? '—',
           className: 'text-muted-foreground',
+          hideBelow: 'lg',
         },
         {
           header: 'Equipo previsto',
           cell: (item) => {
             const current = item.intended_equipment_id
-              ? equipmentMap?.get(item.intended_equipment_id)?.serial_number ??
-                item.intended_equipment_id
+              ? (equipmentMap?.get(item.intended_equipment_id)?.serial_number ??
+                item.intended_equipment_id)
               : '—';
             const productName = item.product_id
-              ? productMap?.get(item.product_id)?.name ?? item.product_id
+              ? (productMap?.get(item.product_id)?.name ?? item.product_id)
               : null;
 
             if (item.item_type === 'replace_equipment') {
@@ -119,8 +115,8 @@ export function TechnicalOrderItemsTable({
           header: 'Asignado a',
           cell: (item) =>
             item.intended_assignee_staff_id
-              ? staffMap?.get(item.intended_assignee_staff_id)?.full_name ??
-                item.intended_assignee_staff_id
+              ? (staffMap?.get(item.intended_assignee_staff_id)?.full_name ??
+                item.intended_assignee_staff_id)
               : '—',
           className: 'text-muted-foreground text-xs',
           hideBelow: 'lg',
