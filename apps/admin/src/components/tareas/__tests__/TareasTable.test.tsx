@@ -81,14 +81,17 @@ describe('TareasTable', () => {
     vi.clearAllMocks();
   });
 
-  it('renders rows with ticket link, description column, and building sub-line', () => {
+  it('renders one card per ticket instead of a table, with the ticket number as title', () => {
     render(
       <TareasTable rows={[tareaAbierta, tareaSinDatos]} isFetching={false} hasFilters={false} />,
       { wrapper: makeWrapper() },
     );
 
-    // Ticket is the first-column link with the exact ticket number as name
-    // (the description lives in its own column, not inside the anchor).
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+
+    // Ticket number stays the clean title — unlike installer's pilot, admin's
+    // title was never messy free text, so it is NOT swapped for the category.
     const link = screen.getByRole('link', { name: 'T-0001' });
     expect(link).toHaveAttribute('href', '/tareas/t-1');
 
@@ -97,16 +100,23 @@ describe('TareasTable', () => {
     expect(screen.getByText('Admin García S.A.')).toBeInTheDocument();
     expect(screen.getByText('Ana Gómez')).toBeInTheDocument();
     expect(screen.getAllByText('Mantenimiento').length).toBeGreaterThanOrEqual(1);
-    const cells = screen.getAllByRole('cell').map((cell) => cell.textContent);
-    expect(cells).toContain('Pendiente');
-    expect(cells).toContain('Cancelada');
+    expect(screen.getByText('Pendiente')).toBeInTheDocument();
+    expect(screen.getByText('Cancelada')).toBeInTheDocument();
+  });
+
+  it('renders a decorative category icon in the card, before the title', () => {
+    render(<TareasTable rows={[tareaAbierta]} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
+    const [card] = screen.getAllByRole('listitem');
+    const icon = card!.querySelector('svg[aria-hidden="true"]');
+    expect(icon).toBeInTheDocument();
   });
 
   it('renders fallback dashes and labels for rows without data', () => {
-    render(
-      <TareasTable rows={[tareaSinDatos]} isFetching={false} hasFilters={false} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<TareasTable rows={[tareaSinDatos]} isFetching={false} hasFilters={false} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText('—')).toBeInTheDocument();
     expect(screen.getByText('Sin asignar')).toBeInTheDocument();
@@ -115,12 +125,12 @@ describe('TareasTable', () => {
   });
 
   it('renders the loading skeleton while fetching', () => {
-    render(<TareasTable rows={[]} isFetching hasFilters={false} />, {
+    const { container } = render(<TareasTable rows={[]} isFetching hasFilters={false} />, {
       wrapper: makeWrapper(),
     });
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByText('Ticket')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('shows the empty state when there are no rows and no filters', () => {
@@ -147,7 +157,7 @@ describe('TareasTable', () => {
     });
 
     expect(screen.getByText('1–10 de 12')).toBeInTheDocument();
-    expect(screen.getAllByRole('row')).toHaveLength(11); // 1 header + 10 body rows
+    expect(screen.getAllByRole('listitem')).toHaveLength(10);
   });
 
   it('renders an Editar button with aria-label only when onEdit is provided', async () => {
