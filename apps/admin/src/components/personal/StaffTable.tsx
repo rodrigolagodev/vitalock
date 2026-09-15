@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Trash2, PencilLine } from 'lucide-react';
 import {
-  DataTable,
+  DataCardList,
   Button,
   type DataTableAction,
   Dialog,
@@ -22,6 +22,18 @@ interface StaffTableProps {
   onEdit?: (staff: StaffRow) => void;
 }
 
+/**
+ * Card list of admin/installer staff. `full_name` is already a clean
+ * identifier — no title swap. `Rol` (`StaffRole`) is the row's only
+ * controlled-vocabulary field, so it is promoted to `card: 'status'`
+ * (the header's badge slot) like every other view's Estado field.
+ * Deliberately NO decorative `card: 'icon'`: with only 2 possible role
+ * values already rendered as a distinct colored `staffRole.Badge` now
+ * sitting in the most prominent header slot, a title icon would repeat a
+ * signal the badge already carries — the same "skip where it's a stretch"
+ * call as `EquipmentUpdateHistoryPanel` (Phase 3), just for a different
+ * reason (redundant signal here vs. no type field there).
+ */
 export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: StaffTableProps) {
   const [deactivating, setDeactivating] = useState<StaffRow | null>(null);
   const { deactivateStaff } = useMutateStaff();
@@ -53,7 +65,7 @@ export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: Sta
 
   return (
     <>
-      <DataTable<StaffRow>
+      <DataCardList<StaffRow>
         rows={rows}
         isFetching={isFetching}
         columns={[
@@ -76,6 +88,7 @@ export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: Sta
           {
             header: 'Rol',
             cell: (staff) => <staffRole.Badge status={staff.role} />,
+            card: 'status',
           },
         ]}
         rowKey={(staff) => staff.id}

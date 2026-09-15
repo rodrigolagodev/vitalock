@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Trash2, PencilLine } from 'lucide-react';
 import {
-  DataTable,
+  DataCardList,
   Button,
   type DataTableAction,
   Dialog,
@@ -64,7 +64,7 @@ export function ParticularTable({
 
   return (
     <>
-      <DataTable<ParticularRow>
+      <DataCardList<ParticularRow>
         rows={rows}
         isFetching={isFetching}
         columns={[
@@ -109,8 +109,7 @@ export function ParticularTable({
               {deactivating ? `¿Dar de baja a ${deactivating.full_name}?` : ''}
             </DialogTitle>
             <DialogDescription>
-              El registro se conserva pero deja de aparecer y no puede vincularse a
-              nuevas órdenes.
+              El registro se conserva pero deja de aparecer y no puede vincularse a nuevas órdenes.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

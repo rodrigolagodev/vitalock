@@ -18,6 +18,7 @@ vi.mock('@/hooks/useStaff', () => ({
 vi.mock('@/hooks/useBuildings', () => ({
   useBuildings: useBuildingsMock,
 }));
+vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
 import TareasPage from '../TareasPage';
 

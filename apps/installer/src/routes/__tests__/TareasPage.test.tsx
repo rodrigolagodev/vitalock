@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TareasPage from '@/routes/TareasPage';
+import { categoryLabel } from '@/lib/status/tareaStatus';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
 
 const useAssignedTicketsMock = vi.fn();
@@ -62,7 +63,7 @@ describe('TareasPage', () => {
     expect(screen.getByText('Estás al día. No tenés tareas pendientes.')).toBeInTheDocument();
   });
 
-  it('renders one row per task as a link to the individual detail route', () => {
+  it('renders one row per task as a link to the individual detail route, titled with the category label', () => {
     useAssignedTicketsMock.mockReturnValue({
       data: [makeTicket('1'), makeTicket('2')],
       isLoading: false,
@@ -70,7 +71,9 @@ describe('TareasPage', () => {
     });
     renderTareas();
 
-    const links = screen.getAllByRole('link', { name: /Tarea/ });
+    // Both fixtures default to category: 'update_equipment', so the card
+    // title (the clean category label, not the raw free-text title) repeats.
+    const links = screen.getAllByRole('link', { name: categoryLabel('update_equipment') });
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute('href', '/tareas/1');
     expect(links[1]).toHaveAttribute('href', '/tareas/2');
@@ -88,8 +91,8 @@ describe('TareasPage', () => {
     });
     renderTareas();
 
-    const links = screen.getAllByRole('link', { name: /Tarea/ });
-    expect(links[0]).toHaveTextContent('Tarea b'); // in_progress first
+    const links = screen.getAllByRole('link', { name: categoryLabel('update_equipment') });
+    expect(links[0]).toHaveAttribute('href', '/tareas/b'); // in_progress first
   });
 
   it('shows a per-task key summary (activate / disable counts)', () => {

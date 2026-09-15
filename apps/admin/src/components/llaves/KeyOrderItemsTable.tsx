@@ -111,11 +111,13 @@ export function KeyOrderItemsTable({
                 ? (buildingsMap?.get(item.building_id)?.name ?? item.building_id)
                 : '—',
             className: 'text-muted-foreground',
+            hideBelow: 'md',
           },
           {
             header: 'Precio',
             cell: (item) => formatCurrencyARS(item.unit_price),
             className: 'text-right',
+            hideBelow: 'md',
           },
           {
             header: 'Estado',
@@ -135,6 +137,7 @@ export function KeyOrderItemsTable({
               );
             },
             className: 'text-sm',
+            hideBelow: 'lg',
           },
         ]}
         rowKey={(item) => item.id}

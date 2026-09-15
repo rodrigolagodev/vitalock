@@ -1,3 +1,5 @@
+import type { LucideIcon } from 'lucide-react';
+import { ArrowLeftRight, ClipboardList, PackagePlus, RefreshCcw, Wrench } from 'lucide-react';
 import { createStatusHelpers } from '@vitalock/ui';
 
 /**
@@ -55,4 +57,20 @@ export const CATEGORY_LABELS: Record<string, string> = {
 
 export function categoryLabel(category: string): string {
   return CATEGORY_LABELS[category] ?? 'Tarea';
+}
+
+/**
+ * Decorative icon for a ticket category — always paired with `categoryLabel`,
+ * which already names the task type in words, so the icon itself carries no
+ * separate accessible name (render with `aria-hidden="true"`).
+ */
+export const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  install_equipment: PackagePlus,
+  replace_equipment: ArrowLeftRight,
+  update_equipment: RefreshCcw,
+  maintain_equipment: Wrench,
+};
+
+export function categoryIcon(category: string): LucideIcon {
+  return CATEGORY_ICONS[category] ?? ClipboardList;
 }
