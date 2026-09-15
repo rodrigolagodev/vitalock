@@ -31,7 +31,8 @@ export interface UseTareaFilters {
   search?: string;
   staffId?: string;
   buildingId?: string;
-  status?: string;
+  /** Zero-or-more statuses filtered by set-membership. Empty/undefined = no filter. */
+  status?: string[];
 }
 
 export function useTareas({ search, staffId, buildingId, status }: UseTareaFilters = {}) {
@@ -63,8 +64,8 @@ export function useTareas({ search, staffId, buildingId, status }: UseTareaFilte
         `);
 
       // Server-side status filter.
-      if (status && status !== 'all') {
-        query = query.eq('status', status);
+      if (status?.length) {
+        query = query.in('status', status);
       }
 
       // Server-side staff filter.
