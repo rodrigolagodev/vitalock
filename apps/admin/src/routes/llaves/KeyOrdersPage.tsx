@@ -1,20 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, PackageCheck } from 'lucide-react';
-import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar, StatCard } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useKeyOrders } from '@/hooks/useKeyOrders';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
-import { useDebounce } from '@/hooks/useDebounce';
 import { LlavesTable } from '@/components/llaves/LlavesTable';
 import type { KeyOrderStatus } from '@/hooks/useKeyOrders';
 
-type StatusFilter = 'all' | KeyOrderStatus;
-
-const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'Todos' },
+const STATUS_OPTIONS: { value: KeyOrderStatus; label: string }[] = [
   { value: 'draft', label: 'Borrador' },
   { value: 'confirmed', label: 'Confirmada' },
   { value: 'in_progress', label: 'En proceso' },
@@ -27,18 +23,16 @@ const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
 
 export default function KeyOrdersPage() {
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<StatusFilter>('all');
+  const [status, setStatus] = useState<KeyOrderStatus[]>([]);
   const [administrationId, setAdministrationId] = useState<string | undefined>();
   const [buildingId, setBuildingId] = useState<string | undefined>();
-
-  const debouncedSearch = useDebounce(search, 300);
 
   const { data: administrations = [] } = useAdministrations();
   const { data: buildings = [] } = useBuildings({ administrationId });
 
   const hasFilters =
-    debouncedSearch.trim() !== '' ||
-    status !== 'all' ||
+    search.trim() !== '' ||
+    status.length > 0 ||
     administrationId !== undefined ||
     buildingId !== undefined;
 
@@ -47,8 +41,8 @@ export default function KeyOrdersPage() {
     isFetching,
     isError,
   } = useKeyOrders({
-    search: debouncedSearch,
-    status: status === 'all' ? undefined : status,
+    search,
+    status,
     administrationId,
     buildingId,
   });
@@ -84,46 +78,62 @@ export default function KeyOrdersPage() {
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
+      <FilterBar>
+        <FilterBar.Search
           placeholder="Buscar por número de orden, cliente..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           className="max-w-sm"
         />
-        <CascadeFilter
-          value={{ administrationId, buildingId }}
-          onChange={(next) => {
-            setAdministrationId(next.administrationId);
-            setBuildingId(next.buildingId);
+        <FilterBar.Cascade
+          value={{
+            administrationId: administrationId ?? '',
+            buildingId: buildingId ?? '',
+            equipmentId: '',
           }}
-          levels={['administration', 'building']}
-          administrations={administrations.map((a) => ({
-            id: a.id,
-            label: a.company_name,
-          }))}
-          buildings={buildings.map((b) => ({
-            id: b.id,
-            label: b.name,
-            parentId: b.administration_id,
-          }))}
-          equipment={[]}
+          onChange={(next) => {
+            setAdministrationId(next.administrationId || undefined);
+            setBuildingId(next.buildingId || undefined);
+          }}
+          labels={{ administration: 'Administración', building: 'Edificio', equipment: 'Equipo' }}
+          resolveLabel={(level, id) => {
+            if (level === 'administration') {
+              return administrations.find((a) => a.id === id)?.company_name ?? id;
+            }
+            if (level === 'building') {
+              return buildings.find((b) => b.id === id)?.name ?? id;
+            }
+            return id;
+          }}
+        >
+          <CascadeFilter
+            value={{ administrationId, buildingId }}
+            onChange={(next) => {
+              setAdministrationId(next.administrationId);
+              setBuildingId(next.buildingId);
+            }}
+            levels={['administration', 'building']}
+            administrations={administrations.map((a) => ({
+              id: a.id,
+              label: a.company_name,
+            }))}
+            buildings={buildings.map((b) => ({
+              id: b.id,
+              label: b.name,
+              parentId: b.administration_id,
+            }))}
+            equipment={[]}
+          />
+        </FilterBar.Cascade>
+        <FilterBar.MultiSelect
+          facet="status"
+          label="Estado"
+          options={STATUS_OPTIONS}
+          value={status}
+          onChange={(next) => setStatus(next as KeyOrderStatus[])}
         />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-muted-foreground text-xs uppercase">Estado:</span>
-        {STATUS_PILLS.map((pill) => (
-          <button key={pill.value} type="button" onClick={() => setStatus(pill.value)}>
-            <Badge
-              variant={status === pill.value ? 'default' : 'secondary'}
-              className="cursor-pointer"
-            >
-              {pill.label}
-            </Badge>
-          </button>
-        ))}
-      </div>
+        <FilterBar.Summary />
+      </FilterBar>
 
       <LlavesTable rows={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>

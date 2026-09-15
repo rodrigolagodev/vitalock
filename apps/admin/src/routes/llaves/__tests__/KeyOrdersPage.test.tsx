@@ -94,7 +94,19 @@ describe('KeyOrdersPage list', () => {
 });
 
 describe('KeyOrdersPage status filter', () => {
-  it('passes status filter to useKeyOrders when a status pill is clicked', async () => {
+  it('renders an "Estado" multi-select facet with all 8 live statuses', async () => {
+    renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    const group = screen.getByRole('group', { name: /^estado$/i });
+    expect(within(group).getByRole('checkbox', { name: /^facturado$/i })).toBeInTheDocument();
+    expect(
+      within(group).getByRole('checkbox', { name: /^pendiente instalación$/i }),
+    ).toBeInTheDocument();
+    expect(within(group).getAllByRole('checkbox')).toHaveLength(8);
+  });
+
+  it('passes status filter to useKeyOrders when the Confirmada checkbox is checked', async () => {
     useKeyOrdersMock.mockReturnValue({
       data: [],
       isFetching: false,
@@ -103,12 +115,28 @@ describe('KeyOrdersPage status filter', () => {
 
     renderPage();
 
-    const confirmedPill = screen.getByRole('button', { name: /confirmada/i });
-    await userEvent.click(confirmedPill);
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^confirmada$/i }));
 
-    // After clicking, the hook should be called with status: 'confirmed'.
     const lastCall = useKeyOrdersMock.mock.calls.at(-1)?.[0];
-    expect(lastCall?.status).toBe('confirmed');
+    expect(lastCall?.status).toEqual(['confirmed']);
+  });
+
+  it('passes multiple statuses to useKeyOrders when two checkboxes are checked', async () => {
+    useKeyOrdersMock.mockReturnValue({
+      data: [],
+      isFetching: false,
+      isError: false,
+    });
+
+    renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: /^estado$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^confirmada$/i }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /^en proceso$/i }));
+
+    const lastCall = useKeyOrdersMock.mock.calls.at(-1)?.[0];
+    expect(lastCall?.status).toEqual(['confirmed', 'in_progress']);
   });
 });
 

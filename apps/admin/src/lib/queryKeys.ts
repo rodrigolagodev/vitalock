@@ -19,7 +19,7 @@ export const particularKey = (id: string) => ['admin', 'particular', id] as cons
 export const decommissionImpactKey = (equipmentId: string) =>
   ['admin', 'decommission-impact', equipmentId] as const;
 export const keyOrdersKey = (
-  status?: string,
+  status?: string[],
   search?: string,
   administrationId?: string,
   buildingId?: string,
@@ -27,14 +27,14 @@ export const keyOrdersKey = (
   [
     'admin',
     'key-orders',
-    status ?? 'all',
+    normalizeArrayFilter(status),
     search ?? '',
     administrationId ?? 'all',
     buildingId ?? 'all',
   ] as const;
 export const keyOrderKey = (id: string) => ['admin', 'key-order', id] as const;
 export const technicalOrdersKey = (
-  status?: string,
+  status?: string[],
   search?: string,
   administrationId?: string,
   buildingId?: string,
@@ -42,7 +42,7 @@ export const technicalOrdersKey = (
   [
     'admin',
     'technical-orders',
-    status ?? 'all',
+    normalizeArrayFilter(status),
     search ?? '',
     administrationId ?? 'all',
     buildingId ?? 'all',

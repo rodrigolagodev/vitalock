@@ -8,7 +8,8 @@ import { escapeIlikeValue } from '../db/escapeIlikeValue';
 
 export interface OrderListFilters<TStatus extends string> {
   search?: string;
-  status?: TStatus | 'all' | (string & {});
+  /** Zero-or-more statuses filtered by set-membership. Empty/undefined = no filter. */
+  status?: TStatus[];
   administrationId?: string;
   buildingId?: string;
 }
@@ -36,6 +37,7 @@ export interface OrderListSummaryRawRow {
  */
 export interface OrderListQuery {
   eq: (column: string, value: string) => OrderListQuery;
+  in: (column: string, values: string[]) => OrderListQuery;
   or: (filters: string) => OrderListQuery;
   order: (
     column: string,
@@ -65,7 +67,7 @@ export interface CreateUseOrderListOptions<TRow> {
    * hooks so invalidation and list caching share one key shape.
    */
   queryKeyFn: (
-    status?: string,
+    status?: string[],
     search?: string,
     administrationId?: string,
     buildingId?: string,
@@ -109,8 +111,8 @@ export function createUseOrderList<TStatus extends string, TRow>(
             `id, order_number, client_type, administration_id, company_name, particular_full_name, status, created_at, ${embed}`,
           );
 
-        if (status && status !== 'all') {
-          query = query.eq('status', status);
+        if (status?.length) {
+          query = query.in('status', status);
         }
 
         if (administrationId && administrationId !== 'all') {
