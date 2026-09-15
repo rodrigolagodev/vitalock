@@ -1,38 +1,33 @@
 import { useState } from 'react';
 import { Package, TriangleAlert } from 'lucide-react';
-import { Badge, Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar, StatCard } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useProducts } from '@/hooks/useProducts';
-import { useDebounce } from '@/hooks/useDebounce';
 import { ProductsTable } from '@/components/stock/ProductsTable';
 import { CargarProductoSheet } from '@/components/stock/CargarProductoSheet';
 import { LOW_STOCK_THRESHOLD } from '@/lib/statThresholds';
 import type { ProductCategory } from '@/types/stock';
 
-type CategoryFilter = 'all' | ProductCategory;
-
-const CATEGORY_PILLS: { value: CategoryFilter; label: string }[] = [
-  { value: 'all', label: 'Todas' },
+const CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: '', label: 'Todas' },
   { value: 'rfid_key', label: 'Llaves RFID' },
   { value: 'equipment', label: 'Equipos' },
 ];
 
 export default function StockPage() {
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<CategoryFilter>('all');
+  const [category, setCategory] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
 
-  const debouncedSearch = useDebounce(search, 300);
-
-  const hasFilters = debouncedSearch.trim() !== '' || category !== 'all';
+  const hasFilters = search.trim() !== '' || category !== '';
 
   const {
     data: products = [],
     isFetching,
     isError,
   } = useProducts({
-    category: category === 'all' ? undefined : category,
-    search: debouncedSearch,
+    category: category === '' ? undefined : (category as ProductCategory),
+    search,
   });
 
   if (isError) {
@@ -59,27 +54,24 @@ export default function StockPage() {
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
+      <FilterBar>
+        <FilterBar.Search
           placeholder="Buscar por nombre..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           className="max-w-sm"
         />
-      </div>
 
-      <div className="flex flex-wrap gap-2">
-        {CATEGORY_PILLS.map((pill) => (
-          <button key={pill.value} type="button" onClick={() => setCategory(pill.value)}>
-            <Badge
-              variant={category === pill.value ? 'default' : 'secondary'}
-              className="cursor-pointer"
-            >
-              {pill.label}
-            </Badge>
-          </button>
-        ))}
-      </div>
+        <FilterBar.Select
+          facet="category"
+          label="Categoría"
+          options={CATEGORY_OPTIONS}
+          value={category}
+          onChange={setCategory}
+        />
+
+        <FilterBar.Summary />
+      </FilterBar>
 
       <ProductsTable rows={products} isFetching={isFetching} hasFilters={hasFilters} />
 
