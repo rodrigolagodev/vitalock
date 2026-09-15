@@ -483,8 +483,22 @@ export interface FilterBarCascadeProps {
 /**
  * Registration-only wrapper: `packages/ui` has no access to the app-level
  * cascade filtering logic, so this component does not reimplement it. It
- * only registers one facet per non-empty level (administration/building/
- * equipment) into the shared registry, and renders `children` untouched.
+ * registers ONE facet for the whole cascade (not one per level) and renders
+ * `children` untouched.
+ *
+ * This used to register 3 independent facets (one per level), each with its
+ * own `onClear`. That is a real bug, not just redundant: `Summary`'s
+ * "Limpiar todo" calls every registered facet's `clearRef` synchronously in
+ * one batch, so when administration/building/equipment all clear together,
+ * the building/equipment levels' `onClear` each read `valueRef.current` —
+ * still the PRE-clear snapshot, since React hasn't re-rendered mid-batch —
+ * and re-send that stale sibling data (e.g. building's clear re-asserts the
+ * old `administrationId`) right after administration's own clear had just
+ * removed it, resurrecting a param the user just cleared. A single facet
+ * with one deterministic "reset all three to empty" `onClear` has no sibling
+ * state to go stale, so it cannot reintroduce this. `Summary` no longer
+ * renders one chip per facet (see its own doc comment), so collapsing three
+ * registrations into one costs nothing on the chip/count side either.
  */
 function FilterBarCascade({
   facet = 'cascade',
@@ -497,34 +511,29 @@ function FilterBarCascade({
 }: FilterBarCascadeProps) {
   const onChangeRef = React.useRef(onChange);
   onChangeRef.current = onChange;
-  const valueRef = React.useRef(value);
-  valueRef.current = value;
 
   const display = (level: 'administration' | 'building' | 'equipment', id: string) =>
     resolveLabel ? resolveLabel(level, id) : id;
 
+  const active =
+    value.administrationId !== '' || value.buildingId !== '' || value.equipmentId !== '';
+
+  const chipParts = [
+    value.administrationId !== ''
+      ? `${labels.administration}: ${display('administration', value.administrationId)}`
+      : null,
+    value.buildingId !== '' ? `${labels.building}: ${display('building', value.buildingId)}` : null,
+    value.equipmentId !== ''
+      ? `${labels.equipment}: ${display('equipment', value.equipmentId)}`
+      : null,
+  ].filter((part): part is string => part !== null);
+
   useRegisterFacet({
-    id: `${facet}.administration`,
+    id: facet,
     label: labels.administration,
-    active: value.administrationId !== '',
-    chipLabel: `${labels.administration}: ${display('administration', value.administrationId)}`,
+    active,
+    chipLabel: chipParts.join(' · '),
     onClear: () => onChangeRef.current({ administrationId: '', buildingId: '', equipmentId: '' }),
-  });
-
-  useRegisterFacet({
-    id: `${facet}.building`,
-    label: labels.building,
-    active: value.buildingId !== '',
-    chipLabel: `${labels.building}: ${display('building', value.buildingId)}`,
-    onClear: () => onChangeRef.current({ ...valueRef.current, buildingId: '', equipmentId: '' }),
-  });
-
-  useRegisterFacet({
-    id: `${facet}.equipment`,
-    label: labels.equipment,
-    active: value.equipmentId !== '',
-    chipLabel: `${labels.equipment}: ${display('equipment', value.equipmentId)}`,
-    onClear: () => onChangeRef.current({ ...valueRef.current, equipmentId: '' }),
   });
 
   return <div className={className}>{children}</div>;
