@@ -75,7 +75,7 @@ export const tareasKey = (
   search?: string,
   staffId?: string,
   buildingId?: string,
-  status?: string,
+  status?: string[],
 ) =>
   [
     'admin',
@@ -83,7 +83,7 @@ export const tareasKey = (
     search ?? '',
     staffId ?? 'all',
     buildingId ?? 'all',
-    status ?? 'all',
+    normalizeArrayFilter(status),
   ] as const;
 export const buildingsByIdsKey = (ids: readonly string[]) =>
   ['admin', 'buildings', 'by-ids', ...[...ids].sort()] as const;

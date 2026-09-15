@@ -1,39 +1,30 @@
 import { useState } from 'react';
-import { Badge, Button, ErrorState, SearchInput } from '@vitalock/ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useTareas } from '@/hooks/useTareas';
 import { useStaff } from '@/hooks/useStaff';
 import { useBuildings } from '@/hooks/useBuildings';
-import { useDebounce } from '@/hooks/useDebounce';
 import { TareasTable } from '@/components/tareas/TareasTable';
 import { TareaFormSheet } from '@/components/tareas/TareaFormSheet';
 import type { TareaRow } from '@/hooks/useTareas';
 
-type StatusFilter = 'all' | 'open' | 'in_progress' | 'resolved' | 'cancelled';
-
-const STATUS_PILLS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'Todos' },
+const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'open', label: 'Pendientes' },
   { value: 'in_progress', label: 'En curso' },
   { value: 'resolved', label: 'Finalizadas' },
   { value: 'cancelled', label: 'Canceladas' },
 ];
 
-const ALL = 'all';
-
 export default function TareasPage() {
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<StatusFilter>('all');
+  const [status, setStatus] = useState<string[]>([]);
   const [staffId, setStaffId] = useState('');
   const [buildingId, setBuildingId] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<TareaRow | null>(null);
 
-  const debouncedSearch = useDebounce(search, 300);
-
   const hasFilters =
-    debouncedSearch.trim() !== '' || status !== 'all' || staffId !== '' || buildingId !== '';
+    search.trim() !== '' || status.length > 0 || staffId !== '' || buildingId !== '';
 
   const { data: staff = [] } = useStaff();
   const { data: buildings = [] } = useBuildings();
@@ -43,8 +34,8 @@ export default function TareasPage() {
     isFetching,
     isError,
   } = useTareas({
-    search: debouncedSearch,
-    status: status === 'all' ? undefined : status,
+    search,
+    status,
     staffId: staffId || undefined,
     buildingId: buildingId || undefined,
   });
@@ -59,55 +50,46 @@ export default function TareasPage() {
         <Button onClick={() => setCreateOpen(true)}>Nueva tarea</Button>
       </PageHeader>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <SearchInput
+      <FilterBar>
+        <FilterBar.Search
           placeholder="Buscar por número, descripción, edificio o asignado..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           className="max-w-sm"
         />
 
-        <Select value={staffId || ALL} onValueChange={(v) => setStaffId(v === ALL ? '' : v)}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Todos los asignados" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>Todos los asignados</SelectItem>
-            {staff.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.full_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterBar.Select
+          facet="staff"
+          label="Asignado"
+          options={[
+            { value: '', label: 'Todos los asignados' },
+            ...staff.map((s) => ({ value: s.id, label: s.full_name })),
+          ]}
+          value={staffId}
+          onChange={setStaffId}
+        />
 
-        <Select value={buildingId || ALL} onValueChange={(v) => setBuildingId(v === ALL ? '' : v)}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Todos los edificios" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>Todos los edificios</SelectItem>
-            {buildings.map((b) => (
-              <SelectItem key={b.id} value={b.id}>
-                {b.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        <FilterBar.Select
+          facet="building"
+          label="Edificio"
+          options={[
+            { value: '', label: 'Todos los edificios' },
+            ...buildings.map((b) => ({ value: b.id, label: b.name })),
+          ]}
+          value={buildingId}
+          onChange={setBuildingId}
+        />
 
-      <div className="flex flex-wrap gap-2">
-        {STATUS_PILLS.map((pill) => (
-          <button key={pill.value} type="button" onClick={() => setStatus(pill.value)}>
-            <Badge
-              variant={status === pill.value ? 'default' : 'secondary'}
-              className="cursor-pointer"
-            >
-              {pill.label}
-            </Badge>
-          </button>
-        ))}
-      </div>
+        <FilterBar.MultiSelect
+          facet="status"
+          label="Estado"
+          options={STATUS_OPTIONS}
+          value={status}
+          onChange={setStatus}
+        />
+
+        <FilterBar.Summary />
+      </FilterBar>
 
       <TareasTable
         rows={tareas}
