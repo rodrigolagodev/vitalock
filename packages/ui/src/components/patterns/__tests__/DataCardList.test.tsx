@@ -74,6 +74,42 @@ describe('DataCardList', () => {
     expect(within(card!).getByText('ok')).toBeInTheDocument();
   });
 
+  it('honors an explicit card: "icon" slot and renders it before the title, in the card header', () => {
+    const columns: DataTableColumn<Item>[] = [
+      { header: 'Nombre', cell: (row) => row.name },
+      {
+        header: 'Tipo',
+        cell: () => <Trash2 data-testid="type-icon" aria-hidden="true" />,
+        card: 'icon',
+      },
+    ];
+    renderList({ columns, rows: makeRows(1) });
+
+    const [card] = screen.getAllByRole('listitem');
+    const icon = within(card!).getByTestId('type-icon');
+    expect(icon).toHaveAttribute('aria-hidden', 'true');
+
+    const title = within(card!).getByText('Item 1');
+    // Icon must come before the title in DOM order (top-left of the card).
+    expect(icon.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Both live inside the card header, not the content/footer.
+    const header = card!.querySelector('.p-4');
+    expect(header).toContainElement(icon);
+    expect(header).toContainElement(title);
+  });
+
+  it('does not infer an icon slot — a column only becomes the icon when explicitly marked card: "icon"', () => {
+    const columns: DataTableColumn<Item>[] = [
+      { header: 'Nombre', cell: (row) => row.name },
+      { header: 'Meta 1', cell: (row) => row.meta1 },
+    ];
+    renderList({ columns, rows: makeRows(1) });
+    const [card] = screen.getAllByRole('listitem');
+    // No icon column declared, so the header holds only the title.
+    expect(within(card!).getByText('Item 1')).toBeInTheDocument();
+    expect(within(card!).getByText('Meta 1')).toBeInTheDocument();
+  });
+
   it('does not render a column explicitly marked card: "hidden"', () => {
     const columns: DataTableColumn<Item>[] = [
       { header: 'Nombre', cell: (row) => row.name },
@@ -89,14 +125,14 @@ describe('DataCardList', () => {
     expect(within(card!).getByText('Meta2-1')).toBeInTheDocument();
   });
 
-  it('applies the compact density grid class', () => {
+  it('applies the compact density grid class, fluid (1fr) so cards fill each row evenly', () => {
     const { container } = renderList({ density: 'compact' });
     expect(container.querySelector('ul')).toHaveClass(
       'grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]',
     );
   });
 
-  it('applies the comfortable density grid class', () => {
+  it('applies the comfortable density grid class, fluid (1fr) so cards fill each row evenly', () => {
     const { container } = renderList({ density: 'comfortable' });
     expect(container.querySelector('ul')).toHaveClass(
       'grid-cols-[repeat(auto-fit,minmax(22rem,1fr))]',
@@ -106,6 +142,14 @@ describe('DataCardList', () => {
   it('applies the full density grid class', () => {
     const { container } = renderList({ density: 'full' });
     expect(container.querySelector('ul')).toHaveClass('grid-cols-1');
+  });
+
+  it('caps card width only for `full` density, so a single column never spans edge-to-edge', () => {
+    const { container: fullContainer } = renderList({ density: 'full' });
+    expect(fullContainer.querySelector('li > div')).toHaveClass('max-w-xl');
+
+    const { container: comfortableContainer } = renderList({ density: 'comfortable' });
+    expect(comfortableContainer.querySelector('li > div')).not.toHaveClass('max-w-xl');
   });
 
   it('groups rows by groupBy and renders a SectionHeading per group in descending key order', () => {

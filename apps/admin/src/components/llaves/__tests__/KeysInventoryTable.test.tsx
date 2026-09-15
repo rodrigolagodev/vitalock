@@ -35,34 +35,53 @@ describe('KeysInventoryTable', () => {
   });
 
   it('renders the rfid_code of each row', () => {
-    const rows = [makeRow({ rfid_code: 'RFID-001' }), makeRow({ id: 'key-2', rfid_code: 'RFID-002' })];
+    const rows = [
+      makeRow({ rfid_code: 'RFID-001' }),
+      makeRow({ id: 'key-2', rfid_code: 'RFID-002' }),
+    ];
     renderWithRouter(<KeysInventoryTable rows={rows} isFetching={false} />);
     expect(screen.getByText('RFID-001')).toBeInTheDocument();
     expect(screen.getByText('RFID-002')).toBeInTheDocument();
   });
 
   it('renders the building_name', () => {
-    renderWithRouter(<KeysInventoryTable rows={[makeRow({ building_name: 'Torre Norte' })]} isFetching={false} />);
+    renderWithRouter(
+      <KeysInventoryTable rows={[makeRow({ building_name: 'Torre Norte' })]} isFetching={false} />,
+    );
     expect(screen.getByText('Torre Norte')).toBeInTheDocument();
   });
 
   it('renders the administration_company_name', () => {
-    renderWithRouter(<KeysInventoryTable rows={[makeRow({ administration_company_name: 'Garcia S.A.' })]} isFetching={false} />);
+    renderWithRouter(
+      <KeysInventoryTable
+        rows={[makeRow({ administration_company_name: 'Garcia S.A.' })]}
+        isFetching={false}
+      />,
+    );
     expect(screen.getByText('Garcia S.A.')).toBeInTheDocument();
   });
 
   it('renders the unit_number', () => {
-    renderWithRouter(<KeysInventoryTable rows={[makeRow({ unit_number: '3B' })]} isFetching={false} />);
+    renderWithRouter(
+      <KeysInventoryTable rows={[makeRow({ unit_number: '3B' })]} isFetching={false} />,
+    );
     expect(screen.getByText('3B')).toBeInTheDocument();
   });
 
   it('renders "—" when equipment_serial_number is null', () => {
-    renderWithRouter(<KeysInventoryTable rows={[makeRow({ equipment_serial_number: null })]} isFetching={false} />);
+    renderWithRouter(
+      <KeysInventoryTable rows={[makeRow({ equipment_serial_number: null })]} isFetching={false} />,
+    );
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 
   it('renders equipment_serial_number when present', () => {
-    renderWithRouter(<KeysInventoryTable rows={[makeRow({ equipment_serial_number: 'SN-999' })]} isFetching={false} />);
+    renderWithRouter(
+      <KeysInventoryTable
+        rows={[makeRow({ equipment_serial_number: 'SN-999' })]}
+        isFetching={false}
+      />,
+    );
     expect(screen.getByText('SN-999')).toBeInTheDocument();
   });
 
@@ -78,7 +97,31 @@ describe('KeysInventoryTable', () => {
   });
 
   it('renders "Sin orden" when active_order_id is null', () => {
-    renderWithRouter(<KeysInventoryTable rows={[makeRow({ active_order_id: null })]} isFetching={false} />);
+    renderWithRouter(
+      <KeysInventoryTable rows={[makeRow({ active_order_id: null })]} isFetching={false} />,
+    );
     expect(screen.getByText('Sin orden')).toBeInTheDocument();
+  });
+
+  it('hides secondary columns below their assigned breakpoint, keeps RFID/Unidad/Estado físico always visible', () => {
+    renderWithRouter(<KeysInventoryTable rows={[makeRow()]} isFetching={false} />);
+
+    expect(screen.getByRole('columnheader', { name: 'Edificio' }).className).toContain(
+      'md:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Administración' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Equipo asignado' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Orden activa' }).className).toContain(
+      'xl:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'RFID' }).className).not.toContain('hidden');
+    expect(screen.getByRole('columnheader', { name: 'Unidad' }).className).not.toContain('hidden');
+    expect(screen.getByRole('columnheader', { name: 'Estado físico' }).className).not.toContain(
+      'hidden',
+    );
   });
 });

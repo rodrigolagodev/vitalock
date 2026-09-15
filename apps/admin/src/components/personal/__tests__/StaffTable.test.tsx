@@ -72,7 +72,16 @@ describe('StaffTable', () => {
     mockDeactivateStaff.mockResolvedValue({ id: 's-1', status: 'inactive' });
   });
 
-  it('renders the Usuario column header', () => {
+  it('renders one card per staff member instead of a table', () => {
+    render(<StaffTable rows={[ana, sinContacto]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+
+  it('renders the Usuario field label', () => {
     render(<StaffTable rows={[ana]} isFetching={false} />, { wrapper: makeWrapper() });
     expect(screen.getByText('Usuario')).toBeInTheDocument();
   });
@@ -93,10 +102,10 @@ describe('StaffTable', () => {
   });
 
   it('renders the loading skeleton while fetching', () => {
-    render(<StaffTable rows={[]} isFetching />, { wrapper: makeWrapper() });
+    const { container } = render(<StaffTable rows={[]} isFetching />, { wrapper: makeWrapper() });
 
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByText('Nombre')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('shows the empty state when there are no rows and no filters', () => {
@@ -115,13 +124,13 @@ describe('StaffTable', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the pagination footer and only the first 10 rows', () => {
+  it('renders the pagination footer and only the first 10 cards', () => {
     render(<StaffTable rows={makeStaff(12)} isFetching={false} />, {
       wrapper: makeWrapper(),
     });
 
     expect(screen.getByText('1–10 de 12')).toBeInTheDocument();
-    expect(screen.getAllByRole('row')).toHaveLength(11); // 1 header + 10 body rows
+    expect(screen.getAllByRole('listitem')).toHaveLength(10);
   });
 
   it('opens the deactivate dialog and calls deactivateStaff on confirm', async () => {

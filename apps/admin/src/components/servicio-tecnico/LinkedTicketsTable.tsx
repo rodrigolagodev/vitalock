@@ -1,6 +1,6 @@
-import { DataTable } from '@vitalock/ui';
+import { DataCardList } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
-import { tareaStatus } from '@/lib/status/tareaStatus';
+import { categoryIcon, categoryLabel, tareaStatus } from '@/lib/status/tareaStatus';
 import type { TechnicalOrderTicketRow } from '@/hooks/useTechnicalOrderTickets';
 import { useStaffByIds } from '@/hooks/useStaffByIds';
 
@@ -19,6 +19,13 @@ interface LinkedTicketsTableProps {
  * that reads the same support.tickets row. assigned_to_staff_id is resolved to
  * the staff full name via useStaffByIds; rows without a resolvable assignee
  * render "—".
+ *
+ * "Categoría" used to render `t.category` raw and unlabeled (leaking enum
+ * strings like `install_equipment` straight to the UI) — fixed by reusing
+ * admin's shared `categoryLabel`/`categoryIcon` from `tareaStatus.ts`
+ * (promoted in the admin TareasTable conversion; not re-derived here). A
+ * decorative `card: 'icon'` column restores the type as scannable meta
+ * instead of leaving it hidden below `lg`.
  */
 export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTicketsTableProps) {
   const staffIds = tickets
@@ -37,7 +44,7 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
   }
 
   return (
-    <DataTable<TechnicalOrderTicketRow>
+    <DataCardList<TechnicalOrderTicketRow>
       rows={tickets}
       isFetching={false}
       columns={[
@@ -46,8 +53,16 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
           cell: (t) => t.ticket_number,
         },
         {
+          header: 'Tipo',
+          cell: (t) => {
+            const Icon = categoryIcon(t.category);
+            return <Icon aria-hidden="true" className="text-muted-foreground h-5 w-5" />;
+          },
+          card: 'icon',
+        },
+        {
           header: 'Categoría',
-          cell: (t) => t.category,
+          cell: (t) => categoryLabel(t.category),
           className: 'text-muted-foreground',
           hideBelow: 'md',
         },
@@ -69,6 +84,7 @@ export function LinkedTicketsTable({ tickets, isLoading = false }: LinkedTickets
         {
           header: 'Estado',
           cell: (t) => <tareaStatus.Badge status={t.status} />,
+          card: 'status',
         },
         {
           header: 'Creado',

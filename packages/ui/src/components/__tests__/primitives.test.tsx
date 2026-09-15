@@ -117,7 +117,7 @@ describe('Card primitives from @vitalock/ui', () => {
       </Card>,
     );
     const card = screen.getByTestId('card');
-    expect(card).toHaveClass('hover:bg-accent/50');
+    expect(card).toHaveClass('hover:bg-muted/50');
     expect(card).toHaveClass('focus-visible:ring-2');
   });
 

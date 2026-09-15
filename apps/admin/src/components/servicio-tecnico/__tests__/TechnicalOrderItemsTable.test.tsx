@@ -136,6 +136,25 @@ describe('TechnicalOrderItemsTable — intent fields (fallback UUID)', () => {
   });
 });
 
+describe('TechnicalOrderItemsTable — responsive column hiding', () => {
+  it('hides Descripción below lg, keeps Tipo/Cant./Estado always visible', () => {
+    render(<TechnicalOrderItemsTable items={[makeItem()]} />, { wrapper: makeWrapper() });
+
+    expect(screen.getByRole('columnheader', { name: 'Descripción' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Equipo previsto' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Asignado a' }).className).toContain(
+      'lg:table-cell',
+    );
+    expect(screen.getByRole('columnheader', { name: 'Tipo' }).className).not.toContain('hidden');
+    expect(screen.getByRole('columnheader', { name: 'Cant.' }).className).not.toContain('hidden');
+    expect(screen.getByRole('columnheader', { name: 'Estado' }).className).not.toContain('hidden');
+  });
+});
+
 describe('TechnicalOrderItemsTable — intent fields (resolved names)', () => {
   it('resolves equipment serial_number via useEquipmentByIds', () => {
     useEquipmentByIdsMock.mockReturnValue({
