@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronDown, SlidersHorizontal, X, XCircle } from 'lucide-react';
+import { ChevronDown, PlusCircle, X } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
 import { Badge } from '../badge';
@@ -9,13 +9,14 @@ import { Input } from '../input';
 import { Label } from '../label';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../select';
+import { Separator } from '../separator';
 import { SearchInput, type SearchInputProps } from './SearchInput';
 
 /**
  * A single facet's self-reported state in the shared registry. Sub-parts
  * register/unregister themselves via `useRegisterFacet`; `FilterBar.Summary`
- * derives "N filtros activos" and per-facet chips from this list alone — no
- * page ever passes a `facets` array or a `hasFilters` boolean directly.
+ * derives whether ANY facet is active from this list alone — no page ever
+ * passes a `facets` array or a `hasFilters` boolean directly.
  */
 export interface FacetRegistration {
   /** Stable facet key, e.g. 'status'. Unique within one `FilterBar`. */
@@ -24,7 +25,7 @@ export interface FacetRegistration {
   label: string;
   /** Whether this facet currently constrains the result set. */
   active: boolean;
-  /** Chip text shown by `Summary`, e.g. 'Estado (3)' or 'Búsqueda: "abc"'. */
+  /** Descriptive chip text kept for consumer/introspection use, e.g. 'Estado (3)'. */
   chipLabel: string;
   /**
    * Stable ref holding the facet's own reset function. Reassigned on every
@@ -106,39 +107,14 @@ function FilterBarRoot({ children, className }: FilterBarProps) {
     [register, unregister, facets],
   );
 
-  // Layout only — purely presentational grouping of the same children, no
-  // prop/behavior change: `Search` gets its own full-width row, `Summary`
-  // gets its own row (visually separated from the flat wall of controls it
-  // used to sit inside), and everything else (Select/MultiSelect/Cascade/
-  // DateRange) wraps together in the row between them.
-  const searchChildren: React.ReactNode[] = [];
-  const summaryChildren: React.ReactNode[] = [];
-  const controlChildren: React.ReactNode[] = [];
-  React.Children.forEach(children, (child) => {
-    if (React.isValidElement(child)) {
-      if (child.type === FilterBarSearch) {
-        searchChildren.push(child);
-        return;
-      }
-      if (child.type === FilterBarSummary) {
-        summaryChildren.push(child);
-        return;
-      }
-    }
-    controlChildren.push(child);
-  });
-
+  // No bordered/boxed container, no row-splitting by sub-component type:
+  // every child (Search, Select, MultiSelect, Cascade, DateRange, and the
+  // conditional Summary/"Limpiar todo" button) renders inline in one row
+  // that wraps naturally on overflow — matching the shadcn `data-table-
+  // toolbar` reference this component mirrors.
   return (
     <FacetContext.Provider value={contextValue}>
-      <div className={cn('bg-card flex flex-col gap-4 rounded-lg border p-4', className)}>
-        {searchChildren.length > 0 && <div className="w-full">{searchChildren}</div>}
-        {controlChildren.length > 0 && (
-          <div className="flex flex-wrap items-end gap-3">{controlChildren}</div>
-        )}
-        {summaryChildren.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 border-t pt-3">{summaryChildren}</div>
-        )}
-      </div>
+      <div className={cn('flex flex-wrap items-center gap-2', className)}>{children}</div>
     </FacetContext.Provider>
   );
 }
@@ -165,6 +141,7 @@ function FilterBarSearch({
   value,
   onChange,
   debounceMs = 300,
+  className,
   ...inputProps
 }: FilterBarSearchProps) {
   const [draft, setDraft] = React.useState(value);
@@ -198,7 +175,14 @@ function FilterBarSearch({
   });
 
   return (
-    <SearchInput value={draft} onChange={(event) => setDraft(event.target.value)} {...inputProps} />
+    <SearchInput
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      // Bounded/responsive width, never full-width: this control sits
+      // inline as the first item of the single filter row, not its own row.
+      className={cn('w-full sm:w-[220px] lg:w-[260px]', className)}
+      {...inputProps}
+    />
   );
 }
 
@@ -314,6 +298,9 @@ export interface FilterBarMultiSelectProps {
   className?: string;
 }
 
+/** Above this count, individual option badges collapse into "N seleccionados". */
+const MULTISELECT_INLINE_BADGE_LIMIT = 2;
+
 function FilterBarMultiSelect({
   facet,
   label,
@@ -333,25 +320,60 @@ function FilterBarMultiSelect({
     onClear: () => onChangeRef.current([]),
   });
 
-  const badgeText =
-    value.length === 0
-      ? null
-      : value.length === 1
-        ? (options.find((option) => option.value === value[0])?.label ?? value[0])
-        : `${value.length} seleccionados`;
+  const selectedLabels = value.map(
+    (optionValue) => options.find((option) => option.value === optionValue)?.label ?? optionValue,
+  );
 
   const toggle = (optionValue: string, checked: boolean) => {
     const next = checked ? [...value, optionValue] : value.filter((entry) => entry !== optionValue);
     onChange(next);
   };
 
+  const clearFacet = () => onChangeRef.current([]);
+
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className={cn('gap-2', className)}>
-          <span>{label}</span>
-          {badgeText !== null && <Badge variant="secondary">{badgeText}</Badge>}
-          <ChevronDown className="h-4 w-4 opacity-50" />
+        {/*
+          shadcn's own faceted-filter trigger: dashed border + leading icon
+          signal "this is a filter, not a regular action", never a trailing
+          chevron. Selected values render as inline badges in the SAME
+          button — individual labels up to the limit, then a collapsed
+          count; a numeric-only badge takes over on small screens.
+        */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn('border-dashed', className)}
+        >
+          <PlusCircle className="h-4 w-4" />
+          {label}
+          {value.length > 0 && (
+            <>
+              <Separator orientation="vertical" className="mx-2 h-4" />
+              <Badge variant="secondary" className="rounded-sm px-1.5 font-normal lg:hidden">
+                {value.length}
+              </Badge>
+              <div className="hidden gap-1 lg:flex">
+                {value.length > MULTISELECT_INLINE_BADGE_LIMIT ? (
+                  <Badge variant="secondary" className="rounded-sm px-1.5 font-normal">
+                    {value.length} seleccionados
+                  </Badge>
+                ) : (
+                  selectedLabels.map((optionLabel) => (
+                    <Badge
+                      key={optionLabel}
+                      variant="secondary"
+                      className="rounded-sm px-1.5 font-normal"
+                    >
+                      {optionLabel}
+                    </Badge>
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-2">
@@ -382,6 +404,18 @@ function FilterBarMultiSelect({
             );
           })}
         </div>
+        {value.length > 0 && (
+          <>
+            <Separator className="my-1" />
+            <button
+              type="button"
+              onClick={clearFacet}
+              className="text-muted-foreground hover:bg-accent w-full rounded-md px-2 py-1.5 text-center text-sm"
+            >
+              Limpiar filtro
+            </button>
+          </>
+        )}
       </PopoverContent>
     </Popover>
   );
@@ -548,42 +582,35 @@ export interface FilterBarSummaryProps {
   clearAllLabel?: string;
 }
 
-function activeCountLabel(count: number): string {
-  return count === 1 ? '1 filtro activo' : `${count} filtros activos`;
-}
-
+/**
+ * Renders nothing — not even an empty container — while no facet is
+ * active. Once at least one is, this is a single inline "Limpiar todo"
+ * button in the same row as the rest of the controls, never a separate
+ * pill-counter/chip-row/bordered-summary block.
+ */
 function FilterBarSummary({ className, clearAllLabel = 'Limpiar todo' }: FilterBarSummaryProps) {
   const { facets } = useFacetContext('FilterBar.Summary');
   const activeFacets = facets.filter((facet) => facet.active);
+
+  if (activeFacets.length === 0) {
+    return null;
+  }
 
   const clearAll = () => {
     facets.forEach((facet) => facet.clearRef.current());
   };
 
   return (
-    <div className={cn('flex flex-wrap items-center gap-2', className)}>
-      <span className="text-muted-foreground bg-muted inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium">
-        <SlidersHorizontal className="h-3.5 w-3.5" />
-        {activeCountLabel(activeFacets.length)}
-      </span>
-      {activeFacets.map((facet) => (
-        <Badge key={facet.id} variant="secondary" className="gap-1 pr-1">
-          <span>{facet.chipLabel}</span>
-          <button
-            type="button"
-            aria-label={`Quitar filtro ${facet.label}`}
-            onClick={() => facet.clearRef.current()}
-            className="hover:bg-muted-foreground/20 rounded-full p-0.5"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </Badge>
-      ))}
-      <Button type="button" variant="outline" size="sm" onClick={clearAll} className="gap-1.5">
-        <XCircle className="h-3.5 w-3.5" />
-        {clearAllLabel}
-      </Button>
-    </div>
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={clearAll}
+      className={cn('gap-1.5', className)}
+    >
+      {clearAllLabel}
+      <X className="h-4 w-4" />
+    </Button>
   );
 }
 
