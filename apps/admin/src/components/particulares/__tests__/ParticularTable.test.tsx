@@ -152,4 +152,17 @@ describe('ParticularTable', () => {
     await user.click(screen.getByRole('button', { name: /editar/i }));
     expect(onEdit).toHaveBeenCalledWith(garcia);
   });
+
+  it('renders both action buttons with short visible labels, each sharing the row width equally', () => {
+    render(<ParticularTable rows={[garcia]} isFetching={false} onEdit={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const editButton = screen.getByRole('button', { name: 'Editar a García Juan' });
+    const deactivateButton = screen.getByRole('button', { name: 'Dar de baja a García Juan' });
+    expect(editButton).toHaveTextContent('Editar');
+    expect(deactivateButton).toHaveTextContent('Dar de baja');
+    expect(editButton).toHaveClass('flex-1');
+    expect(deactivateButton).toHaveClass('flex-1');
+  });
 });

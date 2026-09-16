@@ -3,7 +3,6 @@ import { Trash2, PencilLine } from 'lucide-react';
 import {
   DataCardList,
   Button,
-  type DataTableAction,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -47,21 +46,6 @@ export function ParticularTable({
     }
   };
 
-  const actions: DataTableAction<ParticularRow>[] = [];
-  if (onEdit) {
-    actions.push({
-      icon: PencilLine,
-      label: (particular) => `Editar a ${particular.full_name}`,
-      onClick: (particular) => onEdit(particular),
-    });
-  }
-  actions.push({
-    icon: Trash2,
-    label: (particular) => `Dar de baja a ${particular.full_name}`,
-    onClick: (particular) => setDeactivating(particular),
-    className: 'text-destructive hover:text-destructive',
-  });
-
   return (
     <>
       <DataCardList<ParticularRow>
@@ -91,7 +75,34 @@ export function ParticularTable({
           },
         ]}
         rowKey={(particular) => particular.id}
-        actions={actions}
+        renderActions={(particular) => (
+          <div className="flex w-full items-center gap-2">
+            {onEdit && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2"
+                aria-label={`Editar a ${particular.full_name}`}
+                onClick={() => onEdit(particular)}
+              >
+                <PencilLine className="h-4 w-4" />
+                Editar
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive flex-1 gap-2"
+              aria-label={`Dar de baja a ${particular.full_name}`}
+              onClick={() => setDeactivating(particular)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Dar de baja
+            </Button>
+          </div>
+        )}
         emptyMessage="No hay particulares registrados."
         filteredEmptyMessage="No se encontraron particulares con los filtros aplicados."
         hasFilters={hasFilters}
