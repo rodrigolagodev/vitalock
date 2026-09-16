@@ -2,10 +2,40 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=./" />
     <title>Vitalock</title>
   </head>
   <body>
-    <p>Redirigiendo a <a href="./">la portada</a>…</p>
+    <p>Página no encontrada. <a href="/vitalock/">Volver al inicio</a>.</p>
+    <script>
+      // GitHub Pages has no server-side routing and serves only this one
+      // repo-root 404.html for every unmatched path on the whole site — the
+      // per-app apps/{admin,installer}/404.html copies this repo's Pages
+      // workflow also publishes are never actually reached (verified live:
+      // both return byte-identical bodies). So a hard refresh or deep link
+      // into a client-side route (e.g. /vitalock/admin/administraciones/)
+      // lands here. Re-encode the intended path into the owning app's root
+      // URL and hand it back on the way in via
+      // apps/*/public/rehydrate-route.js — the well-tested
+      // github.com/rafgraham/spa-github-pages trick. Unknown top-level
+      // segments are left alone (no redirect) so a genuinely bad URL shows
+      // the static message above instead of looping.
+      (function (l) {
+        var segments = l.pathname.split('/');
+        var app = segments[2];
+        if (app !== 'admin' && app !== 'installer') return;
+        var prefix = segments.slice(0, 3).join('/');
+        var rest = segments.slice(3).join('/');
+        l.replace(
+          l.protocol +
+            '//' +
+            l.host +
+            prefix +
+            '/?/' +
+            rest.replace(/&/g, '~and~') +
+            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+            l.hash,
+        );
+      })(window.location);
+    </script>
   </body>
 </html>

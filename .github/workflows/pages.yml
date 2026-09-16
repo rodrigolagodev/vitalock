@@ -148,10 +148,14 @@ jobs:
           mkdir -p _site/admin _site/installer
           cp -r apps/admin/dist/. _site/admin/
           cp -r apps/installer/dist/. _site/installer/
-          # SPA fallback for client-side routing on GitHub Pages
-          cp _site/admin/index.html _site/admin/404.html
-          cp _site/installer/index.html _site/installer/404.html
           cp .github/pages/index.html _site/index.html
+          # GitHub Pages serves only ONE 404.html per site, at the repo
+          # root — it never looks at a nested */404.html for a path deeper
+          # than the site root (verified live: a per-app 404.html copy
+          # here was byte-identical to a request that should have hit it,
+          # meaning it was never reached). This is the sole SPA fallback;
+          # it re-encodes the request into a query string each app's
+          # rehydrate-route.js decodes on load. See .github/pages/404.html.
           cp .github/pages/404.html _site/404.html
 
       - uses: actions/upload-pages-artifact@v3
