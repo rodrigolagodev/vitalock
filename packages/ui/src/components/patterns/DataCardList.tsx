@@ -221,13 +221,10 @@ export function DataCardList<T>({
               {metaColumns.map((column, index) => (
                 <div
                   key={index}
-                  className={cn(
-                    'flex items-baseline justify-between gap-2 text-sm',
-                    column.className,
-                  )}
+                  className={cn('flex items-baseline gap-1.5 text-sm', column.className)}
                 >
-                  <span className="text-muted-foreground">{column.header}</span>
-                  <span className="text-right font-medium">{column.cell(row)}</span>
+                  <span className="text-muted-foreground font-normal">{column.header}</span>
+                  <span className="text-foreground font-semibold">{column.cell(row)}</span>
                 </div>
               ))}
             </CardContent>
