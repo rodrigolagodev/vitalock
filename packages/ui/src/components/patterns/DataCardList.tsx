@@ -169,7 +169,7 @@ export function DataCardList<T>({
       return (
         <Link
           to={getRowHref(row)}
-          className="text-primary truncate font-medium after:absolute after:inset-0 hover:underline"
+          className="text-primary truncate font-semibold after:absolute after:inset-0 hover:underline"
         >
           {content}
         </Link>
@@ -180,13 +180,13 @@ export function DataCardList<T>({
         <button
           type="button"
           onClick={() => onFirstCellClick(row)}
-          className="text-primary truncate text-left font-medium after:absolute after:inset-0 hover:underline"
+          className="text-primary truncate text-left font-semibold after:absolute after:inset-0 hover:underline"
         >
           {content}
         </button>
       );
     }
-    return <span className="truncate font-medium">{content}</span>;
+    return <span className="truncate font-semibold">{content}</span>;
   };
 
   const renderCard = (row: T) => {
