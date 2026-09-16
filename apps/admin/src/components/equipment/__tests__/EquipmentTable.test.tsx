@@ -135,6 +135,19 @@ describe('EquipmentTable', () => {
     expect(await screen.findByRole('heading', { name: 'Reemplazar equipo' })).toBeInTheDocument();
   });
 
+  it('renders both action buttons with short visible labels, each sharing the row width equally', () => {
+    render(<EquipmentTable buildingId="b-1" equipment={[equipoActivo]} />, {
+      wrapper: makeWrapper(),
+    });
+
+    const editButton = screen.getByRole('button', { name: 'Editar a Lector X1' });
+    const replaceButton = screen.getByRole('button', { name: 'Reemplazar Lector X1' });
+    expect(editButton).toHaveTextContent('Editar');
+    expect(replaceButton).toHaveTextContent('Reemplazar');
+    expect(editButton).toHaveClass('flex-1');
+    expect(replaceButton).toHaveClass('flex-1');
+  });
+
   it('renders the pagination footer and only the first 10 rows', () => {
     render(<EquipmentTable buildingId="b-1" equipment={makeEquipment(12)} />, {
       wrapper: makeWrapper(),

@@ -151,6 +151,14 @@ describe('KeysTable', () => {
     expect(await screen.findByRole('heading', { name: 'Solicitar baja' })).toBeInTheDocument();
   });
 
+  it('renders the power action with a short visible label spanning the full row width', () => {
+    render(<KeysTable buildingId="b-1" keys={[keyActiva]} />, { wrapper: makeWrapper() });
+
+    const button = screen.getByRole('button', { name: 'Solicitar baja de K-0001' });
+    expect(button).toHaveTextContent('Solicitar baja');
+    expect(button).toHaveClass('w-full');
+  });
+
   it('does not show the status-change action button for terminal disabled keys', () => {
     render(<KeysTable buildingId="b-1" keys={[keyDadaDeBaja]} />, { wrapper: makeWrapper() });
 

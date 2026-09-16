@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilLine, RefreshCw } from 'lucide-react';
-import { DataCardList, type DataTableAction } from '@vitalock/ui';
+import { Button, DataCardList } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 import { equipmentStatus } from '@/lib/status/equipmentStatus';
@@ -19,20 +19,6 @@ export function EquipmentTable({ buildingId, equipment, isFetching = false }: Eq
   const [editingEquipment, setEditingEquipment] = useState<EquipmentRow | null>(null);
   const [replacingEquipment, setReplacingEquipment] = useState<EquipmentRow | null>(null);
 
-  const actions: DataTableAction<EquipmentRow>[] = [
-    {
-      icon: PencilLine,
-      label: (i) => `Editar a ${i.model ?? i.serial_number}`,
-      onClick: (i) => setEditingEquipment(i),
-    },
-    {
-      icon: RefreshCw,
-      label: (i) => `Reemplazar ${i.model ?? i.serial_number}`,
-      show: (i) => i.status !== 'dead',
-      onClick: (i) => setReplacingEquipment(i),
-    },
-  ];
-
   return (
     <>
       <DataCardList<EquipmentRow>
@@ -42,7 +28,34 @@ export function EquipmentTable({ buildingId, equipment, isFetching = false }: Eq
         emptyMessage="No hay equipos registrados."
         firstCell="button"
         onFirstCellClick={(i) => navigate(`/equipos/${i.id}`)}
-        actions={actions}
+        renderActions={(i) => (
+          <div className="flex w-full items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2"
+              aria-label={`Editar a ${i.model ?? i.serial_number}`}
+              onClick={() => setEditingEquipment(i)}
+            >
+              <PencilLine className="h-4 w-4" />
+              Editar
+            </Button>
+            {i.status !== 'dead' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2"
+                aria-label={`Reemplazar ${i.model ?? i.serial_number}`}
+                onClick={() => setReplacingEquipment(i)}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reemplazar
+              </Button>
+            )}
+          </div>
+        )}
         columns={[
           { header: 'Modelo', cell: (i) => i.model ?? '—' },
           {

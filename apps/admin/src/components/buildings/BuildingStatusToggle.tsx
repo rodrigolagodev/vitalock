@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Power } from 'lucide-react';
-import { IconButton, Button } from '@vitalock/ui';
+import { Button, cn } from '@vitalock/ui';
 import {
   Dialog,
   DialogContent,
@@ -44,13 +44,18 @@ export function BuildingStatusToggle({ building }: BuildingStatusToggleProps) {
 
   return (
     <>
-      <IconButton
-        icon={Power}
-        label={`Desactivar ${building.name}`}
-        iconClassName="text-destructive hover:text-destructive"
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="text-destructive hover:text-destructive flex-1 gap-2"
+        aria-label={`Desactivar ${building.name}`}
         onClick={handleClick}
-        loading={deactivateBuilding.isPending}
-      />
+        disabled={deactivateBuilding.isPending}
+      >
+        <Power className={cn('h-4 w-4', deactivateBuilding.isPending && 'animate-pulse')} />
+        Desactivar
+      </Button>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
@@ -61,24 +66,25 @@ export function BuildingStatusToggle({ building }: BuildingStatusToggleProps) {
             <DialogDescription>
               {hasActiveChildren ? (
                 <>
-                  El edificio <strong>{building.name}</strong> tiene dependencias activas
-                  que deben desactivarse primero:
+                  El edificio <strong>{building.name}</strong> tiene dependencias activas que deben
+                  desactivarse primero:
                   {activeUnits > 0 && (
-                    <span className="block mt-1">
-                      • {activeUnits} unidad{activeUnits !== 1 ? 'es' : ''} activa{activeUnits !== 1 ? 's' : ''}
+                    <span className="mt-1 block">
+                      • {activeUnits} unidad{activeUnits !== 1 ? 'es' : ''} activa
+                      {activeUnits !== 1 ? 's' : ''}
                     </span>
                   )}
                   {activeEquipment > 0 && (
-                    <span className="block mt-1">
-                      • {activeEquipment} equipo{activeEquipment !== 1 ? 's' : ''} activo{activeEquipment !== 1 ? 's' : ''}
+                    <span className="mt-1 block">
+                      • {activeEquipment} equipo{activeEquipment !== 1 ? 's' : ''} activo
+                      {activeEquipment !== 1 ? 's' : ''}
                     </span>
                   )}
                 </>
               ) : (
                 <>
-                  ¿Confirmás que querés desactivar el edificio{' '}
-                  <strong>{building.name}</strong>? Esta acción cambiará su estado a
-                  inactivo.
+                  ¿Confirmás que querés desactivar el edificio <strong>{building.name}</strong>?
+                  Esta acción cambiará su estado a inactivo.
                 </>
               )}
             </DialogDescription>

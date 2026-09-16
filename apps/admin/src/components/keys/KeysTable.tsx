@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Power } from 'lucide-react';
-import { Badge } from '@vitalock/ui';
-import { DataCardList, type DataTableAction } from '@vitalock/ui';
+import { Badge, Button, DataCardList, cn } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { KeyStatusChangeDialog } from './KeyStatusChangeDialog';
 import type { KeyRow } from '@/hooks/useKeys';
@@ -34,20 +33,6 @@ export function KeysTable({
   const navigate = useNavigate();
   const [changingStatusFor, setChangingStatusFor] = useState<KeyRow | null>(null);
 
-  const actions: DataTableAction<KeyRow>[] = [
-    {
-      icon: Power,
-      label: (k) => {
-        if (k.status === 'active') return `Solicitar baja de ${k.rfid_code}`;
-        if (k.status === 'pending_disable') return `Cancelar baja de ${k.rfid_code}`;
-        return `Ver ${k.rfid_code}`;
-      },
-      className: (k) => (k.status === 'active' ? 'text-destructive hover:text-destructive' : ''),
-      show: (k) => k.status === 'active' || k.status === 'pending_disable',
-      onClick: (k) => setChangingStatusFor(k),
-    },
-  ];
-
   return (
     <>
       <DataCardList<KeyRow>
@@ -59,7 +44,28 @@ export function KeysTable({
         emptyMessage="No hay llaves registradas."
         hasFilters={hasFilters}
         filteredEmptyMessage="No se encontraron llaves con los filtros aplicados."
-        actions={actions}
+        renderActions={(k) =>
+          k.status === 'active' || k.status === 'pending_disable' ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(
+                'w-full gap-2',
+                k.status === 'active' && 'text-destructive hover:text-destructive',
+              )}
+              aria-label={
+                k.status === 'active'
+                  ? `Solicitar baja de ${k.rfid_code}`
+                  : `Cancelar baja de ${k.rfid_code}`
+              }
+              onClick={() => setChangingStatusFor(k)}
+            >
+              <Power className="h-4 w-4" />
+              {k.status === 'active' ? 'Solicitar baja' : 'Cancelar baja'}
+            </Button>
+          ) : null
+        }
         columns={[
           {
             header: 'RFID',

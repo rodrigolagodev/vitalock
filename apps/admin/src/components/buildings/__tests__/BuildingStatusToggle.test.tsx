@@ -58,25 +58,32 @@ describe('BuildingStatusToggle', () => {
   });
 
   it('renders nothing for inactive building', () => {
-    const { container } = render(
-      <BuildingStatusToggle building={inactiveBuilding} />,
-      { wrapper: makeWrapper() },
-    );
+    const { container } = render(<BuildingStatusToggle building={inactiveBuilding} />, {
+      wrapper: makeWrapper(),
+    });
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders icon-only Power button with aria-label for active building', () => {
+  it('renders a full-width Power button with a short visible label and a descriptive aria-label', () => {
     render(<BuildingStatusToggle building={activeBuilding} />, {
       wrapper: makeWrapper(),
     });
     const trigger = screen.getByRole('button', { name: 'Desactivar Torre Norte' });
     expect(trigger).toBeInTheDocument();
-    expect(within(trigger).queryByText(/desactivar/i)).not.toBeInTheDocument();
+    expect(within(trigger).getByText('Desactivar')).toBeInTheDocument();
+    expect(trigger).toHaveClass('flex-1');
   });
 
   it('shows block dialog when activeUnits > 0', async () => {
     mockUnits = [
-      { id: 'u-1', number: '101', unit_type: null, status: 'active', is_administrative: false, building_id: 'b-1' },
+      {
+        id: 'u-1',
+        number: '101',
+        unit_type: null,
+        status: 'active',
+        is_administrative: false,
+        building_id: 'b-1',
+      },
     ];
 
     const user = userEvent.setup();

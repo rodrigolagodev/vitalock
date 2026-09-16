@@ -102,6 +102,17 @@ describe('BuildingsTable', () => {
     expect(screen.getByText(/no hay edificios registrados/i)).toBeInTheDocument();
   });
 
+  it('renders both action buttons with short visible labels, each sharing the row width equally', () => {
+    render(<BuildingsTable buildings={[sampleBuildings[0]!]} />, { wrapper: makeWrapper() });
+
+    const editButton = screen.getByRole('button', { name: 'Editar a Torre Norte' });
+    const deactivateButton = screen.getByRole('button', { name: 'Desactivar Torre Norte' });
+    expect(editButton).toHaveTextContent('Editar');
+    expect(deactivateButton).toHaveTextContent('Desactivar');
+    expect(editButton).toHaveClass('flex-1');
+    expect(deactivateButton).toHaveClass('flex-1');
+  });
+
   it('renders skeleton rows when isFetching is true', () => {
     const { container } = render(<BuildingsTable buildings={[]} isFetching={true} />, {
       wrapper: makeWrapper(),

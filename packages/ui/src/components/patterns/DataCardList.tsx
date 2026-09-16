@@ -191,7 +191,12 @@ export function DataCardList<T>({
 
   const renderCard = (row: T) => {
     const { primary, overflow } = splitActions(actions, row);
-    const hasFooter = Boolean(renderActions) || primary.length > 0 || overflow.length > 0;
+    // `renderActions` may itself conditionally render nothing for a given
+    // row (e.g. no action applies to this row's state) — call it once and
+    // reuse the result so an empty return doesn't still leave a blank
+    // CardFooter, and so it isn't invoked twice per row.
+    const customActions = renderActions?.(row);
+    const hasFooter = Boolean(customActions) || primary.length > 0 || overflow.length > 0;
     const titleContent = titleColumn?.cell(row);
     const primaryFieldValue = typeof titleContent === 'string' ? titleContent : rowKey(row);
 
@@ -230,7 +235,7 @@ export function DataCardList<T>({
           {hasFooter && (
             <CardFooter className="relative z-10">
               {renderActions ? (
-                renderActions(row)
+                customActions
               ) : (
                 <>
                   {primary.map((action, index) => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PencilLine } from 'lucide-react';
-import { DataCardList, IconButton } from '@vitalock/ui';
+import { Button, DataCardList } from '@vitalock/ui';
 import { buildingStatus } from '@/lib/status/buildingStatus';
 import { BuildingFormSheet } from './BuildingFormSheet';
 import { BuildingStatusToggle } from './BuildingStatusToggle';
@@ -49,12 +49,18 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
         getRowHref={(building) => `/buildings/${building.id}`}
         emptyMessage="No hay edificios registrados."
         renderActions={(building) => (
-          <div className="flex items-center justify-end gap-1">
-            <IconButton
-              icon={PencilLine}
-              label={`Editar a ${building.name}`}
+          <div className="flex w-full items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2"
+              aria-label={`Editar a ${building.name}`}
               onClick={() => setEditingBuilding(building)}
-            />
+            >
+              <PencilLine className="h-4 w-4" />
+              Editar
+            </Button>
             <BuildingStatusToggle building={building} />
           </div>
         )}

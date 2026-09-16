@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
+import { FilterBar } from '@vitalock/ui';
 import { Tabs, TabsList, TabsTrigger } from '@vitalock/ui';
-import { ErrorState, NotFoundState, SearchInput, SectionHeading, Skeleton } from '@vitalock/ui';
+import { ErrorState, NotFoundState, SectionHeading, Skeleton } from '@vitalock/ui';
 import { buildingStatus } from '@/lib/status/buildingStatus';
 import type { KeyRow } from '@/hooks/useKeys';
 import { useBuilding } from '@/hooks/useBuilding';
@@ -111,30 +111,30 @@ export default function BuildingDetailPage() {
       {activeTab === 'llaves' && (
         <div className="mt-4 space-y-4">
           <SectionHeading title="Llaves" variant="secondary" />
-          <div className="flex flex-wrap items-center gap-2">
-            <SearchInput
+          <FilterBar>
+            <FilterBar.Search
               placeholder="Buscar llaves por código o unidad..."
               value={llavesSearch}
-              onChange={(e) => setLlavesSearch(e.target.value)}
+              onChange={setLlavesSearch}
               className="max-w-sm"
             />
-            <Select
+            <FilterBar.Select
+              facet="status"
+              label="Estado"
+              options={[
+                { value: 'all', label: 'Todos los estados' },
+                { value: 'active', label: 'Activa' },
+                { value: 'pending_installation', label: 'Pendiente instalación' },
+                { value: 'pending_creation', label: 'En creación' },
+                { value: 'pending_disable', label: 'Baja solicitada' },
+                { value: 'disabled', label: 'Dada de baja' },
+              ]}
               value={llavesStatus}
-              onValueChange={(v) => setLlavesStatus(v as 'all' | KeyRow['status'])}
-            >
-              <SelectTrigger className="w-52">
-                <SelectValue placeholder="Todos los estados" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="active">Activa</SelectItem>
-                <SelectItem value="pending_installation">Pendiente instalación</SelectItem>
-                <SelectItem value="pending_creation">En creación</SelectItem>
-                <SelectItem value="pending_disable">Baja solicitada</SelectItem>
-                <SelectItem value="disabled">Dada de baja</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              onChange={(v) => setLlavesStatus(v as 'all' | KeyRow['status'])}
+              allValue="all"
+            />
+            <FilterBar.Summary />
+          </FilterBar>
           <KeysTable
             buildingId={buildingId}
             keys={filteredKeys}
@@ -147,12 +147,15 @@ export default function BuildingDetailPage() {
       {activeTab === 'equipos' && (
         <div className="mt-4 space-y-4">
           <SectionHeading title="Equipos" variant="secondary" />
-          <SearchInput
-            placeholder="Buscar equipos por serie o modelo..."
-            value={equiposSearch}
-            onChange={(e) => setEquiposSearch(e.target.value)}
-            className="max-w-sm"
-          />
+          <FilterBar>
+            <FilterBar.Search
+              placeholder="Buscar equipos por serie o modelo..."
+              value={equiposSearch}
+              onChange={setEquiposSearch}
+              className="max-w-sm"
+            />
+            <FilterBar.Summary />
+          </FilterBar>
           <EquipmentTable
             buildingId={buildingId}
             equipment={filteredEquipment}
