@@ -6,20 +6,19 @@ import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import type { ProductRow, StockMovementRow } from '@/types/stock';
 
-const { useParamsMock, useProductMock, useMutateProductMock, useStockMovementsMock } =
-  vi.hoisted(() => ({
+const { useParamsMock, useProductMock, useMutateProductMock, useStockMovementsMock } = vi.hoisted(
+  () => ({
     useParamsMock: vi.fn(),
     useProductMock: vi.fn(),
     useMutateProductMock: vi.fn(),
     useStockMovementsMock: vi.fn(),
-  }));
+  }),
+);
 
 const mockUpdateProduct = vi.fn();
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>(
-    'react-router-dom',
-  );
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return {
     ...actual,
     useParams: useParamsMock,
@@ -33,14 +32,43 @@ vi.mock('@/hooks/useMutateProduct', () => ({
 vi.mock('@/hooks/useStockMovements', () => ({
   useStockMovements: useStockMovementsMock,
 }));
+const stockMovementsTableSpy = vi.fn();
 vi.mock('@/components/stock/StockMovementsTable', () => ({
-  StockMovementsTable: () => null,
+  StockMovementsTable: (props: unknown) => {
+    stockMovementsTableSpy(props);
+    return null;
+  },
 }));
 vi.mock('@/components/stock/AjusteStockSheet', () => ({
   AjusteStockSheet: () => null,
 }));
 
 import StockDetailPage from '../StockDetailPage';
+
+const COMPRA: StockMovementRow = {
+  id: 'm-1',
+  created_at: '2026-07-01T10:00:00Z',
+  created_by: null,
+  note: null,
+  order_id: null,
+  order_item_id: null,
+  order_kind: null,
+  product_id: 'p1',
+  quantity: 5,
+  staff_id: null,
+  ticket_id: null,
+  type: 'compra',
+  unit_cost: 1500,
+  ticket_number: null,
+  staff_name: null,
+};
+
+const AJUSTE: StockMovementRow = {
+  ...COMPRA,
+  id: 'm-2',
+  created_at: '2026-08-15T10:00:00Z',
+  type: 'ajuste_manual',
+};
 
 const PRODUCT: ProductRow = {
   id: 'p1',
@@ -143,5 +171,56 @@ describe('StockDetailPage', () => {
     // Back to display mode without saving; the rename affordance is back.
     expect(screen.getByRole('button', { name: 'Renombrar' })).toBeInTheDocument();
     expect(mockUpdateProduct).not.toHaveBeenCalled();
+  });
+
+  describe('movement filters (FilterBar)', () => {
+    beforeEach(() => {
+      useStockMovementsMock.mockReturnValue({
+        data: [COMPRA, AJUSTE] as StockMovementRow[],
+        isFetching: false,
+      });
+    });
+
+    it('renders FilterBar.MultiSelect (Tipo) and FilterBar.DateRange (Fecha) controls', () => {
+      renderPage();
+
+      expect(screen.getByRole('button', { name: 'Tipo' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Fecha' })).toBeInTheDocument();
+    });
+
+    it('filters the movements passed to StockMovementsTable by selected type', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Tipo' }));
+      await user.click(screen.getByRole('checkbox', { name: 'Ajuste manual' }));
+
+      await waitFor(() => {
+        const lastCall = stockMovementsTableSpy.mock.calls.at(-1)?.[0] as {
+          rows: StockMovementRow[];
+        };
+        expect(lastCall.rows).toEqual([AJUSTE]);
+      });
+    });
+
+    it('shows "Limpiar todo" once a type is selected and clears the filter back to all movements', async () => {
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('button', { name: 'Tipo' }));
+      await user.click(screen.getByRole('checkbox', { name: 'Ajuste manual' }));
+      await user.keyboard('{Escape}');
+
+      const clearButton = await screen.findByRole('button', { name: 'Limpiar todo' });
+      await user.click(clearButton);
+
+      await waitFor(() => {
+        const lastCall = stockMovementsTableSpy.mock.calls.at(-1)?.[0] as {
+          rows: StockMovementRow[];
+        };
+        expect(lastCall.rows).toEqual([COMPRA, AJUSTE]);
+      });
+      expect(screen.queryByRole('button', { name: 'Limpiar todo' })).not.toBeInTheDocument();
+    });
   });
 });
