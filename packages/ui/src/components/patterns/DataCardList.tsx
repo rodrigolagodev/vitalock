@@ -212,7 +212,9 @@ export function DataCardList<T>({
           <CardHeader>
             <div className="flex min-w-0 flex-1 items-center gap-2">
               {iconColumn && <span className="shrink-0">{iconColumn.cell(row)}</span>}
-              <CardTitle className="min-w-0 flex-1">{renderTitle(row)}</CardTitle>
+              <CardTitle className="min-w-0 flex-1 text-base font-semibold">
+                {renderTitle(row)}
+              </CardTitle>
             </div>
             {statusColumn && <CardAction>{statusColumn.cell(row)}</CardAction>}
           </CardHeader>
