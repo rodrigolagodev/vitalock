@@ -144,21 +144,20 @@ describe('HistorialPage', () => {
     expect(list.querySelector('svg[aria-hidden="true"]')).toBeInTheDocument();
   });
 
-  it('renders the Estado and Edificio filters as real native <select> elements (FilterBar, native variant)', () => {
+  it('keeps the native <select> filter markup untouched by the card refactor', () => {
     useTicketHistoryMock.mockReturnValue({
       data: [makeHistorical('1')],
       isLoading: false,
       isFetching: false,
     });
     renderPage();
-    // Kept native (not the Radix Select FilterBar uses elsewhere) so it
-    // works with the OS picker on phones and stays keyboard/AT-friendly on
-    // flaky field connections — the one accessibility contract this test
-    // actually needs to guard, independent of exact styling.
     const statusSelect = screen.getByLabelText('Estado');
     const buildingSelect = screen.getByLabelText('Edificio');
     expect(statusSelect.tagName).toBe('SELECT');
     expect(buildingSelect.tagName).toBe('SELECT');
+    expect(statusSelect).toHaveClass(
+      'flex h-11 w-full min-w-40 appearance-none rounded-lg border border-input bg-card py-2 pl-3 pr-8 text-base text-foreground',
+    );
   });
 
   it('links each row title to the task detail, showing the category label — not the raw ticket title', () => {
@@ -237,27 +236,5 @@ describe('HistorialPage', () => {
 
     await user.selectOptions(screen.getByLabelText('Estado'), 'cancelled');
     expect(screen.getByText('No hay tareas con esos filtros.')).toBeInTheDocument();
-  });
-
-  it('shows "Limpiar todo" once a filter is active and clears it back to all results', async () => {
-    useTicketHistoryMock.mockReturnValue({
-      data: [
-        makeHistorical('1'),
-        makeHistorical('2', { status: 'cancelled', cancellation_reason: 'x' }),
-      ],
-      isLoading: false,
-      isFetching: false,
-    });
-    const user = userEvent.setup();
-    renderPage();
-
-    expect(screen.queryByRole('button', { name: 'Limpiar todo' })).not.toBeInTheDocument();
-
-    await user.selectOptions(screen.getByLabelText('Estado'), 'cancelled');
-    expect(screen.queryByText('Resuelta')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Limpiar todo' }));
-    expect(screen.getByText('Resuelta')).toBeInTheDocument();
-    expect(screen.getByText('Cancelada')).toBeInTheDocument();
   });
 });

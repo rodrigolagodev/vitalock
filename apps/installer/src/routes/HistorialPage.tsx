@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import {
   DataCardList,
   EmptyState,
-  FilterBar,
+  Label,
   PageHeader,
   Skeleton,
+  cn,
   formatMonthHeading,
   monthKey,
 } from '@vitalock/ui';
@@ -15,6 +16,20 @@ import { categoryIcon, categoryLabel, tareaStatus } from '@/lib/status/tareaStat
 import type { HistoricalTicket } from '@/hooks/useTicketHistory';
 
 type StatusFilter = 'all' | 'resolved' | 'cancelled';
+
+/**
+ * Native `<select>` styled like the shared `Input`. Kept native (not the
+ * Radix `Select`) so it works with the OS picker on phones and stays
+ * keyboard/AT-friendly on flaky field connections. `appearance-none` +
+ * `pr-8` drop the browser's own arrow (which some browsers render flush
+ * against the edge with no margin) in favor of the same absolutely
+ * positioned `ChevronDown` convention `PaginationFooter` already uses.
+ */
+const NATIVE_SELECT_CLASS = cn(
+  'flex h-11 w-full min-w-40 appearance-none rounded-lg border border-input bg-card py-2 pl-3 pr-8 text-base text-foreground',
+  'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+  'disabled:cursor-not-allowed disabled:opacity-50',
+);
 
 function formatDateTime(iso: string): string {
   const date = new Date(iso);
@@ -140,34 +155,48 @@ export default function HistorialPage() {
         )}
       </PageHeader>
 
-      <FilterBar>
-        <FilterBar.Select
-          facet="status"
-          label="Estado"
-          variant="native"
-          allValue="all"
-          options={[
-            { value: 'all', label: 'Todas' },
-            { value: 'resolved', label: 'Resueltas' },
-            { value: 'cancelled', label: 'Canceladas' },
-          ]}
-          value={status}
-          onChange={(v) => setStatus(v as StatusFilter)}
-        />
-        <FilterBar.Select
-          facet="building"
-          label="Edificio"
-          variant="native"
-          allValue="all"
-          options={[
-            { value: 'all', label: 'Todos' },
-            ...buildingOptions.map((b) => ({ value: b.id, label: b.name })),
-          ]}
-          value={buildingId}
-          onChange={setBuildingId}
-        />
-        <FilterBar.Summary />
-      </FilterBar>
+      <div className="flex flex-wrap items-center gap-4" aria-label="Filtros">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="historial-status" className="text-muted-foreground text-xs uppercase">
+            Estado
+          </Label>
+          <div className="relative">
+            <select
+              id="historial-status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as StatusFilter)}
+              className={NATIVE_SELECT_CLASS}
+            >
+              <option value="all">Todas</option>
+              <option value="resolved">Resueltas</option>
+              <option value="cancelled">Canceladas</option>
+            </select>
+            <ChevronDown className="text-muted-foreground pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label htmlFor="historial-building" className="text-muted-foreground text-xs uppercase">
+            Edificio
+          </Label>
+          <div className="relative">
+            <select
+              id="historial-building"
+              value={buildingId}
+              onChange={(e) => setBuildingId(e.target.value)}
+              className={NATIVE_SELECT_CLASS}
+            >
+              <option value="all">Todos</option>
+              {buildingOptions.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="text-muted-foreground pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+          </div>
+        </div>
+      </div>
 
       {isLoading ? (
         <LoadingSkeletons />
