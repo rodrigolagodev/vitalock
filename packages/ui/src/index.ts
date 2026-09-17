@@ -77,6 +77,7 @@ export { Tooltip, type TooltipProps } from './components/tooltip';
 export { Textarea } from './components/textarea';
 export { SidebarGroup, type SidebarGroupProps } from './components/patterns/SidebarGroup';
 export { SearchInput, type SearchInputProps } from './components/patterns/SearchInput';
+export { PasswordInput, type PasswordInputProps } from './components/patterns/PasswordInput';
 export { SectionHeading, type SectionHeadingProps } from './components/patterns/SectionHeading';
 export { EmptyState, type EmptyStateProps } from './components/patterns/EmptyState';
 export { ErrorState, type ErrorStateProps } from './components/patterns/ErrorState';

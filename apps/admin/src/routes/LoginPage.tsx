@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Navigate } from 'react-router-dom';
-import { Button, Input } from '@vitalock/ui';
+import { Button, Input, PasswordInput } from '@vitalock/ui';
 import { useAuthContext, usernameSchema } from '@vitalock/shared';
 
 const schema = z.object({
@@ -61,9 +61,8 @@ export default function LoginPage() {
             <label htmlFor="password" className="text-sm font-medium">
               Contraseña
             </label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
               {...register('password')}
             />

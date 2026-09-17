@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Navigate } from 'react-router-dom';
-import { BrandLogoImages, Button, Input, Label } from '@vitalock/ui';
+import { BrandLogoImages, Button, Input, Label, PasswordInput } from '@vitalock/ui';
 import { useAuthContext, usernameSchema } from '@vitalock/shared';
 import { installerLogo } from '@/components/layout/brand';
 
@@ -59,9 +59,8 @@ export default function LoginPage() {
 
           <div className="space-y-1">
             <Label htmlFor="password">Contraseña</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
               {...register('password')}
             />

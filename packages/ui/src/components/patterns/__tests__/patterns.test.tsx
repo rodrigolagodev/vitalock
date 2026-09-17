@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 // Import through the package entry point — the public contract consumers
 // (admin + installer) will rely on.
-import { SearchInput, SidebarGroup, Topbar } from '@vitalock/ui';
+import { PasswordInput, SearchInput, SidebarGroup, Topbar } from '@vitalock/ui';
 
 describe('SidebarGroup', () => {
   it('renders the section label above the group', () => {
@@ -18,10 +18,7 @@ describe('SidebarGroup', () => {
       </SidebarGroup>,
     );
     expect(screen.getByText('Ordenes')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ver órdenes' })).toHaveAttribute(
-      'href',
-      '/ordenes',
-    );
+    expect(screen.getByRole('link', { name: 'Ver órdenes' })).toHaveAttribute('href', '/ordenes');
   });
 
   it('renders a label-only group (empty placeholder section)', () => {
@@ -43,10 +40,7 @@ describe('SidebarGroup', () => {
     expect(label).toHaveAttribute('aria-hidden', 'true');
     expect(label.className).toContain('opacity-0');
     // Nav items remain visible (icon-only) when the label is hidden.
-    expect(screen.getByRole('link', { name: 'Ver clientes' })).toHaveAttribute(
-      'href',
-      '/clientes',
-    );
+    expect(screen.getByRole('link', { name: 'Ver clientes' })).toHaveAttribute('href', '/clientes');
   });
 
   it('keeps the section label visible when not collapsed', () => {
@@ -81,6 +75,33 @@ describe('SearchInput', () => {
     const input = screen.getByPlaceholderText('Buscar...');
     fireEvent.change(input, { target: { value: 'stock' } });
     expect(input).toHaveValue('stock');
+  });
+});
+
+describe('PasswordInput', () => {
+  it('masks the value by default', () => {
+    render(<PasswordInput placeholder="Contraseña" />);
+    expect(screen.getByPlaceholderText('Contraseña')).toHaveAttribute('type', 'password');
+  });
+
+  it('reveals the value while the toggle is active, then masks it again', () => {
+    render(<PasswordInput placeholder="Contraseña" />);
+    const input = screen.getByPlaceholderText('Contraseña');
+    const toggle = screen.getByRole('button', { name: 'Mostrar contraseña' });
+
+    fireEvent.click(toggle);
+    expect(input).toHaveAttribute('type', 'text');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    expect(input).toHaveAttribute('type', 'password');
+  });
+
+  it('keeps the typed value across the toggle', () => {
+    render(<PasswordInput placeholder="Contraseña" />);
+    const input = screen.getByPlaceholderText('Contraseña');
+    fireEvent.change(input, { target: { value: 'secreto123' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(input).toHaveValue('secreto123');
   });
 });
 
