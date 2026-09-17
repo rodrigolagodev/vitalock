@@ -28,7 +28,12 @@ export function AdministrationsTable({
           { header: 'Razón social', cell: (admin) => admin.company_name },
           {
             header: 'CUIT/CUIL',
-            cell: (admin) => <span className="text-muted-foreground">{admin.tax_id ?? '—'}</span>,
+            cell: (admin) => admin.tax_id ?? '—',
+            hideBelow: 'md',
+          },
+          {
+            header: 'Dirección',
+            cell: (admin) => admin.address ?? '—',
             hideBelow: 'md',
           },
           {

@@ -41,7 +41,7 @@ const activeAdmin: AdministrationRow = {
   tax_id: '30-11122233-4',
   email: null,
   phone: null,
-  address: null,
+  address: 'Av. Corrientes 1234',
   status: 'active',
   notes: null,
 };
@@ -89,12 +89,20 @@ describe('AdministrationsTable', () => {
     expect(link2).toHaveAttribute('href', '/administraciones/a-2');
   });
 
-  it('renders the CUIT/CUIL fallback dash when tax_id is missing', () => {
+  it('renders the CUIT/CUIL and Dirección fallback dash when both are missing', () => {
     render(<AdministrationsTable administrations={[inactiveAdmin]} isFetching={false} />, {
       wrapper: makeWrapper(),
     });
 
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(2);
+  });
+
+  it('renders the administration address', () => {
+    render(<AdministrationsTable administrations={[activeAdmin]} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByText('Av. Corrientes 1234')).toBeInTheDocument();
   });
 
   it('renders the status badge for each administration', () => {

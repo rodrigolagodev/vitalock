@@ -37,9 +37,7 @@ export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTabl
         },
         {
           header: 'Descripción',
-          cell: (tarea) => (
-            <p className="text-muted-foreground line-clamp-1 text-sm">{tarea.description}</p>
-          ),
+          cell: (tarea) => <p className="line-clamp-1">{tarea.description}</p>,
           hideBelow: 'lg',
         },
         {

@@ -24,9 +24,7 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
           { header: 'Nombre', cell: (building) => building.name },
           {
             header: 'Dirección',
-            cell: (building) => (
-              <span className="text-muted-foreground">{building.address ?? '—'}</span>
-            ),
+            cell: (building) => building.address ?? '—',
           },
           {
             header: 'Estado',
