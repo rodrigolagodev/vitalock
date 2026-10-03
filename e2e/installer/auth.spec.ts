@@ -12,7 +12,7 @@ test.describe('installer — authentication', () => {
   test('an admin account is rejected by the installer app', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('Email').fill('admin@vitalock.local');
-    await page.getByLabel('Contraseña', { exact: true }).fill('Admin123!');
+    await page.getByLabel('Contraseña', { exact: true }).fill('Admin12345!');
     await page.getByRole('button', { name: 'Ingresar' }).click();
     await expect(page).toHaveURL(/\/(login|error)/);
   });

@@ -2,7 +2,7 @@ import { test as base, expect, type Page } from '@playwright/test';
 
 /** Seeded by supabase/seed-users.sql on `supabase start` / `supabase db reset`. */
 export const USERS = {
-  admin: { email: 'admin@vitalock.local', password: 'Admin123!' },
+  admin: { email: 'admin@vitalock.local', password: 'Admin12345!' },
   installer: { email: 'installer@vitalock.local', password: 'Installer123!' },
 } as const;
 
