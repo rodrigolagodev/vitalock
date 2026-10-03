@@ -37,7 +37,7 @@ export interface AuthState {
 export interface UseAuthReturn extends AuthState {
   /** true when phase is initializing, authenticating, or fetching_profile */
   isLoading: boolean;
-  signIn: (username: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   /** Re-fetch staff profile; called internally on TOKEN_REFRESHED */
   refresh: () => Promise<void>;

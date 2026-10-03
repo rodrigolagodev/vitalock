@@ -31,21 +31,18 @@ interface MockSupabase {
 }
 
 /**
- * `rpcMock` defaults to resolving `resolve_login_email` to a fixed email —
- * every pre-existing scenario (wrong password, no staff row, inactive,
- * wrong role) only cares about what happens *after* resolution, so it
- * doesn't need to override this default.
+ * `rpcMock` is a plain spy: login is email + password only and must never
+ * call an RPC (the pre-auth `resolve_login_email` lookup was removed).
  */
 function createMockSupabase(
   profileData: unknown = null,
   initialSession: unknown = null,
-  resolvedEmail: string | null = 'resolved@vitalock.example',
 ): MockSupabase {
   let authCallback: AuthStateChangeCallback | null = null;
 
   const signInMock = vi.fn();
   const signOutMock = vi.fn().mockResolvedValue({ error: null });
-  const rpcMock = vi.fn().mockResolvedValue({ data: resolvedEmail, error: null });
+  const rpcMock = vi.fn();
   const profileQueryMock = vi
     .fn()
     .mockReturnValue(makeQueryResult({ data: profileData, error: null, status: 200 }));
@@ -128,11 +125,7 @@ describe('useAuth', () => {
   });
 
   it('1. happy path — admin login sets phase=authenticated with staff profile (incl. username)', async () => {
-    const { client, triggerAuthEvent, signInMock, rpcMock } = createMockSupabase(
-      makeProfile(),
-      null,
-      'ana@vitalock.example',
-    );
+    const { client, triggerAuthEvent, signInMock } = createMockSupabase(makeProfile());
     const session = makeSession();
     signInFiresSignedIn(signInMock, triggerAuthEvent, session);
 
@@ -142,12 +135,11 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('ana.alvarez', 'test-password');
+      await result.current.signIn('ana@vitalock.example', 'test-password');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('authenticated'));
 
-    expect(rpcMock).toHaveBeenCalledWith('resolve_login_email', { p_username: 'ana.alvarez' });
     expect(signInMock).toHaveBeenCalledWith({
       email: 'ana@vitalock.example',
       password: 'test-password',
@@ -157,7 +149,7 @@ describe('useAuth', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('2. wrong password for a resolved username sets phase=error with INVALID_CREDENTIALS', async () => {
+  it('2. wrong password sets phase=error with INVALID_CREDENTIALS', async () => {
     const { client, signInMock } = createMockSupabase();
     const { AuthApiError } = await import('@supabase/supabase-js');
     signInMock.mockResolvedValue({
@@ -169,46 +161,42 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('ana.alvarez', 'wrong');
+      await result.current.signIn('ana@vitalock.example', 'wrong');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));
     expect(result.current.error?.code).toBe(AuthErrorCode.INVALID_CREDENTIALS);
+    expect(result.current.error?.message).toBe('Email o contraseña incorrectos.');
   });
 
-  it('3. unknown/inactive/unlinked username (RPC resolves NULL) sets INVALID_CREDENTIALS without calling signInWithPassword', async () => {
-    const { client, signInMock, rpcMock } = createMockSupabase(null, null, null);
-
-    const { result } = renderHook(() => useAuth(client, 'admin'));
-    await waitFor(() => expect(result.current.phase).toBe('anonymous'));
-
-    await act(async () => {
-      await result.current.signIn('nonexistent-user', 'pass');
-    });
-
-    await waitFor(() => expect(result.current.phase).toBe('error'));
-    expect(rpcMock).toHaveBeenCalledWith('resolve_login_email', { p_username: 'nonexistent-user' });
-    expect(result.current.error?.code).toBe(AuthErrorCode.INVALID_CREDENTIALS);
-    expect(signInMock).not.toHaveBeenCalled();
-  });
-
-  it('4. resolve_login_email RPC error sets NETWORK_ERROR without calling signInWithPassword', async () => {
+  it('3. login never calls an RPC (no pre-auth username/email lookup)', async () => {
     const { client, signInMock, rpcMock } = createMockSupabase();
-    rpcMock.mockResolvedValueOnce({
-      data: null,
-      error: { message: 'fetch failed' },
-    });
+    signInMock.mockResolvedValue({ data: { session: null }, error: null });
 
     const { result } = renderHook(() => useAuth(client, 'admin'));
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('ana.alvarez', 'pass');
+      await result.current.signIn('ana@vitalock.example', 'pass');
+    });
+
+    expect(signInMock).toHaveBeenCalledTimes(1);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it('4. signInWithPassword throwing (network failure) sets NETWORK_ERROR', async () => {
+    const { client, signInMock } = createMockSupabase();
+    signInMock.mockRejectedValue(new TypeError('fetch failed'));
+
+    const { result } = renderHook(() => useAuth(client, 'admin'));
+    await waitFor(() => expect(result.current.phase).toBe('anonymous'));
+
+    await act(async () => {
+      await result.current.signIn('ana@vitalock.example', 'pass');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));
     expect(result.current.error?.code).toBe(AuthErrorCode.NETWORK_ERROR);
-    expect(signInMock).not.toHaveBeenCalled();
   });
 
   it('5. no staff row sets phase=error with NO_STAFF_ROW and calls signOut', async () => {
@@ -220,7 +208,7 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('unknown-but-resolved', 'pass');
+      await result.current.signIn('unknown@vitalock.example', 'pass');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));
@@ -239,7 +227,7 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('elena.gomez', 'pass');
+      await result.current.signIn('elena@vitalock.example', 'pass');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));
@@ -258,7 +246,7 @@ describe('useAuth', () => {
     await waitFor(() => expect(result.current.phase).toBe('anonymous'));
 
     await act(async () => {
-      await result.current.signIn('ana.alvarez', 'pass');
+      await result.current.signIn('ana@vitalock.example', 'pass');
     });
 
     await waitFor(() => expect(result.current.phase).toBe('error'));

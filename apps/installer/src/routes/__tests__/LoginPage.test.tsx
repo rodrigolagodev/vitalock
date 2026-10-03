@@ -22,15 +22,17 @@ describe('LoginPage', () => {
     mockSignIn.mockReset();
   });
 
-  it('renders username and password fields with their labels', () => {
+  it('renders email and password fields with their labels', () => {
     render(<LoginPage />);
-    expect(screen.getByLabelText('Usuario')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
   });
 
-  it('sets autoComplete="username" on the username field', () => {
+  it('uses an email input with autoComplete="email"', () => {
     render(<LoginPage />);
-    expect(screen.getByLabelText('Usuario')).toHaveAttribute('autoComplete', 'username');
+    const email = screen.getByLabelText('Email');
+    expect(email).toHaveAttribute('type', 'email');
+    expect(email).toHaveAttribute('autoComplete', 'email');
   });
 
   it('renders the submit button with the expected label', () => {
@@ -38,22 +40,22 @@ describe('LoginPage', () => {
     expect(screen.getByRole('button', { name: 'Ingresar' })).toBeInTheDocument();
   });
 
-  it('submits a lowercased, trimmed username through signIn', async () => {
+  it('submits a trimmed email through signIn', async () => {
     const user = userEvent.setup();
     render(<LoginPage />);
-    await user.type(screen.getByLabelText('Usuario'), '  Bruno.Benitez  ');
+    await user.type(screen.getByLabelText('Email'), '  bruno@vitalock.example  ');
     await user.type(screen.getByLabelText('Contraseña'), 'secreto123');
     await user.click(screen.getByRole('button', { name: 'Ingresar' }));
-    expect(mockSignIn).toHaveBeenCalledWith('bruno.benitez', 'secreto123');
+    expect(mockSignIn).toHaveBeenCalledWith('bruno@vitalock.example', 'secreto123');
   });
 
-  it('shows an inline validation message and does not call signIn for a malformed username', async () => {
+  it('shows an inline validation message and does not call signIn for a username instead of an email', async () => {
     const user = userEvent.setup();
     render(<LoginPage />);
-    await user.type(screen.getByLabelText('Usuario'), 'a@b');
+    await user.type(screen.getByLabelText('Email'), 'bruno');
     await user.type(screen.getByLabelText('Contraseña'), 'secreto123');
     await user.click(screen.getByRole('button', { name: 'Ingresar' }));
-    expect(await screen.findByText('Usuario inválido')).toBeInTheDocument();
+    expect(await screen.findByText('Email inválido')).toBeInTheDocument();
     expect(mockSignIn).not.toHaveBeenCalled();
   });
 
@@ -61,7 +63,7 @@ describe('LoginPage', () => {
     const user = userEvent.setup();
     render(<LoginPage />);
     await user.click(screen.getByRole('button', { name: 'Ingresar' }));
-    expect(await screen.findByText('Usuario inválido')).toBeInTheDocument();
+    expect(await screen.findByText('Email inválido')).toBeInTheDocument();
     expect(mockSignIn).not.toHaveBeenCalled();
   });
 });

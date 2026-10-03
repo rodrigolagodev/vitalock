@@ -111,6 +111,10 @@ export type Database = {
       is_api_client_role: { Args: never; Returns: boolean }
       is_installer: { Args: never; Returns: boolean }
       require_admin: { Args: { p_rpc: string }; Returns: undefined }
+      require_assigned_ticket: {
+        Args: { p_rpc: string; p_ticket_id: string }
+        Returns: undefined
+      }
       require_staff: { Args: { p_rpc: string }; Returns: undefined }
     }
     Enums: {
@@ -1575,7 +1579,6 @@ export type Database = {
         Args: { p_actor_staff_id?: string; p_task_id: string }
         Returns: Json
       }
-      resolve_login_email: { Args: { p_username: string }; Returns: string }
       resolve_ticket: {
         Args: {
           p_actor_staff_id?: string

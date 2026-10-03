@@ -2,15 +2,15 @@ import { test as base, expect, type Page } from '@playwright/test';
 
 /** Seeded by supabase/seed-users.sql on `supabase start` / `supabase db reset`. */
 export const USERS = {
-  admin: { username: 'admin', password: 'Admin123!' },
-  installer: { username: 'installer', password: 'Installer123!' },
+  admin: { email: 'admin@vitalock.local', password: 'Admin123!' },
+  installer: { email: 'installer@vitalock.local', password: 'Installer123!' },
 } as const;
 
 export async function login(page: Page, user: keyof typeof USERS): Promise<void> {
-  const { username, password } = USERS[user];
+  const { email, password } = USERS[user];
   await page.goto('/login');
-  await page.getByLabel('Usuario').fill(username);
-  await page.getByLabel('Contraseña').fill(password);
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Ingresar' }).click();
   await expect(page).not.toHaveURL(/\/login$/);
 }
