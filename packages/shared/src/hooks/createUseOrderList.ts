@@ -29,6 +29,8 @@ export interface OrderListSummaryRawRow {
   particular_full_name: string | null;
   status: string;
   created_at: string;
+  /** Server-computed order total (whole order, excludes cancelled items). */
+  total_amount: number | string | null;
   [itemsField: string]: unknown;
 }
 
@@ -109,7 +111,7 @@ export function createUseOrderList<TStatus extends string, TRow>(
         let query: OrderListQuery = supabase
           .from(view)
           .select(
-            `id, order_number, client_type, administration_id, company_name, particular_full_name, status, created_at, ${embed}`,
+            `id, order_number, client_type, administration_id, company_name, particular_full_name, status, created_at, total_amount, ${embed}`,
             { count: 'exact' },
           );
 
