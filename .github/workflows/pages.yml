@@ -95,8 +95,14 @@ jobs:
         if: always()
         run: supabase stop --no-backup
 
+  # Browser journeys against both apps and a local Supabase stack. Reuses
+  # e2e.yml (a `workflow_call` workflow) so the recipe lives in one place;
+  # a failing journey blocks the deploy.
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+
   build:
-    needs: [verify, verify-sql]
+    needs: [verify, verify-sql, e2e]
     runs-on: ubuntu-latest
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}

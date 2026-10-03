@@ -1,9 +1,11 @@
 name: e2e
 
 # Real browser journeys against both apps and the local Supabase stack.
-# Runs on PRs that touch runtime code and on every push to main. Not a
-# required check yet — promote it in branch protection once it has been
-# stable for a couple of weeks.
+# Runs on PRs that touch runtime code. On push to main it is NOT triggered
+# here: pages.yml calls this workflow (`workflow_call`) as a deploy gate, so
+# every main push runs the journeys exactly once and Pages only deploys when
+# they pass. Not a required PR check yet — promote it in branch protection
+# once it has been stable for a couple of weeks.
 on:
   pull_request:
     paths:
@@ -14,9 +16,10 @@ on:
       - 'e2e/**'
       - 'playwright.config.ts'
       - '.github/workflows/e2e.yml'
-  push:
-    branches: [main]
+  workflow_call:
 
+# When called from pages.yml, github.ref is the caller's (main), so a newer
+# main push cancels an older in-flight gate — same policy as pages.yml.
 concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
