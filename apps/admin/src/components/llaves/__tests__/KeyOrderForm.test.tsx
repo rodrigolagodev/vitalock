@@ -90,11 +90,7 @@ vi.mock('@/components/buildings/BuildingCombobox', () => ({
     onChange: (v: string | null) => void;
     value?: string | null;
   }) => (
-    <button
-      type="button"
-      data-testid="building-combobox"
-      onClick={() => onChange('bld-1')}
-    >
+    <button type="button" data-testid="building-combobox" onClick={() => onChange('bld-1')}>
       {value ?? 'Seleccionar edificio'}
     </button>
   ),
@@ -168,9 +164,7 @@ describe('KeyOrderForm', () => {
     render(<KeyOrderForm mode="create" onSubmit={onSubmit} />, {
       wrapper: makeWrapper(),
     });
-    expect(
-      screen.getByRole('button', { name: /crear y confirmar orden/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /crear y confirmar orden/i })).toBeInTheDocument();
     expect(screen.getByText('Cliente')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /ítems/i })).toBeInTheDocument();
   });
@@ -179,13 +173,10 @@ describe('KeyOrderForm', () => {
   it('renders in edit mode with "Guardar cambios" button and pre-populated notes', () => {
     const onSubmit = vi.fn();
     const initialOrder = makeInitialOrder();
-    render(
-      <KeyOrderForm mode="edit" initialOrder={initialOrder} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
-    expect(
-      screen.getByRole('button', { name: /guardar cambios/i }),
-    ).toBeInTheDocument();
+    render(<KeyOrderForm mode="edit" initialOrder={initialOrder} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
+    expect(screen.getByRole('button', { name: /guardar cambios/i })).toBeInTheDocument();
     const notesTextarea = screen.getByPlaceholderText(/observaciones adicionales/i);
     expect(notesTextarea).toHaveValue('Nota de prueba');
   });
@@ -193,10 +184,9 @@ describe('KeyOrderForm', () => {
   // T-13c-1c: edit mode shows pre-populated item card
   it('renders pre-populated item card in edit mode', () => {
     const onSubmit = vi.fn();
-    render(
-      <KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
     expect(screen.getByText('Ítem 1')).toBeInTheDocument();
     expect(screen.getByTestId('key-order-item-0')).toBeInTheDocument();
   });
@@ -257,10 +247,9 @@ describe('KeyOrderForm', () => {
   it('removes an item card when "Eliminar" is clicked', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(
-      <KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByText('Ítem 1')).toBeInTheDocument();
     const removeBtn = screen.getByRole('button', { name: /eliminar ítem 1/i });
@@ -273,10 +262,9 @@ describe('KeyOrderForm', () => {
   // Totals footer shows live totals (visibility of system status).
   it('shows live item, key and price totals below the item list', () => {
     const onSubmit = vi.fn();
-    render(
-      <KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
 
     const totals = screen.getByTestId('lines-totals');
     // makeInitialOrder has one item: quantity 2, unit_price 150 → 2 llaves, $300,00.
@@ -285,17 +273,26 @@ describe('KeyOrderForm', () => {
     expect(totals).toHaveTextContent(/300,00/);
   });
 
+  it('formats the live total like the technical form (shared helper)', () => {
+    const base = makeInitialOrder();
+    const initialOrder = makeInitialOrder({
+      key_order_items: [{ ...base.key_order_items[0]!, quantity: 1, unit_price: 80 }],
+    });
+    render(<KeyOrderForm mode="edit" initialOrder={initialOrder} onSubmit={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByTestId('lines-totals')).toHaveTextContent('Total: $ 80,00');
+  });
+
   // Section header carries a persistent "Agregar ítem" button.
   it('shows the "Agregar ítem" button in the section header', () => {
     const onSubmit = vi.fn();
-    render(
-      <KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
 
-    expect(
-      screen.getByRole('button', { name: /agregar ítem/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /agregar ítem/i })).toBeInTheDocument();
   });
 
   // T-13c-1g: create mode calls onSubmit (form-level, not mutation-level)
@@ -326,10 +323,9 @@ describe('KeyOrderForm', () => {
       ],
     };
 
-    render(
-      <KeyOrderForm mode="create" initialValues={validValues} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<KeyOrderForm mode="create" initialValues={validValues} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
 
     const submitBtn = screen.getByRole('button', { name: /crear y confirmar orden/i });
     await user.click(submitBtn);
@@ -425,14 +421,10 @@ describe('KeyOrderForm', () => {
       { wrapper: makeWrapper() },
     );
 
-    await user.click(
-      screen.getByRole('button', { name: /crear y confirmar orden/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/el edificio es obligatorio/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/el edificio es obligatorio/i)).toBeInTheDocument();
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -472,14 +464,10 @@ describe('KeyOrderForm', () => {
       { wrapper: makeWrapper() },
     );
 
-    await user.click(
-      screen.getByRole('button', { name: /crear y confirmar orden/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/el precio debe ser mayor a 0/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/el precio debe ser mayor a 0/i)).toBeInTheDocument();
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });

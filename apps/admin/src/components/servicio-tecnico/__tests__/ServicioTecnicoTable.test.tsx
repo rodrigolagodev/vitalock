@@ -33,6 +33,7 @@ const sampleRows: TechnicalOrderListRow[] = [
     particular_full_name: null,
     status: 'confirmed',
     created_at: '2026-08-10T12:00:00Z',
+    total_amount: 300,
     technical_order_items: [{ id: 'ti-1' }, { id: 'ti-2' }],
   },
   {
@@ -44,6 +45,7 @@ const sampleRows: TechnicalOrderListRow[] = [
     particular_full_name: 'Juan Pérez',
     status: 'in_progress',
     created_at: '2026-08-09T08:00:00Z',
+    total_amount: 0,
     technical_order_items: [{ id: 'ti-3' }],
   },
 ];
@@ -110,5 +112,23 @@ describe('ServicioTecnicoTable', () => {
     // date/month-grouped view like admin HistorialTable.
     expect(container.querySelectorAll('section')).toHaveLength(0);
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
+  });
+});
+
+describe('ServicioTecnicoTable — total column', () => {
+  it('shows the server total_amount formatted as ARS for each row', () => {
+    render(<ServicioTecnicoTable rows={sampleRows} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByText('$ 300,00')).toBeInTheDocument();
+  });
+
+  it('shows $ 0,00 for a row whose server total is 0 (e.g. cancelled order)', () => {
+    render(<ServicioTecnicoTable rows={sampleRows} isFetching={false} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByText('$ 0,00')).toBeInTheDocument();
   });
 });

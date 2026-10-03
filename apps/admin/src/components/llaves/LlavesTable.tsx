@@ -1,5 +1,5 @@
 import { DataCardList } from '@vitalock/ui';
-import { formatDate } from '@/lib/format';
+import { formatCurrencyARS, formatDate } from '@/lib/format';
 import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
 import type { KeyOrderListRow } from '@/hooks/useKeyOrders';
 
@@ -41,6 +41,11 @@ export function LlavesTable({ rows, isFetching, hasFilters = false }: LlavesTabl
           cell: (row) => row.key_order_items.length,
           className: 'text-muted-foreground',
           hideBelow: 'lg',
+        },
+        {
+          header: 'Total',
+          cell: (row) => formatCurrencyARS(row.total_amount),
+          className: 'text-right tabular-nums',
         },
         {
           header: 'Estado',

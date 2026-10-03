@@ -6,6 +6,7 @@ import { PickupKeyDialog, type PickupPersonPrefill } from './PickupKeyDialog';
 import { KeyItemDetailsDialog } from './KeyItemDetailsDialog';
 import { useBuildingsByIds } from '@/hooks/useBuildingsByIds';
 import { useMutateKeyOrder } from '@/hooks/useMutateKeyOrder';
+import { lineSubtotal, orderTotal } from '@vitalock/shared';
 import { formatCurrencyARS } from '@/lib/format';
 import { keyItemStatus } from '@/lib/status/keyItemStatus';
 import type { KeyOrderItemRow, KeyOrderDetailRow } from '@/hooks/useKeyOrder';
@@ -102,7 +103,8 @@ export function KeyOrderItemsTable({
           {
             header: 'Cantidad',
             cell: (item) => item.quantity,
-            className: 'text-right',
+            align: 'right',
+            className: 'tabular-nums',
           },
           {
             header: 'Edificio',
@@ -116,8 +118,15 @@ export function KeyOrderItemsTable({
           {
             header: 'Precio',
             cell: (item) => formatCurrencyARS(item.unit_price),
-            className: 'text-right',
+            align: 'right',
+            className: 'tabular-nums',
             hideBelow: 'md',
+          },
+          {
+            header: 'Subtotal',
+            cell: (item) => formatCurrencyARS(lineSubtotal(item)),
+            align: 'right',
+            className: 'tabular-nums',
           },
           {
             header: 'Estado',
@@ -143,6 +152,7 @@ export function KeyOrderItemsTable({
         rowKey={(item) => item.id}
         actions={actions}
         emptyMessage="Sin ítems"
+        footer={isFetching ? undefined : `Total: ${formatCurrencyARS(orderTotal(items))}`}
       />
 
       {configureItem && (

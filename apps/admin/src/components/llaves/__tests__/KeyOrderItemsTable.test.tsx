@@ -210,3 +210,50 @@ describe('KeyOrderItemsTable — building name resolution', () => {
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe('KeyOrderItemsTable — subtotal and footer total', () => {
+  const renderTable = (items: KeyOrderItemRow[], isFetching = false) =>
+    render(
+      <KeyOrderItemsTable
+        items={items}
+        orderId="ko-1"
+        orderStatus="confirmed"
+        isFetching={isFetching}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+  it('shows a Subtotal column with each row subtotal and the footer total', () => {
+    renderTable([
+      makeItem({ id: 'a', quantity: 2, unit_price: 50 }),
+      makeItem({ id: 'b', quantity: 1, unit_price: 200 }),
+    ]);
+
+    expect(screen.getByRole('columnheader', { name: 'Subtotal' })).toBeInTheDocument();
+    // 2 x 50 -> subtotal $ 100,00 (unique: no price equals 100)
+    expect(screen.getByText('$ 100,00')).toBeInTheDocument();
+    expect(screen.getByText('Total: $ 300,00')).toBeInTheDocument();
+  });
+
+  it('shows a cancelled row subtotal but excludes it from the footer', () => {
+    renderTable([
+      makeItem({ id: 'a', quantity: 1, unit_price: 100, status: 'pending' }),
+      makeItem({ id: 'b', quantity: 2, unit_price: 20, status: 'cancelled' }),
+    ]);
+
+    expect(screen.getByText('$ 40,00')).toBeInTheDocument();
+    expect(screen.getByText('Total: $ 100,00')).toBeInTheDocument();
+  });
+
+  it('treats a null price as zero in the subtotal and the total', () => {
+    renderTable([makeItem({ unit_price: null })]);
+
+    expect(screen.getByText('Total: $ 0,00')).toBeInTheDocument();
+  });
+
+  it('hides the footer total while fetching', () => {
+    renderTable([makeItem({ quantity: 1, unit_price: 100 })], true);
+
+    expect(screen.queryByText(/^Total:/)).not.toBeInTheDocument();
+  });
+});

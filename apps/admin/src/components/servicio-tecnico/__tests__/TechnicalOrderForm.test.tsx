@@ -19,13 +19,33 @@ vi.mock('@/hooks/useBuildings', () => ({
 
 vi.mock('@/hooks/usePersonal', () => ({
   usePersonal: () => ({
-    data: [{ id: 'staff-1', full_name: 'García Juan', email: null, phone: null, role: 'installer', status: 'active', notes: null, created_at: '2026-01-01' }],
+    data: [
+      {
+        id: 'staff-1',
+        full_name: 'García Juan',
+        email: null,
+        phone: null,
+        role: 'installer',
+        status: 'active',
+        notes: null,
+        created_at: '2026-01-01',
+      },
+    ],
   }),
 }));
 
 vi.mock('@/hooks/useEquipment', () => ({
   useEquipment: () => ({
-    data: [{ id: 'equip-1', model: 'Equipo Modelo A', serial_number: 'SN001', status: 'active', installed_at: '2026-01-01', building_id: 'bld-1' }],
+    data: [
+      {
+        id: 'equip-1',
+        model: 'Equipo Modelo A',
+        serial_number: 'SN001',
+        status: 'active',
+        installed_at: '2026-01-01',
+        building_id: 'bld-1',
+      },
+    ],
   }),
 }));
 
@@ -34,11 +54,7 @@ vi.mock('@/hooks/useProducts', () => ({
 }));
 
 vi.mock('@/components/particulares/ParticularSelector', () => ({
-  ParticularSelector: ({
-    onChange,
-  }: {
-    onChange: (p: unknown) => void;
-  }) => (
+  ParticularSelector: ({ onChange }: { onChange: (p: unknown) => void }) => (
     <button
       type="button"
       data-testid="particular-selector"
@@ -71,11 +87,7 @@ vi.mock('@/components/buildings/BuildingCombobox', () => ({
     onChange: (v: string | null) => void;
     value?: string | null;
   }) => (
-    <button
-      type="button"
-      data-testid="building-combobox"
-      onClick={() => onChange('bld-1')}
-    >
+    <button type="button" data-testid="building-combobox" onClick={() => onChange('bld-1')}>
       {value ?? 'Seleccionar edificio'}
     </button>
   ),
@@ -98,7 +110,9 @@ function makeWrapper() {
   };
 }
 
-function makeInitialOrder(overrides: Partial<TechnicalOrderDetailRow> = {}): TechnicalOrderDetailRow {
+function makeInitialOrder(
+  overrides: Partial<TechnicalOrderDetailRow> = {},
+): TechnicalOrderDetailRow {
   return {
     id: 'to-1',
     order_number: 'ORD-TEC-000001',
@@ -146,9 +160,7 @@ describe('TechnicalOrderForm', () => {
     render(<TechnicalOrderForm mode="create" onSubmit={onSubmit} />, {
       wrapper: makeWrapper(),
     });
-    expect(
-      screen.getByRole('button', { name: /crear y confirmar orden/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /crear y confirmar orden/i })).toBeInTheDocument();
     expect(screen.getByText('Cliente')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /ítems/i })).toBeInTheDocument();
   });
@@ -160,9 +172,7 @@ describe('TechnicalOrderForm', () => {
       <TechnicalOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={onSubmit} />,
       { wrapper: makeWrapper() },
     );
-    expect(
-      screen.getByRole('button', { name: /guardar cambios/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /guardar cambios/i })).toBeInTheDocument();
     const notesTextarea = screen.getByPlaceholderText(/observaciones adicionales/i);
     expect(notesTextarea).toHaveValue('Nota técnica');
   });
@@ -205,10 +215,35 @@ describe('TechnicalOrderForm', () => {
     expect(screen.queryByText('Ítem 1')).not.toBeInTheDocument();
     // Open the popover, then click Mantenimiento
     await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
-    await user.click(
-      await screen.findByRole('button', { name: /mantenimiento/i }),
-    );
+    await user.click(await screen.findByRole('button', { name: /mantenimiento/i }));
     expect(screen.getByText('Ítem 1')).toBeInTheDocument();
+  });
+
+  // Live total mirrors KeyOrderForm's `lines-totals` block.
+  it('shows a live total that updates as items are added and repriced', async () => {
+    const user = userEvent.setup();
+    const base = makeInitialOrder();
+    const initialOrder = makeInitialOrder({
+      technical_order_items: [{ ...base.technical_order_items[0]!, unit_price: 80 }],
+    });
+    render(<TechnicalOrderForm mode="edit" initialOrder={initialOrder} onSubmit={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getByTestId('lines-totals')).toHaveTextContent('Total: $ 80,00');
+
+    // A newly added item has no price yet: it counts as 0.
+    await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
+    await user.click(await screen.findByRole('button', { name: /mantenimiento/i }));
+    expect(screen.getByTestId('lines-totals')).toHaveTextContent('Total: $ 80,00');
+
+    await user.type(screen.getByLabelText(/precio unitario/i), '20');
+    expect(screen.getByTestId('lines-totals')).toHaveTextContent('Total: $ 100,00');
+  });
+
+  it('hides the live total when there are no items', () => {
+    render(<TechnicalOrderForm mode="create" onSubmit={vi.fn()} />, { wrapper: makeWrapper() });
+    expect(screen.queryByTestId('lines-totals')).not.toBeInTheDocument();
   });
 
   // T-14c-1f: removing an item works
@@ -237,9 +272,7 @@ describe('TechnicalOrderForm', () => {
 
     // Add one item so items validation passes
     await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
-    await user.click(
-      await screen.findByRole('button', { name: /mantenimiento/i }),
-    );
+    await user.click(await screen.findByRole('button', { name: /mantenimiento/i }));
 
     const submitBtn = screen.getByRole('button', { name: /crear y confirmar orden/i });
     await user.click(submitBtn);
@@ -277,9 +310,7 @@ describe('TechnicalOrderForm', () => {
 
     // Add a maintenance item via the popover menu — auto-expands
     await user.click(screen.getByRole('button', { name: /agregar ítem/i }));
-    await user.click(
-      await screen.findByRole('button', { name: /mantenimiento/i }),
-    );
+    await user.click(await screen.findByRole('button', { name: /mantenimiento/i }));
 
     // Submit without filling building_id
     await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
@@ -402,7 +433,7 @@ describe('TechnicalOrderForm', () => {
               description: '',
               building_id: 'bld-1',
               unit_price: null,
-              product_id: null,   // missing — should fail
+              product_id: null, // missing — should fail
               intended_equipment_id: null,
               intended_assignee_staff_id: 'staff-1',
             },
@@ -444,8 +475,8 @@ describe('TechnicalOrderForm', () => {
               quantity: 1,
               description: '',
               building_id: 'bld-1',
-              unit_price: 100,   // required for install_equipment (billable)
-              product_id: 'prod-1',   // provided — should pass
+              unit_price: 100, // required for install_equipment (billable)
+              product_id: 'prod-1', // provided — should pass
               intended_equipment_id: null,
               intended_assignee_staff_id: 'staff-1',
             },
@@ -484,17 +515,16 @@ describe('TechnicalOrderForm', () => {
           description: '',
           building_id: 'bld-1',
           unit_price: null,
-          product_id: null,                     // still missing
+          product_id: null, // still missing
           intended_equipment_id: null,
           intended_assignee_staff_id: 'staff-1',
         },
       ],
     };
 
-    render(
-      <TechnicalOrderForm mode="create" initialValues={values} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<TechnicalOrderForm mode="create" initialValues={values} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
 
@@ -529,7 +559,7 @@ describe('TechnicalOrderForm', () => {
               building_id: 'bld-1',
               unit_price: null,
               product_id: null,
-              intended_equipment_id: null,        // required for replace_equipment
+              intended_equipment_id: null, // required for replace_equipment
               intended_assignee_staff_id: 'staff-1',
             },
           ],
@@ -576,10 +606,9 @@ describe('TechnicalOrderForm', () => {
       ],
     };
 
-    render(
-      <TechnicalOrderForm mode="create" initialValues={validValues} onSubmit={onSubmit} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<TechnicalOrderForm mode="create" initialValues={validValues} onSubmit={onSubmit} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
 

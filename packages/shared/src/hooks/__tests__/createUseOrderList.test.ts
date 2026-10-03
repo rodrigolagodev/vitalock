@@ -108,6 +108,28 @@ describe('createUseOrderList (factory)', () => {
     expect(mockOr).not.toHaveBeenCalled();
   });
 
+  it('selects the server total_amount column ahead of the items embed', async () => {
+    const useHook = createUseOrderList(makeOptions());
+    const { result } = renderHook(() => useHook(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const [columns] = mockSelect.mock.calls[0] as [string, unknown];
+    expect(columns).toContain('total_amount');
+    expect(columns.indexOf('total_amount')).toBeLessThan(columns.indexOf('test_order_items('));
+  });
+
+  it('keeps total_amount in the select when scoped by building', async () => {
+    const useHook = createUseOrderList(makeOptions());
+    const { result } = renderHook(() => useHook({ buildingId: 'bld-1' }), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const [columns] = mockSelect.mock.calls[0] as [string, unknown];
+    expect(columns).toContain('total_amount');
+    expect(columns).toContain('test_order_items!inner(id,building_id)');
+  });
+
   // -------------------------------------------------------------------------
   // B.2 test-2: status filter
   // -------------------------------------------------------------------------

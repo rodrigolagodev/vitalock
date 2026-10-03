@@ -1123,6 +1123,7 @@ export type Database = {
           particular_full_name: string | null
           particular_id: string | null
           status: string | null
+          total_amount: number | null
           updated_at: string | null
         }
         Relationships: []
@@ -1175,6 +1176,7 @@ export type Database = {
           particular_phone: string | null
           pickup_particular_id: string | null
           status: string | null
+          total_amount: number | null
           updated_at: string | null
         }
         Relationships: [
@@ -1250,6 +1252,7 @@ export type Database = {
           particular_id: string | null
           particular_phone: string | null
           status: string | null
+          total_amount: number | null
           updated_at: string | null
         }
         Relationships: [

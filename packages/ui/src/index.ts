@@ -102,6 +102,7 @@ export {
 export {
   DataTable,
   type DataTableProps,
+  type DataTableAlign,
   type DataTableColumn,
   type DataTableAction,
   type DataTableBreakpoint,

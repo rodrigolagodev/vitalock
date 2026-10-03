@@ -21,6 +21,7 @@ export interface KeyOrderListRow {
   particular_full_name: string | null;
   status: KeyOrderStatus;
   created_at: string;
+  total_amount: number;
   key_order_items: { id: string }[];
 }
 
@@ -40,6 +41,7 @@ export const useKeyOrders = createUseOrderList<KeyOrderStatus, KeyOrderListRow>(
       particular_full_name: row.particular_full_name,
       status: row.status as KeyOrderStatus,
       created_at: row.created_at,
+      total_amount: Number(row.total_amount) || 0,
       key_order_items: items.map((item) => ({ id: item.id })),
     };
   },

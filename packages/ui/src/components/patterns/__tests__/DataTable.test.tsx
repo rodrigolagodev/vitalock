@@ -250,4 +250,83 @@ describe('DataTable', () => {
     expect(screen.getByRole('button', { name: 'Página anterior' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'Filas por página' })).toHaveValue('10');
   });
+
+  describe('footer slot', () => {
+    it('renders the footer on page 1 and page 2 without counting it in the row total', async () => {
+      const user = userEvent.setup();
+      renderTable({ rows: makeRows(25), footer: 'Total: $ 300,00' });
+
+      expect(screen.getByText('Total: $ 300,00')).toBeInTheDocument();
+      expect(screen.getByText('1–10 de 25')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+
+      expect(screen.getByText('11–20 de 25')).toBeInTheDocument();
+      expect(screen.getByText('Total: $ 300,00')).toBeInTheDocument();
+    });
+
+    it('renders inside a tfoot that spans every column', () => {
+      renderTable({ footer: 'Total: $ 10,00' });
+
+      const cell = screen.getByText('Total: $ 10,00').closest('td');
+      expect(cell?.closest('tfoot')).not.toBeNull();
+      expect(cell).toHaveAttribute('colspan', String(baseColumns.length));
+      // header + 3 data rows + footer row
+      expect(screen.getAllByRole('row')).toHaveLength(5);
+    });
+
+    it('still renders the footer when there are no rows', () => {
+      renderTable({ rows: [], emptyMessage: 'Sin ítems.', footer: 'Total: $ 0,00' });
+
+      expect(screen.getByText('Sin ítems.')).toBeInTheDocument();
+      expect(screen.getByText('Total: $ 0,00')).toBeInTheDocument();
+    });
+
+    it('adds no footer region when the footer prop is omitted', () => {
+      renderTable({ rows: makeRows(3) });
+
+      expect(document.querySelector('tfoot')).toBeNull();
+      expect(screen.getAllByRole('row')).toHaveLength(4);
+    });
+
+    it('coexists with the pagination footer', () => {
+      renderTable({ rows: makeRows(25), footer: 'Total: $ 5,00' });
+
+      expect(screen.getByText('Total: $ 5,00')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeEnabled();
+    });
+  });
+
+  describe('column align', () => {
+    const alignedColumns: DataTableColumn<Item>[] = [
+      { header: 'Cantidad', cell: () => '1', align: 'right' },
+      { header: 'Nombre', cell: (row) => row.name },
+      { header: 'Precio', cell: () => '$ 10,00', align: 'right' },
+    ];
+
+    it('aligns the header and every body cell of an aligned column, including the first', () => {
+      renderTable({ rows: makeRows(1), columns: alignedColumns });
+
+      expect(screen.getByRole('columnheader', { name: 'Cantidad' })).toHaveClass('text-right');
+      expect(screen.getByRole('columnheader', { name: 'Precio' })).toHaveClass('text-right');
+      expect(screen.getByText('1').closest('td')).toHaveClass('text-right');
+      expect(screen.getByText('$ 10,00').closest('td')).toHaveClass('text-right');
+    });
+
+    it('leaves unaligned columns left-aligned by default', () => {
+      renderTable({ rows: makeRows(1), columns: alignedColumns });
+
+      expect(screen.getByRole('columnheader', { name: 'Nombre' })).not.toHaveClass('text-right');
+      expect(screen.getByText('Item 1').closest('td')).not.toHaveClass('text-right');
+    });
+
+    it('aligns skeleton cells while fetching', () => {
+      renderTable({ rows: [], columns: alignedColumns, isFetching: true });
+
+      const firstSkeletonRow = screen.getAllByRole('row')[1]!;
+      const cells = within(firstSkeletonRow).getAllByRole('cell');
+      expect(cells[0]).toHaveClass('text-right');
+      expect(cells[1]).not.toHaveClass('text-right');
+    });
+  });
 });
