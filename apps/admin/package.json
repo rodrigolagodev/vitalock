@@ -23,7 +23,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hook-form": "^7.85.0",
-    "react-router-dom": "6.27.0",
+    "react-router-dom": "6.30.6",
     "sonner": "^2.0.8",
     "zod": "3.23.8"
   },
