@@ -85,11 +85,11 @@ PaginationFooter MUST render the reference footer: a "1-10 of 30" summary, rows-
 
 List pages MUST adopt StatCards aggregating client-side over existing hooks (no new queries) and PaginationFooter on their tables:
 
-| Page | StatCards |
-|---|---|
-| `/administraciones` | Total; Activas (`status = 'active'`) |
-| `/ordenes` | Total; En proceso; Listo para retirar |
-| `/stock` | Total; Stock bajo (`stock_disponible <= 5`) |
+| Page                | StatCards                                   |
+| ------------------- | ------------------------------------------- |
+| `/administraciones` | Total; Activas (`status = 'active'`)        |
+| `/ordenes`          | Total; En proceso; Listo para retirar       |
+| `/stock`            | Total; Stock bajo (`stock_disponible <= 5`) |
 
 #### Scenario: Stock KPIs aggregate from loaded products
 
@@ -189,11 +189,55 @@ All row actions MUST be icon-only buttons (`size="icon"`, ghost variant; destruc
 
 Every DataTable instance MUST render the pagination footer (`paginated` defaults true): "start–end de total", rows-per-page select, prev/next with aria-labels; prev disabled on the first page, next on the last; small lists still render the footer with disabled navigation. Page-reset on data change MUST be built in: when `rows` change (filter/search), page resets to 1 and page size to DEFAULT_PAGE_SIZE.
 
+DataTable MUST additionally accept an optional `footer` slot (ReactNode). When provided, the slot MUST render inside the table as a footer region OUTSIDE the paginated body: it MUST NOT be sliced, counted or reordered by pagination, and it MUST remain visible on every page, including when `rows` is empty. When `footer` is omitted, DataTable output MUST be unchanged. The slot MUST be independent of the pagination footer (both render when both apply).
+
 #### Scenario: Page resets when the filter changes
 
 - GIVEN a table with 25 rows on page 3 with an active filter
 - WHEN the filter changes the row set
 - THEN the page resets to 1 and the page size resets to the default
+
+#### Scenario: Footer slot stays visible across pages
+
+- GIVEN a paginated DataTable with 25 rows and a `footer` slot
+- WHEN the user navigates from page 1 to page 2
+- THEN the footer content is rendered on both pages
+- AND the footer is not part of the paginated row count ("start–end de total" counts rows only)
+
+#### Scenario: Footer slot renders with no rows
+
+- GIVEN a DataTable with zero rows and a `footer` slot
+- WHEN it renders
+- THEN the footer content is still rendered
+
+#### Scenario: No footer slot leaves output unchanged
+
+- GIVEN a DataTable without a `footer` prop
+- WHEN it renders
+- THEN no footer region is added and the pagination footer behaves as before
+
+### Requirement: Column Alignment
+
+DataTableColumn MUST accept an optional `align?: 'left' | 'center' | 'right'` prop that applies alignment to the header, every body cell (including the first column), and loading skeleton cells so headers and content always align. When `align` is omitted, columns default to `'left'`. Numeric and currency columns MUST use `'right'` alignment to ensure decimal points stack vertically.
+
+#### Scenario: Aligned header and cells including first column
+
+- GIVEN a DataTable with a numeric column configured with `align: 'right'`
+- WHEN the table renders
+- THEN the header, all body cells, and skeleton cells for that column display right-aligned
+- AND the first column can be right-aligned independently
+
+#### Scenario: Unaligned columns default left
+
+- GIVEN a DataTable column without an `align` prop
+- WHEN the column renders
+- THEN content and header display left-aligned
+
+#### Scenario: Skeleton cells respect alignment
+
+- GIVEN a DataTable in loading state with an `align: 'right'` column
+- WHEN skeleton rows render
+- THEN the skeleton cells align right with the header and data cells
 
 ### Requirement: renderActions Escape Hatch
 
@@ -209,21 +253,21 @@ Every DataTable instance MUST render the pagination footer (`paginated` defaults
 
 All 13 render sites MUST adopt DataTable with these contracts, and every one MUST be paginated:
 
-| Table | First cell | Actions (icons) |
-|---|---|---|
-| KeysTable | button → KeyDetailDialog | Power (Activar/Dar de baja) |
-| StaffTable | text | PencilLine, Trash2 |
-| TareasTable | Link `/tareas/:id` | PencilLine |
-| OrdenesTable | Link `/ordenes/:id` | — |
-| ProductsTable | Link `/stock/:id` | — (dead "Acciones" column removed) |
-| ParticularTable | text | PencilLine, Trash2 |
-| BuildingsTable | Link `/buildings/:id` | PencilLine + BuildingStatusToggle |
-| AdministrationsTable | Link `/administraciones/:id` | PencilLine + AdministrationStatusToggle |
-| EquipmentTable | text | PencilLine, RefreshCw |
-| OrderItemsTable | text (Tipo) | Settings2, Eye, Ban, PackageCheck |
-| StockMovementsTable | text (Fecha) | — |
-| TechnicalItemsTable (new) | text | — |
-| OrderTareasTable (new) | Link `/tareas/:id` | — |
+| Table                     | First cell                   | Actions (icons)                         |
+| ------------------------- | ---------------------------- | --------------------------------------- |
+| KeysTable                 | button → KeyDetailDialog     | Power (Activar/Dar de baja)             |
+| StaffTable                | text                         | PencilLine, Trash2                      |
+| TareasTable               | Link `/tareas/:id`           | PencilLine                              |
+| OrdenesTable              | Link `/ordenes/:id`          | —                                       |
+| ProductsTable             | Link `/stock/:id`            | — (dead "Acciones" column removed)      |
+| ParticularTable           | text                         | PencilLine, Trash2                      |
+| BuildingsTable            | Link `/buildings/:id`        | PencilLine + BuildingStatusToggle       |
+| AdministrationsTable      | Link `/administraciones/:id` | PencilLine + AdministrationStatusToggle |
+| EquipmentTable            | text                         | PencilLine, RefreshCw                   |
+| OrderItemsTable           | text (Tipo)                  | Settings2, Eye, Ban, PackageCheck       |
+| StockMovementsTable       | text (Fecha)                 | —                                       |
+| TechnicalItemsTable (new) | text                         | —                                       |
+| OrderTareasTable (new)    | Link `/tareas/:id`           | —                                       |
 
 OrdenDetailPage MUST compose OrderItemsTable, TechnicalItemsTable (Tipo/Descripción/Cantidad), and OrderTareasTable (N.º/Categoría/Descripción/Estado) and MUST NOT render inline table markup.
 
