@@ -225,7 +225,13 @@ staff de Vitalock se loguea.
 - `admin` → full access (`identity.is_admin()`).
 - `installer` → SELECT en el mundo operativo (edificios, unidades, llaves,
   equipos, staff). UPDATE limitado a `sync_state` + auditoría en
-  `key_authorizations`. En `support.tickets` solo ve los asignados a él y
+  `key_authorizations`, y solo sobre filas **pendientes**
+  (`pending_install` / `pending_removal`); el resultado solo puede ser un
+  estado pendiente o `installed` / `removed` (`cancelled` es solo admin).
+  **El worklist de autorizaciones es compartido**: todo installer ve y puede
+  completar cualquier autorización pendiente, de cualquier edificio — no hay
+  asignación por installer ni por ticket (decisión de negocio, 2026-10;
+  migración `20260915100000`, `test_139`). En `support.tickets` solo ve los asignados a él y
   solo puede tocar `status`/`resolution_notes`/`notes` (no puede reasignar
   ni cancelar). **Sin acceso a `sales.*`.**
 

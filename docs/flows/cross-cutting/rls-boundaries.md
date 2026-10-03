@@ -55,12 +55,12 @@ without redoing the whole RLS layer.
 Defined in
 `supabase/migrations/20260808000013_auth_helpers.sql`:
 
-| Function | Returns | Used by |
-|---|---|---|
-| `identity.current_staff_id()` | `uuid` — the staff id of the logged-in user, or NULL | Ticket ownership scoping |
-| `identity.current_staff_role()` | `'admin' \| 'installer' \| NULL` | Column-level guards |
-| `identity.is_admin()` | boolean | Every `admin_*` policy |
-| `identity.is_installer()` | boolean | Every `installer_*` policy |
+| Function                        | Returns                                              | Used by                    |
+| ------------------------------- | ---------------------------------------------------- | -------------------------- |
+| `identity.current_staff_id()`   | `uuid` — the staff id of the logged-in user, or NULL | Ticket ownership scoping   |
+| `identity.current_staff_role()` | `'admin' \| 'installer' \| NULL`                     | Column-level guards        |
+| `identity.is_admin()`           | boolean                                              | Every `admin_*` policy     |
+| `identity.is_installer()`       | boolean                                              | Every `installer_*` policy |
 
 Granted `execute` to `authenticated` (line 78). Policies use them
 directly.
@@ -98,7 +98,11 @@ looking at a ticket.
 
 The scoped-write layer is where things get precise:
 
-- **`key_authorizations`** (lines 71-72): SELECT all, UPDATE all. The
+- **`key_authorizations`** (lines 71-72): SELECT all, UPDATE only rows in
+  `pending_install` / `pending_removal`, landing in a pending state or
+  `installed` / `removed` (migration `20260915100000`). The worklist is
+  shared — any installer completes any pending row; there is no
+  per-installer scoping by design. The
   `sync_state` transitions are guarded by the `key_authorizations_validate`
   trigger which restricts what an installer can flip. Direct column
   changes (`rfid_key_id`, `equipment_id`) are immutable by trigger,
@@ -176,19 +180,19 @@ trigger's whitelist.
 
 ## Error paths & guards
 
-| Trigger | Guard | Effect |
-|---|---|---|
-| Installer INSERTs a ticket | `installer_update_own_tickets` policy (no INSERT policy for installer) | Rejected |
-| Installer reassigns a ticket | `enforce_installer_ticket_column_restrictions` | Raises `insufficient_privilege` |
-| Installer SELECTs from `sales.*` | No installer policy on sales | Empty result |
-| Anonymous user hits any endpoint | Anon key is scoped to auth-only helpers | Rejected |
-| SECURITY DEFINER RPC called without body-level auth | If the RPC forgets to check | Silent privilege escalation |
+| Trigger                                             | Guard                                                                  | Effect                          |
+| --------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------- |
+| Installer INSERTs a ticket                          | `installer_update_own_tickets` policy (no INSERT policy for installer) | Rejected                        |
+| Installer reassigns a ticket                        | `enforce_installer_ticket_column_restrictions`                         | Raises `insufficient_privilege` |
+| Installer SELECTs from `sales.*`                    | No installer policy on sales                                           | Empty result                    |
+| Anonymous user hits any endpoint                    | Anon key is scoped to auth-only helpers                                | Rejected                        |
+| SECURITY DEFINER RPC called without body-level auth | If the RPC forgets to check                                            | Silent privilege escalation     |
 
 ## Known gaps
 
 1. **Some newer tables may lack RLS policies**. Verify by running
    `SELECT * FROM pg_policies WHERE schemaname IN ('public',
-   'operations', 'support', 'identity', 'sales')` and cross-check
+'operations', 'support', 'identity', 'sales')` and cross-check
    against `pg_tables`. Any table without a policy defaults to
    deny-all under `authenticated` — worse: without RLS enabled at
    the table level, it defaults to allow-all, which is a real
