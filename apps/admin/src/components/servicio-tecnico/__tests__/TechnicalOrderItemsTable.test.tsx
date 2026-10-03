@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
@@ -177,5 +178,59 @@ describe('TechnicalOrderItemsTable — intent fields (resolved names)', () => {
     );
     expect(screen.getByText('Perez, Ana')).toBeInTheDocument();
     expect(screen.queryByText('staff-1')).not.toBeInTheDocument();
+  });
+});
+
+describe('TechnicalOrderItemsTable — price, subtotal and footer total', () => {
+  it('shows Precio and Subtotal columns with the footer total', () => {
+    render(
+      <TechnicalOrderItemsTable
+        items={[makeItem({ item_type: 'install_equipment', unit_price: 80 })]}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(screen.getByRole('columnheader', { name: 'Precio' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Subtotal' })).toBeInTheDocument();
+    // Precio and Subtotal both render $ 80,00 for a quantity of 1
+    expect(screen.getAllByText('$ 80,00')).toHaveLength(2);
+    expect(screen.getByText('Total: $ 80,00')).toBeInTheDocument();
+  });
+
+  it('shows $ 0,00 for a zero-price maintenance item and a zero total', () => {
+    render(<TechnicalOrderItemsTable items={[makeItem({ unit_price: 0 })]} />, {
+      wrapper: makeWrapper(),
+    });
+
+    expect(screen.getAllByText('$ 0,00')).toHaveLength(2); // Precio and Subtotal
+    expect(screen.getByText('Total: $ 0,00')).toBeInTheDocument();
+  });
+
+  it('shows a cancelled row but leaves it out of the footer total', () => {
+    render(
+      <TechnicalOrderItemsTable
+        items={[
+          makeItem({ id: 'a', item_type: 'install_equipment', unit_price: 100, status: 'pending' }),
+          makeItem({ id: 'b', unit_price: 40, status: 'cancelled' }),
+        ]}
+      />,
+      { wrapper: makeWrapper() },
+    );
+
+    expect(screen.getAllByText('$ 40,00')).toHaveLength(2);
+    expect(screen.getByText('Total: $ 100,00')).toBeInTheDocument();
+  });
+
+  it('keeps the footer total visible on every page', async () => {
+    const user = userEvent.setup();
+    const items = Array.from({ length: 25 }, (_, i) =>
+      makeItem({ id: `item-${i}`, unit_price: 10 }),
+    );
+    render(<TechnicalOrderItemsTable items={items} />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText('Total: $ 250,00')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+    expect(screen.getByText('11–20 de 25')).toBeInTheDocument();
+    expect(screen.getByText('Total: $ 250,00')).toBeInTheDocument();
   });
 });

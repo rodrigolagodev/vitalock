@@ -24,6 +24,8 @@ export interface AllOrderRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  /** Server-computed order total (whole order, excludes cancelled items). */
+  total_amount: number;
 }
 
 export interface UseAllOrdersFilters {
@@ -57,7 +59,7 @@ export function useAllOrders({
       let query = supabase
         .from('all_orders')
         .select(
-          'id, order_number, order_kind, client_type, administration_id, particular_id, particular_full_name, status, notes, created_at, updated_at',
+          'id, order_number, order_kind, client_type, administration_id, particular_id, particular_full_name, status, notes, created_at, updated_at, total_amount',
           { count: 'exact' },
         );
 
@@ -85,7 +87,14 @@ export function useAllOrders({
       // `all_orders` is a UNION view. Postgres does not carry NOT NULL through
       // views, so `supabase gen types` marks every column nullable even though
       // both underlying tables guarantee them. The one place this hook asserts.
-      return fetchCappedList<AllOrderRow>(query.order('created_at', { ascending: false }));
+      const capped = await fetchCappedList<AllOrderRow>(
+        query.order('created_at', { ascending: false }),
+      );
+      // PostgREST returns numeric as a JSON number; coerce defensively.
+      return {
+        ...capped,
+        rows: capped.rows.map((row) => ({ ...row, total_amount: Number(row.total_amount) || 0 })),
+      };
     },
   });
   return toCappedQueryResult(result);

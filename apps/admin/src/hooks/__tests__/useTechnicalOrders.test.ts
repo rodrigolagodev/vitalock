@@ -65,6 +65,7 @@ const fakeSummaryRows = [
     particular_full_name: null,
     status: 'draft',
     created_at: '2026-08-10T10:00:00Z',
+    total_amount: '80.00',
     technical_order_items: [{ id: 'toi-1' }],
   },
 ];
@@ -116,6 +117,26 @@ describe('useTechnicalOrders', () => {
         technical_order_items: [{ id: 'toi-1' }],
       }),
     ]);
+  });
+
+  it('selects total_amount and coerces it to a number', async () => {
+    const { result } = renderHook(() => useTechnicalOrders(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(getMocks().select).toHaveBeenCalledWith(expect.stringContaining('total_amount'), {
+      count: 'exact',
+    });
+    expect(result.current.data?.[0]?.total_amount).toBe(80);
+  });
+
+  it('maps a null total_amount to 0', async () => {
+    getMocks().limit.mockResolvedValue({
+      data: [{ ...fakeSummaryRows[0], total_amount: null }],
+      error: null,
+      count: 1,
+    });
+    const { result } = renderHook(() => useTechnicalOrders(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.[0]?.total_amount).toBe(0);
   });
 
   it('no .or() filter called when no search term', async () => {

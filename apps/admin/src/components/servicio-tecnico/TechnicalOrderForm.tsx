@@ -16,6 +16,8 @@ import { Textarea } from '@vitalock/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { Popover, PopoverContent, PopoverTrigger } from '@vitalock/ui';
 import { Plus, Trash2 } from 'lucide-react';
+import { orderTotal } from '@vitalock/shared';
+import { formatCurrencyARS } from '@/lib/format';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
 import { usePersonal } from '@/hooks/usePersonal';
@@ -228,6 +230,9 @@ export function TechnicalOrderForm({
   const clientType = watch('client_type');
   const administrationId = watch('administration_id');
   const items = watch('items');
+
+  // Live total for the lines table (visibility of system status).
+  const totalPrice = orderTotal(items);
 
   const { data: buildings = [] } = useBuildings(
     clientType === 'administration' && administrationId ? { administrationId } : {},
@@ -608,6 +613,21 @@ export function TechnicalOrderForm({
                 ? 'La orden todavía no tiene ítems. Agregá el primero desde “Agregar ítem”.'
                 : 'Hay lugar para más ítems.'}
             </div>
+
+            {/* Totals — always visible below the item list */}
+            {fields.length > 0 && (
+              <div
+                data-testid="lines-totals"
+                className="bg-muted/40 flex flex-wrap items-center justify-between gap-2 rounded-md border px-4 py-3 text-sm"
+              >
+                <span className="text-muted-foreground">
+                  {items.length} {items.length === 1 ? 'ítem' : 'ítems'}
+                </span>
+                <span className="font-medium">
+                  Total: <span className="tabular-nums">{formatCurrencyARS(totalPrice)}</span>
+                </span>
+              </div>
+            )}
           </div>
         </section>
 

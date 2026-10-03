@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { DataTable, StatusBadge, type StatusTone } from '@vitalock/ui';
+import { lineSubtotal, orderTotal } from '@vitalock/shared';
+import { formatCurrencyARS } from '@/lib/format';
 import { useEquipmentByIds } from '@/hooks/useEquipmentByIds';
 import { useStaffByIds } from '@/hooks/useStaffByIds';
 import { useProductsByIds } from '@/hooks/useProductsByIds';
@@ -79,6 +81,19 @@ export function TechnicalOrderItemsTable({
           className: 'text-right',
         },
         {
+          header: 'Precio',
+          cell: (item) => formatCurrencyARS(item.unit_price),
+          className: 'text-right tabular-nums',
+          headerClassName: 'text-right',
+          hideBelow: 'md',
+        },
+        {
+          header: 'Subtotal',
+          cell: (item) => formatCurrencyARS(lineSubtotal(item)),
+          className: 'text-right tabular-nums',
+          headerClassName: 'text-right',
+        },
+        {
           header: 'Descripción',
           cell: (item) => item.description ?? '—',
           className: 'text-muted-foreground',
@@ -132,6 +147,7 @@ export function TechnicalOrderItemsTable({
       ]}
       rowKey={(item) => item.id}
       emptyMessage="Sin ítems"
+      footer={isFetching ? undefined : `Total: ${formatCurrencyARS(orderTotal(items))}`}
     />
   );
 }

@@ -25,6 +25,7 @@ function makeRows(): KeyOrderListRow[] {
     administrations: null,
     particular_full_name: 'Cliente Test',
     created_at: '2026-08-10T12:00:00Z',
+    total_amount: 0,
     key_order_items: [{ id: 'item-1' }],
   };
   return [

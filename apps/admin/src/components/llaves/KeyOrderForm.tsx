@@ -16,6 +16,7 @@ import { Textarea } from '@vitalock/ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import { Plus, Trash2 } from 'lucide-react';
+import { orderTotal } from '@vitalock/shared';
 import { formatCurrencyARS } from '@/lib/format';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useBuildings } from '@/hooks/useBuildings';
@@ -194,10 +195,7 @@ export function KeyOrderForm({
 
   // Live totals for the lines table (visibility of system status).
   const keysCount = items.reduce((acc, it) => acc + (Number(it?.quantity) || 0), 0);
-  const totalPrice = items.reduce(
-    (acc, it) => acc + (Number(it?.quantity) || 0) * (Number(it?.unit_price) || 0),
-    0,
-  );
+  const totalPrice = orderTotal(items);
 
   // ---- Item cards (list-first, one card per item) ----
   // Each item in `items` is rendered as an expandable card. Adding an item

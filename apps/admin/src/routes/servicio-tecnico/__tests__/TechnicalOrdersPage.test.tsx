@@ -29,6 +29,7 @@ function makeRows(): TechnicalOrderListRow[] {
     administrations: null,
     particular_full_name: 'Cliente Test',
     created_at: '2026-08-10T12:00:00Z',
+    total_amount: 0,
     technical_order_items: [{ id: 'ti-1' }],
   };
   return [

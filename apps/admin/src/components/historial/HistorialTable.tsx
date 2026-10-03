@@ -2,7 +2,7 @@ import { Key, Wrench } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { DataCardList, StatusBadge, formatMonthHeading, monthKey } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
-import { formatDate } from '@/lib/format';
+import { formatCurrencyARS, formatDate } from '@/lib/format';
 import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
 import { technicalOrderStatus } from '@/lib/status/technicalOrderStatus';
 import type { AllOrderRow } from '@/hooks/useAllOrders';
@@ -65,6 +65,11 @@ export function HistorialTable({ orders, isFetching, hasFilters = false }: Histo
         {
           header: 'Tipo',
           cell: (row) => <OrderKindBadge kind={row.order_kind} />,
+        },
+        {
+          header: 'Total',
+          cell: (row) => formatCurrencyARS(row.total_amount),
+          className: 'text-right tabular-nums',
         },
         {
           header: 'Estado',
