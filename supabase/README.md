@@ -380,14 +380,19 @@ The 22 pre-existing business RPCs were hardened in
 `<name>` is now a guarded wrapper delegating to `<name>_unguarded`. New RPCs should
 simply follow the four rules above in one function.
 
-Regression tests: `tests-sql/test_130_*` … `test_134_*`.
+Regression tests: `tests-sql/test_130_*` … `test_134_*`, plus `test_137_*` for the
+assignee scope below.
 
-**Exception: pre-auth lookup RPCs.** A function whose intended caller is
-`anon` before any session exists (currently only `public.resolve_login_email`)
-cannot call `identity.require_admin`/`identity.require_staff` — there is no
-staff session yet to guard. These RPCs skip rule 1 and are instead
-constrained by explicit `EXECUTE` privileges (`REVOKE ... FROM PUBLIC, anon,
-authenticated; GRANT ... TO anon, authenticated, service_role;`) plus a
-contract of returning a constant `NULL` for every invalid/unknown/unauthorized
-case and never raising a distinguishing error. Regression test:
+**Staff-level ticket RPCs are assignee-scoped.** `resolve_ticket`,
+`resolve_equipment_update` and `configure_technical_ticket_equipment` also call
+`identity.require_assigned_ticket(<rpc_name>, <ticket_id>)` after `require_staff`:
+through an API role an installer must be the ticket's `assigned_to_staff_id`
+(P0001 otherwise); admins are not scoped. Any new installer-callable RPC that acts
+on a ticket must do the same (`20260913100000`).
+
+**No pre-auth RPCs.** Nothing is callable by `anon` before a session exists.
+The only exception that ever existed, `public.resolve_login_email` (username →
+email for login), was dropped in `20260913110000` because it let anyone with the
+anon key enumerate usernames and harvest staff emails; login is email + password
+only. Do not reintroduce an anon-callable lookup. Regression test:
 `tests-sql/test_136_staff_username_login.sql`.

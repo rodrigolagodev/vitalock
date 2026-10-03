@@ -168,42 +168,12 @@ export function useAuth(supabase: TypedSupabaseClient, expectedRole: StaffRole):
   }, [supabase, fetchProfile]);
 
   const signIn = useCallback(
-    async (username: string, password: string): Promise<void> => {
+    async (email: string, password: string): Promise<void> => {
       setState((prev) => ({ ...prev, phase: 'authenticating', error: null }));
       try {
-        // Resolve the username to its linked auth.users.email server-side
-        // first. `resolve_login_email` never distinguishes unknown/inactive/
-        // unlinked usernames from each other — all three collapse to NULL —
-        // so this branch and the password-rejection branch below both land
-        // on the same generic INVALID_CREDENTIALS message.
-        const { data: email, error: rpcError } = await supabase.rpc('resolve_login_email', {
-          p_username: username,
-        });
-
-        if (rpcError) {
-          setState((prev) => ({
-            ...prev,
-            phase: 'error',
-            error: {
-              code: AuthErrorCode.NETWORK_ERROR,
-              message: 'Error de conexión. Intentá de nuevo.',
-            },
-          }));
-          return;
-        }
-
-        if (!email) {
-          setState((prev) => ({
-            ...prev,
-            phase: 'error',
-            error: {
-              code: AuthErrorCode.INVALID_CREDENTIALS,
-              message: 'Usuario o contraseña incorrectos.',
-            },
-          }));
-          return;
-        }
-
+        // Email + password only. Username-based login was removed: resolving a
+        // username to its email had to happen pre-auth (anon), which leaked
+        // staff emails and allowed username enumeration.
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           setState((prev) => ({
@@ -211,7 +181,7 @@ export function useAuth(supabase: TypedSupabaseClient, expectedRole: StaffRole):
             phase: 'error',
             error: {
               code: AuthErrorCode.INVALID_CREDENTIALS,
-              message: 'Usuario o contraseña incorrectos.',
+              message: 'Email o contraseña incorrectos.',
             },
           }));
         }

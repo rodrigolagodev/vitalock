@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Login identifier format. Mirrors `identity.staff.username`'s CHECK
+ * Staff username format. Mirrors `identity.staff.username`'s CHECK
  * constraint (`staff_username_format`) byte-for-byte: lowercase letters,
  * digits, `.`, `_`, `-`, 3-32 characters. The DB never normalizes on its
  * own — every caller must send an already-normalized value.
@@ -9,10 +9,10 @@ import { z } from 'zod';
 export const USERNAME_PATTERN = /^[a-z0-9._-]{3,32}$/;
 
 /**
- * Shared validator for every username input surface (both login forms and
- * the admin Personal form). Trims and lowercases before matching
- * `USERNAME_PATTERN`, so a differently-cased or padded value normalizes
- * instead of being rejected.
+ * Shared validator for username input surfaces (the admin Personal form).
+ * Usernames are a display handle only — login is email + password. Trims
+ * and lowercases before matching `USERNAME_PATTERN`, so a differently-cased
+ * or padded value normalizes instead of being rejected.
  */
 export const usernameSchema = z
   .string()

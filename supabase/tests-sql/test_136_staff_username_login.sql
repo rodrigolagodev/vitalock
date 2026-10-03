@@ -1,19 +1,17 @@
 -- ============================================================
--- pgTAP: identity.staff.username format/uniqueness + resolve_login_email
+-- pgTAP: identity.staff.username format/uniqueness; no username login lookup
 -- ============================================================
 -- Covers migration 20260912120000_add_staff_username.
 --   - CHECK rejects malformed usernames (case, whitespace, `@`, length)
 --   - UNIQUE rejects a duplicate username
 --   - NOT NULL rejects a missing username
 --   - every existing row satisfies the format check (backfill/default safety)
---   - resolve_login_email resolves active+linked staff to their auth email,
---     and returns NULL (never an error) for inactive/unlinked/unknown/malformed
---     input, normalizing case and surrounding whitespace server-side
---   - anon/authenticated/service_role can execute; PUBLIC cannot
+--   - public.resolve_login_email was dropped (20260913110000) and anon has
+--     no way to resolve a username to an email
 -- ============================================================
 
 BEGIN;
-SELECT plan(22);
+SELECT plan(10);
 
 DO $$
 DECLARE
@@ -119,97 +117,30 @@ SELECT is(
 );
 
 -- ============================================================
--- resolve_login_email contract
+-- resolve_login_email is gone (migration 20260913110000): login is email +
+-- password only, so nothing pre-auth can map a username to an email.
 -- ============================================================
 
-SELECT is(
-  public.resolve_login_email('ana.alvarez136'),
-  'ana136@vitalock.example',
-  'PASS 136-09: active, linked staff resolves to their auth.users email'
+SELECT hasnt_function(
+  'public', 'resolve_login_email', ARRAY['text'],
+  'PASS 136-09: public.resolve_login_email(text) no longer exists'
 );
-
-SELECT is(
-  public.resolve_login_email('bruno.benitez136'),
-  NULL,
-  'PASS 136-10: inactive staff resolves to NULL'
-);
-
-SELECT is(
-  public.resolve_login_email('carla.diaz136'),
-  NULL,
-  'PASS 136-11: unlinked staff (no auth_user_id) resolves to NULL'
-);
-
-SELECT is(
-  public.resolve_login_email('nonexistent-user-136'),
-  NULL,
-  'PASS 136-12: unknown username resolves to NULL'
-);
-
-SELECT is(
-  public.resolve_login_email('a@b'),
-  NULL,
-  'PASS 136-13: malformed username (@) resolves to NULL without error'
-);
-
-SELECT is(
-  public.resolve_login_email('ab'),
-  NULL,
-  'PASS 136-14: malformed username (too short) resolves to NULL without error'
-);
-
-SELECT is(
-  public.resolve_login_email(repeat('a', 33)),
-  NULL,
-  'PASS 136-15: malformed username (too long) resolves to NULL without error'
-);
-
-SELECT is(
-  public.resolve_login_email(NULL),
-  NULL,
-  'PASS 136-16: NULL input resolves to NULL without error'
-);
-
-SELECT is(
-  public.resolve_login_email('  Juan.Perez136 '),
-  'juan136@vitalock.example',
-  'PASS 136-17: case and surrounding whitespace are normalized server-side'
-);
-
--- ============================================================
--- Privileges: anon/authenticated/service_role can execute, PUBLIC cannot
--- ============================================================
 
 SELECT lives_ok(
   $q$
-    DO $body$
+    DO $$
+    DECLARE v_state text := 'none';
     BEGIN
       SET LOCAL role anon;
-      PERFORM public.resolve_login_email('ana.alvarez136');
+      BEGIN
+        PERFORM public.resolve_login_email('admin');
+      EXCEPTION WHEN OTHERS THEN v_state := SQLSTATE;
+      END;
       RESET role;
-    END $body$;
+      ASSERT v_state = '42883', 'FAIL 136-10: anon username lookup should be undefined_function, got ' || v_state;
+    END $$;
   $q$,
-  'PASS 136-18: anon can execute resolve_login_email'
-);
-
-SELECT ok(
-  has_function_privilege('anon', 'public.resolve_login_email(text)', 'execute'),
-  'PASS 136-19: anon has EXECUTE on resolve_login_email'
-);
-
-SELECT ok(
-  has_function_privilege('authenticated', 'public.resolve_login_email(text)', 'execute'),
-  'PASS 136-20: authenticated has EXECUTE on resolve_login_email'
-);
-
-SELECT ok(
-  has_function_privilege('service_role', 'public.resolve_login_email(text)', 'execute'),
-  'PASS 136-21: service_role has EXECUTE on resolve_login_email'
-);
-
-SELECT ok(
-  NOT has_function_privilege('public', 'public.resolve_login_email(text)', 'execute'),
-  'PASS 136-22: PUBLIC has no EXECUTE on resolve_login_email'
+  'PASS 136-10: anon cannot resolve a username to an email'
 );
 
 SELECT * FROM finish();

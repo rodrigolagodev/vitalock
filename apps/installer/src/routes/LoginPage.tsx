@@ -3,11 +3,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Navigate } from 'react-router-dom';
 import { BrandLogoImages, Button, Input, Label, PasswordInput } from '@vitalock/ui';
-import { useAuthContext, usernameSchema } from '@vitalock/shared';
+import { useAuthContext } from '@vitalock/shared';
 import { installerLogo } from '@/components/layout/brand';
 
 const schema = z.object({
-  username: usernameSchema,
+  email: z.string().trim().email('Email inválido'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
 });
 
@@ -24,7 +24,7 @@ export default function LoginPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormValues) => {
-    await signIn(data.username, data.password);
+    await signIn(data.email, data.password);
   };
 
   if (phase === 'authenticated') {
@@ -42,19 +42,17 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-1">
-            <Label htmlFor="username">Usuario</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
-              id="username"
-              type="text"
-              autoComplete="username"
+              id="email"
+              type="email"
+              autoComplete="email"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
-              {...register('username')}
+              {...register('email')}
             />
-            {errors.username && (
-              <p className="text-destructive text-xs">{errors.username.message}</p>
-            )}
+            {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-1">
