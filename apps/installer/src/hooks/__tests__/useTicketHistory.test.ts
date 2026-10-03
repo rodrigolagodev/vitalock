@@ -5,7 +5,8 @@ import React from 'react';
 import type { ReactNode } from 'react';
 
 const mockStaffId = 'staff-bruno-001';
-vi.mock('@vitalock/shared', () => ({
+vi.mock('@vitalock/shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@vitalock/shared')>()),
   useAuthContext: () => ({
     staff: { id: mockStaffId, full_name: 'Bruno', role: 'installer', status: 'active' },
   }),
@@ -38,7 +39,8 @@ vi.mock('@/lib/supabase', () => {
   const viewChain = {
     eq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
-    order: vi.fn().mockResolvedValue({ data: mockViewRows, error: null }),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue({ data: mockViewRows, error: null, count: 1 }),
   };
 
   let currentSchema: string | null = null;
@@ -84,9 +86,7 @@ describe('useTicketHistory', () => {
     const { result } = renderHook(() => useTicketHistory(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(fromCalls).toEqual([
-      { schema: 'support', from: 'installer_tickets_with_context' },
-    ]);
+    expect(fromCalls).toEqual([{ schema: 'support', from: 'installer_tickets_with_context' }]);
   });
 
   it('reshapes flat view columns into the nested building/administration shape consumers expect', async () => {

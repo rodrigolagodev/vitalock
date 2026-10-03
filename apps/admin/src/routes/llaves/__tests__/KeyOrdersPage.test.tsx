@@ -72,6 +72,27 @@ describe('KeyOrdersPage stat cards', () => {
     expect(within(cards).getByText('4')).toBeInTheDocument();
     expect(within(cards).getByText('Abiertas')).toBeInTheDocument();
     expect(within(cards).getByText('Completadas')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('uses the exact server total and flags derived counts as lower bounds when truncated', () => {
+    useKeyOrdersMock.mockReturnValue({
+      data: makeRows(),
+      total: 1500,
+      truncated: true,
+      isFetching: false,
+      isError: false,
+    });
+
+    renderPage();
+
+    const cards = screen.getByTestId('stat-cards');
+    expect(within(cards).getByText('1500')).toBeInTheDocument();
+    expect(within(cards).getByText('3+')).toBeInTheDocument();
+    expect(within(cards).getByText('1+')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Mostrando los primeros 4 de 1.500 resultados',
+    );
   });
 });
 

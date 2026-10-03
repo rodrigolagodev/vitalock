@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { escapeIlikeValue } from '@vitalock/shared';
+import {
+  escapeIlikeValue,
+  fetchCappedList,
+  toCappedQueryResult,
+  type CappedList,
+  type CappedQueryResult,
+} from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { allOrdersKey } from '@/lib/queryKeys';
 
@@ -42,16 +48,17 @@ export function useAllOrders({
   orderKind,
   dateFrom,
   dateTo,
-}: UseAllOrdersFilters = {}) {
+}: UseAllOrdersFilters = {}): CappedQueryResult<AllOrderRow> {
   const trimmed = search?.trim() ?? '';
 
-  return useQuery({
+  const result = useQuery({
     queryKey: allOrdersKey(status, trimmed, orderKind, dateFrom, dateTo),
-    queryFn: async (): Promise<AllOrderRow[]> => {
+    queryFn: async (): Promise<CappedList<AllOrderRow>> => {
       let query = supabase
         .from('all_orders')
         .select(
           'id, order_number, order_kind, client_type, administration_id, particular_id, particular_full_name, status, notes, created_at, updated_at',
+          { count: 'exact' },
         );
 
       if (status?.length) {
@@ -75,13 +82,11 @@ export function useAllOrders({
         query = query.or(`order_number.ilike.%${safe}%,particular_full_name.ilike.%${safe}%`);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
-      if (error) throw error;
-
       // `all_orders` is a UNION view. Postgres does not carry NOT NULL through
       // views, so `supabase gen types` marks every column nullable even though
       // both underlying tables guarantee them. The one place this hook asserts.
-      return (data ?? []) as AllOrderRow[];
+      return fetchCappedList<AllOrderRow>(query.order('created_at', { ascending: false }));
     },
   });
+  return toCappedQueryResult(result);
 }

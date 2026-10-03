@@ -4,6 +4,7 @@ import {
   DataCardList,
   EmptyState,
   Label,
+  TruncationNotice,
   PageHeader,
   Skeleton,
   cn,
@@ -74,7 +75,7 @@ function LoadingSkeletons() {
  * the task type is scannable before reading any text.
  */
 export default function HistorialPage() {
-  const { data, isLoading, isFetching } = useTicketHistory();
+  const { data, total, truncated, isLoading, isFetching } = useTicketHistory();
   const tickets = useMemo(() => data ?? [], [data]);
 
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -197,6 +198,15 @@ export default function HistorialPage() {
           </div>
         </div>
       </div>
+
+      {/* Filters here run client-side over the loaded rows, so they cannot
+          reach tickets beyond the cap. */}
+      <TruncationNotice
+        truncated={truncated}
+        shown={tickets.length}
+        total={total}
+        hint="Se muestran las tareas cerradas más recientes."
+      />
 
       {isLoading ? (
         <LoadingSkeletons />

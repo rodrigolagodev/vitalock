@@ -18,6 +18,7 @@ const mockFrom = vi.fn();
 // the hook is now a module-level constant that captures `supabase` at init.
 vi.mock('@/lib/supabase', () => {
   const order = vi.fn();
+  const limit = vi.fn();
   const or = vi.fn();
   const eq = vi.fn();
   const inFn = vi.fn();
@@ -28,7 +29,7 @@ vi.mock('@/lib/supabase', () => {
       return { from };
     },
     // expose handles so beforeEach can rewire them
-    _mocks: { order, or, eq, in: inFn, select, from },
+    _mocks: { order, limit, or, eq, in: inFn, select, from },
   };
 });
 
@@ -44,6 +45,7 @@ function getMocks() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (supabaseMock as any)._mocks as {
     order: ReturnType<typeof vi.fn>;
+    limit: ReturnType<typeof vi.fn>;
     or: ReturnType<typeof vi.fn>;
     eq: ReturnType<typeof vi.fn>;
     in: ReturnType<typeof vi.fn>;
@@ -81,7 +83,8 @@ describe('useKeyOrders', () => {
     vi.clearAllMocks();
     const m = getMocks();
 
-    m.order.mockResolvedValue({ data: fakeSummaryRows, error: null });
+    m.limit.mockResolvedValue({ data: fakeSummaryRows, error: null, count: 1 });
+    m.order.mockReturnValue({ limit: m.limit });
     m.or.mockReturnValue({ order: m.order });
     m.eq.mockReturnValue({ eq: m.eq, in: m.in, or: m.or, order: m.order });
     m.in.mockReturnValue({ eq: m.eq, in: m.in, or: m.or, order: m.order });
@@ -166,6 +169,7 @@ describe('useKeyOrders', () => {
     // select clause carries the !inner hint
     expect(getMocks().select).toHaveBeenCalledWith(
       expect.stringContaining('key_order_items!inner(id,building_id)'),
+      { count: 'exact' },
     );
   });
 
@@ -198,7 +202,7 @@ describe('useKeyOrders', () => {
   });
 
   it('returns empty array when data is null (no records state)', async () => {
-    getMocks().order.mockResolvedValueOnce({ data: null, error: null });
+    getMocks().limit.mockResolvedValueOnce({ data: null, error: null });
     const { result } = renderHook(() => useKeyOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
@@ -206,7 +210,7 @@ describe('useKeyOrders', () => {
 
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    getMocks().order.mockResolvedValueOnce({ data: null, error: dbError });
+    getMocks().limit.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { result } = renderHook(() => useKeyOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));

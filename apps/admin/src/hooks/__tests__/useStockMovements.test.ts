@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Flat stock_movements chain: select → eq → order (terminal)
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockEq = vi.fn();
 const mockMovementsSelect = vi.fn();
 const mockFrom = vi.fn();
@@ -77,7 +78,8 @@ describe('useStockMovements', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockOrder.mockResolvedValue({ data: flatMovements, error: null });
+    mockLimit.mockResolvedValue({ data: flatMovements, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockEq.mockReturnValue({ order: mockOrder });
     mockMovementsSelect.mockReturnValue({ eq: mockEq, order: mockOrder });
     mockFrom.mockReturnValue({ select: mockMovementsSelect });
@@ -102,6 +104,7 @@ describe('useStockMovements', () => {
     expect(mockFrom).toHaveBeenCalledWith('stock_movements');
     expect(mockMovementsSelect).toHaveBeenCalledWith(
       'id, product_id, type, quantity, unit_cost, note, order_id, order_item_id, order_kind, ticket_id, staff_id, created_by, created_at',
+      { count: 'exact' },
     );
     expect(mockEq).toHaveBeenCalledWith('product_id', 'p-1');
   });
@@ -154,7 +157,7 @@ describe('useStockMovements', () => {
       { ...flatMovements[0], created_by: 's-1' },
       { ...flatMovements[1], created_by: 's-1', ticket_id: 't-1' },
     ];
-    mockOrder.mockResolvedValueOnce({ data: dupMovements, error: null });
+    mockLimit.mockResolvedValueOnce({ data: dupMovements, error: null });
 
     const { result } = renderHook(() => useStockMovements('p-1'), {
       wrapper: makeWrapper(),
@@ -172,7 +175,7 @@ describe('useStockMovements', () => {
       created_by: null,
       ticket_id: null,
     }));
-    mockOrder.mockResolvedValueOnce({ data: noRefs, error: null });
+    mockLimit.mockResolvedValueOnce({ data: noRefs, error: null });
 
     const { result } = renderHook(() => useStockMovements('p-1'), {
       wrapper: makeWrapper(),

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Chainable supabase mock
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
 const mockFrom = vi.fn();
@@ -49,7 +50,8 @@ describe('useEquipmentInventory', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockOrder.mockResolvedValue({ data: fakeRows, error: null });
+    mockLimit.mockResolvedValue({ data: fakeRows, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockEq.mockReturnValue({ eq: mockEq, order: mockOrder });
     mockSelect.mockReturnValue({ eq: mockEq, order: mockOrder });
     mockFrom.mockReturnValue({ select: mockSelect });
@@ -76,37 +78,33 @@ describe('useEquipmentInventory', () => {
   });
 
   it('administrationId filter calls .eq("administration_id", value)', async () => {
-    const { result } = renderHook(
-      () => useEquipmentInventory({ administrationId: 'adm-1' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentInventory({ administrationId: 'adm-1' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('administration_id', 'adm-1');
   });
 
   it('buildingId filter calls .eq("building_id", value)', async () => {
-    const { result } = renderHook(
-      () => useEquipmentInventory({ buildingId: 'bld-1' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentInventory({ buildingId: 'bld-1' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('building_id', 'bld-1');
   });
 
   it('status filter (not "all") calls .eq("status", value)', async () => {
-    const { result } = renderHook(
-      () => useEquipmentInventory({ status: 'active' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentInventory({ status: 'active' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('status', 'active');
   });
 
   it('status="all" does not call .eq("status", ...)', async () => {
-    const { result } = renderHook(
-      () => useEquipmentInventory({ status: 'all' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentInventory({ status: 'all' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     const eqCalls = mockEq.mock.calls;
     expect(eqCalls.some((args: unknown[]) => args[0] === 'status')).toBe(false);
@@ -119,7 +117,7 @@ describe('useEquipmentInventory', () => {
   });
 
   it('returns empty array when data is null', async () => {
-    mockOrder.mockResolvedValueOnce({ data: null, error: null });
+    mockLimit.mockResolvedValueOnce({ data: null, error: null });
     const { result } = renderHook(() => useEquipmentInventory(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
@@ -127,7 +125,7 @@ describe('useEquipmentInventory', () => {
 
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    mockOrder.mockResolvedValueOnce({ data: null, error: dbError });
+    mockLimit.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { result } = renderHook(() => useEquipmentInventory(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));

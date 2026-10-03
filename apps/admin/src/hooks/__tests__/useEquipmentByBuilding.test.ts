@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Chainable supabase mock — equipment_inventory view, filtered by building_id
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
 const mockFrom = vi.fn();
@@ -37,7 +38,8 @@ describe('useEquipmentByBuilding', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockOrder.mockResolvedValue({ data: fakeEquipment, error: null });
+    mockLimit.mockResolvedValue({ data: fakeEquipment, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockEq.mockReturnValue({ eq: mockEq, order: mockOrder });
     mockSelect.mockReturnValue({ eq: mockEq, order: mockOrder });
     mockFrom.mockReturnValue({ select: mockSelect });
@@ -61,50 +63,45 @@ describe('useEquipmentByBuilding', () => {
   });
 
   it('queries from equipment_inventory view', async () => {
-    const { result } = renderHook(
-      () => useEquipmentByBuilding('bld-1'),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentByBuilding('bld-1'), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockFrom).toHaveBeenCalledWith('equipment_inventory');
   });
 
   it('filters by building_id', async () => {
-    const { result } = renderHook(
-      () => useEquipmentByBuilding('bld-1'),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentByBuilding('bld-1'), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('building_id', 'bld-1');
   });
 
   it('returns data on success', async () => {
-    const { result } = renderHook(
-      () => useEquipmentByBuilding('bld-1'),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentByBuilding('bld-1'), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(fakeEquipment);
   });
 
   it('returns empty array when data is null', async () => {
-    mockOrder.mockResolvedValueOnce({ data: null, error: null });
-    const { result } = renderHook(
-      () => useEquipmentByBuilding('bld-1'),
-      { wrapper: makeWrapper() },
-    );
+    mockLimit.mockResolvedValueOnce({ data: null, error: null });
+    const { result } = renderHook(() => useEquipmentByBuilding('bld-1'), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
   });
 
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    mockOrder.mockResolvedValueOnce({ data: null, error: dbError });
+    mockLimit.mockResolvedValueOnce({ data: null, error: dbError });
 
-    const { result } = renderHook(
-      () => useEquipmentByBuilding('bld-1'),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useEquipmentByBuilding('bld-1'), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toEqual(dbError);
   });

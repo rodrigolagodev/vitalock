@@ -80,6 +80,10 @@ export { SearchInput, type SearchInputProps } from './components/patterns/Search
 export { PasswordInput, type PasswordInputProps } from './components/patterns/PasswordInput';
 export { SectionHeading, type SectionHeadingProps } from './components/patterns/SectionHeading';
 export { EmptyState, type EmptyStateProps } from './components/patterns/EmptyState';
+export {
+  TruncationNotice,
+  type TruncationNoticeProps,
+} from './components/patterns/TruncationNotice';
 export { ErrorState, type ErrorStateProps } from './components/patterns/ErrorState';
 export { ErrorFallback, type ErrorFallbackProps } from './components/patterns/ErrorFallback';
 export { NotFoundState, type NotFoundStateProps } from './components/patterns/NotFoundState';

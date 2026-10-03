@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { unitsKey } from '@/lib/queryKeys';
 
@@ -19,7 +20,8 @@ export function useUnits(buildingId: string) {
         .from('units')
         .select('id, number, unit_type, status, is_administrative, building_id')
         .eq('building_id', buildingId)
-        .order('number');
+        .order('number')
+        .limit(LIST_ROW_CAP);
 
       if (error) throw error;
       return data ?? [];

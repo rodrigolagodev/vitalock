@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { buildingsKey } from '@/lib/queryKeys';
 
@@ -19,7 +20,8 @@ export function useBuildings({ administrationId }: { administrationId?: string }
       let query = supabase
         .from('buildings')
         .select('id, name, address, status, administration_id')
-        .order('name');
+        .order('name')
+        .limit(LIST_ROW_CAP);
 
       if (administrationId) {
         query = query.eq('administration_id', administrationId);
@@ -42,9 +44,7 @@ export function useBuildings({ administrationId }: { administrationId?: string }
           .select('id, building_id')
           .in('building_id', buildingIds);
 
-        const unitToBuilding = new Map(
-          (units ?? []).map((u) => [u.id, u.building_id]),
-        );
+        const unitToBuilding = new Map((units ?? []).map((u) => [u.id, u.building_id]));
         const unitIds = [...unitToBuilding.keys()];
 
         if (unitIds.length > 0) {
@@ -70,8 +70,7 @@ export function useBuildings({ administrationId }: { administrationId?: string }
 
         for (const e of equipment ?? []) {
           if (e.status === 'active') {
-            equipmentCounts[e.building_id] =
-              (equipmentCounts[e.building_id] ?? 0) + 1;
+            equipmentCounts[e.building_id] = (equipmentCounts[e.building_id] ?? 0) + 1;
           }
         }
       }

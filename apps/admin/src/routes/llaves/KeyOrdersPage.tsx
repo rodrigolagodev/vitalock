@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, PackageCheck } from 'lucide-react';
-import { Button, ErrorState, FilterBar, StatCard } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar, StatCard, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useKeyOrders } from '@/hooks/useKeyOrders';
@@ -38,6 +38,8 @@ export default function KeyOrdersPage() {
 
   const {
     data: orders = [],
+    total,
+    truncated,
     isFetching,
     isError,
   } = useKeyOrders({
@@ -46,6 +48,11 @@ export default function KeyOrdersPage() {
     administrationId,
     buildingId,
   });
+
+  // "Total" uses the exact server count. Status breakdowns can only be derived
+  // from the loaded rows, so when the list is capped they are lower bounds
+  // ("N+") and the notice below explains why.
+  const countLabel = (n: number) => (truncated ? `${n}+` : String(n));
 
   if (isError) {
     return <ErrorState message="Error al cargar las órdenes de llave. Recargá la página." />;
@@ -60,10 +67,14 @@ export default function KeyOrdersPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stat-cards">
-        <StatCard label="Total órdenes" value={String(orders.length)} icon={<ClipboardList />} />
+        <StatCard
+          label="Total órdenes"
+          value={String(total ?? orders.length)}
+          icon={<ClipboardList />}
+        />
         <StatCard
           label="Abiertas"
-          value={String(
+          value={countLabel(
             orders.filter(
               (o) =>
                 o.status !== 'completed' && o.status !== 'invoiced' && o.status !== 'cancelled',
@@ -73,7 +84,7 @@ export default function KeyOrdersPage() {
         />
         <StatCard
           label="Completadas"
-          value={String(orders.filter((o) => o.status === 'completed').length)}
+          value={countLabel(orders.filter((o) => o.status === 'completed').length)}
           icon={<PackageCheck />}
         />
       </div>
@@ -134,6 +145,8 @@ export default function KeyOrdersPage() {
         />
         <FilterBar.Summary />
       </FilterBar>
+
+      <TruncationNotice truncated={truncated} shown={orders.length} total={total} />
 
       <LlavesTable rows={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>

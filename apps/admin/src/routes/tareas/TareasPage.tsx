@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, ErrorState, FilterBar } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useTareas } from '@/hooks/useTareas';
 import { useStaff } from '@/hooks/useStaff';
@@ -31,6 +31,8 @@ export default function TareasPage() {
 
   const {
     data: tareas = [],
+    total,
+    truncated,
     isFetching,
     isError,
   } = useTareas({
@@ -90,6 +92,8 @@ export default function TareasPage() {
 
         <FilterBar.Summary />
       </FilterBar>
+
+      <TruncationNotice truncated={truncated} shown={tareas.length} total={total} />
 
       <TareasTable
         rows={tareas}

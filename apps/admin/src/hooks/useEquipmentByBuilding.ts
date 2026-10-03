@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { equipmentByBuildingKey } from '@/lib/queryKeys';
 
@@ -25,7 +26,9 @@ export function useEquipmentByBuilding(
         query = query.eq('status', 'active');
       }
 
-      const { data, error } = await query.order('serial_number', { ascending: true });
+      const { data, error } = await query
+        .order('serial_number', { ascending: true })
+        .limit(LIST_ROW_CAP);
 
       if (error) throw error;
 

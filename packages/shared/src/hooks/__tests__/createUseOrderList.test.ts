@@ -6,8 +6,9 @@ import type { ReactNode } from 'react';
 
 // ---------------------------------------------------------------------------
 // Chainable supabase mock
-// from → select → [eq?]* → [or?] → order
+// from → select → [eq?]* → [or?] → order → limit
 // ---------------------------------------------------------------------------
+const mockLimit = vi.fn();
 const mockOrder = vi.fn();
 const mockOr = vi.fn();
 const mockEq = vi.fn();
@@ -26,6 +27,7 @@ function makeWrapper() {
 
 // Import AFTER mock setup
 import { createUseOrderList } from '../createUseOrderList';
+import { LIST_ROW_CAP } from '../../db/listCap';
 
 // ---------------------------------------------------------------------------
 // Shared test fixtures
@@ -83,7 +85,8 @@ describe('createUseOrderList (factory)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockOrder.mockResolvedValue({ data: fakeRawRows, error: null });
+    mockLimit.mockResolvedValue({ data: fakeRawRows, error: null, count: fakeRawRows.length });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockOr.mockReturnValue({ order: mockOrder });
     mockEq.mockReturnValue({ eq: mockEq, in: mockIn, or: mockOr, order: mockOrder });
     mockIn.mockReturnValue({ eq: mockEq, in: mockIn, or: mockOr, order: mockOrder });
@@ -168,6 +171,7 @@ describe('createUseOrderList (factory)', () => {
     expect(mockFrom).toHaveBeenCalledTimes(1);
     expect(mockSelect).toHaveBeenCalledWith(
       expect.stringContaining('test_order_items!inner(id,building_id)'),
+      { count: 'exact' },
     );
     expect(mockEq).toHaveBeenCalledWith('test_order_items.building_id', 'B1');
   });
@@ -272,7 +276,7 @@ describe('createUseOrderList (factory)', () => {
   // B.2 test-9: empty result → mapRow never called
   // -------------------------------------------------------------------------
   it('empty result set → mapRow is never called', async () => {
-    mockOrder.mockResolvedValueOnce({ data: [], error: null });
+    mockLimit.mockResolvedValueOnce({ data: [], error: null });
     const useHook = createUseOrderList(makeOptions());
     const { result } = renderHook(() => useHook(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -281,7 +285,7 @@ describe('createUseOrderList (factory)', () => {
   });
 
   it('null data → mapRow is never called and returns empty array', async () => {
-    mockOrder.mockResolvedValueOnce({ data: null, error: null });
+    mockLimit.mockResolvedValueOnce({ data: null, error: null });
     const useHook = createUseOrderList(makeOptions());
     const { result } = renderHook(() => useHook(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -294,10 +298,34 @@ describe('createUseOrderList (factory)', () => {
   // -------------------------------------------------------------------------
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    mockOrder.mockResolvedValueOnce({ data: null, error: dbError });
+    mockLimit.mockResolvedValueOnce({ data: null, error: dbError });
     const useHook = createUseOrderList(makeOptions());
     const { result } = renderHook(() => useHook(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toEqual(dbError);
+  });
+
+  // -------------------------------------------------------------------------
+  // Truncation safety net
+  // -------------------------------------------------------------------------
+  it('requests an exact count and caps the list at LIST_ROW_CAP', async () => {
+    const useHook = createUseOrderList(makeOptions());
+    const { result } = renderHook(() => useHook(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockSelect).toHaveBeenCalledWith(expect.any(String), { count: 'exact' });
+    expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false });
+    expect(mockLimit).toHaveBeenCalledWith(LIST_ROW_CAP);
+    expect(result.current.total).toBe(1);
+    expect(result.current.truncated).toBe(false);
+  });
+
+  it('flags the list as truncated when the count exceeds the returned rows', async () => {
+    mockLimit.mockResolvedValueOnce({ data: fakeRawRows, error: null, count: 1500 });
+    const useHook = createUseOrderList(makeOptions());
+    const { result } = renderHook(() => useHook(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([{ id: 'order-1', mapped: true }]);
+    expect(result.current.total).toBe(1500);
+    expect(result.current.truncated).toBe(true);
   });
 });

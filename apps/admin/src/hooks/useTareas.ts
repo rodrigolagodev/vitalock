@@ -1,5 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { escapeIlikeValue } from '@vitalock/shared';
+import {
+  escapeIlikeValue,
+  fetchCappedList,
+  toCappedQueryResult,
+  type CappedList,
+  type CappedQueryResult,
+} from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { tareasKey } from '@/lib/queryKeys';
 
@@ -35,16 +41,25 @@ export interface UseTareaFilters {
   status?: string[];
 }
 
-export function useTareas({ search, staffId, buildingId, status }: UseTareaFilters = {}) {
+export function useTareas({
+  search,
+  staffId,
+  buildingId,
+  status,
+}: UseTareaFilters = {}): CappedQueryResult<TareaRow> {
   const trimmed = search?.trim() ?? '';
 
-  return useQuery({
+  const result = useQuery({
     queryKey: tareasKey(trimmed, staffId, buildingId, status),
-    queryFn: async (): Promise<TareaRow[]> => {
+    queryFn: async (): Promise<CappedList<TareaRow>> => {
       // Note: PostgREST cannot embed cross-schema FKs (support -> public /
       // support -> identity), so we fetch the flat rows and resolve building,
       // administration and staff names with batch lookups.
-      let query = supabase.schema('support').from('tickets').select(`
+      let query = supabase
+        .schema('support')
+        .from('tickets')
+        .select(
+          `
           id,
           ticket_number,
           category,
@@ -61,7 +76,9 @@ export function useTareas({ search, staffId, buildingId, status }: UseTareaFilte
           resolution_notes,
           cancellation_reason,
           notes
-        `);
+        `,
+          { count: 'exact' },
+        );
 
       // Server-side status filter.
       if (status?.length) {
@@ -84,10 +101,9 @@ export function useTareas({ search, staffId, buildingId, status }: UseTareaFilte
         query = query.or(`ticket_number.ilike.%${safe}%,description.ilike.%${safe}%`);
       }
 
-      const { data, error } = await query.order('opened_at', { ascending: false });
-      if (error) throw error;
-
-      const rows = (data ?? []) as unknown as TareaRow[];
+      const { rows, total, truncated } = await fetchCappedList<TareaRow>(
+        query.order('opened_at', { ascending: false }),
+      );
 
       // Batch lookup of building names + their administration.
       const buildingIds = [
@@ -144,7 +160,7 @@ export function useTareas({ search, staffId, buildingId, status }: UseTareaFilte
         for (const s of staff ?? []) staffMap.set(s.id, s.full_name);
       }
 
-      let result = rows.map((row) => {
+      let mapped = rows.map((row) => {
         const buildingInfo = row.building_id ? buildingMap.get(row.building_id) : undefined;
         const administration = buildingInfo?.administration_id
           ? administrationMap.get(buildingInfo.administration_id)
@@ -172,14 +188,15 @@ export function useTareas({ search, staffId, buildingId, status }: UseTareaFilte
       // Client-side search on building name and assigned staff name.
       if (trimmed) {
         const q = trimmed.toLowerCase();
-        result = result.filter((row) => {
+        mapped = mapped.filter((row) => {
           const buildingName = row.building?.name.toLowerCase() ?? '';
           const assignedName = row.assigned_to_name?.toLowerCase() ?? '';
           return buildingName.includes(q) || assignedName.includes(q);
         });
       }
 
-      return result;
+      return { rows: mapped, total, truncated };
     },
   });
+  return toCappedQueryResult(result);
 }

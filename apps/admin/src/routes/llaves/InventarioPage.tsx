@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, ErrorState, FilterBar } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -97,6 +97,8 @@ export default function InventarioPage() {
 
   const {
     data: rows = [],
+    total,
+    truncated,
     isFetching,
     isError,
   } = useKeysInventory({
@@ -192,6 +194,8 @@ export default function InventarioPage() {
 
         <FilterBar.Summary />
       </FilterBar>
+
+      <TruncationNotice truncated={truncated} shown={rows.length} total={total} />
 
       <KeysInventoryTable rows={rows} isFetching={isFetching} hasFilters={hasFilters} />
     </div>

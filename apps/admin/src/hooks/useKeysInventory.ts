@@ -1,4 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
+import {
+  fetchCappedList,
+  toCappedQueryResult,
+  type CappedList,
+  type CappedQueryResult,
+} from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { keysInventoryKey } from '@/lib/queryKeys';
 
@@ -40,8 +46,8 @@ export function useKeysInventory({
   equipmentId,
   physicalStatus,
   workflowStatus,
-}: UseKeysInventoryFilters = {}) {
-  return useQuery({
+}: UseKeysInventoryFilters = {}): CappedQueryResult<KeysInventoryRow> {
+  const result = useQuery({
     queryKey: keysInventoryKey(
       administrationId,
       buildingId,
@@ -49,10 +55,8 @@ export function useKeysInventory({
       physicalStatus,
       workflowStatus,
     ),
-    queryFn: async (): Promise<KeysInventoryRow[]> => {
-      let query = supabase
-        .from('keys_inventory')
-        .select('*');
+    queryFn: async (): Promise<CappedList<KeysInventoryRow>> => {
+      let query = supabase.from('keys_inventory').select('*', { count: 'exact' });
 
       if (administrationId) {
         query = query.eq('administration_id', administrationId);
@@ -78,10 +82,8 @@ export function useKeysInventory({
         }
       }
 
-      const { data, error } = await query.order('rfid_code', { ascending: true });
-      if (error) throw error;
-
-      return (data ?? []) as KeysInventoryRow[];
+      return fetchCappedList<KeysInventoryRow>(query.order('rfid_code', { ascending: true }));
     },
   });
+  return toCappedQueryResult(result);
 }

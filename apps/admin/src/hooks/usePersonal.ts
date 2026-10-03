@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { personalKey } from '@/lib/queryKeys';
 import type { StaffRole } from '@/lib/status/staffRole';
@@ -42,7 +43,7 @@ export function usePersonal({ search, role }: UsePersonalFilters = {}) {
         query = query.eq('role', role);
       }
 
-      const { data, error } = await query.order('full_name');
+      const { data, error } = await query.order('full_name').limit(LIST_ROW_CAP);
       if (error) throw error;
 
       let rows = (data ?? []) as unknown as StaffRow[];

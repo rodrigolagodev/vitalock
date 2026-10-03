@@ -15,6 +15,7 @@ const mockFrom = vi.fn();
 // The supabase mock must be defined before useTechnicalOrders is imported.
 vi.mock('@/lib/supabase', () => {
   const order = vi.fn();
+  const limit = vi.fn();
   const or = vi.fn();
   const eq = vi.fn();
   const inFn = vi.fn();
@@ -24,7 +25,7 @@ vi.mock('@/lib/supabase', () => {
     get supabase() {
       return { from };
     },
-    _mocks: { order, or, eq, in: inFn, select, from },
+    _mocks: { order, limit, or, eq, in: inFn, select, from },
   };
 });
 
@@ -36,6 +37,7 @@ function getMocks() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (supabaseMock as any)._mocks as {
     order: ReturnType<typeof vi.fn>;
+    limit: ReturnType<typeof vi.fn>;
     or: ReturnType<typeof vi.fn>;
     eq: ReturnType<typeof vi.fn>;
     in: ReturnType<typeof vi.fn>;
@@ -72,7 +74,8 @@ describe('useTechnicalOrders', () => {
     vi.clearAllMocks();
     const m = getMocks();
 
-    m.order.mockResolvedValue({ data: fakeSummaryRows, error: null });
+    m.limit.mockResolvedValue({ data: fakeSummaryRows, error: null, count: 1 });
+    m.order.mockReturnValue({ limit: m.limit });
     m.or.mockReturnValue({ order: m.order });
     m.eq.mockReturnValue({ eq: m.eq, in: m.in, or: m.or, order: m.order });
     m.in.mockReturnValue({ eq: m.eq, in: m.in, or: m.or, order: m.order });
@@ -155,6 +158,7 @@ describe('useTechnicalOrders', () => {
     expect(getMocks().eq).toHaveBeenCalledWith('technical_order_items.building_id', 'bld-1');
     expect(getMocks().select).toHaveBeenCalledWith(
       expect.stringContaining('technical_order_items!inner(id,building_id)'),
+      { count: 'exact' },
     );
   });
 
@@ -187,7 +191,7 @@ describe('useTechnicalOrders', () => {
   });
 
   it('returns empty array when data is null (no records state)', async () => {
-    getMocks().order.mockResolvedValueOnce({ data: null, error: null });
+    getMocks().limit.mockResolvedValueOnce({ data: null, error: null });
     const { result } = renderHook(() => useTechnicalOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
@@ -195,7 +199,7 @@ describe('useTechnicalOrders', () => {
 
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    getMocks().order.mockResolvedValueOnce({ data: null, error: dbError });
+    getMocks().limit.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { result } = renderHook(() => useTechnicalOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));

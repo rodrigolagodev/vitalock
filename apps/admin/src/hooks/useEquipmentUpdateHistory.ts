@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { equipmentUpdateHistoryKey } from '@/lib/queryKeys';
 
@@ -32,7 +33,8 @@ export function useEquipmentUpdateHistory(equipmentId: string) {
         )
         .eq('equipment_id', equipmentId)
         .not('resolved_at', 'is', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(LIST_ROW_CAP);
 
       if (error) throw error;
 

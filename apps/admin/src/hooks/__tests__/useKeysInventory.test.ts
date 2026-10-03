@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Chainable supabase mock
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockIs = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
@@ -53,7 +54,8 @@ describe('useKeysInventory', () => {
     vi.clearAllMocks();
 
     // Default happy chain: from → select → order resolves with data
-    mockOrder.mockResolvedValue({ data: fakeRows, error: null });
+    mockLimit.mockResolvedValue({ data: fakeRows, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockIs.mockReturnValue({ order: mockOrder });
     mockEq.mockReturnValue({ eq: mockEq, is: mockIs, order: mockOrder });
     mockSelect.mockReturnValue({ eq: mockEq, is: mockIs, order: mockOrder });
@@ -81,74 +83,66 @@ describe('useKeysInventory', () => {
   });
 
   it('administrationId filter calls .eq("administration_id", value)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ administrationId: 'adm-1' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ administrationId: 'adm-1' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('administration_id', 'adm-1');
   });
 
   it('buildingId filter calls .eq("building_id", value)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ buildingId: 'bld-1' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ buildingId: 'bld-1' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('building_id', 'bld-1');
   });
 
   it('equipmentId filter calls .eq("equipment_id", value)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ equipmentId: 'eq-1' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ equipmentId: 'eq-1' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('equipment_id', 'eq-1');
   });
 
   it('physicalStatus filter (not "all") calls .eq("physical_status", value)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ physicalStatus: 'active' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ physicalStatus: 'active' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('physical_status', 'active');
   });
 
   it('physicalStatus="all" does not call .eq("physical_status", ...)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ physicalStatus: 'all' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ physicalStatus: 'all' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     const eqCalls = mockEq.mock.calls;
     expect(eqCalls.some(([col]) => col === 'physical_status')).toBe(false);
   });
 
   it('workflowStatus="__none__" calls .is("active_order_id", null)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ workflowStatus: '__none__' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ workflowStatus: '__none__' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockIs).toHaveBeenCalledWith('active_order_id', null);
   });
 
   it('workflowStatus="confirmed" (not __none__, not all) calls .eq("active_order_status", value)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ workflowStatus: 'confirmed' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ workflowStatus: 'confirmed' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockEq).toHaveBeenCalledWith('active_order_status', 'confirmed');
   });
 
   it('workflowStatus="all" fires no .is() or .eq("active_order_status", ...)', async () => {
-    const { result } = renderHook(
-      () => useKeysInventory({ workflowStatus: 'all' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useKeysInventory({ workflowStatus: 'all' }), {
+      wrapper: makeWrapper(),
+    });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockIs).not.toHaveBeenCalled();
     const eqCalls = mockEq.mock.calls;
@@ -162,7 +156,7 @@ describe('useKeysInventory', () => {
   });
 
   it('returns empty array when data is null', async () => {
-    mockOrder.mockResolvedValueOnce({ data: null, error: null });
+    mockLimit.mockResolvedValueOnce({ data: null, error: null });
     const { result } = renderHook(() => useKeysInventory(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
@@ -170,7 +164,7 @@ describe('useKeysInventory', () => {
 
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    mockOrder.mockResolvedValueOnce({ data: null, error: dbError });
+    mockLimit.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { result } = renderHook(() => useKeysInventory(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ErrorState, FilterBar } from '@vitalock/ui';
+import { ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useAllOrders } from '@/hooks/useAllOrders';
 import { HistorialTable } from '@/components/historial/HistorialTable';
@@ -36,6 +36,8 @@ export default function HistorialPage() {
 
   const {
     data: orders = [],
+    total,
+    truncated,
     isFetching,
     isError,
   } = useAllOrders({
@@ -78,6 +80,8 @@ export default function HistorialPage() {
         />
         <FilterBar.Summary />
       </FilterBar>
+
+      <TruncationNotice truncated={truncated} shown={orders.length} total={total} />
 
       <HistorialTable orders={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>
