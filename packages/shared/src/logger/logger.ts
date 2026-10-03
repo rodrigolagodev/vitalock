@@ -4,8 +4,8 @@
  *
  * Two sinks ship out of the box: `consoleSink` (DEV-only, plus `error` in
  * all envs) and none otherwise. Apps compose the exact pipeline in their
- * entry point — see `main.tsx`. A future Sentry adapter is just another
- * `LogSink` registered with `addLogSink`.
+ * entry point — see `main.tsx`. Sentry is one such sink
+ * (`errorReportingSink` in `reporting/`).
  */
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -33,8 +33,7 @@ function isDev(): boolean {
  */
 export const consoleSink: LogSink = (level, tag, args) => {
   if (!isDev() && level !== 'error') return;
-  const method: 'log' | 'info' | 'warn' | 'error' =
-    level === 'debug' ? 'log' : level;
+  const method: 'log' | 'info' | 'warn' | 'error' = level === 'debug' ? 'log' : level;
   // eslint-disable-next-line no-console
   console[method](`[${tag}]`, ...args);
 };

@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 
@@ -26,13 +27,35 @@ function supabaseCsp(): { connectSrc: string; upgradeInsecure: boolean } {
 
 const { connectSrc, upgradeInsecure } = supabaseCsp();
 
+/**
+ * Error reporting (see docs/runbooks/error-reporting.md).
+ *
+ * - `VITE_RELEASE` ties events to the sourcemaps uploaded for this build; CI
+ *   sets it to the commit SHA, falling back to `GITHUB_SHA`. Mutating
+ *   `process.env` here works because Vite reads `VITE_*` env after the config.
+ * - connect-src gains exactly the DSN's ingest origin, and only when a DSN is
+ *   configured — builds without one keep the policy unchanged.
+ */
+const release = process.env.VITE_RELEASE || process.env.GITHUB_SHA || undefined;
+if (release) process.env.VITE_RELEASE = release;
+
+function sentryConnectSrc(): string {
+  const dsn = process.env.VITE_SENTRY_DSN;
+  if (!dsn) return '';
+  try {
+    return ` ${new URL(dsn).origin}`;
+  } catch {
+    return '';
+  }
+}
+
 const PROD_CSP = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self' ${connectSrc}`,
+  `connect-src 'self' ${connectSrc}${sentryConnectSrc()}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -118,6 +141,9 @@ function vendorChunk(id: string): string | undefined {
   if (inner.startsWith('@supabase/')) return 'vendor-supabase';
   if (/^(react-hook-form|@hookform|zod)\//.test(inner)) return 'vendor-forms';
   if (inner.startsWith('lucide-react/')) return 'vendor-icons';
+  // Only reachable through the lazy `import('./sentryClient')`: must stay out
+  // of the eager `vendor` chunk.
+  if (inner.startsWith('@sentry/') || inner.startsWith('@sentry-internal/')) return 'vendor-sentry';
   return 'vendor';
 }
 
@@ -128,6 +154,11 @@ export default defineConfig({
     // referenced from the bundle. pages.yml strips *.map before publishing.
     sourcemap: 'hidden',
     rollupOptions: { output: { manualChunks: vendorChunk } },
+  },
+  define: {
+    // Strip the SDK's debug logging and tracing code paths from the bundle.
+    __SENTRY_DEBUG__: 'false',
+    __SENTRY_TRACING__: 'false',
   },
   test: {
     environment: 'jsdom',
@@ -142,6 +173,22 @@ export default defineConfig({
     cspPlugin(),
     // ANALYZE=1 pnpm --filter @vitalock/admin build → dist/stats.html
     ...(process.env.ANALYZE ? [visualizer({ filename: 'dist/stats.html', gzipSize: true })] : []),
+    // Sourcemap upload — only when SENTRY_AUTH_TOKEN is set (CI deploy build),
+    // so local and e2e builds are unaffected. Keep it last.
+    ...(process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: 'rodrigo-lago',
+            project: 'vitalock-admin',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            telemetry: false,
+            // The app passes `release` to the SDK itself; no injected snippet.
+            release: { name: release, inject: false },
+            // Maps must never be published (pages.yml also strips them).
+            sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+          }),
+        ]
+      : []),
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },

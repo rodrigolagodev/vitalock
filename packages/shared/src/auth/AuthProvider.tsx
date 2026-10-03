@@ -1,8 +1,9 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { TypedSupabaseClient } from '@vitalock/supabase';
 import { useAuth } from './useAuth';
 import { useIdleTimeout } from './useIdleTimeout';
+import { setErrorReportingUser } from '../reporting/errorReporting';
 import type { StaffRole, UseAuthReturn } from './types';
 
 interface AuthProviderProps {
@@ -21,6 +22,13 @@ export function AuthProvider({ supabase, expectedRole, children }: AuthProviderP
       void auth.signOut();
     },
   });
+  // Error reports carry the staff id + role only — never name, username or email.
+  const staffId = auth.phase === 'authenticated' ? auth.staff?.id : undefined;
+  const staffRole = auth.phase === 'authenticated' ? auth.staff?.role : undefined;
+  useEffect(() => {
+    setErrorReportingUser(staffId && staffRole ? { id: staffId, role: staffRole } : null);
+  }, [staffId, staffRole]);
+
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 

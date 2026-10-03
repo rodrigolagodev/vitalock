@@ -13,7 +13,7 @@
  * with hook-specific `extraHandlers`. That stays exactly as it is.
  *
  * The cache handlers below are the *operator-facing* channel: they only
- * `logger(...).error(...)`. They never toast. Splitting it this way means:
+ * `reportError(...)` (logger + error tracker). They never toast. Splitting it this way means:
  *   - the user still gets the precise, per-hook message (the cache handler has
  *     no idea which `extraHandlers` applied), and
  *   - `apps/admin`, which had zero `logger` call sites, gets error reporting
@@ -23,9 +23,9 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import type { DefaultOptions } from '@tanstack/react-query';
 import { isNetworkError, isPostgrestError } from '../errors/parseSupabaseError';
-import { httpStatusOf, redactError } from '../errors/redactError';
+import { httpStatusOf } from '../errors/redactError';
 import { isAuthSessionError } from '../auth/sessionExpiry';
-import { logger } from '../logger/logger';
+import { reportError } from '../reporting/errorReporting';
 
 /** Retries after the initial attempt. 2 → at most 3 requests total. */
 export const MAX_QUERY_RETRIES = 2;
@@ -137,15 +137,14 @@ function queryScope(queryKey: readonly unknown[]): readonly unknown[] {
 export function createQueryClient(options: CreateQueryClientOptions = {}): QueryClient {
   const { app, defaultOptions, onQueryError, onMutationError, onAuthError } = options;
   const prefix = app ? `${app}:` : '';
-  const queryLog = logger(`${prefix}query`);
-  const mutationLog = logger(`${prefix}mutation`);
+  const queryTag = `${prefix}query`;
+  const mutationTag = `${prefix}mutation`;
 
   const queryCache = new QueryCache({
     onError: (error, query) => {
-      queryLog.error('query failed', {
-        scope: queryScope(query.queryKey),
-        error: redactError(error),
-      });
+      // Logged to every sink; captured by the tracker unless it is an
+      // expected condition (offline, expired session).
+      reportError(queryTag, 'query failed', error, { scope: queryScope(query.queryKey) });
       onQueryError?.(error, { queryKey: query.queryKey });
       if (onAuthError && isAuthSessionError(error)) onAuthError(error);
     },
@@ -155,9 +154,8 @@ export function createQueryClient(options: CreateQueryClientOptions = {}): Query
     // Log only. The per-hook `onError: toastMutationError` owns the toast —
     // toasting here too would show every mutation failure twice.
     onError: (error, _variables, _context, mutation) => {
-      mutationLog.error('mutation failed', {
+      reportError(mutationTag, 'mutation failed', error, {
         scope: mutation.options.mutationKey ? queryScope(mutation.options.mutationKey) : undefined,
-        error: redactError(error),
       });
       onMutationError?.(error, { mutationKey: mutation.options.mutationKey });
       if (onAuthError && isAuthSessionError(error)) onAuthError(error);

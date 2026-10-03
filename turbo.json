@@ -25,7 +25,15 @@
         "package.json"
       ],
       "outputs": ["dist/**", ".vite/**", "*.tsbuildinfo"],
-      "env": ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "VITE_BASE_PATH"]
+      "env": [
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_ANON_KEY",
+        "VITE_BASE_PATH",
+        "VITE_SENTRY_DSN",
+        "VITE_RELEASE",
+        "GITHUB_SHA"
+      ],
+      "passThroughEnv": ["SENTRY_AUTH_TOKEN"]
     },
     "dev": {
       "cache": false,

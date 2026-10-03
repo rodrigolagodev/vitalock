@@ -8,6 +8,9 @@ import {
   addLogSink,
   consoleSink,
   createReportingSink,
+  errorReportingSink,
+  initErrorReporting,
+  loadClientEnv,
   createQueryClient,
   createSessionExpiredHandler,
   registerGlobalErrorHandlers,
@@ -29,10 +32,20 @@ import NotFoundPage from './routes/NotFoundPage';
 import { DashboardPage, TareasPage, TaskDetailPage, HistorialPage } from './routes/lazy';
 import './styles/globals.css';
 
-// Observability. The console sink is always on; the reporting sink is a
-// no-op unless VITE_ERROR_REPORTING_ENDPOINT is set (see packages/shared).
+// Observability. The console sink is always on; the endpoint sink is a no-op
+// unless VITE_ERROR_REPORTING_ENDPOINT is set, and Sentry is a no-op unless
+// VITE_SENTRY_DSN is set — the SDK chunk is only fetched in that case.
+// See docs/runbooks/error-reporting.md.
+const env = loadClientEnv(import.meta.env);
+void initErrorReporting({
+  dsn: env.VITE_SENTRY_DSN,
+  environment: import.meta.env.MODE,
+  release: env.VITE_RELEASE,
+  app: 'installer',
+});
 addLogSink(consoleSink);
 addLogSink(createReportingSink({ app: 'installer' }));
+addLogSink(errorReportingSink);
 // Errors outside React rendering (event handlers, un-awaited promises).
 registerGlobalErrorHandlers('installer:global');
 
