@@ -4,7 +4,7 @@ import { Boxes, Coins, Lock, Package } from 'lucide-react';
 import { Button } from '@vitalock/ui';
 import { Badge } from '@vitalock/ui';
 import { FilterBar } from '@vitalock/ui';
-import { ErrorState, NotFoundState, Skeleton, StatCard } from '@vitalock/ui';
+import { ErrorState, NotFoundState, Skeleton, StatCard, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { EditableTitle } from '@vitalock/ui';
 import { useProduct } from '@/hooks/useProduct';
@@ -46,7 +46,12 @@ export default function StockDetailPage() {
   const { productId } = useParams<{ productId: string }>();
   const { data: product, isLoading, isError } = useProduct(productId);
   const { updateProduct } = useMutateProduct();
-  const { data: movements = [], isFetching } = useStockMovements(productId);
+  const {
+    data: movements = [],
+    total: movementsTotal,
+    truncated: movementsTruncated,
+    isFetching,
+  } = useStockMovements(productId);
 
   const [typeFilter, setTypeFilter] = useState<MovementType[]>([]);
   const [dateFrom, setDateFrom] = useState('');
@@ -158,6 +163,15 @@ export default function StockDetailPage() {
           />
           <FilterBar.Summary />
         </FilterBar>
+
+        {/* Type/date filters run client-side over the loaded rows, so they
+            cannot reach movements beyond the cap. */}
+        <TruncationNotice
+          truncated={movementsTruncated}
+          shown={movements.length}
+          total={movementsTotal}
+          hint="Se muestran los movimientos más recientes."
+        />
 
         <StockMovementsTable
           rows={filteredMovements}

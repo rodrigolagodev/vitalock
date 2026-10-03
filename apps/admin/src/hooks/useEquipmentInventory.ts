@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { equipmentInventoryKey } from '@/lib/queryKeys';
 
@@ -32,9 +33,7 @@ export function useEquipmentInventory({
   return useQuery({
     queryKey: equipmentInventoryKey(administrationId, buildingId, status),
     queryFn: async (): Promise<EquipmentInventoryRow[]> => {
-      let query = supabase
-        .from('equipment_inventory')
-        .select('*');
+      let query = supabase.from('equipment_inventory').select('*');
 
       if (administrationId) {
         query = query.eq('administration_id', administrationId);
@@ -48,7 +47,9 @@ export function useEquipmentInventory({
         query = query.eq('status', status);
       }
 
-      const { data, error } = await query.order('serial_number', { ascending: true });
+      const { data, error } = await query
+        .order('serial_number', { ascending: true })
+        .limit(LIST_ROW_CAP);
       if (error) throw error;
 
       return (data ?? []) as EquipmentInventoryRow[];

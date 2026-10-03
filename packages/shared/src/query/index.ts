@@ -9,3 +9,4 @@ export {
   type MutationErrorContext,
   type QueryErrorContext,
 } from './createQueryClient';
+export { toCappedQueryResult, type CappedQueryResult } from './cappedQueryResult';

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Chainable supabase mock
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockOr = vi.fn();
 const mockIn = vi.fn();
 const mockIlike = vi.fn();
@@ -29,6 +30,7 @@ function makeWrapper() {
 
 import { useAllOrders } from '../useAllOrders';
 import { allOrdersKey } from '@/lib/queryKeys';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 
 const fakeAllOrders = [
   {
@@ -64,7 +66,8 @@ describe('useAllOrders', () => {
     vi.clearAllMocks();
 
     // Default happy chain: from('all_orders') → select → [filters] → order → data
-    mockOrder.mockResolvedValue({ data: fakeAllOrders, error: null });
+    mockLimit.mockResolvedValue({ data: fakeAllOrders, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockOr.mockReturnValue({ order: mockOrder });
     mockIlike.mockReturnValue({ order: mockOrder });
     // gte/lte are part of the chain — must return something that continues the chain
@@ -208,15 +211,28 @@ describe('useAllOrders', () => {
   });
 
   it('returns empty array when data is null', async () => {
-    mockOrder.mockResolvedValueOnce({ data: null, error: null });
+    mockLimit.mockResolvedValueOnce({ data: null, error: null });
     const { result } = renderHook(() => useAllOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
   });
 
+  it('requests an exact count, caps at LIST_ROW_CAP and exposes total/truncated', async () => {
+    mockLimit.mockResolvedValueOnce({ data: fakeAllOrders, error: null, count: 2500 });
+
+    const { result } = renderHook(() => useAllOrders(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockSelect).toHaveBeenCalledWith(expect.any(String), { count: 'exact' });
+    expect(mockLimit).toHaveBeenCalledWith(LIST_ROW_CAP);
+    expect(result.current.data).toEqual(fakeAllOrders);
+    expect(result.current.total).toBe(2500);
+    expect(result.current.truncated).toBe(true);
+  });
+
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    mockOrder.mockResolvedValueOnce({ data: null, error: dbError });
+    mockLimit.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { result } = renderHook(() => useAllOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isError).toBe(true));

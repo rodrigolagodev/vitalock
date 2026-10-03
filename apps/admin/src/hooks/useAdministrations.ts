@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { escapeIlikeValue } from '@vitalock/shared';
+import { LIST_ROW_CAP, escapeIlikeValue } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { administrationsKey } from '@/lib/queryKeys';
 
@@ -14,9 +14,7 @@ export interface AdministrationRow {
   notes: string | null;
 }
 
-export function useAdministrations(
-  { search, status }: { search?: string; status?: string } = {},
-) {
+export function useAdministrations({ search, status }: { search?: string; status?: string } = {}) {
   return useQuery({
     queryKey: administrationsKey(status, search),
     queryFn: async () => {
@@ -31,12 +29,10 @@ export function useAdministrations(
 
       if (search && search.trim() !== '') {
         const safe = escapeIlikeValue(search.trim());
-        query = query.or(
-          `company_name.ilike.%${safe}%,tax_id.ilike.%${safe}%`,
-        );
+        query = query.or(`company_name.ilike.%${safe}%,tax_id.ilike.%${safe}%`);
       }
 
-      const { data, error } = await query.order('company_name');
+      const { data, error } = await query.order('company_name').limit(LIST_ROW_CAP);
       if (error) throw error;
       return (data ?? []) as AdministrationRow[];
     },

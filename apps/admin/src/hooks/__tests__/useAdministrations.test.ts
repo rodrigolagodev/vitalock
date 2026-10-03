@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Shared mock refs — module-level so tests can inspect them
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockOr = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
@@ -47,7 +48,8 @@ describe('useAdministrations', () => {
 
     // Chain: select → [eq?] → [or?] → order
     // order is the terminal step and resolves the promise
-    mockOrder.mockResolvedValue({ data: fakeAdmins, error: null });
+    mockLimit.mockResolvedValue({ data: fakeAdmins, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockOr.mockReturnValue({ order: mockOrder });
     mockEq.mockReturnValue({ or: mockOr, order: mockOrder });
     mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder });
@@ -77,36 +79,29 @@ describe('useAdministrations', () => {
   });
 
   it('search param fires .or() with combined ILIKE string', async () => {
-    const { result } = renderHook(
-      () => useAdministrations({ search: 'garcia' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useAdministrations({ search: 'garcia' }), {
+      wrapper: makeWrapper(),
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockOr).toHaveBeenCalledWith(
-      'company_name.ilike.%garcia%,tax_id.ilike.%garcia%',
-    );
+    expect(mockOr).toHaveBeenCalledWith('company_name.ilike.%garcia%,tax_id.ilike.%garcia%');
   });
 
   it('search param trims whitespace before building the ILIKE string', async () => {
-    const { result } = renderHook(
-      () => useAdministrations({ search: '  garcia  ' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useAdministrations({ search: '  garcia  ' }), {
+      wrapper: makeWrapper(),
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockOr).toHaveBeenCalledWith(
-      'company_name.ilike.%garcia%,tax_id.ilike.%garcia%',
-    );
+    expect(mockOr).toHaveBeenCalledWith('company_name.ilike.%garcia%,tax_id.ilike.%garcia%');
   });
 
   it('empty search string does not call .or()', async () => {
-    const { result } = renderHook(
-      () => useAdministrations({ search: '' }),
-      { wrapper: makeWrapper() },
-    );
+    const { result } = renderHook(() => useAdministrations({ search: '' }), {
+      wrapper: makeWrapper(),
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockOr).not.toHaveBeenCalled();

@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 // ---------------------------------------------------------------------------
 
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockNot = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
@@ -60,7 +61,8 @@ describe('useEquipmentUpdateHistory', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockOrder.mockResolvedValue({ data: [resolvedRow], error: null });
+    mockLimit.mockResolvedValue({ data: [resolvedRow], error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockNot.mockReturnValue({ order: mockOrder });
     mockEq.mockReturnValue({ not: mockNot });
     mockSelect.mockReturnValue({ eq: mockEq });
@@ -118,7 +120,7 @@ describe('useEquipmentUpdateHistory', () => {
   });
 
   it('returns empty array when no resolved rows exist', async () => {
-    mockOrder.mockResolvedValueOnce({ data: [], error: null });
+    mockLimit.mockResolvedValueOnce({ data: [], error: null });
     mockNot.mockReturnValueOnce({ order: mockOrder });
 
     const { result } = renderHook(() => useEquipmentUpdateHistory(EQUIPMENT_ID), {
@@ -130,7 +132,7 @@ describe('useEquipmentUpdateHistory', () => {
 
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    mockOrder.mockResolvedValueOnce({ data: null, error: dbError });
+    mockLimit.mockResolvedValueOnce({ data: null, error: dbError });
     mockNot.mockReturnValueOnce({ order: mockOrder });
 
     const { result } = renderHook(() => useEquipmentUpdateHistory(EQUIPMENT_ID), {

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { keyEventsKey } from '@/lib/queryKeys';
 
@@ -31,7 +32,8 @@ export function useKeyEvents(keyId: string | undefined) {
         .from('key_events')
         .select('id, key_id, event_type, note, actor_staff_id, occurred_at')
         .eq('key_id', keyId)
-        .order('occurred_at', { ascending: false });
+        .order('occurred_at', { ascending: false })
+        .limit(LIST_ROW_CAP);
       if (error) throw error;
 
       const staffIds = [

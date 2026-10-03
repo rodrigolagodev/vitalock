@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 // Shared mock refs — module-level so tests can inspect them
 const mockSingle = vi.fn();
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
 const mockFrom = vi.fn();
@@ -57,7 +58,8 @@ describe('useProducts', () => {
     vi.clearAllMocks();
 
     // Chain: select → [eq?] → order; order is the terminal step
-    mockOrder.mockResolvedValue({ data: fakeProducts, error: null });
+    mockLimit.mockResolvedValue({ data: fakeProducts, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockSingle.mockResolvedValue({ data: fakeProducts[0], error: null });
     mockEq.mockReturnValue({ order: mockOrder, single: mockSingle });
     mockSelect.mockReturnValue({ eq: mockEq, order: mockOrder });
@@ -140,7 +142,8 @@ describe('useProduct', () => {
     vi.clearAllMocks();
 
     // Chain: select → eq → single; single is the terminal step
-    mockOrder.mockResolvedValue({ data: fakeProducts, error: null });
+    mockLimit.mockResolvedValue({ data: fakeProducts, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockSingle.mockResolvedValue({ data: fakeProducts[0], error: null });
     mockEq.mockReturnValue({ order: mockOrder, single: mockSingle });
     mockSelect.mockReturnValue({ eq: mockEq, order: mockOrder });

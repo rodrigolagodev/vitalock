@@ -43,7 +43,9 @@ describe('useTicketComments', () => {
         if (schema === 'support' && table === 'ticket_comments') {
           return {
             select: () => ({
-              eq: () => ({ order: mockCommentsOrder }),
+              eq: () => ({
+                order: (...args: unknown[]) => ({ limit: () => mockCommentsOrder(...args) }),
+              }),
             }),
           };
         }

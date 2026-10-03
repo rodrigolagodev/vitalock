@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import {
   equipmentByIdKey,
@@ -86,7 +87,8 @@ export function useMaintenanceHistory(equipmentId: string | null) {
         .eq('equipment_id', equipmentId)
         .eq('category', 'maintain_equipment')
         .in('status', ['resolved', 'cancelled'])
-        .order('resolved_at', { ascending: false, nullsFirst: false });
+        .order('resolved_at', { ascending: false, nullsFirst: false })
+        .limit(LIST_ROW_CAP);
 
       if (error) throw error;
 
@@ -124,7 +126,8 @@ export function useEquipmentUpdateHistory(equipmentId: string | null) {
         .select('id, created_at, resolved_at, mdb_storage_path, keys_to_activate, keys_to_disable')
         .eq('equipment_id', equipmentId)
         .not('resolved_at', 'is', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(LIST_ROW_CAP);
 
       if (error) throw error;
 

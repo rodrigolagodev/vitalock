@@ -1,4 +1,5 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { ticketCommentsKey } from '@/lib/queryKeys';
 
@@ -60,7 +61,8 @@ async function fetchTicketComments(ticketId: string): Promise<TicketComment[]> {
     `,
     )
     .eq('ticket_id', ticketId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .limit(LIST_ROW_CAP);
 
   if (!embedError && embedData) {
     return (embedData as unknown as RawCommentWithAuthor[]).map((c) => ({
@@ -84,7 +86,8 @@ async function fetchTicketComments(ticketId: string): Promise<TicketComment[]> {
     .from('ticket_comments')
     .select('id, ticket_id, body, created_at, author_staff_id')
     .eq('ticket_id', ticketId)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: true })
+    .limit(LIST_ROW_CAP);
 
   if (flatError) throw flatError;
 

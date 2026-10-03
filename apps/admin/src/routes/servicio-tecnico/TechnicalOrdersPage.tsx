@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardList, Clock, CheckCircle2 } from 'lucide-react';
-import { Button, ErrorState, FilterBar, StatCard } from '@vitalock/ui';
+import { Button, ErrorState, FilterBar, StatCard, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useTechnicalOrders } from '@/hooks/useTechnicalOrders';
@@ -37,6 +37,8 @@ export default function TechnicalOrdersPage() {
 
   const {
     data: orders = [],
+    total,
+    truncated,
     isFetching,
     isError,
   } = useTechnicalOrders({
@@ -45,6 +47,11 @@ export default function TechnicalOrdersPage() {
     administrationId,
     buildingId,
   });
+
+  // "Total" uses the exact server count. Status breakdowns can only be derived
+  // from the loaded rows, so when the list is capped they are lower bounds
+  // ("N+") and the notice below explains why.
+  const countLabel = (n: number) => (truncated ? `${n}+` : String(n));
 
   if (isError) {
     return (
@@ -61,10 +68,14 @@ export default function TechnicalOrdersPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-testid="stat-cards">
-        <StatCard label="Total órdenes" value={String(orders.length)} icon={<ClipboardList />} />
+        <StatCard
+          label="Total órdenes"
+          value={String(total ?? orders.length)}
+          icon={<ClipboardList />}
+        />
         <StatCard
           label="Abiertas"
-          value={String(
+          value={countLabel(
             orders.filter(
               (o) =>
                 o.status !== 'completed' && o.status !== 'invoiced' && o.status !== 'cancelled',
@@ -74,7 +85,7 @@ export default function TechnicalOrdersPage() {
         />
         <StatCard
           label="Listas para facturar"
-          value={String(orders.filter((o) => o.status === 'completed').length)}
+          value={countLabel(orders.filter((o) => o.status === 'completed').length)}
           icon={<CheckCircle2 />}
         />
       </div>
@@ -135,6 +146,8 @@ export default function TechnicalOrdersPage() {
         />
         <FilterBar.Summary />
       </FilterBar>
+
+      <TruncationNotice truncated={truncated} shown={orders.length} total={total} />
 
       <ServicioTecnicoTable rows={orders} isFetching={isFetching} hasFilters={hasFilters} />
     </div>

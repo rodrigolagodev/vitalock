@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 // hook is its own hand-rolled query builder (NOT the shared createUseOrderList
 // factory), so it needs its own .eq→.in widening test coverage.
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockOr = vi.fn();
 const mockIn = vi.fn();
 const mockEq = vi.fn();
@@ -59,7 +60,8 @@ describe('useTareas', () => {
     vi.clearAllMocks();
 
     // Happy chain: from('tickets').select(...) → [filters] → order → data
-    mockOrder.mockResolvedValue({ data: fakeTareas, error: null });
+    mockLimit.mockResolvedValue({ data: fakeTareas, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockOr.mockReturnValue({ order: mockOrder });
     mockIn.mockReturnValue({
       in: mockIn,

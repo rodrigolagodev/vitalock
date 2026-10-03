@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Chainable supabase mock: from → select → (eq → or?) → order
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockOr = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
@@ -65,7 +66,8 @@ describe('useParticulares', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockOrder.mockResolvedValue({ data: rawParticulares, error: null });
+    mockLimit.mockResolvedValue({ data: rawParticulares, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockOr.mockReturnValue({ order: mockOrder });
     mockEq.mockReturnValue({ or: mockOr, order: mockOrder });
     mockSelect.mockReturnValue({ eq: mockEq, or: mockOr, order: mockOrder });
@@ -95,28 +97,32 @@ describe('useParticulares', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockOr).toHaveBeenCalledWith(
-      'full_name.ilike.%garcia%,dni.ilike.%garcia%',
-    );
+    expect(mockOr).toHaveBeenCalledWith('full_name.ilike.%garcia%,dni.ilike.%garcia%');
   });
 
   it('search by DNI forwards the same combined filter', async () => {
     const { Wrapper } = makeWrapper();
-    const { result } = renderHook(
-      () => useParticulares({ search: '30111222' }),
-      { wrapper: Wrapper },
-    );
+    const { result } = renderHook(() => useParticulares({ search: '30111222' }), {
+      wrapper: Wrapper,
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockOr).toHaveBeenCalledWith(
-      'full_name.ilike.%30111222%,dni.ilike.%30111222%',
-    );
+    expect(mockOr).toHaveBeenCalledWith('full_name.ilike.%30111222%,dni.ilike.%30111222%');
   });
 
   it('maps rows without a unit embed to null display fields', async () => {
-    mockOrder.mockResolvedValueOnce({
-      data: [{ id: 'p-2', unit_id: 'u-9', dni: '30111222', full_name: 'Sin Unidad', phone: null, email: null }],
+    mockLimit.mockResolvedValueOnce({
+      data: [
+        {
+          id: 'p-2',
+          unit_id: 'u-9',
+          dni: '30111222',
+          full_name: 'Sin Unidad',
+          phone: null,
+          email: null,
+        },
+      ],
       error: null,
     });
 
@@ -181,9 +187,7 @@ describe('useParticulares', () => {
         vi.advanceTimersByTime(1);
       });
       await act(async () => {});
-      expect(mockOr).toHaveBeenCalledWith(
-        'full_name.ilike.%garcia%,dni.ilike.%garcia%',
-      );
+      expect(mockOr).toHaveBeenCalledWith('full_name.ilike.%garcia%,dni.ilike.%garcia%');
     } finally {
       vi.useRealTimers();
     }

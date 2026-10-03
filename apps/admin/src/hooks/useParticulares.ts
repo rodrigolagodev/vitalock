@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { escapeIlikeValue } from '@vitalock/shared';
+import { LIST_ROW_CAP, escapeIlikeValue } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { particularesKey } from '@/lib/queryKeys';
 import { useDebounce } from './useDebounce';
@@ -46,12 +46,10 @@ export function useParticulares({ search }: { search?: string } = {}) {
 
       if (trimmed) {
         const safe = escapeIlikeValue(trimmed);
-        query = query.or(
-          `full_name.ilike.%${safe}%,dni.ilike.%${safe}%`,
-        );
+        query = query.or(`full_name.ilike.%${safe}%,dni.ilike.%${safe}%`);
       }
 
-      const { data, error } = await query.order('full_name');
+      const { data, error } = await query.order('full_name').limit(LIST_ROW_CAP);
       if (error) throw error;
 
       type ParticularRowWithUnit = ParticularRow & {

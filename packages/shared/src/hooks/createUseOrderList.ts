@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { escapeIlikeValue } from '../db/escapeIlikeValue';
+import { fetchCappedList, type CappableQuery, type CappedList } from '../db/listCap';
+import { toCappedQueryResult, type CappedQueryResult } from '../query/cappedQueryResult';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -39,16 +41,13 @@ export interface OrderListQuery {
   eq: (column: string, value: string) => OrderListQuery;
   in: (column: string, values: string[]) => OrderListQuery;
   or: (filters: string) => OrderListQuery;
-  order: (
-    column: string,
-    options: { ascending: boolean },
-  ) => PromiseLike<{ data: unknown; error: unknown }>;
+  order: (column: string, options: { ascending: boolean }) => CappableQuery;
 }
 
 /** Minimal supabase client surface the factory needs. */
 export interface OrderListSupabaseClient {
   from: (view: string) => {
-    select: (cols: string) => OrderListQuery;
+    select: (cols: string, options: { count: 'exact' }) => OrderListQuery;
   };
 }
 
@@ -90,25 +89,28 @@ export interface CreateUseOrderListOptions<TRow> {
  */
 export function createUseOrderList<TStatus extends string, TRow>(
   options: CreateUseOrderListOptions<TRow>,
-): (filters?: OrderListFilters<TStatus>) => UseQueryResult<TRow[]> {
+): (filters?: OrderListFilters<TStatus>) => CappedQueryResult<TRow> {
   const { view, itemsTable, supabase, queryKeyFn, mapRow } = options;
 
-  return function useOrderList(filters?: OrderListFilters<TStatus>): UseQueryResult<TRow[]> {
+  return function useOrderList(filters?: OrderListFilters<TStatus>): CappedQueryResult<TRow> {
     const { search, status, administrationId, buildingId } = filters ?? {};
     const trimmed = search?.trim() ?? '';
     const scopedByBuilding = Boolean(buildingId && buildingId !== 'all');
 
-    return useQuery({
+    const result: UseQueryResult<CappedList<TRow>> = useQuery({
       queryKey: queryKeyFn(status, trimmed, administrationId, buildingId),
-      queryFn: async (): Promise<TRow[]> => {
+      queryFn: async (): Promise<CappedList<TRow>> => {
         const embed = scopedByBuilding
           ? `${itemsTable}!inner(id,building_id)`
           : `${itemsTable}(id)`;
 
+        // `count: 'exact'` respects the `!inner` embed, so the total stays
+        // scoped to the building filter.
         let query: OrderListQuery = supabase
           .from(view)
           .select(
             `id, order_number, client_type, administration_id, company_name, particular_full_name, status, created_at, ${embed}`,
+            { count: 'exact' },
           );
 
         if (status?.length) {
@@ -130,12 +132,12 @@ export function createUseOrderList<TStatus extends string, TRow>(
           );
         }
 
-        const { data, error } = await query.order('created_at', { ascending: false });
-        if (error) throw error;
-
-        const rows = (data ?? []) as unknown as OrderListSummaryRawRow[];
-        return rows.map((row) => mapRow(row, itemsTable));
+        const capped = await fetchCappedList<OrderListSummaryRawRow>(
+          query.order('created_at', { ascending: false }),
+        );
+        return { ...capped, rows: capped.rows.map((row) => mapRow(row, itemsTable)) };
       },
     });
+    return toCappedQueryResult(result);
   };
 }

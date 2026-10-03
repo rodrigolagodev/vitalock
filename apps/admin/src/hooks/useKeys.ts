@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { keysKey } from '@/lib/queryKeys';
 
@@ -46,7 +47,8 @@ export function useKeys(buildingId: string | undefined) {
           'id, rfid_code, status, notes, activated_at, deactivated_at, picked_up_at, picked_up_by_name, picked_up_by_surname, picked_up_by_dni, delivered_by_staff_id, unit_id',
         )
         .in('unit_id', unitIds)
-        .order('rfid_code');
+        .order('rfid_code')
+        .limit(LIST_ROW_CAP);
       if (kErr) throw kErr;
 
       const unitMap = new Map((units ?? []).map((u) => [u.id, u]));

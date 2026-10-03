@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { LIST_ROW_CAP } from '@vitalock/shared';
 import { supabase } from '@/lib/supabase';
 import { productsKey } from '@/lib/queryKeys';
 import type { ProductCategory, ProductRow } from '@/types/stock';
@@ -29,7 +30,7 @@ export function useProducts({ category, search }: UseProductsFilters = {}) {
         query = query.eq('category', category);
       }
 
-      const { data, error } = await query.order('name');
+      const { data, error } = await query.order('name').limit(LIST_ROW_CAP);
       if (error) throw error;
 
       let rows = (data ?? []) as unknown as ProductRow[];

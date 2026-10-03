@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 
 // Chainable supabase mock — schema('identity') -> from('staff') -> select -> [eq] -> [or] -> order
 const mockOrder = vi.fn();
+const mockLimit = vi.fn();
 const mockOr = vi.fn();
 const mockEq = vi.fn();
 const mockSelect = vi.fn();
@@ -49,7 +50,8 @@ describe('usePersonal', () => {
     vi.clearAllMocks();
 
     // Default happy chain: select -> eq -> [or] -> order resolves with data
-    mockOrder.mockResolvedValue({ data: fakeStaff, error: null });
+    mockLimit.mockResolvedValue({ data: fakeStaff, error: null });
+    mockOrder.mockReturnValue({ limit: mockLimit });
     mockOr.mockReturnValue({ order: mockOrder });
     mockEq.mockReturnValue({ or: mockOr, order: mockOrder, eq: mockEq });
     mockSelect.mockReturnValue({ or: mockOr, eq: mockEq, order: mockOrder });
@@ -150,7 +152,7 @@ describe('usePersonal', () => {
 
   it('throws when supabase returns an error', async () => {
     const dbError = { code: '42501', message: 'permission denied' };
-    mockOrder.mockResolvedValueOnce({ data: null, error: dbError });
+    mockLimit.mockResolvedValueOnce({ data: null, error: dbError });
 
     const { result } = renderHook(() => usePersonal(), { wrapper: makeWrapper() });
 
