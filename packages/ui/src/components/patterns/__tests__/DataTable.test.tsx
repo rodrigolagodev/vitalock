@@ -250,4 +250,50 @@ describe('DataTable', () => {
     expect(screen.getByRole('button', { name: 'Página anterior' })).toBeDisabled();
     expect(screen.getByRole('combobox', { name: 'Filas por página' })).toHaveValue('10');
   });
+
+  describe('footer slot', () => {
+    it('renders the footer on page 1 and page 2 without counting it in the row total', async () => {
+      const user = userEvent.setup();
+      renderTable({ rows: makeRows(25), footer: 'Total: $ 300,00' });
+
+      expect(screen.getByText('Total: $ 300,00')).toBeInTheDocument();
+      expect(screen.getByText('1–10 de 25')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Página siguiente' }));
+
+      expect(screen.getByText('11–20 de 25')).toBeInTheDocument();
+      expect(screen.getByText('Total: $ 300,00')).toBeInTheDocument();
+    });
+
+    it('renders inside a tfoot that spans every column', () => {
+      renderTable({ footer: 'Total: $ 10,00' });
+
+      const cell = screen.getByText('Total: $ 10,00').closest('td');
+      expect(cell?.closest('tfoot')).not.toBeNull();
+      expect(cell).toHaveAttribute('colspan', String(baseColumns.length));
+      // header + 3 data rows + footer row
+      expect(screen.getAllByRole('row')).toHaveLength(5);
+    });
+
+    it('still renders the footer when there are no rows', () => {
+      renderTable({ rows: [], emptyMessage: 'Sin ítems.', footer: 'Total: $ 0,00' });
+
+      expect(screen.getByText('Sin ítems.')).toBeInTheDocument();
+      expect(screen.getByText('Total: $ 0,00')).toBeInTheDocument();
+    });
+
+    it('adds no footer region when the footer prop is omitted', () => {
+      renderTable({ rows: makeRows(3) });
+
+      expect(document.querySelector('tfoot')).toBeNull();
+      expect(screen.getAllByRole('row')).toHaveLength(4);
+    });
+
+    it('coexists with the pagination footer', () => {
+      renderTable({ rows: makeRows(25), footer: 'Total: $ 5,00' });
+
+      expect(screen.getByText('Total: $ 5,00')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeEnabled();
+    });
+  });
 });

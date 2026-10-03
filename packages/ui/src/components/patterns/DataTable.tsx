@@ -4,7 +4,15 @@ import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
 import { IconButton } from '../icon-button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../table';
 import { DEFAULT_PAGE_SIZE, getPageSlice } from './pagination';
 import { PaginationFooter } from './PaginationFooter';
 
@@ -80,6 +88,13 @@ export interface DataTableProps<T> {
   filteredEmptyMessage?: string;
   hasFilters?: boolean;
   paginated?: boolean;
+  /**
+   * Optional footer region (e.g. an order total). Rendered as a `<tfoot>` row
+   * spanning every column, OUTSIDE the paginated body: it is never sliced or
+   * counted by pagination and stays visible on every page and with zero rows.
+   * `DataCardList` does not render it.
+   */
+  footer?: React.ReactNode;
 }
 
 const SKELETON_ROWS = 3;
@@ -111,6 +126,7 @@ export function DataTable<T>({
   filteredEmptyMessage,
   hasFilters = false,
   paginated = true,
+  footer,
 }: DataTableProps<T>) {
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
@@ -243,6 +259,15 @@ export function DataTable<T>({
             ))
           )}
         </TableBody>
+        {footer != null && (
+          <TableFooter>
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={columnCount} className="text-right tabular-nums">
+                {footer}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
       {paginated && rows.length > 0 && (
         <PaginationFooter
