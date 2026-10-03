@@ -103,7 +103,8 @@ export function KeyOrderItemsTable({
           {
             header: 'Cantidad',
             cell: (item) => item.quantity,
-            className: 'text-right',
+            align: 'right',
+            className: 'tabular-nums',
           },
           {
             header: 'Edificio',
@@ -117,14 +118,15 @@ export function KeyOrderItemsTable({
           {
             header: 'Precio',
             cell: (item) => formatCurrencyARS(item.unit_price),
-            className: 'text-right',
+            align: 'right',
+            className: 'tabular-nums',
             hideBelow: 'md',
           },
           {
             header: 'Subtotal',
             cell: (item) => formatCurrencyARS(lineSubtotal(item)),
-            className: 'text-right tabular-nums',
-            headerClassName: 'text-right',
+            align: 'right',
+            className: 'tabular-nums',
           },
           {
             header: 'Estado',

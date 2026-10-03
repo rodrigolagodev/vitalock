@@ -296,4 +296,37 @@ describe('DataTable', () => {
       expect(screen.getByRole('button', { name: 'Página siguiente' })).toBeEnabled();
     });
   });
+
+  describe('column align', () => {
+    const alignedColumns: DataTableColumn<Item>[] = [
+      { header: 'Cantidad', cell: () => '1', align: 'right' },
+      { header: 'Nombre', cell: (row) => row.name },
+      { header: 'Precio', cell: () => '$ 10,00', align: 'right' },
+    ];
+
+    it('aligns the header and every body cell of an aligned column, including the first', () => {
+      renderTable({ rows: makeRows(1), columns: alignedColumns });
+
+      expect(screen.getByRole('columnheader', { name: 'Cantidad' })).toHaveClass('text-right');
+      expect(screen.getByRole('columnheader', { name: 'Precio' })).toHaveClass('text-right');
+      expect(screen.getByText('1').closest('td')).toHaveClass('text-right');
+      expect(screen.getByText('$ 10,00').closest('td')).toHaveClass('text-right');
+    });
+
+    it('leaves unaligned columns left-aligned by default', () => {
+      renderTable({ rows: makeRows(1), columns: alignedColumns });
+
+      expect(screen.getByRole('columnheader', { name: 'Nombre' })).not.toHaveClass('text-right');
+      expect(screen.getByText('Item 1').closest('td')).not.toHaveClass('text-right');
+    });
+
+    it('aligns skeleton cells while fetching', () => {
+      renderTable({ rows: [], columns: alignedColumns, isFetching: true });
+
+      const firstSkeletonRow = screen.getAllByRole('row')[1]!;
+      const cells = within(firstSkeletonRow).getAllByRole('cell');
+      expect(cells[0]).toHaveClass('text-right');
+      expect(cells[1]).not.toHaveClass('text-right');
+    });
+  });
 });

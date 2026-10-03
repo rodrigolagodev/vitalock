@@ -78,20 +78,21 @@ export function TechnicalOrderItemsTable({
         {
           header: 'Cant.',
           cell: (item) => item.quantity,
-          className: 'text-right',
+          align: 'right',
+          className: 'tabular-nums',
         },
         {
           header: 'Precio',
           cell: (item) => formatCurrencyARS(item.unit_price),
-          className: 'text-right tabular-nums',
-          headerClassName: 'text-right',
+          align: 'right',
+          className: 'tabular-nums',
           hideBelow: 'md',
         },
         {
           header: 'Subtotal',
           cell: (item) => formatCurrencyARS(lineSubtotal(item)),
-          className: 'text-right tabular-nums',
-          headerClassName: 'text-right',
+          align: 'right',
+          className: 'tabular-nums',
         },
         {
           header: 'Descripción',
