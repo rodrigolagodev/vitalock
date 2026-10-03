@@ -9,6 +9,8 @@ import {
   consoleSink,
   createReportingSink,
   createQueryClient,
+  createSessionExpiredHandler,
+  registerGlobalErrorHandlers,
   AppErrorBoundary,
   RouteBoundaryLayout,
   AuthProvider,
@@ -23,6 +25,7 @@ import {
   RootErrorFallback,
 } from './components/common/BoundaryFallbacks';
 import LoginPage from './routes/LoginPage';
+import NotFoundPage from './routes/NotFoundPage';
 import {
   AdministrationsPage,
   AdministrationDetailPage,
@@ -53,8 +56,17 @@ import './styles/globals.css';
 // no-op unless VITE_ERROR_REPORTING_ENDPOINT is set (see packages/shared).
 addLogSink(consoleSink);
 addLogSink(createReportingSink({ app: 'admin' }));
+// Errors outside React rendering (event handlers, un-awaited promises).
+registerGlobalErrorHandlers('admin:global');
 
-const queryClient = createQueryClient({ app: 'admin' });
+// A 401 / expired JWT anywhere in the query cache signs out and lands on
+// /error?reason=session_expired (once per page load, never from /login|/error).
+const handleSessionExpired = createSessionExpiredHandler({
+  signOut: () => supabase.auth.signOut({ scope: 'local' }),
+  basePath: import.meta.env.BASE_URL,
+});
+
+const queryClient = createQueryClient({ app: 'admin', onAuthError: handleSessionExpired });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -114,6 +126,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                         <Route path="particulares" element={<ParticularesPage />} />
                         <Route path="stock" element={<StockPage />} />
                         <Route path="stock/:productId" element={<StockDetailPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
                       </Route>
                     </Route>
                   </Route>

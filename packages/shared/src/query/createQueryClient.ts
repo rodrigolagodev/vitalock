@@ -24,6 +24,7 @@ import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import type { DefaultOptions } from '@tanstack/react-query';
 import { isNetworkError, isPostgrestError } from '../errors/parseSupabaseError';
 import { httpStatusOf, redactError } from '../errors/redactError';
+import { isAuthSessionError } from '../auth/sessionExpiry';
 import { logger } from '../logger/logger';
 
 /** Retries after the initial attempt. 2 → at most 3 requests total. */
@@ -115,6 +116,12 @@ export interface CreateQueryClientOptions {
   onQueryError?: (error: unknown, context: QueryErrorContext) => void;
   /** Extra hook run after the shared logging handler. Must not throw. */
   onMutationError?: (error: unknown, context: MutationErrorContext) => void;
+  /**
+   * Called (from both caches) when an error means the session is no longer
+   * valid — HTTP 401, PostgREST PGRST301/302/303, "JWT expired". Apps pass
+   * `createSessionExpiredHandler(...)` from `auth/sessionExpiry`. Must not throw.
+   */
+  onAuthError?: (error: unknown) => void;
 }
 
 /**
@@ -128,7 +135,7 @@ function queryScope(queryKey: readonly unknown[]): readonly unknown[] {
 }
 
 export function createQueryClient(options: CreateQueryClientOptions = {}): QueryClient {
-  const { app, defaultOptions, onQueryError, onMutationError } = options;
+  const { app, defaultOptions, onQueryError, onMutationError, onAuthError } = options;
   const prefix = app ? `${app}:` : '';
   const queryLog = logger(`${prefix}query`);
   const mutationLog = logger(`${prefix}mutation`);
@@ -140,6 +147,7 @@ export function createQueryClient(options: CreateQueryClientOptions = {}): Query
         error: redactError(error),
       });
       onQueryError?.(error, { queryKey: query.queryKey });
+      if (onAuthError && isAuthSessionError(error)) onAuthError(error);
     },
   });
 
@@ -152,6 +160,7 @@ export function createQueryClient(options: CreateQueryClientOptions = {}): Query
         error: redactError(error),
       });
       onMutationError?.(error, { mutationKey: mutation.options.mutationKey });
+      if (onAuthError && isAuthSessionError(error)) onAuthError(error);
     },
   });
 
