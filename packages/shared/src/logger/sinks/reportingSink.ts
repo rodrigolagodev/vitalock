@@ -5,23 +5,12 @@
  * Deliberately dependency-free — no Sentry, no Bugsnag — so it can ship without
  * touching any `package.json`.
  *
- * ## Swapping in Sentry later
+ * ## Relationship with Sentry
  *
- * Nothing in the app talks to this module directly: `main.tsx` only calls
- * `addLogSink(...)`. To move to Sentry, add `@sentry/react`, then replace the
- * registration with a sink of the same `LogSink` shape:
- *
- * ```ts
- * Sentry.init({ dsn, release, tracesSampleRate: 0 });
- * addLogSink((level, tag, args) => {
- *   if (level !== 'error') return;
- *   Sentry.captureMessage(String(args[0]), {
- *     level: 'error',
- *     tags: { source: tag },
- *     extra: { payload: sanitizeArgs(args) }, // keep the scrubbing below
- *   });
- * });
- * ```
+ * Sentry is wired separately through `reporting/` (`initErrorReporting` +
+ * `errorReportingSink`), see docs/runbooks/error-reporting.md. This endpoint
+ * sink stays as an optional, vendor-neutral second channel; both share the
+ * same scrubbing (`sanitizeArgs` / `redactError`).
  *
  * Keep `sanitizeArgs` in the path: `redactError` is what stops a `23505`
  * `details` string (which contains row values) from leaving the browser.

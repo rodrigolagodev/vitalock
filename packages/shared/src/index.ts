@@ -5,5 +5,6 @@ export * from './errors';
 export * from './hooks';
 export * from './logger';
 export * from './query';
+export * from './reporting';
 export * from './storage';
 export * from './types';

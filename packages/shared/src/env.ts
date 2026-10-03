@@ -1,8 +1,16 @@
 import { z } from 'zod';
 
+/** CI passes `${{ secrets.X }}`, which is `''` when the secret is unset. */
+const optionalString = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => (value === '' ? undefined : value), schema.optional());
+
 const clientSchema = z.object({
   VITE_SUPABASE_URL: z.string().url(),
   VITE_SUPABASE_ANON_KEY: z.string().min(1),
+  /** Sentry DSN. Unset → error reporting stays a no-op (dev, tests, e2e). */
+  VITE_SENTRY_DSN: optionalString(z.string().url()),
+  /** Build identifier (git SHA), injected by `vite.config.ts`. */
+  VITE_RELEASE: optionalString(z.string().min(1)),
 });
 
 const serverSchema = z.object({

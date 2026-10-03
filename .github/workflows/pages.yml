@@ -107,6 +107,11 @@ jobs:
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      # Sentry release = commit SHA; the same value tags runtime events and the
+      # sourcemap upload, so stack traces resolve. See docs/runbooks/error-reporting.md.
+      VITE_RELEASE: ${{ github.sha }}
+      # Enables @sentry/vite-plugin (sourcemap upload + delete after upload).
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -132,11 +137,13 @@ jobs:
       - name: Build admin
         env:
           VITE_BASE_PATH: /vitalock/admin/
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_ADMIN }}
         run: pnpm exec turbo run build --filter=@vitalock/admin --cache-dir=.turbo/cache
 
       - name: Build installer
         env:
           VITE_BASE_PATH: /vitalock/installer/
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_INSTALLER }}
         run: pnpm exec turbo run build --filter=@vitalock/installer --cache-dir=.turbo/cache
 
       - name: Check bundle budgets
@@ -144,8 +151,9 @@ jobs:
           node scripts/check-bundle-size.mjs apps/admin
           node scripts/check-bundle-size.mjs apps/installer
 
-      # vite `sourcemap: 'hidden'` emits *.map next to the chunks for an error
-      # reporter to consume. They must not be served from the public site.
+      # vite `sourcemap: 'hidden'` emits *.map next to the chunks for Sentry.
+      # @sentry/vite-plugin uploads and deletes them; this stays as the
+      # backstop (token unset, plugin failure). Maps are never published.
       - name: Strip sourcemaps from publishable output
         run: find apps/admin/dist apps/installer/dist -name '*.map' -type f -delete
 

@@ -1,6 +1,6 @@
 {
-  "_comment": "gzip kB. Measured 2026-09-10: initial 194.5 / largest chunk 52.7 (vendor-react) / total 298. ~10% headroom. Raise deliberately, never to silence CI.",
+  "_comment": "gzip kB. Measured 2026-09-10: initial 194.5 / largest chunk 52.7 (vendor-react) / total 298. ~10% headroom. Raise deliberately, never to silence CI. 2026-10-03 (Sentry, phase 2b): total raised 330 -> 370 for the lazy vendor-sentry chunk (~26 kB gzip, fetched only when VITE_SENTRY_DSN is set); measured initial 195.0 / total 339.4. Initial budget unchanged.",
   "initialGzipKb": 215,
   "chunkGzipKb": 60,
-  "totalGzipKb": 330
+  "totalGzipKb": 370
 }

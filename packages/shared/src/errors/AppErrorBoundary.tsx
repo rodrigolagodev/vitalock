@@ -27,8 +27,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { logger } from '../logger/logger';
-import { redactError } from './redactError';
+import { reportError } from '../reporting/errorReporting';
 
 export interface ErrorFallbackProps {
   error: Error;
@@ -92,12 +91,9 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     const componentStack = info.componentStack ?? null;
     this.setState({ componentStack });
 
-    // Central report. Every registered sink sees it — console in dev, the
-    // reporting sink in production (see `logger/sinks/reportingSink.ts`).
-    logger(this.props.tag ?? 'error-boundary').error('render error', {
-      error: redactError(error),
-      componentStack,
-    });
+    // Central report. Every registered log sink sees it (console, endpoint)
+    // and the error tracker captures the raw error once (see `reporting/`).
+    reportError(this.props.tag ?? 'error-boundary', 'render error', error, { componentStack });
 
     this.props.onError?.(error, componentStack);
   }
