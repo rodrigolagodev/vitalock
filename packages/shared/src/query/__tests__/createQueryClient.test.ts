@@ -210,3 +210,59 @@ describe('cache error handlers', () => {
     expect(reported.error).not.toHaveProperty('details');
   });
 });
+
+describe('onAuthError (session expiry)', () => {
+  it('fires for a query failing with an expired JWT', async () => {
+    const onAuthError = vi.fn();
+    const client = createQueryClient({
+      onAuthError,
+      defaultOptions: { queries: { retry: false } },
+    });
+    const expired = { code: 'PGRST303', message: 'JWT expired' };
+
+    await client
+      .fetchQuery({ queryKey: ['a'], queryFn: () => Promise.reject(expired) })
+      .catch(() => {});
+
+    expect(onAuthError).toHaveBeenCalledTimes(1);
+    expect(onAuthError).toHaveBeenCalledWith(expired);
+  });
+
+  it('fires for a mutation failing with HTTP 401', async () => {
+    const onAuthError = vi.fn();
+    const client = createQueryClient({ onAuthError });
+    const mutation = client.getMutationCache().build(client, {
+      mutationFn: () => Promise.reject({ status: 401, message: 'Unauthorized' }),
+    });
+
+    await mutation.execute(undefined).catch(() => {});
+
+    expect(onAuthError).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not fire for an RLS denial (valid session, no access)', async () => {
+    const onAuthError = vi.fn();
+    const client = createQueryClient({
+      onAuthError,
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    await client
+      .fetchQuery({
+        queryKey: ['b'],
+        queryFn: () => Promise.reject({ code: '42501', message: 'permission denied' }),
+      })
+      .catch(() => {});
+
+    expect(onAuthError).not.toHaveBeenCalled();
+  });
+
+  it('never retries an auth error', () => {
+    const retry = createQueryClient().getDefaultOptions().queries?.retry as (
+      failureCount: number,
+      error: unknown,
+    ) => boolean;
+    expect(retry(0, { code: 'PGRST303', message: 'JWT expired' })).toBe(false);
+    expect(retry(0, { code: 'PGRST301', message: 'JWSError' })).toBe(false);
+  });
+});

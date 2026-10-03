@@ -9,7 +9,7 @@
 --     -f supabase/seed-users.sql
 --
 -- Credenciales creadas:
---   admin@vitalock.local     / Admin123!     (rol admin)
+--   admin@vitalock.local     / Admin12345!   (rol admin)
 --   installer@vitalock.local / Installer123! (rol installer)
 -- ============================================================
 
@@ -37,7 +37,7 @@ begin
       v_admin_id,
       'authenticated', 'authenticated',
       'admin@vitalock.local',
-      crypt('Admin123!', gen_salt('bf')),
+      crypt('Admin12345!', gen_salt('bf')),
       now(),
       jsonb_build_object('provider', 'email', 'providers', array['email']),
       '{}'::jsonb,
@@ -46,7 +46,7 @@ begin
     );
   else
     update auth.users
-       set encrypted_password = crypt('Admin123!', gen_salt('bf')),
+       set encrypted_password = crypt('Admin12345!', gen_salt('bf')),
            email_confirmed_at = coalesce(email_confirmed_at, now()),
            updated_at         = now()
      where id = v_admin_id;
@@ -102,7 +102,7 @@ begin
         status       = excluded.status,
         updated_at   = now();
 
-  raise notice 'Seed users ready: admin@vitalock.local (Admin123!), installer@vitalock.local (Installer123!)';
+  raise notice 'Seed users ready: admin@vitalock.local (Admin12345!), installer@vitalock.local (Installer123!)';
 end $$;
 
 select s.email, s.role, s.status, u.email_confirmed_at is not null as confirmed

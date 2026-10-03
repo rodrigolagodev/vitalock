@@ -1,6 +1,6 @@
 # Vitalock — Database Schema Reference
 
-> **Generated** by `scripts/gen-schema-doc.sh` from the database as of migration `20260913110000_drop_resolve_login_email.sql`.
+> **Generated** by `scripts/gen-schema-doc.sh` from the database as of migration `20260915100000_scope_installer_key_authorization_updates.sql`.
 > Do not edit by hand — re-run `pnpm gen:schema-doc` after a migration; CI fails if this file is stale. For narrative (flows, auth model, business rules) see `FLOWS.md`.
 
 ## Tables

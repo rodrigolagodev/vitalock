@@ -9,6 +9,8 @@ import {
   consoleSink,
   createReportingSink,
   createQueryClient,
+  createSessionExpiredHandler,
+  registerGlobalErrorHandlers,
   AppErrorBoundary,
   RouteBoundaryLayout,
   AuthProvider,
@@ -23,6 +25,7 @@ import {
   RootErrorFallback,
 } from './components/common/BoundaryFallbacks';
 import LoginPage from './routes/LoginPage';
+import NotFoundPage from './routes/NotFoundPage';
 import { DashboardPage, TareasPage, TaskDetailPage, HistorialPage } from './routes/lazy';
 import './styles/globals.css';
 
@@ -30,12 +33,22 @@ import './styles/globals.css';
 // no-op unless VITE_ERROR_REPORTING_ENDPOINT is set (see packages/shared).
 addLogSink(consoleSink);
 addLogSink(createReportingSink({ app: 'installer' }));
+// Errors outside React rendering (event handlers, un-awaited promises).
+registerGlobalErrorHandlers('installer:global');
+
+// A 401 / expired JWT anywhere in the query cache signs out and lands on
+// /error?reason=session_expired (once per page load, never from /login|/error).
+const handleSessionExpired = createSessionExpiredHandler({
+  signOut: () => supabase.auth.signOut({ scope: 'local' }),
+  basePath: import.meta.env.BASE_URL,
+});
 
 // Field technicians work on flaky connections: retry reads a little harder
 // than the admin desktop app before giving up.
 const queryClient = createQueryClient({
   app: 'installer',
   defaultOptions: { queries: { retry: 3 } },
+  onAuthError: handleSessionExpired,
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -60,6 +73,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                         <Route path="tareas" element={<TareasPage />} />
                         <Route path="tareas/:id" element={<TaskDetailPage />} />
                         <Route path="historial" element={<HistorialPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
                       </Route>
                     </Route>
                   </Route>
