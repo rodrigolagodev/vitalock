@@ -19,6 +19,7 @@ export interface TechnicalOrderListRow {
   particular_full_name: string | null;
   status: TechnicalOrderStatus;
   created_at: string;
+  total_amount: number;
   technical_order_items: { id: string }[];
 }
 
@@ -38,6 +39,7 @@ export const useTechnicalOrders = createUseOrderList<TechnicalOrderStatus, Techn
       particular_full_name: row.particular_full_name,
       status: row.status as TechnicalOrderStatus,
       created_at: row.created_at,
+      total_amount: Number(row.total_amount) || 0,
       technical_order_items: items.map((item) => ({ id: item.id })),
     };
   },

@@ -4,7 +4,15 @@ import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
 import { IconButton } from '../icon-button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../table';
 import { DEFAULT_PAGE_SIZE, getPageSlice } from './pagination';
 import { PaginationFooter } from './PaginationFooter';
 
@@ -25,11 +33,20 @@ export type DataTableBreakpoint = 'sm' | 'md' | 'lg' | 'xl';
  */
 export type CardSlot = 'title' | 'status' | 'meta' | 'hidden' | 'icon';
 
+export type DataTableAlign = 'left' | 'center' | 'right';
+
 export interface DataTableColumn<T> {
   header: string;
   cell: (row: T) => React.ReactNode;
   className?: string;
   headerClassName?: string;
+  /**
+   * Horizontal alignment applied to the header AND every cell of the column
+   * (including the first column and loading skeletons), so header and content
+   * always line up. Prefer this over aligning via `className`/`headerClassName`.
+   * Use `'right'` for numbers and money.
+   */
+  align?: DataTableAlign;
   /**
    * If set, the column is hidden below the given Tailwind breakpoint
    * (`hidden <bp>:table-cell`). Use for secondary information that can
@@ -80,6 +97,13 @@ export interface DataTableProps<T> {
   filteredEmptyMessage?: string;
   hasFilters?: boolean;
   paginated?: boolean;
+  /**
+   * Optional footer region (e.g. an order total). Rendered as a `<tfoot>` row
+   * spanning every column, OUTSIDE the paginated body: it is never sliced or
+   * counted by pagination and stays visible on every page and with zero rows.
+   * `DataCardList` does not render it.
+   */
+  footer?: React.ReactNode;
 }
 
 const SKELETON_ROWS = 3;
@@ -91,6 +115,16 @@ const HIDE_BELOW_CLASS: Record<DataTableBreakpoint, string> = {
   lg: 'hidden lg:table-cell',
   xl: 'hidden xl:table-cell',
 };
+
+const ALIGN_CLASS: Record<DataTableAlign, string | undefined> = {
+  left: undefined,
+  center: 'text-center',
+  right: 'text-right',
+};
+
+function alignClass(align: DataTableAlign | undefined): string | undefined {
+  return align ? ALIGN_CLASS[align] : undefined;
+}
 
 function responsiveClass(hideBelow: DataTableBreakpoint | undefined): string | undefined {
   return hideBelow ? HIDE_BELOW_CLASS[hideBelow] : undefined;
@@ -111,6 +145,7 @@ export function DataTable<T>({
   filteredEmptyMessage,
   hasFilters = false,
   paginated = true,
+  footer,
 }: DataTableProps<T>) {
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
@@ -190,7 +225,11 @@ export function DataTable<T>({
             {columns.map((column, index) => (
               <TableHead
                 key={index}
-                className={cn(responsiveClass(column.hideBelow), column.headerClassName)}
+                className={cn(
+                  responsiveClass(column.hideBelow),
+                  alignClass(column.align),
+                  column.headerClassName,
+                )}
               >
                 {column.header}
               </TableHead>
@@ -203,8 +242,17 @@ export function DataTable<T>({
             Array.from({ length: SKELETON_ROWS }, (_, rowIndex) => (
               <TableRow key={rowIndex}>
                 {columns.map((column, cellIndex) => (
-                  <TableCell key={cellIndex} className={responsiveClass(column.hideBelow)}>
-                    <div className="bg-muted h-4 w-24 animate-pulse rounded" />
+                  <TableCell
+                    key={cellIndex}
+                    className={cn(responsiveClass(column.hideBelow), alignClass(column.align))}
+                  >
+                    <div
+                      className={cn(
+                        'bg-muted h-4 w-24 animate-pulse rounded',
+                        column.align === 'right' && 'ml-auto',
+                        column.align === 'center' && 'mx-auto',
+                      )}
+                    />
                   </TableCell>
                 ))}
                 {hasActions && (
@@ -225,13 +273,22 @@ export function DataTable<T>({
           ) : (
             visibleRows.map((row) => (
               <TableRow key={rowKey(row)}>
-                <TableCell className={responsiveClass(firstColumn?.hideBelow)}>
+                <TableCell
+                  className={cn(
+                    responsiveClass(firstColumn?.hideBelow),
+                    alignClass(firstColumn?.align),
+                  )}
+                >
                   {renderFirstCell(row)}
                 </TableCell>
                 {restColumns.map((column, index) => (
                   <TableCell
                     key={index}
-                    className={cn(responsiveClass(column.hideBelow), column.className)}
+                    className={cn(
+                      responsiveClass(column.hideBelow),
+                      alignClass(column.align),
+                      column.className,
+                    )}
                   >
                     {column.cell(row)}
                   </TableCell>
@@ -243,6 +300,15 @@ export function DataTable<T>({
             ))
           )}
         </TableBody>
+        {footer != null && (
+          <TableFooter>
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={columnCount} className="text-right tabular-nums">
+                {footer}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
       {paginated && rows.length > 0 && (
         <PaginationFooter

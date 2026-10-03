@@ -1,5 +1,5 @@
 import { DataCardList } from '@vitalock/ui';
-import { formatDate } from '@/lib/format';
+import { formatCurrencyARS, formatDate } from '@/lib/format';
 import { technicalOrderStatus } from '@/lib/status/technicalOrderStatus';
 import type { TechnicalOrderListRow } from '@/hooks/useTechnicalOrders';
 
@@ -45,6 +45,11 @@ export function ServicioTecnicoTable({
           cell: (row) => row.technical_order_items.length,
           className: 'text-muted-foreground',
           hideBelow: 'lg',
+        },
+        {
+          header: 'Total',
+          cell: (row) => formatCurrencyARS(row.total_amount),
+          className: 'text-right tabular-nums',
         },
         {
           header: 'Estado',

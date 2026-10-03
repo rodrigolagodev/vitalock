@@ -45,6 +45,7 @@ const fakeAllOrders = [
     notes: null,
     created_at: '2026-08-10T10:00:00Z',
     updated_at: '2026-08-10T10:05:00Z',
+    total_amount: 300,
   },
   {
     id: 'ao-2',
@@ -58,6 +59,7 @@ const fakeAllOrders = [
     notes: null,
     created_at: '2026-08-11T10:00:00Z',
     updated_at: '2026-08-11T10:05:00Z',
+    total_amount: 0,
   },
 ];
 
@@ -140,6 +142,27 @@ describe('useAllOrders', () => {
     const { result } = renderHook(() => useAllOrders(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(fakeAllOrders);
+  });
+
+  it('selects total_amount from the view', async () => {
+    const { result } = renderHook(() => useAllOrders(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockSelect).toHaveBeenCalledWith(expect.stringContaining('total_amount'), {
+      count: 'exact',
+    });
+  });
+
+  it('coerces a string or null total_amount to a number', async () => {
+    mockLimit.mockResolvedValueOnce({
+      data: [
+        { ...fakeAllOrders[0], total_amount: '300.00' },
+        { ...fakeAllOrders[1], total_amount: null },
+      ],
+      error: null,
+    });
+    const { result } = renderHook(() => useAllOrders(), { wrapper: makeWrapper() });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.map((row) => row.total_amount)).toEqual([300, 0]);
   });
 
   it('status filter calls .in("status", value)', async () => {

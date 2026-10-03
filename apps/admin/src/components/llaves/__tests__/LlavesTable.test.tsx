@@ -33,6 +33,7 @@ const sampleRows: KeyOrderListRow[] = [
     particular_full_name: null,
     status: 'confirmed',
     created_at: '2026-08-10T12:00:00Z',
+    total_amount: 300,
     key_order_items: [{ id: 'item-1' }, { id: 'item-2' }],
   },
   {
@@ -44,6 +45,7 @@ const sampleRows: KeyOrderListRow[] = [
     particular_full_name: 'María García',
     status: 'ready_for_pickup',
     created_at: '2026-08-09T08:00:00Z',
+    total_amount: 0,
     key_order_items: [{ id: 'item-3' }],
   },
 ];
@@ -110,5 +112,19 @@ describe('LlavesTable', () => {
 
     const link2 = screen.getByRole('link', { name: 'ORD-LLV-000002' });
     expect(link2).toHaveAttribute('href', '/llaves/ko-2');
+  });
+});
+
+describe('LlavesTable — total column', () => {
+  it('shows the server total_amount formatted as ARS for each row', () => {
+    render(<LlavesTable rows={sampleRows} isFetching={false} />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText('$ 300,00')).toBeInTheDocument();
+  });
+
+  it('shows $ 0,00 for a row whose server total is 0 (e.g. cancelled order)', () => {
+    render(<LlavesTable rows={sampleRows} isFetching={false} />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText('$ 0,00')).toBeInTheDocument();
   });
 });
