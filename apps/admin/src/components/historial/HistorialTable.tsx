@@ -69,7 +69,7 @@ export function HistorialTable({ orders, isFetching, hasFilters = false }: Histo
         {
           header: 'Total',
           cell: (row) => formatCurrencyARS(row.total_amount),
-          className: 'text-right tabular-nums',
+          className: 'tabular-nums',
         },
         {
           header: 'Estado',

@@ -49,7 +49,7 @@ export function ServicioTecnicoTable({
         {
           header: 'Total',
           cell: (row) => formatCurrencyARS(row.total_amount),
-          className: 'text-right tabular-nums',
+          className: 'tabular-nums',
         },
         {
           header: 'Estado',
