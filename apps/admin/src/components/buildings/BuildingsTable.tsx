@@ -33,12 +33,10 @@ export function BuildingsTable({ buildings, isFetching = false }: BuildingsTable
           },
           {
             header: 'Llaves',
-            className: 'text-center',
             cell: (building) => building.key_count,
           },
           {
             header: 'Equipos',
-            className: 'text-center',
             cell: (building) => building.equipment_count,
           },
         ]}
