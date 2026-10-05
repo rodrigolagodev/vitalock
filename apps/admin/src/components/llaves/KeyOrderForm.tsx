@@ -8,7 +8,7 @@ import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
 import { AdministrationCombobox } from '@/components/administrations/AdministrationCombobox';
 import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog';
-import { Button, ConfirmDialog } from '@vitalock/ui';
+import { Button, ConfirmDialog, FormField } from '@vitalock/ui';
 import { UNSAVED_CHANGES_COPY, useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
@@ -298,39 +298,44 @@ export function KeyOrderForm({
           </div>
 
           {clientType === 'administration' && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="administration_id">Administración *</Label>
-              <Controller
-                control={control}
-                name="administration_id"
-                render={({ field }) => (
-                  <AdministrationCombobox
-                    id="administration_id"
-                    administrations={administrations}
-                    value={field.value}
-                    onChange={(v) => field.onChange(v || null)}
-                    placeholder="Buscar por razón social o CUIT/CUIL"
-                  />
-                )}
-              />
-              {errors.administration_id && (
-                <p className="text-destructive text-sm">{errors.administration_id.message}</p>
+            <FormField
+              label="Administración *"
+              id="administration_id"
+              error={errors.administration_id?.message}
+            >
+              {(a11y) => (
+                <Controller
+                  control={control}
+                  name="administration_id"
+                  render={({ field }) => (
+                    <AdministrationCombobox
+                      {...a11y}
+                      administrations={administrations}
+                      value={field.value}
+                      onChange={(v) => field.onChange(v || null)}
+                      placeholder="Buscar por razón social o CUIT/CUIL"
+                    />
+                  )}
+                />
               )}
-            </div>
+            </FormField>
           )}
 
           {clientType === 'particular' && (
-            <div className="flex flex-col gap-2">
-              <Label>Particular *</Label>
-              <ParticularSelector
-                value={particular}
-                onChange={handleParticularChange}
-                onEdit={() => setEditParticularOpen(true)}
-              />
-              {errors.particular_id && (
-                <p className="text-destructive text-sm">{errors.particular_id.message}</p>
+            <FormField
+              label="Particular *"
+              id="particular_id"
+              error={errors.particular_id?.message}
+            >
+              {(a11y) => (
+                <ParticularSelector
+                  {...a11y}
+                  value={particular}
+                  onChange={handleParticularChange}
+                  onEdit={() => setEditParticularOpen(true)}
+                />
               )}
-            </div>
+            </FormField>
           )}
         </section>
 
@@ -356,7 +361,9 @@ export function KeyOrderForm({
           </div>
 
           {errors.items && !Array.isArray(errors.items) && (
-            <p className="text-destructive text-sm">{errors.items.message}</p>
+            <p role="alert" className="text-footnote text-destructive">
+              {errors.items.message}
+            </p>
           )}
 
           <div className="flex flex-col gap-3" data-testid="key-order-items">
@@ -447,61 +454,65 @@ export function KeyOrderForm({
                   {isOpen && (
                     <div className="bg-card grid grid-cols-1 gap-4 border-t p-4 sm:grid-cols-2">
                       {/* Producto */}
-                      <div className="flex min-w-0 flex-col gap-2 sm:col-span-2">
-                        <Label htmlFor={`items.${index}.product_id`}>Llave *</Label>
-                        <Controller
-                          control={control}
-                          name={`items.${index}.product_id`}
-                          render={({ field: f }) => (
-                            <Select
-                              value={f.value ?? ''}
-                              onValueChange={(v) => f.onChange(v || null)}
-                            >
-                              <SelectTrigger id={`items.${index}.product_id`} aria-label="Llave">
-                                <SelectValue placeholder="Seleccioná un modelo" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {keyProducts.map((p) => (
-                                  <SelectItem key={p.id} value={p.id}>
-                                    {p.name} — disponible: {p.stock_disponible}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                        {itemErrors?.product_id && (
-                          <p className="text-destructive text-xs">
-                            {itemErrors.product_id.message}
-                          </p>
+                      <FormField
+                        label="Llave *"
+                        id={`items.${index}.product_id`}
+                        error={itemErrors?.product_id?.message}
+                        className="min-w-0 sm:col-span-2"
+                      >
+                        {(a11y) => (
+                          <Controller
+                            control={control}
+                            name={`items.${index}.product_id`}
+                            render={({ field: f }) => (
+                              <Select
+                                value={f.value ?? ''}
+                                onValueChange={(v) => f.onChange(v || null)}
+                              >
+                                <SelectTrigger {...a11y} aria-label="Llave">
+                                  <SelectValue placeholder="Seleccioná un modelo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {keyProducts.map((p) => (
+                                    <SelectItem key={p.id} value={p.id}>
+                                      {p.name} — disponible: {p.stock_disponible}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
                         )}
-                      </div>
+                      </FormField>
 
                       {/* Cantidad */}
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <Label htmlFor={`items.${index}.quantity`}>Cantidad *</Label>
+                      <FormField
+                        label="Cantidad *"
+                        id={`items.${index}.quantity`}
+                        error={itemErrors?.quantity?.message}
+                        description={
+                          (Number(item?.quantity) || 0) > 1
+                            ? `Se dividirá en  llaves individuales.`
+                            : undefined
+                        }
+                        className="min-w-0"
+                      >
                         <Input
-                          id={`items.${index}.quantity`}
                           type="number"
                           min={1}
                           aria-label="Cantidad de llaves"
                           {...register(`items.${index}.quantity`)}
                         />
-                        {itemErrors?.quantity && (
-                          <p className="text-destructive text-xs">{itemErrors.quantity.message}</p>
-                        )}
-                        {(Number(item?.quantity) || 0) > 1 && (
-                          <p className="text-muted-foreground text-xs">
-                            Se dividirá en {item?.quantity} llaves individuales.
-                          </p>
-                        )}
-                      </div>
+                      </FormField>
 
                       {/* Precio unitario */}
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <Label htmlFor={`items.${index}.unit_price`}>Precio unitario *</Label>
+                      <FormField
+                        label="Precio unitario *"
+                        id={`items.${index}.unit_price`}
+                        error={itemErrors?.unit_price?.message}
+                        className="min-w-0"
+                      >
                         <Input
-                          id={`items.${index}.unit_price`}
                           type="number"
                           min={0}
                           step="0.01"
@@ -509,51 +520,53 @@ export function KeyOrderForm({
                           aria-label="Precio unitario"
                           {...register(`items.${index}.unit_price`)}
                         />
-                        {itemErrors?.unit_price && (
-                          <p className="text-destructive text-xs">
-                            {itemErrors.unit_price.message}
-                          </p>
-                        )}
-                      </div>
+                      </FormField>
 
                       {/* Edificio */}
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <Label>Edificio *</Label>
-                        <Controller
-                          control={control}
-                          name={`items.${index}.building_id`}
-                          render={({ field: f }) => (
-                            <BuildingCombobox
-                              id={`items.${index}.building_id`}
-                              buildings={buildings}
-                              value={f.value ?? ''}
-                              onChange={(v) => {
-                                f.onChange(v ?? null);
-                                // Clear unit when building changes; the previously
-                                // selected unit belongs to a different building.
-                                setValue(`items.${index}.unit_id`, null);
-                              }}
-                              placeholder="Buscar por nombre o dirección"
-                            />
-                          )}
-                        />
-                        {itemErrors?.building_id && (
-                          <p className="text-destructive text-xs">
-                            {itemErrors.building_id.message}
-                          </p>
+                      <FormField
+                        label="Edificio *"
+                        id={`items.${index}.building_id`}
+                        error={itemErrors?.building_id?.message}
+                        className="min-w-0"
+                      >
+                        {(a11y) => (
+                          <Controller
+                            control={control}
+                            name={`items.${index}.building_id`}
+                            render={({ field: f }) => (
+                              <BuildingCombobox
+                                {...a11y}
+                                buildings={buildings}
+                                value={f.value ?? ''}
+                                onChange={(v) => {
+                                  f.onChange(v ?? null);
+                                  // Clear unit when building changes; the previously
+                                  // selected unit belongs to a different building.
+                                  setValue(`items.${index}.unit_id`, null);
+                                }}
+                                placeholder="Buscar por nombre o dirección"
+                              />
+                            )}
+                          />
                         )}
-                      </div>
+                      </FormField>
 
                       {/* Unidad */}
-                      <div className="flex min-w-0 flex-col gap-2">
-                        <Label>Unidad</Label>
-                        <KeyItemUnitField
-                          buildingId={buildingId}
-                          value={item?.unit_id ?? null}
-                          onChange={(v) => setValue(`items.${index}.unit_id`, v)}
-                          error={itemErrors?.unit_id?.message}
-                        />
-                      </div>
+                      <FormField
+                        label="Unidad"
+                        id={`items.${index}.unit_id`}
+                        error={itemErrors?.unit_id?.message}
+                        className="min-w-0"
+                      >
+                        {(a11y) => (
+                          <KeyItemUnitField
+                            {...a11y}
+                            buildingId={buildingId}
+                            value={item?.unit_id ?? null}
+                            onChange={(v) => setValue(`items.${index}.unit_id`, v)}
+                          />
+                        )}
+                      </FormField>
 
                       {/* Autorizado a retirar */}
                       <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
@@ -640,10 +653,20 @@ interface KeyItemUnitFieldProps {
   buildingId: string | null | undefined;
   value: string | null | undefined;
   onChange: (v: string | null) => void;
-  error?: string;
+  /** FormField control props, spread on the select trigger. */
+  id: string;
+  'aria-invalid'?: true;
+  'aria-describedby'?: string;
 }
 
-function KeyItemUnitField({ buildingId, value, onChange, error }: KeyItemUnitFieldProps) {
+function KeyItemUnitField({
+  buildingId,
+  value,
+  onChange,
+  id,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
+}: KeyItemUnitFieldProps) {
   const [quickUnitOpen, setQuickUnitOpen] = useState(false);
   const { data: units = [] } = useUnits(buildingId ?? '');
 
@@ -656,7 +679,12 @@ function KeyItemUnitField({ buildingId, value, onChange, error }: KeyItemUnitFie
             onValueChange={(v) => onChange(v || null)}
             disabled={!buildingId || units.length === 0}
           >
-            <SelectTrigger id="draft-unit-id" aria-label="Unidad de la llave">
+            <SelectTrigger
+              id={id}
+              aria-invalid={ariaInvalid}
+              aria-describedby={ariaDescribedBy}
+              aria-label="Unidad de la llave"
+            >
               <SelectValue
                 placeholder={
                   !buildingId
@@ -698,7 +726,6 @@ function KeyItemUnitField({ buildingId, value, onChange, error }: KeyItemUnitFie
           />
         )}
       </div>
-      {error && <p className="text-destructive text-xs">{error}</p>}
     </div>
   );
 }

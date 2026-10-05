@@ -14,6 +14,8 @@ interface AdministrationComboboxProps {
   disabled?: boolean;
   placeholder?: string;
   id?: string;
+  'aria-invalid'?: boolean | 'true' | 'false';
+  'aria-describedby'?: string;
 }
 
 /**
@@ -30,6 +32,8 @@ export function AdministrationCombobox({
   disabled = false,
   placeholder = 'Buscar administración',
   id,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
 }: AdministrationComboboxProps) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -75,6 +79,8 @@ export function AdministrationCombobox({
       <div className="relative">
         <SearchInput
           id={id}
+          aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
           role="combobox"
           aria-expanded={open}
           aria-label="Buscar administración"
@@ -96,7 +102,7 @@ export function AdministrationCombobox({
             type="button"
             aria-label="Quitar administración"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground absolute right-2 top-1/2 -translate-y-1/2 rounded p-1"
           >
             <X className="h-4 w-4" />
           </button>
@@ -104,7 +110,7 @@ export function AdministrationCombobox({
       </div>
 
       {!disabled && open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border bg-popover shadow-md">
+        <div className="bg-popover absolute left-0 right-0 top-full z-50 mt-1 rounded-md border shadow-md">
           {filtered.length > 0 ? (
             <ul
               role="listbox"
@@ -119,22 +125,18 @@ export function AdministrationCombobox({
                     aria-selected={value === administration.id}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelect(administration)}
-                    className="flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                    className="hover:bg-accent hover:text-accent-foreground flex w-full flex-col px-3 py-2 text-left text-sm"
                   >
-                    <span className="font-medium">
-                      {administration.company_name}
-                    </span>
+                    <span className="font-medium">{administration.company_name}</span>
                     {administration.tax_id && (
-                      <span className="text-xs text-muted-foreground">
-                        {administration.tax_id}
-                      </span>
+                      <span className="text-muted-foreground text-xs">{administration.tax_id}</span>
                     )}
                   </button>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="px-3 py-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground px-3 py-2 text-sm">
               No se encontraron administraciones
             </p>
           )}

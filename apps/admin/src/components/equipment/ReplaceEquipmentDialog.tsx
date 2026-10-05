@@ -9,10 +9,10 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
+  FormField,
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@vitalock/ui';
 import { useReplaceEquipment } from '@/hooks/useReplaceEquipment';
 import type { EquipmentRow } from '@/hooks/useEquipment';
 
@@ -77,49 +77,38 @@ export function ReplaceEquipmentDialog({
         <DialogHeader>
           <DialogTitle>Reemplazar equipo</DialogTitle>
           <DialogDescription>
-            El equipo actual quedará dado de baja y las autorizaciones instaladas
-            migrarán al nuevo dispositivo.
+            El equipo actual quedará dado de baja y las autorizaciones instaladas migrarán al nuevo
+            dispositivo.
           </DialogDescription>
         </DialogHeader>
 
         {/* Old device reference (read-only) */}
-        <div className="rounded-md border bg-muted/50 p-3 text-sm space-y-1">
-          <p className="font-medium text-muted-foreground">Equipo actual</p>
+        <div className="bg-muted/50 space-y-1 rounded-md border p-3 text-sm">
+          <p className="text-muted-foreground font-medium">Equipo actual</p>
           <p>
             <span className="font-medium">Serie:</span> {equipment.serial_number}
           </p>
           <p>
-            <span className="font-medium">Modelo:</span>{' '}
-            {equipment.model ?? '—'}
+            <span className="font-medium">Modelo:</span> {equipment.model ?? '—'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="new_serial_number">Número de serie del nuevo equipo *</Label>
-            <Input
-              id="new_serial_number"
-              placeholder="Ej. SN-987654321"
-              {...register('new_serial_number')}
-            />
-            {errors.new_serial_number && (
-              <p className="text-sm text-destructive">
-                {errors.new_serial_number.message}
-              </p>
-            )}
-          </div>
+          <FormField
+            label="Número de serie del nuevo equipo *"
+            id="new_serial_number"
+            error={errors.new_serial_number?.message}
+          >
+            <Input placeholder="Ej. SN-987654321" {...register('new_serial_number')} />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="new_model">Modelo del nuevo equipo *</Label>
-            <Input
-              id="new_model"
-              placeholder="Ej. Smart Lock Pro v2"
-              {...register('new_model')}
-            />
-            {errors.new_model && (
-              <p className="text-sm text-destructive">{errors.new_model.message}</p>
-            )}
-          </div>
+          <FormField
+            label="Modelo del nuevo equipo *"
+            id="new_model"
+            error={errors.new_model?.message}
+          >
+            <Input placeholder="Ej. Smart Lock Pro v2" {...register('new_model')} />
+          </FormField>
 
           <DialogFooter>
             <Button

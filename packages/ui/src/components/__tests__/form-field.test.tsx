@@ -93,4 +93,49 @@ describe('FormField', () => {
     expect(input).toHaveAttribute('type', 'password');
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
+  describe('render-prop child', () => {
+    it('hands id, no aria-invalid and no aria-describedby to a valid control', () => {
+      render(
+        <FormField label="Estado" id="estado">
+          {(control) => <button type="button" {...control} />}
+        </FormField>,
+      );
+      const control = screen.getByLabelText('Estado');
+      expect(control).toHaveAttribute('id', 'estado');
+      expect(control).not.toHaveAttribute('aria-invalid');
+      expect(control).not.toHaveAttribute('aria-describedby');
+    });
+
+    it('marks the control invalid and references the role=alert message on error', () => {
+      render(
+        <FormField label="Estado" id="estado" error="Elegí un estado">
+          {(control) => <button type="button" {...control} />}
+        </FormField>,
+      );
+      const control = screen.getByLabelText('Estado');
+      const alert = screen.getByRole('alert');
+      expect(control).toHaveAttribute('aria-invalid', 'true');
+      expect(alert).toHaveTextContent('Elegí un estado');
+      expect(control.getAttribute('aria-describedby')).toContain(alert.id);
+    });
+
+    it('includes the description id in aria-describedby', () => {
+      render(
+        <FormField label="Estado" description="Ayuda">
+          {(control) => <button type="button" {...control} />}
+        </FormField>,
+      );
+      const control = screen.getByLabelText('Estado');
+      expect(control.getAttribute('aria-describedby')).toBe(
+        screen.getByText('Ayuda').getAttribute('id'),
+      );
+    });
+
+    it('generates an id when none is given', () => {
+      render(
+        <FormField label="Estado">{(control) => <button type="button" {...control} />}</FormField>,
+      );
+      expect(screen.getByLabelText('Estado').id).not.toBe('');
+    });
+  });
 });

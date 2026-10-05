@@ -2,16 +2,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, FormField } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
 import { useMutateAdministration } from '@/hooks/useMutateAdministration';
 import type { AdministrationRow } from '@/hooks/useAdministrations';
@@ -101,90 +94,38 @@ export function AdministrationFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-md">
         <SheetHeader className="p-6 pb-4">
-          <SheetTitle>
-            {isEdit ? 'Editar administración' : 'Nueva administración'}
-          </SheetTitle>
+          <SheetTitle>{isEdit ? 'Editar administración' : 'Nueva administración'}</SheetTitle>
         </SheetHeader>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-1 flex-col gap-6 overflow-y-auto px-6"
         >
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="company_name">Razón social *</Label>
-            <Input
-              id="company_name"
-              {...register('company_name')}
-              placeholder="Ej. Administraciones García S.A."
-            />
-            {errors.company_name && (
-              <p className="text-sm text-destructive">{errors.company_name.message}</p>
-            )}
-          </div>
+          <FormField label="Razón social *" id="company_name" error={errors.company_name?.message}>
+            <Input {...register('company_name')} placeholder="Ej. Administraciones García S.A." />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="tax_id">CUIT/CUIL</Label>
-            <Input
-              id="tax_id"
-              {...register('tax_id')}
-              placeholder="Ej. 30-71234567-9"
-            />
-            {errors.tax_id && (
-              <p className="text-sm text-destructive">{errors.tax_id.message}</p>
-            )}
-          </div>
+          <FormField label="CUIT/CUIL" id="tax_id" error={errors.tax_id?.message}>
+            <Input {...register('tax_id')} placeholder="Ej. 30-71234567-9" />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-              placeholder="Ej. contacto@admin.com"
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
+          <FormField label="Email" id="email" error={errors.email?.message}>
+            <Input type="email" {...register('email')} placeholder="Ej. contacto@admin.com" />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="phone">Teléfono</Label>
-            <Input
-              id="phone"
-              {...register('phone')}
-              placeholder="Ej. +54 11 1234-5678"
-            />
-            {errors.phone && (
-              <p className="text-sm text-destructive">{errors.phone.message}</p>
-            )}
-          </div>
+          <FormField label="Teléfono" id="phone" error={errors.phone?.message}>
+            <Input {...register('phone')} placeholder="Ej. +54 11 1234-5678" />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="address">Dirección</Label>
-            <Input
-              id="address"
-              {...register('address')}
-              placeholder="Ej. Av. Corrientes 1234, CABA"
-            />
-            {errors.address && (
-              <p className="text-sm text-destructive">{errors.address.message}</p>
-            )}
-          </div>
+          <FormField label="Dirección" id="address" error={errors.address?.message}>
+            <Input {...register('address')} placeholder="Ej. Av. Corrientes 1234, CABA" />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Notas</Label>
-            <Textarea
-              id="notes"
-              {...register('notes')}
-              placeholder="Observaciones adicionales..."
-              rows={3}
-            />
-            {errors.notes && (
-              <p className="text-sm text-destructive">{errors.notes.message}</p>
-            )}
-          </div>
+          <FormField label="Notas" id="notes" error={errors.notes?.message}>
+            <Textarea {...register('notes')} placeholder="Observaciones adicionales..." rows={3} />
+          </FormField>
 
-          <SheetFooter className="mt-auto pt-4 pb-6">
+          <SheetFooter className="mt-auto pb-6 pt-4">
             <Button
               type="button"
               variant="outline"

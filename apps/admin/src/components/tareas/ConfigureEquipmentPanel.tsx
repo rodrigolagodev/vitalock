@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, Label, SectionHeading } from '@vitalock/ui';
+import { Button, Input, Label, SectionHeading, FormField } from '@vitalock/ui';
 import { useConfigureTechnicalTicketEquipment } from '@/hooks/useConfigureTechnicalTicketEquipment';
 import type { TareaDetailRow } from '@/hooks/useTarea';
 
@@ -108,16 +108,13 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           {!configured && <p className="text-muted-foreground text-sm">{help}</p>}
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pending_new_serial">Número de serie *</Label>
-            <Input
-              id="pending_new_serial"
-              placeholder="Ej. SN-987654321"
-              disabled={isPending}
-              {...register('serial')}
-            />
-            {errors.serial && <p className="text-destructive text-sm">{errors.serial.message}</p>}
-          </div>
+          <FormField
+            label="Número de serie *"
+            id="pending_new_serial"
+            error={errors.serial?.message}
+          >
+            <Input placeholder="Ej. SN-987654321" disabled={isPending} {...register('serial')} />
+          </FormField>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="pending_new_model">

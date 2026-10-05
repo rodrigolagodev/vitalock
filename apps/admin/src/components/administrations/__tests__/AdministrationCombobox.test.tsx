@@ -140,4 +140,19 @@ describe('AdministrationCombobox', () => {
 
     expect(screen.getByText('No se encontraron administraciones')).toBeInTheDocument();
   });
+
+  it('forwards id, aria-invalid and aria-describedby to the input (FormField pass-through)', () => {
+    setup({ id: 'administration_id', 'aria-invalid': true, 'aria-describedby': 'err-1' });
+    const input = screen.getByRole('combobox');
+    expect(input).toHaveAttribute('id', 'administration_id');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input).toHaveAttribute('aria-describedby', 'err-1');
+  });
+
+  it('leaves aria-invalid and aria-describedby off when not given', () => {
+    setup({ id: 'administration_id' });
+    const input = screen.getByRole('combobox');
+    expect(input).not.toHaveAttribute('aria-invalid');
+    expect(input).not.toHaveAttribute('aria-describedby');
+  });
 });

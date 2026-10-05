@@ -82,9 +82,7 @@ describe('ParticularSelector', () => {
       expect(mockUseParticulares).toHaveBeenLastCalledWith({ search: 'garc' });
     });
 
-    expect(
-      await screen.findByRole('option', { name: /garcía juan/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: /garcía juan/i })).toBeInTheDocument();
   });
 
   it('binds the selected particular through onChange', async () => {
@@ -121,9 +119,7 @@ describe('ParticularSelector', () => {
 
     await user.type(screen.getByRole('combobox'), 'zzz');
 
-    expect(
-      await screen.findByText('No se encontraron resultados'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('No se encontraron resultados')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /crear particular/i }));
     expect(screen.getByTestId('create-dialog')).toBeInTheDocument();
@@ -179,9 +175,7 @@ describe('ParticularSelector', () => {
     await user.type(screen.getByRole('combobox'), 'garc');
 
     expect(await screen.findByText('Buscando...')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('option', { name: /garcía juan/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /garcía juan/i })).not.toBeInTheDocument();
   });
 
   it('does not flash the previous full list while the new search is fetching', async () => {
@@ -199,8 +193,31 @@ describe('ParticularSelector', () => {
     await user.type(screen.getByRole('combobox'), 'garc');
 
     expect(await screen.findByText('Buscando...')).toBeInTheDocument();
-    expect(
-      screen.queryByRole('option', { name: /garcía juan/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /garcía juan/i })).not.toBeInTheDocument();
+  });
+
+  it('forwards id, aria-invalid and aria-describedby to the input (FormField pass-through)', () => {
+    render(
+      <ParticularSelector
+        onChange={vi.fn()}
+        id="particular_id"
+        aria-invalid
+        aria-describedby="err-1"
+      />,
+      { wrapper: makeWrapper() },
+    );
+    const input = screen.getByRole('combobox');
+    expect(input).toHaveAttribute('id', 'particular_id');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input).toHaveAttribute('aria-describedby', 'err-1');
+  });
+
+  it('leaves aria-invalid and aria-describedby off when not given', () => {
+    render(<ParticularSelector onChange={vi.fn()} id="particular_id" />, {
+      wrapper: makeWrapper(),
+    });
+    const input = screen.getByRole('combobox');
+    expect(input).not.toHaveAttribute('aria-invalid');
+    expect(input).not.toHaveAttribute('aria-describedby');
   });
 });

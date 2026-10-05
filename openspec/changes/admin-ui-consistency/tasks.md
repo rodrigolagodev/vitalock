@@ -36,7 +36,7 @@ No code is written here except the conditional task 0.7. If a check fails and F1
 - [x] 0.4 Verify whether `FormField.children` already accepts a render-prop (`(control: FormFieldControlProps) => ReactNode`) with `id`, `aria-invalid`, `aria-describedby`. Record the answer in `apply-progress.md` (closes the first Open Question).
 - [x] 0.5 Verify `ErrorState` accepts `onRetry` and renders a "Reintentar" button; verify `EmptyState` v2 accepts `icon`, `title`, `description`, `action`; verify `ConfirmDialog`, `Skeleton` and `NotFoundState` exist in `packages/ui`.
 - [x] 0.6 Verify the baseline is green before starting: `pnpm lint && pnpm typecheck && pnpm test` (record failures that predate this change).
-- [ ] 0.7 CONDITIONAL on 0.4 being negative: add the FormField render-prop child per Decision 11. This is scheduled inside WU3 as tasks 3.1 and 3.2 (RED/GREEN) and is skipped if 0.4 is positive.
+- [x] 0.7 CONDITIONAL on 0.4 being negative: add the FormField render-prop child per Decision 11. This is scheduled inside WU3 as tasks 3.1 and 3.2 (RED/GREEN) and is skipped if 0.4 is positive.
 - [x] 0.8 Check the Open Questions that affect scope: `ConfigureKeyItemSheet` "Cargando..." (line 156) and the empty-state action labels versus each page's header button (Decision 8). Record the answers in `apply-progress.md`.
 
 ## Phase 1 · Core consistency (WU1, commit 1)
@@ -124,19 +124,19 @@ No code is written here except the conditional task 0.7. If a check fails and F1
 
 ## Phase 3 · FormField migration (WU3, commit 3)
 
-- [ ] 3.1 CONDITIONAL on 0.4 being negative. RED: in the `FormField` test add the render-prop child: it receives `FormFieldControlProps` (`id`, `aria-invalid` only on error, `aria-describedby` referencing the `role="alert"` message); an element child behaves as before.
-- [ ] 3.2 CONDITIONAL on 0.4 being negative. GREEN: widen `FormField.children` to `ReactElement | ((control: FormFieldControlProps) => ReactNode)` and export `FormFieldControlProps` from `packages/ui/src/index.ts`.
-- [ ] 3.3 RED: pass-through tests for `AdministrationCombobox`, `BuildingCombobox`, `ParticularSelector` and `KeyItemUnitField` forwarding `id`, `aria-invalid` and `aria-describedby` to their trigger.
-- [ ] 3.4 GREEN: implement the pass-through edits [P with other GREEN edits that touch different files].
-- [ ] 3.5 RED: for each of the 20 forms below, add one submit-invalid test (`getAllByRole('alert')` non-empty and the first invalid field has `aria-invalid="true"`); keep existing `getByLabelText` queries working (label text including " \*" unchanged).
-- [ ] 3.6 GREEN: migrate field-error markup to `FormField` (plain element child, `Controller` with FormField inside `render`, Select via `{(p) => <SelectTrigger {...p}>}`, RadioGroup as element child). Items are [P], disjoint files, grouped by domain:
-  - [ ] 3.6.1 Orders: `KeyOrderForm`, `TechnicalOrderForm`, `ConfigureKeyItemSheet`, `QuickUnitCreateDialog`, `PickupKeyDialog`.
-  - [ ] 3.6.2 Stock: `CargarProductoSheet`, `ProductFormFields`, `AjusteStockSheet`.
-  - [ ] 3.6.3 Equipment and tareas: `EquipmentFormSheet`, `AssignEquipmentDialog`, `TareaFormSheet`, `EquipmentUpdateFormSheet`, `ConfigureEquipmentPanel`, `DecommissionDialog`, `ReplaceEquipmentDialog`.
-  - [ ] 3.6.4 Directory: `StaffFormSheet`, `QuickParticularCreateDialog`, `ParticularFormSheet`, `BuildingFormSheet`, `AdministrationFormSheet`.
-- [ ] 3.7 Keep mutation-error banners and the collapsed item error summary in the order forms untouched (not field errors).
-- [ ] 3.8 Verify no ad-hoc error `<p>` with a destructive text class remains beside a control in `apps/admin/src` form files (`rg 'text-destructive' apps/admin/src` reviewed; banners excluded).
-- [ ] 3.9 Commit 3 gate: `pnpm lint && pnpm typecheck && pnpm test && pnpm lint:hardcodes` green. Commit `feat(admin): wire form field errors through FormField`.
+- [x] 3.1 CONDITIONAL on 0.4 being negative. RED: in the `FormField` test add the render-prop child: it receives `FormFieldControlProps` (`id`, `aria-invalid` only on error, `aria-describedby` referencing the `role="alert"` message); an element child behaves as before.
+- [x] 3.2 CONDITIONAL on 0.4 being negative. GREEN: widen `FormField.children` to `ReactElement | ((control: FormFieldControlProps) => ReactNode)` and export `FormFieldControlProps` from `packages/ui/src/index.ts`.
+- [x] 3.3 RED: pass-through tests for `AdministrationCombobox`, `BuildingCombobox`, `ParticularSelector` and `KeyItemUnitField` forwarding `id`, `aria-invalid` and `aria-describedby` to their trigger.
+- [x] 3.4 GREEN: implement the pass-through edits [P with other GREEN edits that touch different files].
+- [x] 3.5 RED: for each of the 20 forms below, add one submit-invalid test (`getAllByRole('alert')` non-empty and the first invalid field has `aria-invalid="true"`); keep existing `getByLabelText` queries working (label text including " \*" unchanged).
+- [x] 3.6 GREEN: migrate field-error markup to `FormField` (plain element child, `Controller` with FormField inside `render`, Select via `{(p) => <SelectTrigger {...p}>}`, RadioGroup as element child). Items are [P], disjoint files, grouped by domain:
+  - [x] 3.6.1 Orders: `KeyOrderForm`, `TechnicalOrderForm`, `ConfigureKeyItemSheet`, `QuickUnitCreateDialog`, `PickupKeyDialog`.
+  - [x] 3.6.2 Stock: `CargarProductoSheet`, `ProductFormFields`, `AjusteStockSheet`.
+  - [x] 3.6.3 Equipment and tareas: `EquipmentFormSheet`, `AssignEquipmentDialog`, `TareaFormSheet`, `EquipmentUpdateFormSheet`, `ConfigureEquipmentPanel`, `DecommissionDialog`, `ReplaceEquipmentDialog`.
+  - [x] 3.6.4 Directory: `StaffFormSheet`, `QuickParticularCreateDialog`, `ParticularFormSheet`, `BuildingFormSheet`, `AdministrationFormSheet`.
+- [x] 3.7 Keep mutation-error banners and the collapsed item error summary in the order forms untouched (not field errors).
+- [x] 3.8 Verify no ad-hoc error `<p>` with a destructive text class remains beside a control in `apps/admin/src` form files (`rg 'text-destructive' apps/admin/src` reviewed; banners excluded).
+- [x] 3.9 Commit 3 gate: `pnpm lint && pnpm typecheck && pnpm test && pnpm lint:hardcodes` green. Commit `feat(admin): wire form field errors through FormField`.
 
 ## Phase 4 · Axe e2e gate (WU4, commit 4)
 

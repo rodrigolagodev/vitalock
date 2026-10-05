@@ -43,7 +43,11 @@ export {
 } from './components/dialog';
 export { Input, type InputProps } from './components/input';
 export { Label } from './components/label';
-export { FormField, type FormFieldProps } from './components/form-field';
+export {
+  FormField,
+  type FormFieldProps,
+  type FormFieldControlProps,
+} from './components/form-field';
 export {
   Select,
   SelectGroup,

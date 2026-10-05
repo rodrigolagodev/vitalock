@@ -1,5 +1,6 @@
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import type { ReactNode } from 'react';
@@ -25,6 +26,7 @@ vi.mock('@vitalock/shared', async () => {
 });
 
 import { CargarProductoSheet } from '../CargarProductoSheet';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -56,5 +58,12 @@ describe('CargarProductoSheet submit button', () => {
     expect(button).toBeDisabled();
     expect(button).toHaveTextContent('Cargar');
     expect(spinner.querySelector('.animate-spin')).not.toBeNull();
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<CargarProductoSheet open onOpenChange={vi.fn()} />, { wrapper: makeWrapper() });
+    await user.click(screen.getByRole('button', { name: 'Cargar' }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

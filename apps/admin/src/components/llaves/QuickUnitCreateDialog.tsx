@@ -7,17 +7,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  FormField,
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { Switch } from '@vitalock/ui';
 import { useMutateUnit } from '@/hooks/useMutateUnit';
 import { toastMutationError } from '@/lib/errors/toast';
@@ -110,17 +105,9 @@ export function QuickUnitCreateDialog({
           className="flex flex-col gap-4"
         >
           {/* Number */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="quick-unit-number">Número *</Label>
-            <Input
-              id="quick-unit-number"
-              placeholder="Ej. 1A, 202, PB"
-              {...register('number')}
-            />
-            {errors.number && (
-              <p className="text-sm text-destructive">{errors.number.message}</p>
-            )}
-          </div>
+          <FormField label="Número *" id="quick-unit-number" error={errors.number?.message}>
+            <Input placeholder="Ej. 1A, 202, PB" {...register('number')} />
+          </FormField>
 
           {/* Unit type */}
           <div className="flex flex-col gap-2">
@@ -129,10 +116,7 @@ export function QuickUnitCreateDialog({
               control={control}
               name="unit_type"
               render={({ field }) => (
-                <Select
-                  value={field.value ?? ''}
-                  onValueChange={(v) => field.onChange(v || null)}
-                >
+                <Select value={field.value ?? ''} onValueChange={(v) => field.onChange(v || null)}>
                   <SelectTrigger id="quick-unit-type">
                     <SelectValue placeholder="Sin especificar" />
                   </SelectTrigger>

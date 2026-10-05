@@ -1,7 +1,7 @@
 import { Controller } from 'react-hook-form';
 import type { Control, FieldErrors, FieldPath, FieldValues } from 'react-hook-form';
 import { Input } from '@vitalock/ui';
-import { Label } from '@vitalock/ui';
+import { FormField } from '@vitalock/ui';
 import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
 import type { ProductCategory } from '@/types/stock';
 
@@ -44,75 +44,72 @@ export function ProductFormFields<T extends FieldValues>({
 
   return (
     <>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="product-name">Nombre *</Label>
-        <Controller
-          control={control}
-          name={name}
-          render={({ field }) => (
-            <Input
-              id="product-name"
-              placeholder="Ej. Llave RFID genérica"
-              value={field.value ?? ''}
-              onChange={field.onChange}
-              disabled={disabled}
-            />
-          )}
-        />
-        {message(name) && <p className="text-destructive text-sm">{message(name)}</p>}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label>Categoría *</Label>
-        <Controller
-          control={control}
-          name={categoryName}
-          render={({ field }) => (
-            <RadioGroup
-              value={field.value ?? ''}
-              onValueChange={field.onChange}
-              disabled={disabled}
-              aria-label="Categoría"
-              className="grid w-full max-w-md grid-cols-2"
-            >
-              {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
-                <RadioGroupItem key={val} value={val} className="text-center">
-                  {label}
-                </RadioGroupItem>
-              ))}
-            </RadioGroup>
-          )}
-        />
-        {message(categoryName) && (
-          <p className="text-destructive text-sm">{message(categoryName)}</p>
-        )}
-      </div>
-
-      {costPriceName && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="product-cost-price">Precio de costo</Label>
+      <FormField label="Nombre *" id="product-name" error={message(name)}>
+        {(a11y) => (
           <Controller
             control={control}
-            name={costPriceName}
+            name={name}
             render={({ field }) => (
               <Input
-                id="product-cost-price"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
+                {...a11y}
+                placeholder="Ej. Llave RFID genérica"
                 value={field.value ?? ''}
-                onChange={(e) =>
-                  field.onChange(e.target.value === '' ? null : Number(e.target.value))
-                }
+                onChange={field.onChange}
                 disabled={disabled}
               />
             )}
           />
-          {message(costPriceName) && (
-            <p className="text-destructive text-sm">{message(costPriceName)}</p>
+        )}
+      </FormField>
+
+      <FormField label="Categoría *" id="product-category" error={message(categoryName)}>
+        {(a11y) => (
+          <Controller
+            control={control}
+            name={categoryName}
+            render={({ field }) => (
+              <RadioGroup
+                {...a11y}
+                value={field.value ?? ''}
+                onValueChange={field.onChange}
+                disabled={disabled}
+                aria-label="Categoría"
+                className="grid w-full max-w-md grid-cols-2"
+              >
+                {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+                  <RadioGroupItem key={val} value={val} className="text-center">
+                    {label}
+                  </RadioGroupItem>
+                ))}
+              </RadioGroup>
+            )}
+          />
+        )}
+      </FormField>
+
+      {costPriceName && (
+        <FormField label="Precio de costo" id="product-cost-price" error={message(costPriceName)}>
+          {(a11y) => (
+            <Controller
+              control={control}
+              name={costPriceName}
+              render={({ field }) => (
+                <Input
+                  {...a11y}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={field.value ?? ''}
+                  onChange={(e) =>
+                    field.onChange(e.target.value === '' ? null : Number(e.target.value))
+                  }
+                  disabled={disabled}
+                />
+              )}
+            />
           )}
-        </div>
+        </FormField>
       )}
     </>
   );

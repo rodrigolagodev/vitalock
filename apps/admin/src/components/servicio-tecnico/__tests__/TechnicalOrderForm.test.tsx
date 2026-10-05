@@ -94,6 +94,7 @@ vi.mock('@/components/buildings/BuildingCombobox', () => ({
 import { TechnicalOrderForm } from '../TechnicalOrderForm';
 import { makeDataRouterWrapper } from '@/test/renderWithDataRouter';
 import type { TechnicalOrderFormValues } from '../TechnicalOrderForm';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 let getRouter: ReturnType<typeof makeDataRouterWrapper>['getRouter'];
 
@@ -825,5 +826,12 @@ describe('TechnicalOrderForm', () => {
       expect(chip.className).not.toMatch(/blue-/);
       expect(chip.className).not.toMatch(/\[\d+px\]/);
     });
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<TechnicalOrderForm mode="create" onSubmit={vi.fn()} />, { wrapper: makeWrapper() });
+    await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

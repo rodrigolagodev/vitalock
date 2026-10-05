@@ -1,5 +1,6 @@
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import type { ReactNode } from 'react';
@@ -26,6 +27,7 @@ vi.mock('@/hooks/useDecommissionImpact', () => ({
 
 import { EquipmentFormSheet } from '../EquipmentFormSheet';
 import type { EquipmentRow } from '@/hooks/useEquipment';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 const BUILDING_ID = 'bld-form';
 
@@ -161,5 +163,12 @@ describe('EquipmentFormSheet', () => {
       const matches = screen.getAllByText('Dado de baja');
       expect(matches.length).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    renderSheet();
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

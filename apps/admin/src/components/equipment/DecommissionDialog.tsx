@@ -9,9 +9,9 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
+  FormField,
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
-import { Label } from '@vitalock/ui';
 import { Textarea } from '@vitalock/ui';
 import { useDecommissionImpact } from '@/hooks/useDecommissionImpact';
 import type { UpdateStatusInput } from '@/hooks/useMutateEquipment';
@@ -26,7 +26,11 @@ interface DecommissionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   equipmentId: string;
-  onConfirm: (input: { id: string; status: UpdateStatusInput['status']; decommission_reason: string }) => void;
+  onConfirm: (input: {
+    id: string;
+    status: UpdateStatusInput['status'];
+    decommission_reason: string;
+  }) => void;
   isPending?: boolean;
 }
 
@@ -43,10 +47,7 @@ export function DecommissionDialog({
   onConfirm,
   isPending,
 }: DecommissionDialogProps) {
-  const { data: impactCount, isLoading: impactLoading } = useDecommissionImpact(
-    equipmentId,
-    open,
-  );
+  const { data: impactCount, isLoading: impactLoading } = useDecommissionImpact(equipmentId, open);
 
   const {
     register,
@@ -86,7 +87,7 @@ export function DecommissionDialog({
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           {/* Impact preview */}
-          <div className="rounded-md border bg-muted/50 p-3 text-sm">
+          <div className="bg-muted/50 rounded-md border p-3 text-sm">
             {impactLoading ? (
               <span className="text-muted-foreground">Calculando impacto...</span>
             ) : (
@@ -101,20 +102,17 @@ export function DecommissionDialog({
           </div>
 
           {/* Reason */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="decommission_reason">Motivo de baja *</Label>
+          <FormField
+            label="Motivo de baja *"
+            id="decommission_reason"
+            error={errors.decommission_reason?.message}
+          >
             <Textarea
-              id="decommission_reason"
               placeholder="Describí el motivo de la baja del equipo..."
               rows={3}
               {...register('decommission_reason')}
             />
-            {errors.decommission_reason && (
-              <p className="text-sm text-destructive">
-                {errors.decommission_reason.message}
-              </p>
-            )}
-          </div>
+          </FormField>
 
           <DialogFooter>
             <Button
@@ -125,11 +123,7 @@ export function DecommissionDialog({
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={isPending || isSubmitting}
-            >
+            <Button type="submit" variant="destructive" disabled={isPending || isSubmitting}>
               {isPending || isSubmitting ? 'Procesando...' : 'Confirmar baja'}
             </Button>
           </DialogFooter>

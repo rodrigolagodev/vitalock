@@ -45,6 +45,7 @@ vi.mock('@/hooks/useMutateUnit', () => ({
 }));
 
 import { QuickParticularCreateDialog } from '../QuickParticularCreateDialog';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -72,17 +73,19 @@ describe('QuickParticularCreateDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseUnits.mockReturnValue({
-      data: [{ id: 'u-1', number: '101' }, { id: 'u-2', number: '102' }],
+      data: [
+        { id: 'u-1', number: '101' },
+        { id: 'u-2', number: '102' },
+      ],
       isLoading: false,
     });
   });
 
   it('blocks save when required fields are empty', async () => {
     const user = userEvent.setup();
-    render(
-      <QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.click(screen.getByRole('button', { name: /^crear$/i }));
 
@@ -101,10 +104,9 @@ describe('QuickParticularCreateDialog', () => {
     const onCreated = vi.fn();
     mockCreateParticular.mockResolvedValue({ ...createdRow, unit_id: null });
 
-    render(
-      <QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={onCreated} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={onCreated} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.type(screen.getByLabelText(/nombre completo/i), 'Juan García');
     await user.type(screen.getByLabelText(/dni/i), '30111222');
@@ -127,10 +129,9 @@ describe('QuickParticularCreateDialog', () => {
     const onCreated = vi.fn();
     mockCreateParticular.mockResolvedValue(createdRow);
 
-    render(
-      <QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={onCreated} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={onCreated} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.type(screen.getByLabelText(/nombre completo/i), 'Juan García');
     await user.type(screen.getByLabelText(/dni/i), '30111222');
@@ -162,14 +163,9 @@ describe('QuickParticularCreateDialog', () => {
     const onOpenChange = vi.fn();
     mockCreateParticular.mockResolvedValue(createdRow);
 
-    render(
-      <QuickParticularCreateDialog
-        open
-        onOpenChange={onOpenChange}
-        onCreated={vi.fn()}
-      />,
-      { wrapper: makeWrapper() },
-    );
+    render(<QuickParticularCreateDialog open onOpenChange={onOpenChange} onCreated={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.type(screen.getByLabelText(/nombre completo/i), 'Juan García');
     await user.type(screen.getByLabelText(/dni/i), '30111222');
@@ -185,11 +181,19 @@ describe('QuickParticularCreateDialog', () => {
   });
 
   it('keeps the unit select disabled until a building is chosen', () => {
-    render(
-      <QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
 
     expect(screen.getByRole('combobox', { name: /unidad/i })).toBeDisabled();
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<QuickParticularCreateDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />, {
+      wrapper: makeWrapper(),
+    });
+    await user.click(screen.getByRole('button', { name: /^crear$/i }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

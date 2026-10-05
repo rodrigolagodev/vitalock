@@ -1,20 +1,8 @@
 import { useRef, useState } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
+import { Button, FormField } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
 import { useMutateEquipmentUpdate } from '@/hooks/useMutateEquipmentUpdate';
 import { useStaff } from '@/hooks/useStaff';
@@ -102,7 +90,7 @@ export function EquipmentUpdateFormSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleClose}>
-      <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-lg overflow-y-auto">
+      <SheetContent side="right" className="flex flex-col gap-0 overflow-y-auto sm:max-w-lg">
         <SheetHeader className="p-6 pb-4">
           <SheetTitle>Crear tarea de actualización</SheetTitle>
         </SheetHeader>
@@ -112,7 +100,7 @@ export function EquipmentUpdateFormSheet({
           <div className="flex flex-col gap-2">
             <Label>Llaves a activar ({pendingActivate.length})</Label>
             {pendingActivate.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin llaves pendientes de instalación.</p>
+              <p className="text-muted-foreground text-sm">Sin llaves pendientes de instalación.</p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {pendingActivate.map((k) => (
@@ -129,7 +117,7 @@ export function EquipmentUpdateFormSheet({
           <div className="flex flex-col gap-2">
             <Label>Llaves a dar de baja ({pendingDisable.length})</Label>
             {pendingDisable.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin llaves con baja solicitada.</p>
+              <p className="text-muted-foreground text-sm">Sin llaves con baja solicitada.</p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {pendingDisable.map((k) => (
@@ -153,9 +141,7 @@ export function EquipmentUpdateFormSheet({
               <SelectTrigger id="assigned-to">
                 <SelectValue
                   placeholder={
-                    installers.length === 0
-                      ? 'No hay instaladores activos'
-                      : 'Elegí un instalador'
+                    installers.length === 0 ? 'No hay instaladores activos' : 'Elegí un instalador'
                   }
                 />
               </SelectTrigger>
@@ -167,41 +153,39 @@ export function EquipmentUpdateFormSheet({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               El instalador va a recibir la tarea en su board apenas se cree.
             </p>
           </div>
 
           {/* MDB file */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="mdb-file">Archivo .mdb *</Label>
+          <FormField
+            label="Archivo .mdb *"
+            id="mdb-file"
+            error={fileError ?? undefined}
+            description={
+              <>
+                {selectedFile && !fileError && (
+                  <span className="block">
+                    {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                )}
+                <span className="block">Máx. 50 MB.</span>
+              </>
+            }
+          >
             <input
               ref={fileInputRef}
-              id="mdb-file"
               type="file"
               accept=".mdb,application/x-msaccess"
               onChange={handleFileChange}
               disabled={isPending}
-              className="block w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 disabled:opacity-50"
+              className="text-foreground file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:text-sm file:font-medium disabled:opacity-50"
             />
-            {fileError && (
-              <p className="text-sm text-destructive">{fileError}</p>
-            )}
-            {selectedFile && !fileError && (
-              <p className="text-xs text-muted-foreground">
-                {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground">Máx. 50 MB.</p>
-          </div>
+          </FormField>
 
           <SheetFooter className="mt-auto pb-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isPending}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
               Cancelar
             </Button>
             <Button type="submit" disabled={!canSubmit}>
