@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
@@ -50,13 +50,29 @@ function makeTicket(overrides: Partial<AssignedTicket> = {}): AssignedTicket {
 
 beforeEach(() => {
   configureMutate.mockReset();
+  Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
 });
 
+async function openSheet(label = /configurar equipo/i) {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: label }));
+  return user;
+}
+
 describe('ConfigureEquipmentInline — empty state', () => {
-  it('shows the empty form with help text and product placeholder', () => {
+  it('keeps the form out of the page until the trigger opens a bottom sheet', async () => {
+    render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
+    expect(screen.queryByLabelText(/número de serie/i)).not.toBeInTheDocument();
+    await openSheet();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByLabelText(/número de serie/i)).toBeInTheDocument();
+  });
+
+  it('shows the empty form with help text and product placeholder', async () => {
     render(<ConfigureEquipmentInline ticket={makeTicket()} />, {
       wrapper: makeWrapper(),
     });
+    await openSheet();
     expect(screen.getByLabelText(/número de serie/i)).toBeInTheDocument();
     expect(screen.getByText(/después vas a poder finalizar/i)).toBeInTheDocument();
     const model = screen.getByLabelText(/modelo/i) as HTMLInputElement;
@@ -64,20 +80,21 @@ describe('ConfigureEquipmentInline — empty state', () => {
   });
 
   it('rejects empty serial and does not call the mutation', async () => {
-    const user = userEvent.setup();
     render(<ConfigureEquipmentInline ticket={makeTicket()} />, {
       wrapper: makeWrapper(),
     });
+    const user = await openSheet();
     await user.click(screen.getByRole('button', { name: /guardar equipo/i }));
-    expect(await screen.findByText(/número de serie es obligatorio/i)).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent(/número de serie es obligatorio/i);
+    expect(screen.getByLabelText(/número de serie/i)).toHaveAttribute('aria-invalid', 'true');
     expect(configureMutate).not.toHaveBeenCalled();
   });
 
   it('submits serial + null model when the model field is left blank', async () => {
-    const user = userEvent.setup();
     render(<ConfigureEquipmentInline ticket={makeTicket()} />, {
       wrapper: makeWrapper(),
     });
+    const user = await openSheet();
     await user.type(screen.getByLabelText(/número de serie/i), 'SN-XYZ');
     await user.click(screen.getByRole('button', { name: /guardar equipo/i }));
     expect(configureMutate).toHaveBeenCalledWith(
@@ -97,14 +114,13 @@ describe('ConfigureEquipmentInline — install_equipment category', () => {
       { wrapper: makeWrapper() },
     );
     expect(screen.getByText(/equipo a instalar/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/número de serie/i)).toBeInTheDocument();
   });
 
   it('submits configure payload for installation ticket', async () => {
-    const user = userEvent.setup();
     render(<ConfigureEquipmentInline ticket={makeTicket({ category: 'install_equipment' })} />, {
       wrapper: makeWrapper(),
     });
+    const user = await openSheet();
     await user.type(screen.getByLabelText(/número de serie/i), 'SN-INSTALL-01');
     await user.click(screen.getByRole('button', { name: /guardar equipo/i }));
     expect(configureMutate).toHaveBeenCalledWith(
@@ -122,11 +138,70 @@ describe('ConfigureEquipmentInline — install_equipment category', () => {
 });
 
 describe('ConfigureEquipmentInline — touch targets', () => {
-  it('renders the submit button at the 44px default control height', () => {
+  it('renders the trigger and the submit button at the 44px default control height', async () => {
     render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
-    const submit = screen.getByRole('button', { name: /guardar|configurar/i });
+    const trigger = screen.getByRole('button', { name: /configurar equipo/i });
+    expect(trigger).toHaveClass('h-control-md');
+    await openSheet();
+    const submit = screen.getByRole('button', { name: /guardar equipo/i });
     expect(submit).toHaveClass('h-control-md');
     expect(submit).not.toHaveClass('h-control-sm');
+  });
+});
+
+describe('ConfigureEquipmentInline — touch-safe inputs', () => {
+  it('labels the serial field and suppresses autocorrection', async () => {
+    render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
+    await openSheet();
+    const serial = screen.getByLabelText('Número de serie');
+    expect(serial).toHaveAttribute('autocapitalize', 'characters');
+    expect(serial).toHaveAttribute('autocorrect', 'off');
+    expect(serial).toHaveAttribute('spellcheck', 'false');
+  });
+
+  it('keeps both inputs at 16px (no text-sm or text-xs overrides)', async () => {
+    render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
+    await openSheet();
+    for (const input of [
+      screen.getByLabelText('Número de serie'),
+      screen.getByLabelText('Modelo'),
+    ]) {
+      expect(input).not.toHaveClass('text-sm');
+      expect(input).not.toHaveClass('text-xs');
+    }
+  });
+});
+
+describe('ConfigureEquipmentInline — offline and sheet lifecycle', () => {
+  it('disables Guardar equipo offline and shows the reason', async () => {
+    render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
+    const user = await openSheet();
+    await user.type(screen.getByLabelText('Número de serie'), 'SN-1');
+    act(() => {
+      Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+      window.dispatchEvent(new Event('offline'));
+    });
+    expect(screen.getByRole('button', { name: /guardar equipo/i })).toBeDisabled();
+    expect(screen.getByText('Sin conexión')).toBeInTheDocument();
+  });
+
+  it('closes the sheet after a successful save', async () => {
+    configureMutate.mockImplementation((_vars, opts?: { onSuccess?: () => void }) =>
+      opts?.onSuccess?.(),
+    );
+    render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
+    const user = await openSheet();
+    await user.type(screen.getByLabelText('Número de serie'), 'SN-1');
+    await user.click(screen.getByRole('button', { name: /guardar equipo/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('closes via Cerrar without calling the mutation', async () => {
+    render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
+    const user = await openSheet();
+    await user.click(screen.getByRole('button', { name: 'Cerrar' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(configureMutate).not.toHaveBeenCalled();
   });
 });
 
@@ -155,5 +230,17 @@ describe('ConfigureEquipmentInline — configured state', () => {
       { wrapper: makeWrapper() },
     );
     expect(screen.getByText('Smart Lock Pro v3')).toBeInTheDocument();
+  });
+
+  it('opens the sheet prefilled from the Editar button', async () => {
+    render(
+      <ConfigureEquipmentInline
+        ticket={makeTicket({ pending_new_serial: 'SN-999', pending_new_model: 'Custom Model' })}
+      />,
+      { wrapper: makeWrapper() },
+    );
+    await openSheet(/editar/i);
+    expect(screen.getByLabelText('Número de serie')).toHaveValue('SN-999');
+    expect(screen.getByLabelText('Modelo')).toHaveValue('Custom Model');
   });
 });

@@ -149,6 +149,7 @@ export {
   type SidebarNavProps,
 } from './components/layout/Sidebar';
 export { MobileSidebar, type MobileSidebarProps } from './components/layout/MobileSidebar';
+export { TabBar, type TabBarItem, type TabBarProps } from './components/layout/TabBar';
 export { NavItem, type NavItemProps } from './components/layout/NavItem';
 export {
   PageHeader,

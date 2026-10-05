@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import { AuthContext } from '@vitalock/shared';
 import type { UseAuthReturn } from '@vitalock/shared';
@@ -27,7 +27,6 @@ function stubMatchMedia(matches: boolean) {
 
 beforeEach(() => {
   stubMatchMedia(false);
-  window.localStorage.removeItem('vitalock-sidebar-collapsed');
 });
 
 afterEach(() => {
@@ -57,26 +56,36 @@ const authStub: UseAuthReturn = {
   refresh: async () => {},
 };
 
-function renderApp(initialPath = '/') {
+function LocationProbe() {
+  return <output data-testid="location">{useLocation().pathname}</output>;
+}
+
+function renderApp(initialPath = '/', authOverride: Partial<UseAuthReturn> = {}) {
   return render(
     <ThemeProvider attribute="class">
-      <AuthContext.Provider value={authStub}>
+      <AuthContext.Provider value={{ ...authStub, ...authOverride }}>
         <MemoryRouter initialEntries={[initialPath]}>
           <Routes>
             <Route path="/" element={<App />}>
               <Route index element={<div>DASHBOARD</div>} />
               <Route path="tareas" element={<div>TAREAS</div>} />
               <Route path="historial" element={<div>HISTORIAL</div>} />
+              <Route path="tareas/:id" element={<div>DETALLE</div>} />
             </Route>
           </Routes>
+          <LocationProbe />
         </MemoryRouter>
       </AuthContext.Provider>
     </ThemeProvider>,
   );
 }
 
-describe('App shell — mobile topbar', () => {
-  it('renders the Vitalock wordmark in the mobile topbar', () => {
+function setOnline(value: boolean) {
+  Object.defineProperty(window.navigator, 'onLine', { configurable: true, value });
+}
+
+describe('App shell — top bar', () => {
+  it('renders the Vitalock wordmark in the top bar', () => {
     const { container } = renderApp();
     const header = container.querySelector('header');
     expect(header).not.toBeNull();
@@ -93,67 +102,96 @@ describe('App shell — mobile topbar', () => {
     expect(imgs[1]?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('renders the hamburger trigger that opens the mobile drawer with nav and user menu', async () => {
-    const user = userEvent.setup();
+  it('clears the notch with the top safe area', () => {
+    const { container } = renderApp();
+    expect(container.querySelector('header')).toHaveClass('pt-safe-t');
+  });
+
+  it('puts an avatar-only user menu in the top bar', () => {
     const { container } = renderApp();
     const header = container.querySelector('header') as HTMLElement;
-    await user.click(within(header).getByRole('button', { name: 'Abrir menú' }));
-
-    // The drawer repeats the nav tree and pins the user menu to its bottom.
-    const drawerLinks = screen.getAllByRole('link', { name: 'Tareas' });
-    expect(drawerLinks).toHaveLength(2);
-    expect(screen.getAllByRole('button', { name: 'Abrir menú de usuario' })).toHaveLength(2);
-    // Backdrop + explicit X button both close the drawer.
-    expect(screen.getAllByRole('button', { name: 'Cerrar menú' })).toHaveLength(2);
-  });
-});
-
-describe('App shell — desktop sidebar', () => {
-  it('renders the three primary nav items with the expected routes', () => {
-    renderApp();
-    const expected = [
-      ['Dashboard', '/'],
-      ['Tareas', '/tareas'],
-      ['Historial', '/historial'],
-    ] as const;
-    for (const [label, href] of expected) {
-      expect(screen.getByRole('link', { name: label })).toHaveAttribute('href', href);
-    }
-  });
-
-  it('renders the user menu trigger with initials and name', () => {
-    renderApp();
-    // "Juan Perez" -> "JP"
-    const button = screen.getByRole('button', { name: 'Abrir menú de usuario' });
-    expect(button).toHaveTextContent('JP');
-    expect(button).toHaveTextContent('Juan Perez');
+    const trigger = within(header).getByRole('button', { name: 'Abrir menú de usuario' });
+    expect(trigger).toHaveTextContent('JP');
+    expect(trigger).not.toHaveTextContent('Juan Perez');
   });
 
   it('exposes theme toggle and sign-out inside the user menu popover', async () => {
     const user = userEvent.setup();
-    renderApp();
+    const signOut = vi.fn(async () => {});
+    renderApp('/', { signOut });
 
     await user.click(screen.getByRole('button', { name: 'Abrir menú de usuario' }));
-
     expect(
       screen.getByRole('switch', { name: 'Cambiar entre tema claro y oscuro' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Salir/ })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Salir/ }));
+    expect(signOut).toHaveBeenCalledTimes(1);
   });
 
-  it('expands by default and collapses when the toggle button is clicked', async () => {
-    const user = userEvent.setup();
+  it('has no hamburger, drawer, sidebar or collapse toggle', () => {
     renderApp();
+    expect(screen.queryByRole('button', { name: 'Abrir menú' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Toggle sidebar' })).not.toBeInTheDocument();
+  });
+});
 
-    const aside = screen.getByRole('complementary');
-    expect(aside).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Tareas')).not.toHaveAttribute('aria-hidden', 'true');
+describe('App shell — tab bar', () => {
+  it('renders exactly three tabs in order with the expected routes', () => {
+    renderApp();
+    const nav = screen.getByRole('navigation', { name: 'Principal' });
+    const links = within(nav).getAllByRole('link');
+    expect(links.map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
+      ['Inicio', '/'],
+      ['Tareas', '/tareas'],
+      ['Historial', '/historial'],
+    ]);
+    expect(screen.queryByRole('link', { name: 'Perfil' })).not.toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole('button', { name: 'Toggle sidebar' }));
-    expect(aside).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByText('Tareas')).toHaveAttribute('aria-hidden', 'true');
+  it('marks the tab of the current route as active, including nested routes', () => {
+    renderApp('/tareas/abc');
+    expect(screen.getByRole('link', { name: 'Tareas' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Inicio' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByText('DETALLE')).toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole('button', { name: 'Toggle sidebar' }));
-    expect(aside).toHaveAttribute('aria-expanded', 'true');
+  it('navigates when a tab is tapped', async () => {
+    const user = userEvent.setup();
+    renderApp('/');
+    await user.click(screen.getByRole('link', { name: 'Historial' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/historial');
+    expect(screen.getByText('HISTORIAL')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Historial' })).toHaveAttribute('aria-current', 'page');
+  });
+});
+
+describe('App shell — connectivity banner', () => {
+  afterEach(() => setOnline(true));
+
+  it('shows the banner on every route when offline', () => {
+    setOnline(false);
+    for (const path of ['/', '/tareas', '/historial', '/tareas/abc']) {
+      const { unmount } = renderApp(path);
+      expect(screen.getAllByRole('alert')).toHaveLength(1);
+      expect(screen.getByText(/Sin conexión/)).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('shows no banner when online and reacts to browser events', () => {
+    setOnline(true);
+    renderApp('/');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    act(() => {
+      setOnline(false);
+      window.dispatchEvent(new Event('offline'));
+    });
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    act(() => {
+      setOnline(true);
+      window.dispatchEvent(new Event('online'));
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

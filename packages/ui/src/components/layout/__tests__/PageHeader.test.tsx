@@ -94,4 +94,13 @@ describe('PageHeader', () => {
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveClass('text-footnote');
     expect(container.querySelector('svg')).toHaveClass('h-3.5', 'w-3.5');
   });
+
+  it('renders the h1 at large-title when titleSize is large-title', () => {
+    render(<PageHeader title="Inicio" titleSize="large-title" titleClassName="font-mono" />, {
+      wrapper: makeWrapper(),
+    });
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Inicio' });
+    expect(h1).toHaveClass('text-large-title', 'font-mono');
+    expect(h1).not.toHaveClass('text-title-1');
+  });
 });

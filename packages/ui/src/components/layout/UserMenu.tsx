@@ -25,6 +25,11 @@ export interface UserMenuProps {
   /** When true, hides name/subtitle visually and from AT; the avatar stays. Layout size never changes. */
   collapsed?: boolean;
   /**
+   * `sidebar` (default): full-width row trigger with name and subtitle.
+   * `toolbar`: avatar-only trigger for a top bar; the popover opens below it.
+   */
+  variant?: 'sidebar' | 'toolbar';
+  /**
    * Theme-toggle row slot rendered inside the popover next to the "Tema"
    * label. Apps own the theme runtime (e.g. next-themes), so they pass
    * their own toggle. The row is omitted when no children are given.
@@ -41,41 +46,63 @@ export function UserMenu({
   subtitle = '',
   onSignOut,
   collapsed = false,
+  variant = 'sidebar',
   children,
 }: UserMenuProps) {
   const initials = initialsFromName(name) || 'US';
 
+  const toolbar = variant === 'toolbar';
+
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className="hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring flex w-full items-center gap-3 px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
-          aria-label="Abrir menú de usuario"
-        >
-          <span className="bg-muted text-muted-foreground flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium">
-            {initials}
-          </span>
-          <div
-            className={cn(
-              'flex min-w-0 flex-1 flex-col transition-opacity duration-200',
-              collapsed && 'opacity-0',
-            )}
-            aria-hidden={collapsed}
+        {toolbar ? (
+          <button
+            type="button"
+            className="size-control-md hover:bg-muted focus-visible:ring-ring flex shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+            aria-label="Abrir menú de usuario"
           >
-            <span className="truncate text-sm font-medium">{name}</span>
-            {subtitle && <span className="text-muted-foreground truncate text-xs">{subtitle}</span>}
-          </div>
-          <ChevronsUpDown
-            className={cn(
-              'text-muted-foreground h-4 w-4 shrink-0 transition-opacity duration-200',
-              collapsed && 'opacity-0',
-            )}
-            aria-hidden="true"
-          />
-        </button>
+            <span className="bg-muted text-muted-foreground flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium">
+              {initials}
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring flex w-full items-center gap-3 px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+            aria-label="Abrir menú de usuario"
+          >
+            <span className="bg-muted text-muted-foreground flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium">
+              {initials}
+            </span>
+            <div
+              className={cn(
+                'flex min-w-0 flex-1 flex-col transition-opacity duration-200',
+                collapsed && 'opacity-0',
+              )}
+              aria-hidden={collapsed}
+            >
+              <span className="truncate text-sm font-medium">{name}</span>
+              {subtitle && (
+                <span className="text-muted-foreground truncate text-xs">{subtitle}</span>
+              )}
+            </div>
+            <ChevronsUpDown
+              className={cn(
+                'text-muted-foreground h-4 w-4 shrink-0 transition-opacity duration-200',
+                collapsed && 'opacity-0',
+              )}
+              aria-hidden="true"
+            />
+          </button>
+        )}
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" sideOffset={8} className="w-60 p-0">
+      <PopoverContent
+        side={toolbar ? 'bottom' : 'top'}
+        align={toolbar ? 'end' : 'start'}
+        sideOffset={8}
+        className="w-60 p-0"
+      >
         <div className="flex flex-col gap-0.5 border-b px-3 py-3">
           <span className="truncate text-sm font-medium">{name}</span>
           {subtitle && <span className="text-muted-foreground truncate text-xs">{subtitle}</span>}

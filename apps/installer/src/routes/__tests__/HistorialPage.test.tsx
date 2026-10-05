@@ -237,4 +237,12 @@ describe('HistorialPage', () => {
     await user.selectOptions(screen.getByLabelText('Estado'), 'cancelled');
     expect(screen.getByText('No hay tareas con esos filtros.')).toBeInTheDocument();
   });
+
+  it('renders its title as a large title', () => {
+    useTicketHistoryMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+    renderPage();
+    expect(screen.getByRole('heading', { level: 1, name: 'Historial' })).toHaveClass(
+      'text-large-title',
+    );
+  });
 });

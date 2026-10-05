@@ -5,6 +5,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { buildManifest } from './pwa-manifest';
 
 const basePath = process.env.VITE_BASE_PATH ?? '/';
 
@@ -175,31 +176,7 @@ export default defineConfig({
       strategies: 'generateSW',
       injectRegister: 'auto',
       devOptions: { enabled: false }, // PWA off in dev per spec
-      manifest: {
-        name: 'Vitalock Installer',
-        short_name: 'Installer',
-        description: 'Vitalock field installer app',
-        theme_color: '#0f172a',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'portrait',
-        start_url: basePath,
-        scope: basePath,
-        icons: [
-          {
-            src: `${basePath}icon-192.svg`,
-            sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'any maskable',
-          },
-          {
-            src: `${basePath}icon-512.svg`,
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable',
-          },
-        ],
-      },
+      manifest: buildManifest(basePath),
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         globIgnores: ['**/*.map', 'stats.html'],
