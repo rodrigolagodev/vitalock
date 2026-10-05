@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContext } from '@vitalock/shared';
 import type { UseAuthReturn } from '@vitalock/shared';
@@ -134,25 +135,55 @@ describe('DashboardPage', () => {
     expect(screen.getByLabelText('Actualizando')).toBeInTheDocument();
   });
 
-  it('shows a loading placeholder while the query is pending', () => {
-    useAssignedTicketsMock.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isFetching: true,
-    });
-    renderDashboard();
-    expect(screen.getByText('Cargando tareas…')).toBeInTheDocument();
-    // StatCard still renders with placeholder value.
-    const statCard = screen.getByText('Tareas pendientes').closest('div');
-    expect(statCard).not.toBeNull();
-    expect(within(statCard as HTMLElement).getByText('…')).toBeInTheDocument();
-  });
-
   it('renders its greeting as a large title', () => {
     useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
     renderDashboard();
     expect(screen.getByRole('heading', { level: 1, name: 'Hola, Juan' })).toHaveClass(
       'text-large-title',
     );
+  });
+
+  it('renders a busy skeleton instead of "Cargando…" text on initial load', () => {
+    useAssignedTicketsMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isFetching: true,
+      isError: false,
+    });
+    const { container } = renderDashboard();
+    const region = container.querySelector('[aria-busy="true"]');
+    expect(region).not.toBeNull();
+    const blocks = (region as HTMLElement).querySelectorAll('.animate-pulse');
+    expect(blocks.length).toBeGreaterThanOrEqual(3);
+    expect(blocks.length).toBeLessThanOrEqual(5);
+    expect(screen.queryByText('Cargando tareas…')).not.toBeInTheDocument();
+  });
+
+  it('shows the ErrorState with a retry that calls refetch once', async () => {
+    const refetch = vi.fn();
+    useAssignedTicketsMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+      refetch,
+    });
+    renderDashboard();
+    expect(screen.queryByText(/Estás al día|No tenés tareas pendientes/)).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps stale data on screen when a background refetch fails', () => {
+    useAssignedTicketsMock.mockReturnValue({
+      data: [makeTicket('t1', { title: 'Tarea vieja' })],
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+      refetch: vi.fn(),
+    });
+    renderDashboard();
+    expect(screen.getByText('Tarea vieja')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument();
   });
 });

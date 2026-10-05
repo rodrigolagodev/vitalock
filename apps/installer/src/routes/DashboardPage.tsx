@@ -1,7 +1,15 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Building2, ChevronRight, ListTodo, Loader2, Wrench } from 'lucide-react';
-import { Button, EmptyState, PageHeader, SectionHeading, StatCard } from '@vitalock/ui';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  SectionHeading,
+  Skeleton,
+  StatCard,
+} from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
 import { sortActiveTickets, tareaStatus } from '@/lib/status/tareaStatus';
@@ -12,6 +20,20 @@ function firstName(fullName: string | undefined | null): string {
   if (!fullName) return '';
   const [first] = fullName.trim().split(/\s+/);
   return first ?? '';
+}
+
+/** Placeholder laid out like the loaded page: stat row plus quick-access cards. */
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Cargando">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Skeleton className="h-24" />
+        <Skeleton className="h-24" />
+        <Skeleton className="h-24" />
+      </div>
+      <Skeleton className="h-16" />
+    </div>
+  );
 }
 
 /**
@@ -39,10 +61,10 @@ export default function DashboardPage() {
   const greeting = greetingName ? `Hola, ${greetingName}` : 'Hola';
 
   const isLoading = assignedTickets.isLoading && !assignedTickets.data;
-  const placeholder = isLoading ? '…' : undefined;
+  const showError = assignedTickets.isError && !assignedTickets.data;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-6">
       <PageHeader title={greeting} titleSize="large-title" subtitle="Resumen de tu jornada">
         {assignedTickets.isFetching && !isLoading && (
           <Loader2
@@ -52,74 +74,83 @@ export default function DashboardPage() {
         )}
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
-          label="Tareas pendientes"
-          value={placeholder ?? tickets.length}
-          icon={<ListTodo className="h-5 w-5" />}
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : showError ? (
+        <ErrorState
+          message="No se pudieron cargar las tareas."
+          onRetry={() => void assignedTickets.refetch()}
         />
-        <StatCard
-          label="En curso"
-          value={placeholder ?? inProgressCount}
-          icon={<Wrench className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Edificios"
-          value={placeholder ?? buildingCount}
-          icon={<Building2 className="h-5 w-5" />}
-        />
-      </div>
-
-      <section className="flex flex-col gap-3">
-        <SectionHeading title="Acceso rápido">
-          {sorted.length > 0 && (
-            <Button asChild variant="ghost" className="gap-1">
-              <Link to="/tareas">
-                Ver todas
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          )}
-        </SectionHeading>
-
-        {isLoading ? (
-          <EmptyState message="Cargando tareas…" />
-        ) : quickAccess.length === 0 ? (
-          <EmptyState
-            message="No tenés tareas pendientes. ¡Buen trabajo!"
-            className="bg-card rounded-md border p-4"
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
-            <ul className="bg-card divide-y rounded-md border">
-              {quickAccess.map((ticket) => (
-                <li key={ticket.id}>
-                  <Link
-                    to={`/tareas/${ticket.id}`}
-                    className="hover:bg-muted/50 flex items-center gap-3 px-4 py-3 transition-colors"
-                  >
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="truncate text-sm font-medium">{ticket.title}</span>
-                      {ticket.building.name && (
-                        <span className="text-muted-foreground truncate text-xs">
-                          {ticket.building.name}
-                        </span>
-                      )}
-                    </div>
-                    <tareaStatus.Badge status={ticket.status} />
-                    <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            {remaining > 0 && (
-              <p className="text-muted-foreground text-center text-xs">
-                +{remaining} {remaining === 1 ? 'tarea más' : 'tareas más'}
-              </p>
-            )}
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard
+              label="Tareas pendientes"
+              value={tickets.length}
+              icon={<ListTodo className="h-5 w-5" />}
+            />
+            <StatCard
+              label="En curso"
+              value={inProgressCount}
+              icon={<Wrench className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Edificios"
+              value={buildingCount}
+              icon={<Building2 className="h-5 w-5" />}
+            />
           </div>
-        )}
-      </section>
+
+          <section className="flex flex-col gap-3">
+            <SectionHeading title="Acceso rápido">
+              {sorted.length > 0 && (
+                <Button asChild variant="ghost" className="gap-1">
+                  <Link to="/tareas">
+                    Ver todas
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              )}
+            </SectionHeading>
+
+            {quickAccess.length === 0 ? (
+              <EmptyState
+                message="No tenés tareas pendientes. ¡Buen trabajo!"
+                className="bg-card rounded-md border p-4"
+              />
+            ) : (
+              <div className="flex flex-col gap-2">
+                <ul className="bg-card divide-y rounded-md border">
+                  {quickAccess.map((ticket) => (
+                    <li key={ticket.id}>
+                      <Link
+                        to={`/tareas/${ticket.id}`}
+                        className="hover:bg-muted/50 flex items-center gap-3 px-4 py-3 transition-colors"
+                      >
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="truncate text-sm font-medium">{ticket.title}</span>
+                          {ticket.building.name && (
+                            <span className="text-muted-foreground truncate text-xs">
+                              {ticket.building.name}
+                            </span>
+                          )}
+                        </div>
+                        <tareaStatus.Badge status={ticket.status} />
+                        <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                {remaining > 0 && (
+                  <p className="text-muted-foreground text-center text-xs">
+                    +{remaining} {remaining === 1 ? 'tarea más' : 'tareas más'}
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

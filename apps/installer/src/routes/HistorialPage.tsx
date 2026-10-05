@@ -146,7 +146,7 @@ export default function HistorialPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-6">
       <PageHeader title="Historial" titleSize="large-title" subtitle="Tareas cerradas">
         {isFetching && !isLoading && (
           <Loader2

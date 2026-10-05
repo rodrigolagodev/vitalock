@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
-import { PageHeader } from '@vitalock/ui';
+import { ErrorState, PageHeader } from '@vitalock/ui';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
 import { sortActiveTickets } from '@/lib/status/tareaStatus';
 import { TareasTable } from '@/components/tareas/TareasTable';
@@ -17,13 +17,14 @@ export default function TareasPage() {
 
   const isLoading = assignedTickets.isLoading && !assignedTickets.data;
   const isFetching = assignedTickets.isFetching;
+  const showError = assignedTickets.isError && !assignedTickets.data;
 
   const tasks = useMemo(() => assignedTickets.data ?? [], [assignedTickets.data]);
 
   const sorted = useMemo(() => sortActiveTickets(tasks), [tasks]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-6">
       <PageHeader
         title="Mis tareas"
         titleSize="large-title"
@@ -37,7 +38,14 @@ export default function TareasPage() {
         )}
       </PageHeader>
 
-      <TareasTable rows={sorted} isLoading={isLoading} />
+      {showError ? (
+        <ErrorState
+          message="No se pudieron cargar las tareas."
+          onRetry={() => void assignedTickets.refetch()}
+        />
+      ) : (
+        <TareasTable rows={sorted} isLoading={isLoading} />
+      )}
     </div>
   );
 }

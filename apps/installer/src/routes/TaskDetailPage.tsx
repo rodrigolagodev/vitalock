@@ -1,15 +1,17 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { Download } from 'lucide-react';
 import {
   Badge,
   Button,
+  ConfirmDialog,
   EmptyState,
   ErrorState,
   NotFoundState,
   PageHeader,
   SectionHeading,
   Skeleton,
+  cn,
 } from '@vitalock/ui';
 import { supabase } from '@/lib/supabase';
 import { useMdbDownload } from '@vitalock/shared';
@@ -18,6 +20,7 @@ import { useResolveEquipmentUpdate } from '@/hooks/useResolveEquipmentUpdate';
 import { useResolveTickets } from '@/hooks/useResolveTickets';
 import { useRfidKeyCodeMap } from '@/hooks/useRfidKeyCodeMap';
 import { useTicketComments } from '@/hooks/useTicketComments';
+import { useOfflineGate } from '@/hooks/useOfflineGate';
 import {
   useEquipmentById,
   useMaintenanceHistory,
@@ -29,6 +32,7 @@ import { TicketCommentsList } from '@/components/work/TicketCommentsList';
 import { AddCommentForm } from '@/components/work/AddCommentForm';
 import { ConfigureEquipmentInline } from '@/components/work/ConfigureEquipmentInline';
 import { TaskResolutionCard } from '@/components/work/TaskResolutionCard';
+import { ACTION_BAR_HINT_ID, StickyActionBar } from '@/components/common/StickyActionBar';
 
 const EQUIPMENT_UPDATE = 'update_equipment';
 const EQUIPMENT_INSTALLATION = 'install_equipment';
@@ -133,6 +137,8 @@ export default function TaskDetailPage() {
 
   const resolveBatch = useResolveTickets();
   const resolveUpdate = useResolveEquipmentUpdate();
+  const { offline, reason: offlineReason } = useOfflineGate();
+  const [confirming, setConfirming] = useState<'resolve' | 'finalize' | null>(null);
   const { data: comments = [] } = useTicketComments(ticket?.id ?? '');
 
   const category = ticket?.category ?? '';
@@ -184,13 +190,18 @@ export default function TaskDetailPage() {
     .filter((v): v is string => Boolean(v))
     .join(', ');
 
+  const closeConfirm = () => setConfirming(null);
+
   const handleResolve = () => {
     if (!snapshot) return;
-    resolveUpdate.mutate({ taskId: snapshot.task_id, ticketId: ticket.id });
+    resolveUpdate.mutate(
+      { taskId: snapshot.task_id, ticketId: ticket.id },
+      { onSettled: closeConfirm },
+    );
   };
 
   const handleFinalize = () => {
-    resolveBatch.mutate({ ids: [ticket.id] });
+    resolveBatch.mutate({ ids: [ticket.id] }, { onSettled: closeConfirm });
   };
 
   function keyLabel(kid: string): string {
@@ -198,29 +209,21 @@ export default function TaskDetailPage() {
   }
 
   const isGenericResolve = GENERIC_RESOLVE_CATEGORIES.includes(category);
+  const canResolveUpdate = !isClosed && category === EQUIPMENT_UPDATE && Boolean(snapshot);
+  const canFinalize = !isClosed && category !== EQUIPMENT_UPDATE && isGenericResolve;
+  const hasActionBar = canResolveUpdate || canFinalize;
   const origin = isClosed
     ? { label: 'Historial', to: '/historial' }
     : { label: 'Mis tareas', to: '/tareas' };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={cn('flex flex-col gap-6', !hasActionBar && 'pb-6')}>
       <PageHeader
         title={ticket.title}
         subtitle={categoryLabel(category)}
         breadcrumbs={[origin, { label: ticket.title }]}
         titleAdornment={<tareaStatus.Badge status={ticket.status} />}
-      >
-        {!isClosed && category === EQUIPMENT_UPDATE && snapshot && (
-          <Button onClick={handleResolve} disabled={resolveUpdate.isPending}>
-            {resolveUpdate.isPending ? 'Resolviendo...' : 'Resolver tarea'}
-          </Button>
-        )}
-        {!isClosed && category !== EQUIPMENT_UPDATE && isGenericResolve && (
-          <Button onClick={handleFinalize} disabled={resolveBatch.isPending}>
-            {resolveBatch.isPending ? 'Finalizando...' : 'Finalizar tarea'}
-          </Button>
-        )}
-      </PageHeader>
+      />
 
       <TaskResolutionCard ticket={ticket} />
 
@@ -299,9 +302,9 @@ export default function TaskDetailPage() {
                           variant="outline"
                           onClick={() => void downloadMdb(u.mdb_storage_path, u.id)}
                           disabled={downloadingPriorId === u.id}
-                          className="h-7 px-2 text-xs"
+                          className="px-3"
                         >
-                          <Download className="mr-1 h-3 w-3" />
+                          <Download className="mr-1" />
                           {downloadingPriorId === u.id ? 'Generando…' : 'Descargar'}
                         </Button>
                       </div>
@@ -394,6 +397,51 @@ export default function TaskDetailPage() {
         <TicketCommentsList comments={comments} />
         {!isClosed && <AddCommentForm ticketId={ticket.id} />}
       </div>
+
+      {hasActionBar && (
+        <StickyActionBar hint={offlineReason}>
+          {canResolveUpdate ? (
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => setConfirming('resolve')}
+              disabled={offline || resolveUpdate.isPending}
+              aria-describedby={offlineReason ? ACTION_BAR_HINT_ID : undefined}
+            >
+              {resolveUpdate.isPending ? 'Resolviendo...' : 'Resolver tarea'}
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className="w-full"
+              onClick={() => setConfirming('finalize')}
+              disabled={offline || resolveBatch.isPending}
+              aria-describedby={offlineReason ? ACTION_BAR_HINT_ID : undefined}
+            >
+              {resolveBatch.isPending ? 'Finalizando...' : 'Finalizar tarea'}
+            </Button>
+          )}
+        </StickyActionBar>
+      )}
+
+      <ConfirmDialog
+        open={confirming === 'resolve'}
+        onOpenChange={(o) => !o && closeConfirm()}
+        title="Resolver tarea"
+        description="Se aplicará la actualización y la tarea quedará cerrada. Esta acción no se puede deshacer."
+        confirmLabel="Confirmar"
+        onConfirm={handleResolve}
+        isPending={resolveUpdate.isPending}
+      />
+      <ConfirmDialog
+        open={confirming === 'finalize'}
+        onOpenChange={(o) => !o && closeConfirm()}
+        title="Finalizar tarea"
+        description="La tarea quedará cerrada. Esta acción no se puede deshacer."
+        confirmLabel="Confirmar"
+        onConfirm={handleFinalize}
+        isPending={resolveBatch.isPending}
+      />
     </div>
   );
 }

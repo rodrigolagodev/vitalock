@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -292,7 +292,7 @@ describe('TaskDetailPage', () => {
     });
     renderDetail();
     expect(screen.getByText('Primer comentario')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Escribí un comentario…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Agregar comentario' })).toBeInTheDocument();
   });
 
   it('provides a back link to /tareas', async () => {
@@ -300,19 +300,6 @@ describe('TaskDetailPage', () => {
     await waitFor(() => {
       const back = screen.getByRole('link', { name: /mis tareas/i });
       expect(back).toHaveAttribute('href', '/tareas');
-    });
-  });
-
-  it('calls resolve mutation when Resolver is clicked', async () => {
-    const user = userEvent.setup();
-    const mutate = vi.fn();
-    mockUseResolveEquipmentUpdate.mockReturnValue({ mutate, isPending: false });
-    renderDetail();
-
-    await user.click(screen.getByRole('button', { name: 'Resolver tarea' }));
-    expect(mutate).toHaveBeenCalledWith({
-      taskId: 'task-001',
-      ticketId: 'ticket-001',
     });
   });
 
@@ -364,7 +351,7 @@ describe('TaskDetailPage', () => {
 
       expect(screen.queryByRole('button', { name: 'Resolver tarea' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Finalizar tarea' })).not.toBeInTheDocument();
-      expect(screen.queryByPlaceholderText('Escribí un comentario…')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Agregar comentario' })).not.toBeInTheDocument();
       // Comments stay readable; the .mdb download remains available.
       expect(screen.getByText('Comentario previo')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /descargar archivo/i })).toBeInTheDocument();
@@ -535,6 +522,139 @@ describe('TaskDetailPage', () => {
       expect(
         screen.getByText(/No se encontró la tarea de actualización asociada a este ticket/),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('sticky action bar with confirmation', () => {
+    function setOnline(value: boolean) {
+      Object.defineProperty(window.navigator, 'onLine', { configurable: true, value });
+    }
+    afterEach(() => setOnline(true));
+
+    function mockBatch(mutate = vi.fn(), isPending = false) {
+      mockUseResolveTickets.mockReturnValue({ mutate, isPending });
+      return mutate;
+    }
+    const maintenance = () =>
+      mockTicket(makeTicket({ category: 'maintain_equipment', equipment_id: 'eq-1' }));
+
+    it('renders exactly one terminal action, inside the sticky bar', () => {
+      renderDetail();
+      const buttons = screen.getAllByRole('button', { name: 'Resolver tarea' });
+      expect(buttons).toHaveLength(1);
+      const bar = buttons[0]!.closest('[data-action-bar]');
+      expect(bar).not.toBeNull();
+      expect(bar).toHaveClass('sticky', 'backdrop-blur');
+      expect(screen.getByRole('heading', { level: 1 }).closest('[data-action-bar]')).toBeNull();
+    });
+
+    it('asks before Finalizar and does not mutate until Confirmar', async () => {
+      const user = userEvent.setup();
+      const mutate = mockBatch();
+      maintenance();
+      renderDetail();
+
+      await user.click(screen.getByRole('button', { name: 'Finalizar tarea' }));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(mutate).not.toHaveBeenCalled();
+
+      await user.click(screen.getByRole('button', { name: 'Confirmar' }));
+      expect(mutate).toHaveBeenCalledTimes(1);
+      expect(mutate).toHaveBeenCalledWith({ ids: ['ticket-001'] }, expect.any(Object));
+    });
+
+    it('closes the dialog once the mutation settles', async () => {
+      const user = userEvent.setup();
+      mockBatch(vi.fn((_vars, opts?: { onSettled?: () => void }) => opts?.onSettled?.()));
+      maintenance();
+      renderDetail();
+
+      await user.click(screen.getByRole('button', { name: 'Finalizar tarea' }));
+      await user.click(screen.getByRole('button', { name: 'Confirmar' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('does not mutate when the user cancels', async () => {
+      const user = userEvent.setup();
+      const mutate = mockBatch();
+      maintenance();
+      renderDetail();
+
+      await user.click(screen.getByRole('button', { name: 'Finalizar tarea' }));
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(mutate).not.toHaveBeenCalled();
+    });
+
+    it('asks before Resolver too, then mutates exactly once on Confirmar', async () => {
+      const user = userEvent.setup();
+      const mutate = vi.fn();
+      mockUseResolveEquipmentUpdate.mockReturnValue({ mutate, isPending: false });
+      renderDetail();
+
+      await user.click(screen.getByRole('button', { name: 'Resolver tarea' }));
+      expect(mutate).not.toHaveBeenCalled();
+      await user.click(screen.getByRole('button', { name: 'Confirmar' }));
+      expect(mutate).toHaveBeenCalledTimes(1);
+      expect(mutate).toHaveBeenCalledWith(
+        { taskId: 'task-001', ticketId: 'ticket-001' },
+        expect.any(Object),
+      );
+    });
+
+    it('disables the button and shows progress while pending', () => {
+      mockBatch(vi.fn(), true);
+      maintenance();
+      renderDetail();
+      expect(screen.getByRole('button', { name: 'Finalizando...' })).toBeDisabled();
+    });
+
+    it('disables the action offline with a visible reason, and re-enables online', () => {
+      setOnline(false);
+      renderDetail();
+      const button = screen.getByRole('button', { name: 'Resolver tarea' });
+      expect(button).toBeDisabled();
+      expect(screen.getByText('Sin conexión')).toBeInTheDocument();
+      expect(button).toHaveAccessibleDescription('Sin conexión');
+
+      act(() => {
+        setOnline(true);
+        window.dispatchEvent(new Event('online'));
+      });
+      expect(screen.getByRole('button', { name: 'Resolver tarea' })).toBeEnabled();
+      expect(screen.queryByText('Sin conexión')).not.toBeInTheDocument();
+    });
+
+    it('shows no offline hint while online', () => {
+      renderDetail();
+      expect(screen.queryByText('Sin conexión')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Resolver tarea' })).toBeEnabled();
+    });
+  });
+
+  describe('add comment sheet', () => {
+    it('opens a bottom sheet with the comment form from the trigger', async () => {
+      const user = userEvent.setup();
+      renderDetail();
+      expect(screen.queryByPlaceholderText('Escribí un comentario…')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Agregar comentario' }));
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Escribí un comentario…')).toBeInTheDocument();
+    });
+  });
+
+  describe('touch targets', () => {
+    it('lets the prior-update Descargar button reach the 44px control height', () => {
+      mockUseEquipmentUpdateHistory.mockReturnValue({
+        data: [{ id: 'u1', mdb_storage_path: 'p.mdb', created_at: '2026-08-01T10:00:00Z' }],
+        isLoading: false,
+        isFetching: false,
+      });
+      renderDetail();
+      const button = screen.getByRole('button', { name: 'Descargar' });
+      expect(button).not.toHaveClass('h-7');
+      expect(button).toHaveClass('h-control-md');
     });
   });
 });

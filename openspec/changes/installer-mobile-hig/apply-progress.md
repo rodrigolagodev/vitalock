@@ -35,3 +35,23 @@ See `tasks.md` for the checklist (source of truth).
 - Task 2.2 says `cn('pb-4','pb-safe-b')` keeps both, but task 0.2 registers the tokens as spacing values, which makes them dedupe. The tests assert dedupe (later wins), consistent with `h-control-md`.
 - Spec "TabBar router-agnostic" conflicts with design Decision 1 (`NavLink`) and with existing ui components that already import react-router. Followed the design and reworded the spec.
 - Task 0.2 was done in C2 (RED and GREEN) rather than C1 because C1 is the chore deletion only.
+
+### C3
+
+| Evidence          | Value                                                                                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Focused test      | `pnpm --filter @vitalock/installer test` 166 passed; `pnpm --filter @vitalock/ui test` 396 passed                                            |
+| Runtime harness   | `pnpm e2e --project=installer` 2 passed (auth spec asserting the Tareas tab link) against local Supabase; manual iPhone check (6.4) NOT done |
+| Rollback boundary | revert C3                                                                                                                                    |
+
+## Final gate
+
+`pnpm lint`, `pnpm typecheck`, `pnpm test` green (installer 166, ui 396, admin 846, shared 205, supabase 80).
+
+## Notes
+
+- Old test "shows a loading placeholder" on Dashboard (asserted "Cargando tareas…") removed: it contradicts SC-R4-1.
+- ConfigureEquipmentInline keeps its filename and export (design did not rename it); it now renders the trigger, summary and Sheet.
+- PNG icons generated with `pnpm dlx @vite-pwa/assets-generator --preset minimal-2023 public/icon-512.svg` (worked); `favicon.ico` and `pwa-64x64.png` discarded.
+- Tasks 6.4 (manual device check) and 6.5 (PR label) remain for the human/orchestrator.
+- The local e2e build ran the Sentry plugin because `SENTRY_AUTH_TOKEN` is set in the shell environment (source maps were uploaded); unset it for future e2e runs.

@@ -59,27 +59,27 @@ Branch stacked on F1 (`ui-components-hig`), stacked on F0 (`ui-foundations-hig`)
 
 ## Phase 4 · C3 RED
 
-- [ ] 4.1 RED `sheet` bottom: grabber `aria-hidden`, `rounded-t-sheet`, `h-safe-b` spacer.
-- [ ] 4.2 RED `useOfflineGate` test: offline gives reason "Sin conexión".
-- [ ] 4.3 RED `StickyActionBar` and TaskDetail: bar is sticky with backdrop-blur; mutation not called until Confirmar; buttons disabled offline with hint.
-- [ ] 4.4 RED sheets: Configurar equipo and Agregar comentario open in bottom Sheet; submit disabled offline.
-- [ ] 4.5 RED serial field: label "Número de serie", `autoCapitalize="characters"`, `autoCorrect="off"`, `spellCheck=false`; no `text-sm` on inputs.
-- [ ] 4.6 RED Dashboard skeleton (`aria-busy`); Dashboard and Tareas `ErrorState` retry calls `refetch`.
+- [x] 4.1 RED `sheet` bottom: grabber `aria-hidden`, `rounded-t-sheet`, `h-safe-b` spacer.
+- [x] 4.2 RED `useOfflineGate` test: offline gives reason "Sin conexión".
+- [x] 4.3 RED `StickyActionBar` and TaskDetail: bar is sticky with backdrop-blur; mutation not called until Confirmar; buttons disabled offline with hint.
+- [x] 4.4 RED sheets: Configurar equipo and Agregar comentario open in bottom Sheet; submit disabled offline.
+- [x] 4.5 RED serial field: label "Número de serie", `autoCapitalize="characters"`, `autoCorrect="off"`, `spellCheck=false`; no `text-sm` on inputs.
+- [x] 4.6 RED Dashboard skeleton (`aria-busy`); Dashboard and Tareas `ErrorState` retry calls `refetch`.
 
 ## Phase 5 · C3 GREEN
 
-- [ ] 5.1 Restyle `sheet.tsx` bottom variant.
-- [ ] 5.2 Create `hooks/useOfflineGate.ts`.
-- [ ] 5.3 Create `components/common/StickyActionBar.tsx`; move Resolver/Finalizar in TaskDetail with `ConfirmDialog` closing in `onSettled`.
-- [ ] 5.4 Convert `ConfigureEquipmentInline` and `AddCommentForm` to Sheets; gate with offline hook.
-- [ ] 5.5 Serial field via `FormField`; remove `text-sm` overrides; textareas `md:text-base`.
-- [ ] 5.6 Dashboard skeleton and `ErrorState` on Dashboard and Tareas.
-- [ ] 5.7 REFACTOR: dedupe, tidy. Commit C3.
+- [x] 5.1 Restyle `sheet.tsx` bottom variant.
+- [x] 5.2 Create `hooks/useOfflineGate.ts`.
+- [x] 5.3 Create `components/common/StickyActionBar.tsx`; move Resolver/Finalizar in TaskDetail with `ConfirmDialog` closing in `onSettled`.
+- [x] 5.4 Convert `ConfigureEquipmentInline` and `AddCommentForm` to Sheets; gate with offline hook.
+- [x] 5.5 Serial field via `FormField`; remove `text-sm` overrides; textareas `md:text-base`.
+- [x] 5.6 Dashboard skeleton and `ErrorState` on Dashboard and Tareas.
+- [x] 5.7 REFACTOR: dedupe, tidy. Commit C3.
 
 ## Phase 6 · Verify
 
-- [ ] 6.1 `pnpm lint && pnpm typecheck && pnpm test` green.
-- [ ] 6.2 `rg 'MobileSidebar|EquipmentUpdateResolveDetail' apps/installer` empty.
-- [ ] 6.3 `pnpm e2e` installer suite if local Supabase stack is up; else note skipped.
-- [ ] 6.4 Manual iPhone-viewport check (standalone): no content under notch/indicator, toasts above tabs, no input zoom.
+- [x] 6.1 `pnpm lint && pnpm typecheck && pnpm test` green.
+- [x] 6.2 `rg 'MobileSidebar|EquipmentUpdateResolveDetail' apps/installer` empty.
+- [x] 6.3 `pnpm e2e` installer suite if local Supabase stack is up; else note skipped.
+- [ ] 6.4 (manual, requires a real device; NOT done by apply) Manual iPhone-viewport check (standalone): no content under notch/indicator, toasts above tabs, no input zoom.
 - [ ] 6.5 PR labeled `size:exception`; confirm proposal § Impact matches.
