@@ -1,10 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
-import React from 'react';
-import type { ReactNode } from 'react';
 import type { KeyOrderDetailRow } from '@/hooks/useKeyOrder';
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn(), warning: vi.fn() } }));
@@ -98,19 +95,21 @@ vi.mock('@/components/buildings/BuildingCombobox', () => ({
 
 // Import after mocks
 import { KeyOrderForm } from '../KeyOrderForm';
+import { makeDataRouterWrapper } from '@/test/renderWithDataRouter';
 import type { KeyOrderFormValues } from '../KeyOrderForm';
+
+let getRouter: ReturnType<typeof makeDataRouterWrapper>['getRouter'];
 
 function makeWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return React.createElement(
-      MemoryRouter,
-      null,
-      React.createElement(QueryClientProvider, { client: queryClient }, children),
-    );
-  };
+  const dataRouter = makeDataRouterWrapper({
+    routes: [{ path: '/otra', element: <p>otra pagina</p> }],
+    wrap: (children) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>,
+  });
+  getRouter = dataRouter.getRouter;
+  return dataRouter.Wrapper;
 }
 
 function makeInitialOrder(overrides: Partial<KeyOrderDetailRow> = {}): KeyOrderDetailRow {
@@ -554,6 +553,135 @@ describe('KeyOrderForm', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(confirmSpy).not.toHaveBeenCalled();
       confirmSpy.mockRestore();
+    });
+  });
+
+  describe('navigation blocker (data router)', () => {
+    const NOTES = /observaciones adicionales/i;
+
+    it('blocks in-app navigation while dirty and keeps the location', async () => {
+      const user = userEvent.setup();
+      render(<KeyOrderForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} />, {
+        wrapper: makeWrapper(),
+      });
+      await user.type(screen.getByPlaceholderText(NOTES), 'algo');
+
+      await act(() => getRouter().navigate('/otra'));
+
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByText('¿Descartar los cambios?')).toBeInTheDocument();
+      expect(getRouter().state.location.pathname).toBe('/');
+    });
+
+    it('proceeds to the target when the user confirms', async () => {
+      const user = userEvent.setup();
+      render(<KeyOrderForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} />, {
+        wrapper: makeWrapper(),
+      });
+      await user.type(screen.getByPlaceholderText(NOTES), 'algo');
+      await act(() => getRouter().navigate('/otra'));
+
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Descartar cambios' }));
+
+      await waitFor(() => expect(getRouter().state.location.pathname).toBe('/otra'));
+    });
+
+    it('stays with the input intact when the user dismisses', async () => {
+      const user = userEvent.setup();
+      render(<KeyOrderForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} />, {
+        wrapper: makeWrapper(),
+      });
+      const notes = screen.getByPlaceholderText(NOTES);
+      await user.type(notes, 'algo');
+      await act(() => getRouter().navigate('/otra'));
+
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Seguir editando' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(getRouter().state.location.pathname).toBe('/');
+      expect(notes).toHaveValue('algo');
+    });
+
+    it('does not block a clean form', async () => {
+      render(<KeyOrderForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} />, {
+        wrapper: makeWrapper(),
+      });
+
+      await act(() => getRouter().navigate('/otra'));
+
+      expect(getRouter().state.location.pathname).toBe('/otra');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('does not block a search-only change while dirty', async () => {
+      const user = userEvent.setup();
+      render(<KeyOrderForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} />, {
+        wrapper: makeWrapper(),
+      });
+      await user.type(screen.getByPlaceholderText(NOTES), 'algo');
+
+      await act(() => getRouter().navigate('/?filtro=1'));
+
+      expect(getRouter().state.location.search).toBe('?filtro=1');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('guards browser back (POP) while dirty', async () => {
+      const user = userEvent.setup();
+      const { Wrapper, getRouter: routerOf } = makeDataRouterWrapper({
+        initialEntries: ['/otra', '/'],
+        routes: [{ path: '/otra', element: <p>otra pagina</p> }],
+      });
+      render(<KeyOrderForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} />, {
+        wrapper: Wrapper,
+      });
+      await user.type(screen.getByPlaceholderText(NOTES), 'algo');
+
+      await act(() => routerOf().navigate(-1));
+
+      expect(await screen.findByRole('dialog')).toBeInTheDocument();
+      expect(routerOf().state.location.pathname).toBe('/');
+    });
+
+    it('does not block the redirect that follows a successful submit', async () => {
+      const user = userEvent.setup();
+      const validValues: KeyOrderFormValues = {
+        client_type: 'administration',
+        administration_id: 'adm-1',
+        particular_id: null,
+        particular_full_name: '',
+        particular_dni: '',
+        particular_phone: '',
+        particular_email: '',
+        notes: '',
+        items: [
+          {
+            item_type: 'key',
+            quantity: 1,
+            description: '',
+            building_id: 'bld-1',
+            unit_price: 100,
+            unit_id: null,
+            pickup_particular_id: null,
+            product_id: 'prod-1',
+          },
+        ],
+      };
+
+      const onSubmit = vi.fn(async () => {
+        await getRouter().navigate('/otra');
+      });
+      render(<KeyOrderForm mode="create" initialValues={validValues} onSubmit={onSubmit} />, {
+        wrapper: makeWrapper(),
+      });
+      await user.type(screen.getByPlaceholderText(NOTES), 'algo');
+
+      await user.click(screen.getByRole('button', { name: /crear y confirmar orden/i }));
+
+      await waitFor(() => expect(getRouter().state.location.pathname).toBe('/otra'));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 

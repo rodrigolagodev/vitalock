@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import type { TechnicalOrderDetailRow } from '@/hooks/useTechnicalOrder';
 
 // Hoist mock refs
@@ -131,14 +131,19 @@ function renderPage(techOrderId = 'to-1') {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/servicio-tecnico/${techOrderId}/editar`]}>
-        <Routes>
-          <Route
-            path="/servicio-tecnico/:techOrderId/editar"
-            element={<TechnicalOrderEditarPage />}
-          />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider
+        router={createMemoryRouter(
+          [
+            {
+              path: '/servicio-tecnico/:techOrderId/editar',
+              element: <TechnicalOrderEditarPage />,
+            },
+          ],
+          {
+            initialEntries: [`/servicio-tecnico/${techOrderId}/editar`],
+          },
+        )}
+      />
     </QueryClientProvider>,
   );
 }

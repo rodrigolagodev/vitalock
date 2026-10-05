@@ -110,17 +110,17 @@ No code is written here except the conditional task 0.7. If a check fails and F1
 
 ## Phase 2 · Data router and navigation blocking (WU2, commit 2)
 
-- [ ] 2.1 RED: create `apps/admin/src/router.test.tsx`: `matchRoutes(routes, path)` for every path the app had before (including `/`, `/buildings`, `/historial` redirects, `/buildings/123`, `/administraciones/456`, `/ordenes` and the `*` NotFoundPage); a dropped route fails.
-- [ ] 2.2 GREEN: create `apps/admin/src/router.tsx` exporting `routes: RouteObject[]` (route table unchanged; pathless root route with `<Suspense fallback={<PageFallback />}><Outlet /></Suspense>` and `errorElement: <RouteErrorFallback />`) and `createAdminRouter()` using the existing `BASE_URL` basename.
-- [ ] 2.3 RED: test `RouteErrorFallback` in `components/common/BoundaryFallbacks.tsx`: normalises `useRouteError()` to `Error`, calls `reportError('admin:route', ...)` once, renders the same UI as `RootErrorFallback` with reload as reset.
-- [ ] 2.4 GREEN: implement `RouteErrorFallback`.
-- [ ] 2.5 GREEN: update `apps/admin/src/main.tsx` to `AppErrorBoundary > ThemeProvider > QueryClientProvider > AuthProvider > RouterProvider` with `Toaster` as a sibling inside `AuthProvider`; no `BrowserRouter`. Verify `rg 'BrowserRouter' apps/admin/src/main.tsx` finds nothing.
-- [ ] 2.6 GREEN: create `apps/admin/src/test/renderWithDataRouter.tsx` (`createMemoryRouter`, returns `{ router, ...renderResult }`; options `path`, `initialEntries`, `routes`) and a smoke test for it.
-- [ ] 2.7 RED: add blocker tests to the guard hook test and the six files that render the guarded forms (`KeyOrderForm.test`, `TechnicalOrderForm.test`, `KeyOrderNuevaPage.test`, `KeyOrderEditarPage.test`, `TechnicalOrderNuevaPage.test`, `TechnicalOrderEditarPage.test`): dirty `router.navigate('/otra')` opens the dialog and the location is unchanged; confirm proceeds; dismiss stays with input intact and the blocker resets; clean form is not blocked; a successful submit that navigates opens no dialog; a search-only change does not block; POP (browser back) is guarded; `useBlocker` does not throw on mount.
-- [ ] 2.8 GREEN: move the six test files to `renderWithDataRouter` (other `MemoryRouter` files stay).
-- [ ] 2.9 GREEN: add `useBlocker(({ currentLocation, nextLocation }) => whenRef.current && !bypassRef.current && currentLocation.pathname !== nextLocation.pathname)` to `useUnsavedChangesGuard` with `blocker.proceed()` / `blocker.reset()` in `onConfirm` / `onOpenChange(false)`. Forms need no edit.
-- [ ] 2.10 Run `e2e/admin/navigation.spec.ts` if the stack is up (every route reachable, sidebar visible).
-- [ ] 2.11 Commit 2 gate: `pnpm lint && pnpm typecheck && pnpm test && pnpm lint:hardcodes` green. Commit `feat(admin): move to a data router and block navigation away from dirty forms`.
+- [x] 2.1 RED: create `apps/admin/src/router.test.tsx`: `matchRoutes(routes, path)` for every path the app had before (including `/`, `/buildings`, `/historial` redirects, `/buildings/123`, `/administraciones/456`, `/ordenes` and the `*` NotFoundPage); a dropped route fails.
+- [x] 2.2 GREEN: create `apps/admin/src/router.tsx` exporting `routes: RouteObject[]` (route table unchanged; pathless root route with `<Suspense fallback={<PageFallback />}><Outlet /></Suspense>` and `errorElement: <RouteErrorFallback />`) and `createAdminRouter()` using the existing `BASE_URL` basename.
+- [x] 2.3 RED: test `RouteErrorFallback` in `components/common/BoundaryFallbacks.tsx`: normalises `useRouteError()` to `Error`, calls `reportError('admin:route', ...)` once, renders the same UI as `RootErrorFallback` with reload as reset.
+- [x] 2.4 GREEN: implement `RouteErrorFallback`.
+- [x] 2.5 GREEN: update `apps/admin/src/main.tsx` to `AppErrorBoundary > ThemeProvider > QueryClientProvider > AuthProvider > RouterProvider` with `Toaster` as a sibling inside `AuthProvider`; no `BrowserRouter`. Verify `rg 'BrowserRouter' apps/admin/src/main.tsx` finds nothing.
+- [x] 2.6 GREEN: create `apps/admin/src/test/renderWithDataRouter.tsx` (`createMemoryRouter`, returns `{ router, ...renderResult }`; options `path`, `initialEntries`, `routes`) and a smoke test for it.
+- [x] 2.7 RED: add blocker tests to the guard hook test and the six files that render the guarded forms (`KeyOrderForm.test`, `TechnicalOrderForm.test`, `KeyOrderNuevaPage.test`, `KeyOrderEditarPage.test`, `TechnicalOrderNuevaPage.test`, `TechnicalOrderEditarPage.test`): dirty `router.navigate('/otra')` opens the dialog and the location is unchanged; confirm proceeds; dismiss stays with input intact and the blocker resets; clean form is not blocked; a successful submit that navigates opens no dialog; a search-only change does not block; POP (browser back) is guarded; `useBlocker` does not throw on mount.
+- [x] 2.8 GREEN: move the six test files to `renderWithDataRouter` (other `MemoryRouter` files stay).
+- [x] 2.9 GREEN: add `useBlocker(({ currentLocation, nextLocation }) => whenRef.current && !bypassRef.current && currentLocation.pathname !== nextLocation.pathname)` to `useUnsavedChangesGuard` with `blocker.proceed()` / `blocker.reset()` in `onConfirm` / `onOpenChange(false)`. Forms need no edit.
+- [x] 2.10 Run `e2e/admin/navigation.spec.ts` if the stack is up (every route reachable, sidebar visible).
+- [x] 2.11 Commit 2 gate: `pnpm lint && pnpm typecheck && pnpm test && pnpm lint:hardcodes` green. Commit `feat(admin): move to a data router and block navigation away from dirty forms`.
 
 ## Phase 3 · FormField migration (WU3, commit 3)
 

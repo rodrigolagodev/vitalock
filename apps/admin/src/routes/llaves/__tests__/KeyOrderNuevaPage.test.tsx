@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 
 // Hoist mock refs
 const { mockNavigate } = vi.hoisted(() => ({
@@ -90,11 +90,11 @@ function renderPage() {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/llaves/nueva']}>
-        <Routes>
-          <Route path="/llaves/nueva" element={<KeyOrderNuevaPage />} />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider
+        router={createMemoryRouter([{ path: '/llaves/nueva', element: <KeyOrderNuevaPage /> }], {
+          initialEntries: ['/llaves/nueva'],
+        })}
+      />
     </QueryClientProvider>,
   );
 }
