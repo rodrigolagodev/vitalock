@@ -28,6 +28,9 @@ import {
   SheetContent,
   SheetTitle,
   Switch,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Textarea,
 } from '@vitalock/ui';
 
@@ -280,5 +283,56 @@ describe('Card primitives from @vitalock/ui', () => {
     expect(actionRef.current).toHaveClass('custom-action');
     expect(contentRef.current).toHaveClass('custom-content');
     expect(footerRef.current).toHaveClass('custom-footer');
+  });
+});
+
+describe('Tabs segmented control', () => {
+  function renderTabs() {
+    render(
+      <Tabs defaultValue="a">
+        <TabsList aria-label="Sección">
+          <TabsTrigger value="a">Equipos</TabsTrigger>
+          <TabsTrigger value="b">Llaves</TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+    return {
+      list: screen.getByRole('tablist', { name: 'Sección' }),
+      active: screen.getByRole('tab', { name: 'Equipos' }),
+      inactive: screen.getByRole('tab', { name: 'Llaves' }),
+    };
+  }
+
+  it('draws a neutral track that stands apart from the page surface', () => {
+    const { list } = renderTabs();
+    expect(list).toHaveClass(
+      'h-control-md',
+      'rounded-control',
+      'bg-accent',
+      'ring-1',
+      'ring-border',
+    );
+    expect(list).not.toHaveClass('bg-muted');
+    // Dark: the track sinks to the darkest surface so the selected segment can sit above it.
+    expect(list).toHaveClass('dark:bg-card');
+  });
+
+  it('renders inactive segments in readable secondary text, not muted text', () => {
+    const { inactive } = renderTabs();
+    expect(inactive).toHaveAttribute('aria-selected', 'false');
+    expect(inactive).toHaveClass('text-secondary-foreground');
+    expect(inactive.className).not.toMatch(/(^|\s)text-muted-foreground(\s|$)/);
+  });
+
+  it('lifts the active segment onto a card surface with a hairline edge', () => {
+    const { active } = renderTabs();
+    expect(active).toHaveAttribute('aria-selected', 'true');
+    expect(active).toHaveClass(
+      'data-[state=active]:bg-card',
+      'data-[state=active]:text-foreground',
+      'data-[state=active]:ring-1',
+      'data-[state=active]:ring-border',
+      'dark:data-[state=active]:bg-accent',
+    );
   });
 });

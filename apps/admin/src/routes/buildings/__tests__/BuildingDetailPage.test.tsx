@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -84,7 +84,7 @@ function makeWrapper(initialTab: string) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return React.createElement(
       MemoryRouter,
-      { initialEntries: [`/buildings/b1?tab=${initialTab}`] },
+      { initialEntries: [initialTab ? `/buildings/b1?tab=${initialTab}` : '/buildings/b1'] },
       React.createElement(
         QueryClientProvider,
         { client: queryClient },
@@ -103,6 +103,20 @@ describe('BuildingDetailPage', () => {
     vi.clearAllMocks();
     useBuildingMock.mockReturnValue({ data: building, isLoading: false, isError: false });
     useAdministrationMock.mockReturnValue({ data: { company_name: 'García S.A.' } });
+  });
+
+  describe('Section selector', () => {
+    it('lists Equipos before Llaves and selects Equipos by default', () => {
+      useEquipmentMock.mockReturnValue({ data: [], isFetching: false });
+      useKeysMock.mockReturnValue({ data: [], isFetching: false });
+      render(<BuildingDetailPage />, { wrapper: makeWrapper('') });
+
+      const tabs = within(
+        screen.getByRole('tablist', { name: 'Sección del edificio' }),
+      ).getAllByRole('tab');
+      expect(tabs.map((t) => t.textContent)).toEqual(['Equipos', 'Llaves']);
+      expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+    });
   });
 
   describe('Llaves tab', () => {
