@@ -36,7 +36,7 @@ export function AuthErrorPage() {
       <button
         type="button"
         onClick={isNetworkError ? handleRetry : () => navigate('/login')}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 text-sm font-medium"
+        className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium hover:brightness-95"
       >
         {isNetworkError ? 'Reintentar' : 'Volver al inicio'}
       </button>

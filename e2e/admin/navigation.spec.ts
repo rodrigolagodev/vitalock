@@ -1,25 +1,11 @@
 import { expect, login, test } from '../fixtures';
+import { ROUTES } from './routes';
 
 /**
  * Every lazy route chunk renders its page heading inside the shell. Catches a
  * broken dynamic import or a route-level boundary firing on first paint —
  * neither is visible to the component tests, which never load main.tsx.
  */
-// Exact PageHeader titles (apps/admin/src/routes/**). Kept literal on purpose:
-// a renamed page should fail here, not silently match a looser pattern.
-const ROUTES: ReadonlyArray<[path: string, heading: string]> = [
-  ['/administraciones', 'Administraciones'],
-  ['/llaves', 'Órdenes de llaves'],
-  ['/llaves/inventario', 'Inventario de llaves'],
-  ['/equipos', 'Inventario de equipos'],
-  ['/servicio-tecnico', 'Servicio técnico'],
-  ['/ordenes', 'Órdenes'],
-  ['/tareas', 'Tareas'],
-  ['/personal', 'Personal'],
-  ['/particulares', 'Particulares'],
-  ['/stock', 'Stock'],
-];
-
 test.describe('admin — every route renders', () => {
   test.beforeEach(async ({ page }) => login(page, 'admin'));
 

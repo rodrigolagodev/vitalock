@@ -140,23 +140,23 @@ No code is written here except the conditional task 0.7. If a check fails and F1
 
 ## Phase 4 · Axe e2e gate (WU4, commit 4)
 
-- [ ] 4.1 Add `@axe-core/playwright` 4.10.x as a root devDependency (`pnpm add -D -w`); confirm it appears only under `devDependencies` and the lockfile updates.
-- [ ] 4.2 Create `e2e/admin/routes.ts` exporting `ROUTES`; change `e2e/admin/navigation.spec.ts` to import it.
-- [ ] 4.3 RED: write `e2e/admin/a11y.spec.ts`: two `describe` blocks (`test.use({ colorScheme: 'light' | 'dark' })`), login, audit the 10 list routes plus `/llaves/nueva` and `/servicio-tecnico/nueva` after clicking submit on the empty form; `AxeBuilder` with tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`; fail on `serious` or `critical`, message lists rule id and targets, full JSON via `testInfo.attach`; `EXCLUDED_RULES: Record<string, string>` starts empty and `color-contrast` is never disabled.
-- [ ] 4.4 GREEN: run the spec against the local stack and fix every pre-existing serious or critical violation found. Any exclusion needs a rule id and a written reason.
-- [ ] 4.5 Resolve the Open Question on detail pages: assume lists and forms only; record the assumption in `apply-progress.md`.
-- [ ] 4.6 Confirm `e2e.yml` runs the spec in the existing path (not a required check yet).
-- [ ] 4.7 Commit 4 gate: `pnpm lint && pnpm typecheck && pnpm test` green. Commit `test(admin): add axe accessibility e2e gate`.
+- [x] 4.1 Add `@axe-core/playwright` 4.10.x as a root devDependency (`pnpm add -D -w`); confirm it appears only under `devDependencies` and the lockfile updates.
+- [x] 4.2 Create `e2e/admin/routes.ts` exporting `ROUTES`; change `e2e/admin/navigation.spec.ts` to import it.
+- [x] 4.3 RED: write `e2e/admin/a11y.spec.ts`: two `describe` blocks (`test.use({ colorScheme: 'light' | 'dark' })`), login, audit the 10 list routes plus `/llaves/nueva` and `/servicio-tecnico/nueva` after clicking submit on the empty form; `AxeBuilder` with tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`; fail on `serious` or `critical`, message lists rule id and targets, full JSON via `testInfo.attach`; `EXCLUDED_RULES: Record<string, string>` starts empty and `color-contrast` is never disabled.
+- [x] 4.4 GREEN: run the spec against the local stack and fix every pre-existing serious or critical violation found. Any exclusion needs a rule id and a written reason.
+- [x] 4.5 Resolve the Open Question on detail pages: assume lists and forms only; record the assumption in `apply-progress.md`.
+- [x] 4.6 Confirm `e2e.yml` runs the spec in the existing path (not a required check yet).
+- [x] 4.7 Commit 4 gate: `pnpm lint && pnpm typecheck && pnpm test` green. Commit `test(admin): add axe accessibility e2e gate`.
 
 ## Phase 5 · Verify
 
-- [ ] 5.1 `pnpm install --frozen-lockfile`.
-- [ ] 5.2 `pnpm lint`.
-- [ ] 5.3 `pnpm typecheck`.
-- [ ] 5.4 `pnpm test` (workspaces `@vitalock/admin` and `@vitalock/ui`).
-- [ ] 5.5 `pnpm lint:hardcodes` exits 0 on the tree.
-- [ ] 5.6 `pnpm test:scripts` (the `node:test` gate test): bad fixture exits 1 with each seeded finding, clean and allowlisted fixtures exit 0.
-- [ ] 5.7 If the local stack is up: `pnpm e2e` including `navigation.spec.ts` and `a11y.spec.ts` (light and dark) with zero serious or critical violations. If the stack is down, record the e2e run as skipped with the reason in `apply-progress.md`; CI `e2e.yml` covers it.
-- [ ] 5.8 Success-criteria greps: `rg 'window\.confirm' apps/admin/src` returns none; `rg 'animate-spin' apps/admin/src` returns only button spinners; `rg 'BrowserRouter' apps/admin/src/main.tsx` returns none; `rg 'common/Section' apps/admin/src` returns none.
-- [ ] 5.9 Verify that every commit builds green on its own (`git rebase --exec 'pnpm typecheck && pnpm test' <base>`), and that `size:exception` is stated in the PR description.
-- [ ] 5.10 Write `apply-progress.md` evidence and hand off to `sdd-verify`. No SQL is touched, so `test:sql` and `db:rehearse` do not apply.
+- [x] 5.1 `pnpm install --frozen-lockfile`.
+- [x] 5.2 `pnpm lint`.
+- [x] 5.3 `pnpm typecheck`.
+- [x] 5.4 `pnpm test` (workspaces `@vitalock/admin` and `@vitalock/ui`).
+- [x] 5.5 `pnpm lint:hardcodes` exits 0 on the tree.
+- [x] 5.6 `pnpm test:scripts` (the `node:test` gate test): bad fixture exits 1 with each seeded finding, clean and allowlisted fixtures exit 0.
+- [x] 5.7 If the local stack is up: `pnpm e2e` including `navigation.spec.ts` and `a11y.spec.ts` (light and dark) with zero serious or critical violations. If the stack is down, record the e2e run as skipped with the reason in `apply-progress.md`; CI `e2e.yml` covers it.
+- [x] 5.8 Success-criteria greps: `rg 'window\.confirm' apps/admin/src` returns none; `rg 'animate-spin' apps/admin/src` returns only button spinners; `rg 'BrowserRouter' apps/admin/src/main.tsx` returns none; `rg 'common/Section' apps/admin/src` returns none.
+- [x] 5.9 Verify that every commit builds green on its own (`git rebase --exec 'pnpm typecheck && pnpm test' <base>`), and that `size:exception` is stated in the PR description.
+- [x] 5.10 Write `apply-progress.md` evidence and hand off to `sdd-verify`. No SQL is touched, so `test:sql` and `db:rehearse` do not apply.

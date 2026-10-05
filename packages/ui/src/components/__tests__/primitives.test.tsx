@@ -38,6 +38,13 @@ describe('shared primitives from @vitalock/ui', () => {
     expect(button).toBeInTheDocument();
   });
 
+  it('darkens the default Button on hover instead of fading it (white-on-primary must keep 4.5:1)', () => {
+    render(<Button>Guardar</Button>);
+    const button = screen.getByRole('button', { name: 'Guardar' });
+    expect(button).toHaveClass('hover:brightness-95');
+    expect(button.className).not.toContain('hover:bg-primary/90');
+  });
+
   it('renders a second Button variant with different content', () => {
     render(<Button variant="destructive">Eliminar</Button>);
     const button = screen.getByRole('button', { name: 'Eliminar' });

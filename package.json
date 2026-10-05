@@ -28,6 +28,7 @@
     "db:rehearse": "bash scripts/rehearse-migration.sh"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
     "@playwright/test": "1.48.2",
     "@types/node": "22.7.5",
     "@vitalock/config-typescript": "workspace:^",
