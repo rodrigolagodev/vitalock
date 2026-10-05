@@ -22,6 +22,16 @@ describe('UserMenu', () => {
     expect(screen.getByRole('button', { name: 'Abrir menú de usuario' })).toBeInTheDocument();
   });
 
+  it('gives the trigger an inset keyboard focus ring', () => {
+    render(<UserMenu name="Ana Alvarez" onSignOut={vi.fn()} />);
+    const cls = screen
+      .getByRole('button', { name: 'Abrir menú de usuario' })
+      .className.split(/\s+/);
+    expect(cls).toContain('focus-visible:ring-2');
+    expect(cls).toContain('focus-visible:ring-inset');
+    expect(cls).toContain('focus-visible:ring-ring');
+  });
+
   it('falls back to US initials when the name yields none', () => {
     render(<UserMenu name="" onSignOut={vi.fn()} />);
     expect(screen.getByText('US')).toBeInTheDocument();

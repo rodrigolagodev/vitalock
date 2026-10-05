@@ -1,3 +1,12 @@
+import {
+  controlHeight,
+  elevation,
+  fontFamily,
+  motion,
+  radius,
+  typeScale,
+} from './tailwind.tokens.js';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
@@ -29,6 +38,7 @@ export default {
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
+          solid: 'hsl(var(--destructive-solid))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
@@ -66,7 +76,14 @@ export default {
           950: 'hsl(var(--brand-950))',
         },
       },
+      fontFamily,
+      fontSize: typeScale,
+      spacing: controlHeight,
+      boxShadow: elevation,
+      transitionDuration: motion.duration,
+      transitionTimingFunction: motion.timing,
       borderRadius: {
+        ...radius,
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',

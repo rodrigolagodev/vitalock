@@ -18,6 +18,13 @@ import {
   DialogContent,
   DialogTitle,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Sheet,
+  SheetContent,
+  SheetTitle,
   Switch,
   Textarea,
 } from '@vitalock/ui';
@@ -33,6 +40,66 @@ describe('shared primitives from @vitalock/ui', () => {
     render(<Button variant="destructive">Eliminar</Button>);
     const button = screen.getByRole('button', { name: 'Eliminar' });
     expect(button).toBeInTheDocument();
+  });
+
+  it('paints the destructive Button with the solid token and white foreground', () => {
+    render(<Button variant="destructive">Eliminar</Button>);
+    const cls = screen.getByRole('button', { name: 'Eliminar' }).className.split(/\s+/);
+    expect(cls).toContain('bg-destructive-solid');
+    expect(cls).toContain('text-destructive-foreground');
+    expect(cls).toContain('hover:bg-destructive-solid/90');
+    expect(cls).not.toContain('bg-destructive');
+  });
+
+  it.each(['ghost', 'outline'] as const)(
+    'uses the neutral accent hover for the %s Button',
+    (variant) => {
+      render(<Button variant={variant}>Acción</Button>);
+      const cls = screen.getByRole('button', { name: 'Acción' }).className.split(/\s+/);
+      expect(cls).toContain('hover:bg-accent');
+      expect(cls).not.toContain('hover:bg-muted');
+    },
+  );
+
+  it('names the Dialog close button "Cerrar" (and not "Close")', () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>Confirmar acción</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Cerrar' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+  });
+
+  it('names the Sheet close button "Cerrar" (and not "Close")', () => {
+    render(
+      <Sheet open>
+        <SheetContent>
+          <SheetTitle>Detalle</SheetTitle>
+        </SheetContent>
+      </Sheet>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Cerrar' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+  });
+
+  it('gives Select items a visible keyboard focus ring', () => {
+    render(
+      <Select open>
+        <SelectTrigger>
+          <span>Elegir</span>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="a">Opción A</SelectItem>
+        </SelectContent>
+      </Select>,
+    );
+    const cls = screen.getByRole('option', { name: 'Opción A' }).className.split(/\s+/);
+    expect(cls).toContain('focus-visible:outline-none');
+    expect(cls).toContain('focus-visible:ring-2');
+    expect(cls).toContain('focus-visible:ring-ring');
   });
 
   it('renders a Switch with role switch that toggles on click', () => {
@@ -93,6 +160,7 @@ describe('shared primitives from @vitalock/ui', () => {
   it('renders a Badge variant with its label', () => {
     render(<Badge variant="destructive">Error</Badge>);
     expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.getByText('Error').className.split(/\s+/)).toContain('bg-destructive-solid');
   });
 });
 

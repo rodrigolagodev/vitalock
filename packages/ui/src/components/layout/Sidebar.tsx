@@ -106,7 +106,7 @@ export function SidebarNav({
             onClick={onToggle}
             aria-pressed={collapsed}
             aria-label="Toggle sidebar"
-            className="text-muted-foreground hover:bg-muted focus-visible:bg-muted flex h-11 w-full items-center justify-center border-t transition-colors focus-visible:outline-none"
+            className="text-muted-foreground hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring flex h-11 w-full items-center justify-center border-t transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
           >
             {collapsed ? (
               <ChevronRight className="h-5 w-5" aria-hidden="true" />

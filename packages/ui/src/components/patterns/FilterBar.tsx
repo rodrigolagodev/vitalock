@@ -435,7 +435,7 @@ function FilterBarMultiSelect({
             <button
               type="button"
               onClick={clearFacet}
-              className="text-muted-foreground hover:bg-accent w-full rounded-md px-2 py-1.5 text-center text-sm"
+              className="text-muted-foreground hover:bg-accent focus-visible:ring-ring w-full rounded-md px-2 py-1.5 text-center text-sm focus-visible:outline-none focus-visible:ring-2"
             >
               Limpiar filtro
             </button>
@@ -645,7 +645,7 @@ function FilterBarDateRange({
             <button
               type="button"
               onClick={() => onChangeRef.current({ from: '', to: '' })}
-              className="text-muted-foreground hover:bg-accent w-full rounded-md px-2 py-1.5 text-center text-sm"
+              className="text-muted-foreground hover:bg-accent focus-visible:ring-ring w-full rounded-md px-2 py-1.5 text-center text-sm focus-visible:outline-none focus-visible:ring-2"
             >
               Limpiar filtro
             </button>

@@ -50,7 +50,7 @@ export function UserMenu({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="hover:bg-muted focus-visible:bg-muted flex w-full items-center gap-3 px-3 py-3 text-left transition-colors focus-visible:outline-none"
+          className="hover:bg-muted focus-visible:bg-muted focus-visible:ring-ring flex w-full items-center gap-3 px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset"
           aria-label="Abrir menú de usuario"
         >
           <span className="bg-muted text-muted-foreground flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium">

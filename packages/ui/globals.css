@@ -32,17 +32,17 @@
     --secondary: 210 40% 98%;
     --secondary-foreground: 221.5 7.8% 32.7%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.3 11% 69.6%;
+    --muted-foreground: 215 18% 43%;
     --border: 214.3 31.8% 91.4%;
-    --input: 216.9 16% 84.1%;
+    --input: 215 14% 57%;
     --radius: 0.625rem;
 
     /* Brand (light) */
     --primary: 240 79% 65%;
     --primary-foreground: 0 0% 100%;
     --ring: 240 79% 65%;
-    --accent: 245.8 100% 69.6%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 220 16% 93%;
+    --accent-foreground: 217.2 32.6% 17.5%;
     --brand-50: 228 100% 96.9%;
     --brand-100: 228 100% 93.9%;
     --brand-200: 231 92% 89%;
@@ -56,28 +56,26 @@
     --brand-950: 243 41% 20.4%;
 
     /* Semantics (light)
-     * `--destructive` / `--info` / `--success` / `--warning` are darkened
-     * relative to a "designer default" mid-tone hue so `text-<tone>` on a
-     * white `--card` clears WCAG 1.4.3 (>=4.5:1). Verified sRGB relative
-     * luminance contrast against `#fff`: destructive ~4.69:1, info ~4.75:1,
-     * success ~5.03:1, warning ~4.87:1. Solid-background usages
-     * (`bg-<tone> text-<tone>-foreground` buttons/badges) only gain
-     * contrast from a darker background, so this is a no-regression change.
+     * Tone tokens are darkened so `text-<tone>` clears WCAG 1.4.3 (>=4.5:1)
+     * on card, popover, content and on its own 10% tint (soft badges).
+     * `--destructive` is the text/tint/indicator tone; filled surfaces use
+     * `--destructive-solid` + `--destructive-foreground` (white). In light
+     * the two coincide. The contrast test in tokens.test.ts is authoritative.
      */
-    --destructive: 0 84.2% 49%;
-    --destructive-foreground: 210 20% 98%;
-    --info: 217 91% 52%;
-    --info-foreground: 210 40% 98%;
-    --success: 160 84% 27%;
+    --destructive: 0 84.2% 44%;
+    --destructive-solid: 0 84.2% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 217 91% 46%;
+    --info-foreground: 0 0% 100%;
+    --success: 160 84% 25%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 32%;
+    --warning: 38 92% 29%;
     --warning-foreground: 0 0% 100%;
 
     /*
-     * Dedicated to StatusBadge's `neutral` tone text only — intentionally
-     * NOT `--muted-foreground`, which stays lighter for the app's broader
-     * de-emphasized/secondary text (300+ call sites unrelated to status
-     * badges). ~5.23:1 against white `--card`.
+     * Redundant: `--muted-foreground` now clears 4.5:1 on card and muted too.
+     * Kept (value unchanged) until F1 migrates StatusBadge's `neutral` tone to
+     * `text-muted-foreground`, then remove this token.
      */
     --status-neutral-foreground: 215.3 25% 45%;
   }
@@ -95,16 +93,16 @@
     --secondary-foreground: 224 20% 95%;
     --muted: 224 30% 14%;
     --muted-foreground: 224 12% 68%;
-    --border: 243 41% 20.4%; /* brand-900 — probando borde visible en dark */
-    --input: 224 30% 14%;
+    --border: 224 20% 24%; /* neutral hairline; decorative, exempt from 3:1 */
+    --input: 224 12% 50%;
     --radius: 0.625rem;
 
     /* Brand (dark) */
     --primary: 240 79% 65%;
     --primary-foreground: 0 0% 100%;
     --ring: 240 79% 65%;
-    --accent: 245.8 100% 69.6%;
-    --accent-foreground: 252 60% 90%;
+    --accent: 224 20% 20%;
+    --accent-foreground: 224 20% 95%;
     --brand-50: 228 100% 96.9%;
     --brand-100: 228 100% 93.9%;
     --brand-200: 231 92% 89%;
@@ -118,17 +116,34 @@
     --brand-950: 243 41% 20.4%;
 
     /* Semantics (dark) */
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 72% 68%;
+    --destructive-solid: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
     --info: 213 94% 68%;
     --info-foreground: 217 91% 12%;
     --success: 158 64% 52%;
-    --success-foreground: 0 0% 100%;
+    --success-foreground: 158 80% 10%;
     --warning: 48 96% 53%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 38 92% 12%;
 
     /* Reuses the existing dark-mode --muted-foreground value; dark `--card`
      * already gives it ample contrast, so no separate audit was needed. */
     --status-neutral-foreground: 224 12% 68%;
+  }
+}
+
+/*
+ * Global reduced-motion rule. 0.01ms (not `animation: none`) so `animationend`
+ * still fires and Radix Presence unmounts closing dialogs/sheets normally.
+ * Spinners and pulses become static but still render.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
