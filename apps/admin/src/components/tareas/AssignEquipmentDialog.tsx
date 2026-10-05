@@ -17,6 +17,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  FormField,
 } from '@vitalock/ui';
 import { useEquipment } from '@/hooks/useEquipment';
 import { useProducts } from '@/hooks/useProducts';
@@ -201,39 +202,37 @@ export function AssignEquipmentDialog({
             }}
             className="flex flex-col gap-4"
           >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="assign-equipment-id">Equipo *</Label>
-              <Controller
-                control={selectForm.control}
-                name="equipment_id"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="assign-equipment-id">
-                      <SelectValue placeholder="Seleccioná un equipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {equipment.map((eq) => (
-                        <SelectItem key={eq.id} value={eq.id}>
-                          {eq.serial_number}
-                          {eq.model ? ` — ${eq.model}` : ''}
-                          {eq.status !== 'active' ? ` (${equipmentStatus.label(eq.status)})` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {selectForm.formState.errors.equipment_id && (
-                <p className="text-destructive text-sm">
-                  {selectForm.formState.errors.equipment_id.message}
-                </p>
+            <FormField
+              label="Equipo *"
+              id="assign-equipment-id"
+              error={selectForm.formState.errors.equipment_id?.message}
+              description={
+                equipment.length === 0 ? 'No hay equipos registrados en el edificio.' : undefined
+              }
+            >
+              {(a11y) => (
+                <Controller
+                  control={selectForm.control}
+                  name="equipment_id"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger {...a11y}>
+                        <SelectValue placeholder="Seleccioná un equipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {equipment.map((eq) => (
+                          <SelectItem key={eq.id} value={eq.id}>
+                            {eq.serial_number}
+                            {eq.model ? ` — ${eq.model}` : ''}
+                            {eq.status !== 'active' ? ` (${equipmentStatus.label(eq.status)})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-              {equipment.length === 0 && (
-                <p className="text-muted-foreground text-xs">
-                  No hay equipos registrados en el edificio.
-                </p>
-              )}
-            </div>
+            </FormField>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose} disabled={submitting}>
@@ -254,19 +253,13 @@ export function AssignEquipmentDialog({
             }}
             className="flex flex-col gap-4"
           >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="new-serial">Número de serie *</Label>
-              <Input
-                id="new-serial"
-                placeholder="Ej. SN-987654321"
-                {...createForm.register('serial_number')}
-              />
-              {createForm.formState.errors.serial_number && (
-                <p className="text-destructive text-sm">
-                  {createForm.formState.errors.serial_number.message}
-                </p>
-              )}
-            </div>
+            <FormField
+              label="Número de serie *"
+              id="new-serial"
+              error={createForm.formState.errors.serial_number?.message}
+            >
+              <Input placeholder="Ej. SN-987654321" {...createForm.register('serial_number')} />
+            </FormField>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose} disabled={submitting}>
@@ -287,79 +280,73 @@ export function AssignEquipmentDialog({
             }}
             className="flex flex-col gap-4"
           >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="old-equipment">Equipo actual *</Label>
-              <Controller
-                control={replaceForm.control}
-                name="old_equipment_id"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="old-equipment">
-                      <SelectValue placeholder="Seleccioná el equipo a reemplazar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {activeEquipment.map((eq) => (
-                        <SelectItem key={eq.id} value={eq.id}>
-                          {eq.serial_number}
-                          {eq.model ? ` — ${eq.model}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {replaceForm.formState.errors.old_equipment_id && (
-                <p className="text-destructive text-sm">
-                  {replaceForm.formState.errors.old_equipment_id.message}
-                </p>
+            <FormField
+              label="Equipo actual *"
+              id="old-equipment"
+              error={replaceForm.formState.errors.old_equipment_id?.message}
+            >
+              {(a11y) => (
+                <Controller
+                  control={replaceForm.control}
+                  name="old_equipment_id"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger {...a11y}>
+                        <SelectValue placeholder="Seleccioná el equipo a reemplazar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {activeEquipment.map((eq) => (
+                          <SelectItem key={eq.id} value={eq.id}>
+                            {eq.serial_number}
+                            {eq.model ? ` — ${eq.model}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-            </div>
+            </FormField>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="rep-serial">Nuevo número de serie *</Label>
-              <Input
-                id="rep-serial"
-                placeholder="Ej. SN-NEW-001"
-                {...replaceForm.register('new_serial_number')}
-              />
-              {replaceForm.formState.errors.new_serial_number && (
-                <p className="text-destructive text-sm">
-                  {replaceForm.formState.errors.new_serial_number.message}
-                </p>
-              )}
-            </div>
+            <FormField
+              label="Nuevo número de serie *"
+              id="rep-serial"
+              error={replaceForm.formState.errors.new_serial_number?.message}
+            >
+              <Input placeholder="Ej. SN-NEW-001" {...replaceForm.register('new_serial_number')} />
+            </FormField>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="rep-model">Nuevo modelo *</Label>
-              <Controller
-                control={replaceForm.control}
-                name="new_model"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="rep-model">
-                      <SelectValue placeholder="Seleccioná un modelo (stock)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {equipmentProducts.map((p) => (
-                        <SelectItem key={p.id} value={p.name}>
-                          {p.name} — disponible: {p.stock_disponible}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {replaceForm.formState.errors.new_model && (
-                <p className="text-destructive text-sm">
-                  {replaceForm.formState.errors.new_model.message}
-                </p>
+            <FormField
+              label="Nuevo modelo *"
+              id="rep-model"
+              error={replaceForm.formState.errors.new_model?.message}
+              description={
+                equipmentProducts.length === 0
+                  ? 'No hay productos categoría "equipo" en el stock. Cargá uno antes.'
+                  : undefined
+              }
+            >
+              {(a11y) => (
+                <Controller
+                  control={replaceForm.control}
+                  name="new_model"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger {...a11y}>
+                        <SelectValue placeholder="Seleccioná un modelo (stock)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {equipmentProducts.map((p) => (
+                          <SelectItem key={p.id} value={p.name}>
+                            {p.name} — disponible: {p.stock_disponible}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-              {equipmentProducts.length === 0 && (
-                <p className="text-muted-foreground text-xs">
-                  No hay productos categoría "equipo" en el stock. Cargá uno antes.
-                </p>
-              )}
-            </div>
+            </FormField>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="rep-description">Descripción</Label>

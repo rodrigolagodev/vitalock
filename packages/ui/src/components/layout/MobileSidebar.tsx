@@ -48,7 +48,7 @@ export function MobileSidebar({ children, footer }: MobileSidebarProps) {
             className="absolute inset-0 cursor-default bg-black/40"
             onClick={() => setOpen(false)}
           />
-          <aside className="bg-card absolute inset-y-0 left-0 flex w-[280px] flex-col border-r shadow-xl">
+          <aside className="bg-card absolute inset-y-0 left-0 flex w-72 flex-col border-r shadow-xl">
             <div className="flex shrink-0 items-center justify-end p-2">
               <Button
                 variant="ghost"

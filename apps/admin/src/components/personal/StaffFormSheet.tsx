@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, FormField } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
@@ -135,67 +135,51 @@ export function StaffFormSheet({ open, onOpenChange, staff }: StaffFormSheetProp
             </div>
           )}
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="full_name">Nombre *</Label>
-            <Input id="full_name" {...register('full_name')} placeholder="Ej. Juan Pérez" />
-            {errors.full_name && (
-              <p className="text-destructive text-sm">{errors.full_name.message}</p>
-            )}
-          </div>
+          <FormField label="Nombre *" id="full_name" error={errors.full_name?.message}>
+            <Input {...register('full_name')} placeholder="Ej. Juan Pérez" />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="username">Usuario *</Label>
+          <FormField label="Usuario *" id="username" error={errors.username?.message}>
             <Input
-              id="username"
               {...register('username')}
               placeholder="ej. juan.perez"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
             />
-            {errors.username && (
-              <p className="text-destructive text-sm">{errors.username.message}</p>
-            )}
-          </div>
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-              placeholder="Ej. juan@vitalock.com"
-            />
-            {errors.email && <p className="text-destructive text-sm">{errors.email.message}</p>}
-          </div>
+          <FormField label="Email" id="email" error={errors.email?.message}>
+            <Input type="email" {...register('email')} placeholder="Ej. juan@vitalock.com" />
+          </FormField>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Teléfono</Label>
             <Input id="phone" {...register('phone')} placeholder="Ej. +54 11 1234-5678" />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="role">Rol *</Label>
-            <Controller
-              control={control}
-              name="role"
-              render={({ field }) => (
-                <Select value={field.value ?? ''} onValueChange={field.onChange}>
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Seleccioná un rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(staffRole.meta).map(([val, meta]) => (
-                      <SelectItem key={val} value={val}>
-                        {meta.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.role && <p className="text-destructive text-sm">{errors.role.message}</p>}
-          </div>
+          <FormField label="Rol *" id="role" error={errors.role?.message}>
+            {(a11y) => (
+              <Controller
+                control={control}
+                name="role"
+                render={({ field }) => (
+                  <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                    <SelectTrigger {...a11y}>
+                      <SelectValue placeholder="Seleccioná un rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(staffRole.meta).map(([val, meta]) => (
+                        <SelectItem key={val} value={val}>
+                          {meta.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            )}
+          </FormField>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="notes">Notas</Label>

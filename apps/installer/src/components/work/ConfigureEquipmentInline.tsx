@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Button, Input } from '@vitalock/ui';
+import {
+  Button,
+  FormField,
+  Input,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@vitalock/ui';
+import { useOfflineGate } from '@/hooks/useOfflineGate';
 import { useConfigureTechnicalTicketEquipment } from '@/hooks/useConfigureTechnicalTicketEquipment';
 import type { AssignedTicket } from '@/hooks/useAssignedTickets';
 
@@ -16,7 +26,7 @@ const HEADINGS: Record<'install_equipment' | 'replace_equipment', string> = {
 };
 
 /**
- * Inline configure form for the two-step equipment task flow. Loads
+ * Configure flow for the two-step equipment task flow, presented in a bottom sheet. Loads
  * pending_new_serial + pending_new_model into the ticket via
  * configure_technical_ticket_equipment. Physical work (create/replace
  * equipment, key transfer, stock movements) happens when the installer later
@@ -26,25 +36,26 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
   const category = ticket.category as 'install_equipment' | 'replace_equipment';
   const heading = HEADINGS[category];
   const configured = Boolean(ticket.pending_new_serial);
-  const [editing, setEditing] = useState(false);
-  const showForm = !configured || editing;
+  const [open, setOpen] = useState(false);
 
   const [serial, setSerial] = useState(ticket.pending_new_serial ?? '');
   const [model, setModel] = useState(ticket.pending_new_model ?? '');
   const [error, setError] = useState<string | null>(null);
 
   const configure = useConfigureTechnicalTicketEquipment();
+  const { offline, reason } = useOfflineGate();
 
   useEffect(() => {
-    if (showForm) {
+    if (open) {
       setSerial(ticket.pending_new_serial ?? '');
       setModel(ticket.pending_new_model ?? '');
       setError(null);
     }
-  }, [showForm, ticket.pending_new_serial, ticket.pending_new_model]);
+  }, [open, ticket.pending_new_serial, ticket.pending_new_model]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (offline) return;
     const trimmedSerial = serial.trim();
     if (!trimmedSerial) {
       setError('El número de serie es obligatorio.');
@@ -57,7 +68,7 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
         newSerial: trimmedSerial,
         newModel: model.trim().length > 0 ? model.trim() : null,
       },
-      { onSuccess: () => setEditing(false) },
+      { onSuccess: () => setOpen(false) },
     );
   };
 
@@ -66,22 +77,16 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
 
   return (
     <div className="bg-muted/30 flex flex-col gap-2 rounded-md border p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground text-xs font-semibold uppercase">{heading}</span>
-        {configured && !editing && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(true)}
-            disabled={isPending}
-          >
-            Editar
-          </Button>
-        )}
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-muted-foreground text-footnote font-semibold uppercase">
+          {heading}
+        </span>
+        <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+          {configured ? 'Editar' : 'Configurar equipo'}
+        </Button>
       </div>
 
-      {!showForm && configured && (
+      {configured && (
         <div className="flex flex-col gap-1 text-sm">
           <span>
             <span className="text-muted-foreground">Serie:</span> {ticket.pending_new_serial}
@@ -93,46 +98,52 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
         </div>
       )}
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-          {!configured && (
-            <p className="text-muted-foreground text-xs">
-              Cargá el serie del nuevo equipo. Después vas a poder finalizar la tarea.
-            </p>
-          )}
-          <Input
-            placeholder="Número de serie"
-            value={serial}
-            onChange={(e) => setSerial(e.target.value)}
-            disabled={isPending}
-            aria-label="Número de serie"
-          />
-          <Input
-            placeholder={modelPlaceholder}
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            disabled={isPending}
-            aria-label="Modelo"
-          />
-          {error && <p className="text-destructive text-sm">{error}</p>}
-          <div className="flex justify-end gap-2">
-            {configured && editing && (
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <SheetTitle>{configured ? 'Editar equipo' : 'Configurar equipo'}</SheetTitle>
+            {!configured && (
+              <SheetDescription>
+                Cargá el serie del nuevo equipo. Después vas a poder finalizar la tarea.
+              </SheetDescription>
+            )}
+          </SheetHeader>
+          <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+            <FormField label="Número de serie" error={error ?? undefined}>
+              <Input
+                value={serial}
+                onChange={(e) => setSerial(e.target.value)}
+                disabled={isPending}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </FormField>
+            <FormField label="Modelo">
+              <Input
+                placeholder={modelPlaceholder}
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                disabled={isPending}
+              />
+            </FormField>
+            {reason && <p className="text-footnote text-muted-foreground">{reason}</p>}
+            <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={() => setEditing(false)}
+                onClick={() => setOpen(false)}
                 disabled={isPending}
               >
                 Cancelar
               </Button>
-            )}
-            <Button type="submit" size="sm" disabled={isPending}>
-              {isPending ? 'Guardando…' : 'Guardar equipo'}
-            </Button>
-          </div>
-        </form>
-      )}
+              <Button type="submit" disabled={isPending || offline}>
+                {isPending ? 'Guardando…' : 'Guardar equipo'}
+              </Button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

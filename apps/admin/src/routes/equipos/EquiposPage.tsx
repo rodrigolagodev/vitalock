@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, ErrorState, FilterBar } from '@vitalock/ui';
+import { Cpu } from 'lucide-react';
+import { Button, EmptyState, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useEquipmentInventory } from '@/hooks/useEquipmentInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -31,6 +32,7 @@ export default function EquiposPage() {
     data: rows = [],
     isFetching,
     isError,
+    refetch,
   } = useEquipmentInventory({
     administrationId: cascadeValue.administrationId,
     buildingId: cascadeValue.buildingId,
@@ -55,13 +57,26 @@ export default function EquiposPage() {
     parentId: e.building_id,
   }));
 
+  const hasFilters =
+    cascadeValue.administrationId !== undefined ||
+    cascadeValue.buildingId !== undefined ||
+    status !== 'all';
+
   if (isError) {
-    return <ErrorState message="Error al cargar el inventario de equipos. Recargá la página." />;
+    return (
+      <ErrorState
+        message="Error al cargar el inventario de equipos."
+        onRetry={() => void refetch()}
+      />
+    );
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Inventario de equipos">
+      <PageHeader
+        title="Inventario de equipos"
+        subtitle="Consultá los equipos instalados y su estado."
+      >
         <Button asChild>
           <Link to="/servicio-tecnico/nueva">Crear orden técnica</Link>
         </Button>
@@ -113,7 +128,18 @@ export default function EquiposPage() {
         <FilterBar.Summary />
       </FilterBar>
 
-      <EquipmentInventoryTable rows={rows} isFetching={isFetching} />
+      <EquipmentInventoryTable
+        rows={rows}
+        isFetching={isFetching}
+        hasFilters={hasFilters}
+        emptyState={
+          <EmptyState
+            icon={Cpu}
+            title="Todavía no hay equipos"
+            description="Aparecen acá cuando se crean desde las órdenes."
+          />
+        }
+      />
     </div>
   );
 }

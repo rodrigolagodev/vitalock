@@ -7,14 +7,14 @@ describe('Separator', () => {
     render(<Separator data-testid="sep" />);
     const sep = screen.getByTestId('sep');
     expect(sep).toHaveAttribute('data-orientation', 'horizontal');
-    expect(sep.className).toContain('h-[1px]');
+    expect(sep.className).toContain('h-px');
   });
 
   it('renders a vertical separator when asked', () => {
     render(<Separator data-testid="sep" orientation="vertical" />);
     const sep = screen.getByTestId('sep');
     expect(sep).toHaveAttribute('data-orientation', 'vertical');
-    expect(sep.className).toContain('w-[1px]');
+    expect(sep.className).toContain('w-px');
   });
 
   it('is decorative by default so assistive tech ignores it', () => {

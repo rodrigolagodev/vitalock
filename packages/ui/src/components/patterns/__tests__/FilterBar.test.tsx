@@ -352,6 +352,42 @@ describe('FilterBar.MultiSelect', () => {
     expect(onChangeKind).toHaveBeenCalledWith([]);
   });
 
+  it('gives the "Limpiar filtro" button a visible keyboard focus ring (MultiSelect)', async () => {
+    const user = userEvent.setup();
+    render(
+      <FilterBar>
+        <FilterBar.MultiSelect
+          facet="kind"
+          label="Tipo"
+          options={KIND_OPTIONS}
+          value={['key']}
+          onChange={() => {}}
+        />
+      </FilterBar>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Tipo/ }));
+    const cls = screen.getByRole('button', { name: 'Limpiar filtro' }).className.split(/\s+/);
+    expect(cls).toContain('focus-visible:outline-none');
+    expect(cls).toContain('focus-visible:ring-2');
+    expect(cls).toContain('focus-visible:ring-ring');
+  });
+
+  it('gives the "Limpiar filtro" button a visible keyboard focus ring (DateRange)', async () => {
+    const user = userEvent.setup();
+    render(
+      <FilterBar>
+        <FilterBar.DateRange value={{ from: '2026-01-01', to: '' }} onChange={() => {}} />
+      </FilterBar>,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Fecha|Desde|2026/ }));
+    const cls = screen.getByRole('button', { name: 'Limpiar filtro' }).className.split(/\s+/);
+    expect(cls).toContain('focus-visible:outline-none');
+    expect(cls).toContain('focus-visible:ring-2');
+    expect(cls).toContain('focus-visible:ring-ring');
+  });
+
   it('does not render "Limpiar filtro" when no option is selected', async () => {
     const user = userEvent.setup();
     render(

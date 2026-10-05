@@ -31,7 +31,7 @@ export function TareaTraceabilityCard({
 
   return (
     <div className="bg-card flex flex-col gap-4 rounded-md border p-4">
-      <SectionHeading title="Trazabilidad" variant="secondary" />
+      <SectionHeading title="Trazabilidad" />
 
       <ol className="flex flex-col" aria-label="Línea de tiempo">
         {timeline.map((entry, index) => {

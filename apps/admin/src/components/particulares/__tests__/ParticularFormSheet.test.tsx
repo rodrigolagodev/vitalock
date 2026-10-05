@@ -47,17 +47,14 @@ vi.mock('@/hooks/useMutateUnit', () => ({
 
 import { ParticularFormSheet } from '../ParticularFormSheet';
 import type { ParticularRow } from '@/hooks/useParticulares';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
-    return React.createElement(
-      QueryClientProvider,
-      { client: queryClient },
-      children,
-    );
+    return React.createElement(QueryClientProvider, { client: queryClient }, children);
   };
 }
 
@@ -79,16 +76,16 @@ describe('ParticularFormSheet', () => {
     mockCreateParticular.mockResolvedValue({ id: 'p-new' });
     mockUpdateParticular.mockResolvedValue({ id: 'p-1' });
     mockUseUnits.mockReturnValue({
-      data: [{ id: 'u-1', number: '101' }, { id: 'u-2', number: '102' }],
+      data: [
+        { id: 'u-1', number: '101' },
+        { id: 'u-2', number: '102' },
+      ],
       isLoading: false,
     });
   });
 
   it('keeps the unit select disabled until a building is chosen', () => {
-    render(
-      <ParticularFormSheet open onOpenChange={vi.fn()} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<ParticularFormSheet open onOpenChange={vi.fn()} />, { wrapper: makeWrapper() });
 
     expect(screen.getByRole('combobox', { name: /unidad/i })).toBeDisabled();
   });
@@ -144,18 +141,11 @@ describe('ParticularFormSheet', () => {
 
   it('edit path prefills the row and submits UpdateParticularInput', async () => {
     const user = userEvent.setup();
-    render(
-      <ParticularFormSheet
-        open
-        onOpenChange={vi.fn()}
-        particular={garcia}
-      />,
-      { wrapper: makeWrapper() },
-    );
+    render(<ParticularFormSheet open onOpenChange={vi.fn()} particular={garcia} />, {
+      wrapper: makeWrapper(),
+    });
 
-    expect(screen.getByRole('combobox', { name: /edificio/i })).toHaveTextContent(
-      'Torre Norte',
-    );
+    expect(screen.getByRole('combobox', { name: /edificio/i })).toHaveTextContent('Torre Norte');
     expect(screen.getByRole('combobox', { name: /unidad/i })).not.toBeDisabled();
     expect(screen.getByLabelText(/nombre/i)).toHaveValue('García Juan');
     expect(screen.getByLabelText(/dni/i)).toHaveValue('30111222');
@@ -179,10 +169,9 @@ describe('ParticularFormSheet', () => {
 
   it('changing the building resets the picked unit', async () => {
     const user = userEvent.setup();
-    render(
-      <ParticularFormSheet open onOpenChange={vi.fn()} particular={garcia} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<ParticularFormSheet open onOpenChange={vi.fn()} particular={garcia} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.click(screen.getByRole('combobox', { name: /edificio/i }));
     await user.click(await screen.findByRole('option', { name: 'Edificio Sur' }));
@@ -209,5 +198,12 @@ describe('ParticularFormSheet', () => {
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<ParticularFormSheet open onOpenChange={vi.fn()} />, { wrapper: makeWrapper() });
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

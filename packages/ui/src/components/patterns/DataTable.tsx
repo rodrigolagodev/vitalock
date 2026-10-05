@@ -94,6 +94,11 @@ export interface DataTableProps<T> {
   renderActions?: (row: T) => React.ReactNode;
   actionsHeaderLabel?: string;
   emptyMessage?: string;
+  /**
+   * Rich zero-state (EmptyState v2) shown when there are no rows and no filters.
+   * Takes precedence over `emptyMessage`; the filtered-empty case keeps the compact message.
+   */
+  emptyState?: React.ReactNode;
   filteredEmptyMessage?: string;
   hasFilters?: boolean;
   paginated?: boolean;
@@ -142,6 +147,7 @@ export function DataTable<T>({
   renderActions,
   actionsHeaderLabel = 'Acciones',
   emptyMessage,
+  emptyState,
   filteredEmptyMessage,
   hasFilters = false,
   paginated = true,
@@ -191,7 +197,7 @@ export function DataTable<T>({
     }
     const rowActions = (actions ?? []).filter((action) => action.show?.(row) !== false);
     return (
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex items-center justify-end gap-4">
         {rowActions.map((action, index) => {
           const label = typeof action.label === 'function' ? action.label(row) : action.label;
           const isDisabled = action.disabled?.(row) ?? false;
@@ -218,7 +224,7 @@ export function DataTable<T>({
     // overflow-x-auto keeps horizontal overflow scoped to the table card:
     // wide tables scroll inside their rounded border instead of stretching
     // the surrounding layout. Requires min-w-0 on the flex ancestor.
-    <div className="bg-card overflow-x-auto rounded-xl border">
+    <div className="bg-card rounded-container overflow-x-auto border">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -265,9 +271,13 @@ export function DataTable<T>({
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={columnCount}>
-                <div className="text-muted-foreground flex justify-center rounded-md border border-dashed px-4 py-8 text-center text-sm">
-                  {hasFilters ? (filteredEmptyMessage ?? emptyMessage) : emptyMessage}
-                </div>
+                {!hasFilters && emptyState != null ? (
+                  emptyState
+                ) : (
+                  <div className="text-muted-foreground flex justify-center rounded-md border border-dashed px-4 py-8 text-center text-sm">
+                    {hasFilters ? (filteredEmptyMessage ?? emptyMessage) : emptyMessage}
+                  </div>
+                )}
               </TableCell>
             </TableRow>
           ) : (

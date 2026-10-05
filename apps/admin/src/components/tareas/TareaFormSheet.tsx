@@ -16,6 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
   Textarea,
+  FormField,
 } from '@vitalock/ui';
 import { useMutateTarea } from '@/hooks/useMutateTarea';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -173,9 +174,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
   const selectedStatus = watch('status');
 
   // Buildings for building_id select — scoped to selected administration.
-  const { data: buildings = [] } = useBuildings(
-    administrationId ? { administrationId } : {},
-  );
+  const { data: buildings = [] } = useBuildings(administrationId ? { administrationId } : {});
 
   // Units and equipment are only meaningful once a building is chosen.
   const { data: units = [] } = useUnits(buildingId ?? '');
@@ -218,9 +217,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
   }, [isEdit, buildingId, setValue]);
 
   const currentStatus = tarea?.status ?? 'open';
-  const statusOptions = isEdit
-    ? [currentStatus, ...VALID_TRANSITIONS[currentStatus]]
-    : [];
+  const statusOptions = isEdit ? [currentStatus, ...VALID_TRANSITIONS[currentStatus]] : [];
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -271,15 +268,12 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-lg overflow-y-auto">
+      <SheetContent side="right" className="flex flex-col gap-0 overflow-y-auto sm:max-w-lg">
         <SheetHeader className="p-6 pb-4">
           <SheetTitle>{isEdit ? 'Editar tarea' : 'Nueva tarea'}</SheetTitle>
         </SheetHeader>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-1 flex-col gap-6 px-6"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col gap-6 px-6">
           {isEdit && tarea && (
             <>
               {/* ---- Immutable context (read-only) ---- */}
@@ -303,28 +297,23 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
               </div>
 
               {/* ---- Status (valid transitions only) ---- */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="status">Estado</Label>
-                {statusOptions.length <= 1 ? (
-                  <>
-                    <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm opacity-60">
-                      {STATUS_LABELS[currentStatus]}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Cancelada (estado final)
-                    </p>
-                  </>
-                ) : (
-                  <>
+              {statusOptions.length <= 1 ? (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="status">Estado</Label>
+                  <div className="border-input bg-muted flex h-10 w-full items-center rounded-md border px-3 py-2 text-sm opacity-60">
+                    {STATUS_LABELS[currentStatus]}
+                  </div>
+                  <p className="text-muted-foreground text-xs">Cancelada (estado final)</p>
+                </div>
+              ) : (
+                <FormField label="Estado" id="status" error={errors.status?.message}>
+                  {(a11y) => (
                     <Controller
                       control={control}
                       name="status"
                       render={({ field }) => (
-                        <Select
-                          value={field.value ?? ''}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger id="status">
+                        <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                          <SelectTrigger {...a11y}>
                             <SelectValue placeholder="Seleccioná un estado" />
                           </SelectTrigger>
                           <SelectContent>
@@ -337,112 +326,102 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
                         </Select>
                       )}
                     />
-                    {errors.status && (
-                      <p className="text-sm text-destructive">
-                        {errors.status.message}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
+                  )}
+                </FormField>
+              )}
             </>
           )}
 
           {/* ---- Administration (create only) ---- */}
           {!isEdit && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="administration_id">Administración *</Label>
-              <Controller
-                control={control}
-                name="administration_id"
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(v) => field.onChange(v || '')}
-                  >
-                    <SelectTrigger id="administration_id">
-                      <SelectValue placeholder="Seleccioná una administración" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {administrations.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.company_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.administration_id && (
-                <p className="text-sm text-destructive">
-                  {errors.administration_id.message}
-                </p>
+            <FormField
+              label="Administración *"
+              id="administration_id"
+              error={errors.administration_id?.message}
+            >
+              {(a11y) => (
+                <Controller
+                  control={control}
+                  name="administration_id"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ''}
+                      onValueChange={(v) => field.onChange(v || '')}
+                    >
+                      <SelectTrigger {...a11y}>
+                        <SelectValue placeholder="Seleccioná una administración" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {administrations.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.company_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-            </div>
+            </FormField>
           )}
 
           {/* ---- Building (create only) ---- */}
           {!isEdit && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="building_id">Edificio *</Label>
-              <Controller
-                control={control}
-                name="building_id"
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(v) => field.onChange(v || '')}
-                    disabled={!administrationId}
-                  >
-                    <SelectTrigger id="building_id">
-                      <SelectValue placeholder="Seleccioná un edificio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {buildings.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.building_id && (
-                <p className="text-sm text-destructive">
-                  {errors.building_id.message}
-                </p>
+            <FormField label="Edificio *" id="building_id" error={errors.building_id?.message}>
+              {(a11y) => (
+                <Controller
+                  control={control}
+                  name="building_id"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ''}
+                      onValueChange={(v) => field.onChange(v || '')}
+                      disabled={!administrationId}
+                    >
+                      <SelectTrigger {...a11y}>
+                        <SelectValue placeholder="Seleccioná un edificio" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {buildings.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-            </div>
+            </FormField>
           )}
 
           {/* ---- Category (create only) ---- */}
           {!isEdit && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="category">Categoría *</Label>
-              <Controller
-                control={control}
-                name="category"
-                render={({ field }) => (
-                  <Select value={field.value ?? 'maintain_equipment'} onValueChange={field.onChange}>
-                    <SelectTrigger id="category">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(CREATE_CATEGORY_LABELS).map(([val, label]) => (
-                        <SelectItem key={val} value={val}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.category && (
-                <p className="text-sm text-destructive">
-                  {errors.category.message}
-                </p>
+            <FormField label="Categoría *" id="category" error={errors.category?.message}>
+              {(a11y) => (
+                <Controller
+                  control={control}
+                  name="category"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? 'maintain_equipment'}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger {...a11y}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(CREATE_CATEGORY_LABELS).map(([val, label]) => (
+                          <SelectItem key={val} value={val}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-            </div>
+            </FormField>
           )}
 
           {/* ---- Unit (create only) ---- */}
@@ -506,20 +485,13 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
           )}
 
           {/* ---- Description ---- */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="description">Descripción *</Label>
+          <FormField label="Descripción *" id="description" error={errors.description?.message}>
             <Textarea
-              id="description"
               rows={3}
               placeholder="Describí la tarea a realizar..."
               {...register('description')}
             />
-            {errors.description && (
-              <p className="text-sm text-destructive">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
+          </FormField>
 
           {/* ---- Assigned staff ---- */}
           <div className="flex flex-col gap-2">
@@ -550,38 +522,32 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
 
           {/* ---- Resolution notes (edit, only when resolving) ---- */}
           {isEdit && selectedStatus === 'resolved' && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="resolution_notes">Nota de resolución *</Label>
+            <FormField
+              label="Nota de resolución *"
+              id="resolution_notes"
+              error={errors.resolution_notes?.message}
+            >
               <Textarea
-                id="resolution_notes"
                 rows={3}
                 placeholder="Explicá cómo se resolvió..."
                 {...register('resolution_notes')}
               />
-              {errors.resolution_notes && (
-                <p className="text-sm text-destructive">
-                  {errors.resolution_notes.message}
-                </p>
-              )}
-            </div>
+            </FormField>
           )}
 
           {/* ---- Cancellation reason (edit, only when cancelling) ---- */}
           {isEdit && selectedStatus === 'cancelled' && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cancellation_reason">Motivo de cancelación *</Label>
+            <FormField
+              label="Motivo de cancelación *"
+              id="cancellation_reason"
+              error={errors.cancellation_reason?.message}
+            >
               <Textarea
-                id="cancellation_reason"
                 rows={3}
                 placeholder="Explicá por qué se cancela..."
                 {...register('cancellation_reason')}
               />
-              {errors.cancellation_reason && (
-                <p className="text-sm text-destructive">
-                  {errors.cancellation_reason.message}
-                </p>
-              )}
-            </div>
+            </FormField>
           )}
 
           {/* ---- Notes ---- */}
@@ -595,7 +561,7 @@ export function TareaFormSheet({ open, onOpenChange, tarea }: TareaFormSheetProp
             />
           </div>
 
-          <SheetFooter className="mt-auto pt-4 pb-6">
+          <SheetFooter className="mt-auto pb-6 pt-4">
             <Button
               type="button"
               variant="outline"

@@ -15,6 +15,10 @@ interface ParticularSelectorProps {
   disabled?: boolean;
   /** When set, an "Editar" link appears next to the selected particular. */
   onEdit?: (particular: ParticularRow) => void;
+  /** FormField pass-through: id, aria-invalid and aria-describedby land on the input. */
+  id?: string;
+  'aria-invalid'?: boolean | 'true' | 'false';
+  'aria-describedby'?: string;
 }
 
 /**
@@ -30,12 +34,19 @@ export function ParticularSelector({
   className,
   disabled = false,
   onEdit,
+  id,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
 }: ParticularSelectorProps) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const { data: results = [], isFetching, isSearchPending } = useParticulares({
+  const {
+    data: results = [],
+    isFetching,
+    isSearchPending,
+  } = useParticulares({
     search: query,
   });
 
@@ -78,6 +89,9 @@ export function ParticularSelector({
     <div className={`relative ${className ?? ''}`}>
       <div className="relative">
         <SearchInput
+          id={id}
+          aria-invalid={ariaInvalid}
+          aria-describedby={ariaDescribedBy}
           role="combobox"
           aria-expanded={open && searching}
           aria-label="Buscar particular"
@@ -95,12 +109,12 @@ export function ParticularSelector({
           }}
         />
         {value && showInputValue && !disabled && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
             {onEdit && (
               <button
                 type="button"
                 onClick={() => onEdit(value)}
-                className="rounded px-1.5 py-0.5 text-xs text-primary hover:underline"
+                className="text-primary rounded px-1.5 py-0.5 text-xs hover:underline"
               >
                 Editar
               </button>
@@ -109,7 +123,7 @@ export function ParticularSelector({
               type="button"
               aria-label="Quitar particular"
               onClick={handleClear}
-              className="rounded p-1 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground rounded p-1"
             >
               <X className="h-4 w-4" />
             </button>
@@ -118,11 +132,15 @@ export function ParticularSelector({
       </div>
 
       {!disabled && open && searching && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-md border bg-popover shadow-md">
+        <div className="bg-popover absolute left-0 right-0 top-full z-50 mt-1 rounded-md border shadow-md">
           {isSearchPending || isFetching ? (
-            <p className="px-3 py-2 text-sm text-muted-foreground">Buscando...</p>
+            <p className="text-muted-foreground px-3 py-2 text-sm">Buscando...</p>
           ) : results.length > 0 ? (
-            <ul role="listbox" aria-label="Resultados de búsqueda" className="max-h-56 overflow-y-auto py-1">
+            <ul
+              role="listbox"
+              aria-label="Resultados de búsqueda"
+              className="max-h-56 overflow-y-auto py-1"
+            >
               {results.map((particular) => {
                 const locationParts = [
                   particular.building_name,
@@ -136,10 +154,10 @@ export function ParticularSelector({
                       aria-selected={value?.id === particular.id}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleSelect(particular)}
-                      className="flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                      className="hover:bg-accent hover:text-accent-foreground flex w-full flex-col px-3 py-2 text-left text-sm"
                     >
                       <span className="font-medium">{particular.full_name}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         DNI {particular.dni}
                         {locationParts.length > 0 && ` · ${locationParts.join(' · ')}`}
                       </span>
@@ -150,15 +168,8 @@ export function ParticularSelector({
             </ul>
           ) : (
             <div className="flex flex-col gap-2 p-3">
-              <p className="text-sm text-muted-foreground">
-                No se encontraron resultados
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setCreateOpen(true)}
-              >
+              <p className="text-muted-foreground text-sm">No se encontraron resultados</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
                 Crear particular
               </Button>
             </div>

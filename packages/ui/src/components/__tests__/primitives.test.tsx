@@ -1,6 +1,7 @@
 import { createRef } from 'react';
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { Pencil } from 'lucide-react';
 
 // Import the shared primitives through the package entry point — this is the
 // public contract consumers (admin + installer) will rely on.
@@ -17,8 +18,19 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  IconButton,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Sheet,
+  SheetContent,
+  SheetTitle,
   Switch,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Textarea,
 } from '@vitalock/ui';
 
@@ -29,10 +41,77 @@ describe('shared primitives from @vitalock/ui', () => {
     expect(button).toBeInTheDocument();
   });
 
+  it('darkens the default Button on hover instead of fading it (white-on-primary must keep 4.5:1)', () => {
+    render(<Button>Guardar</Button>);
+    const button = screen.getByRole('button', { name: 'Guardar' });
+    expect(button).toHaveClass('hover:brightness-95');
+    expect(button.className).not.toContain('hover:bg-primary/90');
+  });
+
   it('renders a second Button variant with different content', () => {
     render(<Button variant="destructive">Eliminar</Button>);
     const button = screen.getByRole('button', { name: 'Eliminar' });
     expect(button).toBeInTheDocument();
+  });
+
+  it('paints the destructive Button with the solid token and white foreground', () => {
+    render(<Button variant="destructive">Eliminar</Button>);
+    const cls = screen.getByRole('button', { name: 'Eliminar' }).className.split(/\s+/);
+    expect(cls).toContain('bg-destructive-solid');
+    expect(cls).toContain('text-destructive-foreground');
+    expect(cls).toContain('hover:bg-destructive-solid/90');
+    expect(cls).not.toContain('bg-destructive');
+  });
+
+  it.each(['ghost', 'outline'] as const)(
+    'uses the neutral accent hover for the %s Button',
+    (variant) => {
+      render(<Button variant={variant}>Acción</Button>);
+      const cls = screen.getByRole('button', { name: 'Acción' }).className.split(/\s+/);
+      expect(cls).toContain('hover:bg-accent');
+      expect(cls).not.toContain('hover:bg-muted');
+    },
+  );
+
+  it('names the Dialog close button "Cerrar" (and not "Close")', () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>Confirmar acción</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Cerrar' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+  });
+
+  it('names the Sheet close button "Cerrar" (and not "Close")', () => {
+    render(
+      <Sheet open>
+        <SheetContent>
+          <SheetTitle>Detalle</SheetTitle>
+        </SheetContent>
+      </Sheet>,
+    );
+    expect(screen.getAllByRole('button', { name: 'Cerrar' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+  });
+
+  it('gives Select items a visible keyboard focus ring', () => {
+    render(
+      <Select open>
+        <SelectTrigger>
+          <span>Elegir</span>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="a">Opción A</SelectItem>
+        </SelectContent>
+      </Select>,
+    );
+    const cls = screen.getByRole('option', { name: 'Opción A' }).className.split(/\s+/);
+    expect(cls).toContain('focus-visible:outline-none');
+    expect(cls).toContain('focus-visible:ring-2');
+    expect(cls).toContain('focus-visible:ring-ring');
   });
 
   it('renders a Switch with role switch that toggles on click', () => {
@@ -93,6 +172,52 @@ describe('shared primitives from @vitalock/ui', () => {
   it('renders a Badge variant with its label', () => {
     render(<Badge variant="destructive">Error</Badge>);
     expect(screen.getByText('Error')).toBeInTheDocument();
+    expect(screen.getByText('Error').className.split(/\s+/)).toContain('bg-destructive-solid');
+  });
+});
+
+describe('control sizing tokens', () => {
+  it.each([
+    ['default', 'h-control-md'],
+    ['sm', 'h-control-sm'],
+    ['lg', 'h-control-lg'],
+    ['icon', 'size-control-md'],
+  ] as const)('maps Button size %s to %s', (size, cls) => {
+    render(<Button size={size}>Acción</Button>);
+    const btn = screen.getByRole('button');
+    expect(btn).toHaveClass(cls);
+    expect(btn).toHaveClass('rounded-control');
+    expect(btn.className).not.toMatch(/h-\[\d+px\]/);
+  });
+
+  it('lets a consumer height override the Button size token', () => {
+    render(<Button className="h-9">Acción</Button>);
+    const btn = screen.getByRole('button');
+    expect(btn).toHaveClass('h-9');
+    expect(btn).not.toHaveClass('h-control-md');
+  });
+
+  it('extends the IconButton hit area to 44px with an after: pseudo-element', () => {
+    render(<IconButton icon={Pencil} label="Editar" />);
+    const btn = screen.getByRole('button', { name: 'Editar' });
+    expect(btn).toHaveClass('relative');
+    expect(btn).toHaveClass('after:size-control-md');
+    expect(btn).toHaveClass('rounded-control');
+  });
+
+  it('uses the control radius on Input, Textarea and the Select trigger', () => {
+    render(
+      <>
+        <Input placeholder="i" />
+        <Textarea placeholder="t" />
+        <Select>
+          <SelectTrigger aria-label="s" />
+        </Select>
+      </>,
+    );
+    expect(screen.getByPlaceholderText('i')).toHaveClass('rounded-control', 'h-control-md');
+    expect(screen.getByPlaceholderText('t')).toHaveClass('rounded-control');
+    expect(screen.getByRole('combobox')).toHaveClass('rounded-control', 'h-control-md');
   });
 });
 
@@ -101,7 +226,8 @@ describe('Card primitives from @vitalock/ui', () => {
     render(<Card className="custom-card">Contenido</Card>);
     const card = screen.getByText('Contenido');
     expect(card).toHaveClass('custom-card');
-    expect(card).toHaveClass('rounded-xl');
+    expect(card).toHaveClass('rounded-container');
+    expect(card).not.toHaveClass('shadow-sm');
   });
 
   it('forwards a ref to the underlying div on Card', () => {
@@ -164,5 +290,56 @@ describe('Card primitives from @vitalock/ui', () => {
     expect(actionRef.current).toHaveClass('custom-action');
     expect(contentRef.current).toHaveClass('custom-content');
     expect(footerRef.current).toHaveClass('custom-footer');
+  });
+});
+
+describe('Tabs segmented control', () => {
+  function renderTabs() {
+    render(
+      <Tabs defaultValue="a">
+        <TabsList aria-label="Sección">
+          <TabsTrigger value="a">Equipos</TabsTrigger>
+          <TabsTrigger value="b">Llaves</TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    );
+    return {
+      list: screen.getByRole('tablist', { name: 'Sección' }),
+      active: screen.getByRole('tab', { name: 'Equipos' }),
+      inactive: screen.getByRole('tab', { name: 'Llaves' }),
+    };
+  }
+
+  it('draws a neutral track that stands apart from the page surface', () => {
+    const { list } = renderTabs();
+    expect(list).toHaveClass(
+      'h-control-md',
+      'rounded-control',
+      'bg-accent',
+      'ring-1',
+      'ring-border',
+    );
+    expect(list).not.toHaveClass('bg-muted');
+    // Dark: the track sinks to the darkest surface so the selected segment can sit above it.
+    expect(list).toHaveClass('dark:bg-card');
+  });
+
+  it('renders inactive segments in readable secondary text, not muted text', () => {
+    const { inactive } = renderTabs();
+    expect(inactive).toHaveAttribute('aria-selected', 'false');
+    expect(inactive).toHaveClass('text-secondary-foreground');
+    expect(inactive.className).not.toMatch(/(^|\s)text-muted-foreground(\s|$)/);
+  });
+
+  it('lifts the active segment onto a card surface with a hairline edge', () => {
+    const { active } = renderTabs();
+    expect(active).toHaveAttribute('aria-selected', 'true');
+    expect(active).toHaveClass(
+      'data-[state=active]:bg-card',
+      'data-[state=active]:text-foreground',
+      'data-[state=active]:ring-1',
+      'data-[state=active]:ring-border',
+      'dark:data-[state=active]:bg-accent',
+    );
   });
 });

@@ -11,6 +11,10 @@ vi.mock('@/hooks/useParticulares', () => ({
   useParticulares: useParticularesMock,
 }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
+vi.mock('@/components/particulares/ParticularFormSheet', () => ({
+  ParticularFormSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="particular-sheet" /> : null,
+}));
 
 import ParticularesPage from '../ParticularesPage';
 
@@ -38,7 +42,8 @@ describe('ParticularesPage rendering', () => {
 
   it('renders the "Nuevo particular" button', () => {
     renderPage();
-    expect(screen.getByRole('button', { name: /nuevo particular/i })).toBeInTheDocument();
+    // Header button plus the zero-state action (no rows in this fixture).
+    expect(screen.getAllByRole('button', { name: /nuevo particular/i })).toHaveLength(2);
   });
 
   it('renders the search input', () => {
@@ -50,6 +55,7 @@ describe('ParticularesPage rendering', () => {
     useParticularesMock.mockReturnValueOnce({ data: [], isFetching: false, isError: true });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
 
@@ -78,5 +84,33 @@ describe('ParticularesPage FilterBar.Summary (single Search facet)', () => {
     const lastCall = useParticularesMock.mock.calls.at(-1)?.[0];
     expect(lastCall?.search).toBe('');
     expect(screen.queryByRole('button', { name: /limpiar todo/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title, description and a create action that opens the same sheet as the header button', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay particulares')).toBeInTheDocument();
+    expect(
+      screen.getByText('Los particulares se crean desde una orden o desde acá.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('particular-sheet')).not.toBeInTheDocument();
+
+    const buttons = screen.getAllByRole('button', { name: 'Nuevo particular' });
+    expect(buttons).toHaveLength(2);
+    await user.click(buttons[1]!);
+    expect(screen.getByTestId('particular-sheet')).toBeInTheDocument();
+  });
+
+  it('keeps the compact filtered message and no zero-state while filters are active', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByRole('searchbox'), 'zzz');
+
+    await waitFor(() =>
+      expect(screen.queryByText('Todavía no hay particulares')).not.toBeInTheDocument(),
+    );
   });
 });

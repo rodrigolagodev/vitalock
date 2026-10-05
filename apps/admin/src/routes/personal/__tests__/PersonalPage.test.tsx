@@ -11,6 +11,10 @@ vi.mock('@/hooks/usePersonal', () => ({
   usePersonal: usePersonalMock,
 }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
+vi.mock('@/components/personal/StaffFormSheet', () => ({
+  StaffFormSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="staff-sheet" /> : null,
+}));
 
 import PersonalPage from '../PersonalPage';
 
@@ -38,7 +42,8 @@ describe('PersonalPage rendering', () => {
 
   it('renders the "Nuevo integrante" button', () => {
     renderPage();
-    expect(screen.getByRole('button', { name: /nuevo integrante/i })).toBeInTheDocument();
+    // Header button plus the zero-state action (no rows in this fixture).
+    expect(screen.getAllByRole('button', { name: /nuevo integrante/i })).toHaveLength(2);
   });
 
   it('renders the search input', () => {
@@ -50,6 +55,7 @@ describe('PersonalPage rendering', () => {
     usePersonalMock.mockReturnValueOnce({ data: [], isFetching: false, isError: true });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
 
@@ -95,5 +101,31 @@ describe('PersonalPage FilterBar.Summary', () => {
     expect(lastCall?.search).toBe('');
     expect(lastCall?.role).toBeUndefined();
     expect(screen.queryByRole('button', { name: /limpiar todo/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title, description and a create action that opens the same sheet as the header button', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay personal')).toBeInTheDocument();
+    expect(screen.getByText('Agregá a las personas que usan el sistema.')).toBeInTheDocument();
+    expect(screen.queryByTestId('staff-sheet')).not.toBeInTheDocument();
+
+    const buttons = screen.getAllByRole('button', { name: 'Nuevo integrante' });
+    expect(buttons).toHaveLength(2);
+    await user.click(buttons[1]!);
+    expect(screen.getByTestId('staff-sheet')).toBeInTheDocument();
+  });
+
+  it('keeps the compact filtered message and no zero-state while filters are active', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByRole('searchbox'), 'zzz');
+
+    await waitFor(() =>
+      expect(screen.queryByText('Todavía no hay personal')).not.toBeInTheDocument(),
+    );
   });
 });

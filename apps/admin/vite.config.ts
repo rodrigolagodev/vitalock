@@ -134,8 +134,11 @@ export function sriPlugin(): Plugin {
 function vendorChunk(id: string): string | undefined {
   if (!id.includes('node_modules')) return undefined;
   const inner = id.split('node_modules/').pop() ?? '';
-  if (/^(react|react-dom|scheduler|react-router|react-router-dom|@remix-run)\//.test(inner))
-    return 'vendor-react';
+  if (/^(react|react-dom|scheduler)\//.test(inner)) return 'vendor-react';
+  // The data router (createBrowserRouter, useBlocker) lives in @remix-run/router.
+  // Kept apart from React so each stays under the per-chunk budget and caches
+  // independently: React rarely changes, the router updates more often.
+  if (/^(react-router|react-router-dom|@remix-run)\//.test(inner)) return 'vendor-router';
   if (inner.startsWith('@radix-ui/')) return 'vendor-radix';
   if (inner.startsWith('@tanstack/')) return 'vendor-query';
   if (inner.startsWith('@supabase/')) return 'vendor-supabase';

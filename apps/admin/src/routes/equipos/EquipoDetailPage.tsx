@@ -1,8 +1,14 @@
 import { Link, useParams } from 'react-router-dom';
-import { Button, EmptyState, ErrorState } from '@vitalock/ui';
+import {
+  Card,
+  EmptyState,
+  ErrorState,
+  NotFoundState,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@vitalock/ui';
-import { Section } from '@/components/common/Section';
 import { useEquipmentById } from '@/hooks/useEquipmentById';
 import { equipmentStatus } from '@/lib/status/equipmentStatus';
 import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
@@ -37,23 +43,43 @@ function EquipmentLabel({ serial_number, model }: { serial_number: string; model
 
 export default function EquipoDetailPage() {
   const { equipoId } = useParams<{ equipoId: string }>();
-  const { data: equipment, isLoading, isError } = useEquipmentById(equipoId);
+  const { data: equipment, isLoading, isError, refetch } = useEquipmentById(equipoId);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+      <div role="status" aria-label="Cargando equipo" className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
       </div>
     );
   }
 
-  if (isError || !equipment) {
+  if (isError) {
     return (
-      <ErrorState message="No se pudo cargar la información del equipo." className="gap-4 py-16">
-        <Button asChild variant="outline" size="sm">
-          <Link to="/equipos">Volver al inventario</Link>
-        </Button>
-      </ErrorState>
+      <ErrorState
+        message="No se pudo cargar la información del equipo."
+        className="gap-4 py-16"
+        onRetry={() => void refetch()}
+        back={{ label: 'Volver al inventario', to: '/equipos' }}
+      />
+    );
+  }
+
+  if (!equipment) {
+    return (
+      <NotFoundState
+        message="Equipo no encontrado."
+        back={{ label: 'Volver al inventario', to: '/equipos' }}
+      />
     );
   }
 
@@ -107,7 +133,8 @@ export default function EquipoDetailPage() {
 
       {/* 2-column grid on desktop, single column on mobile */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Section title="Ubicación">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Ubicación" />
           <Row
             label="Administración"
             value={
@@ -142,10 +169,11 @@ export default function EquipoDetailPage() {
           {equipment.access_type && (
             <Row label="Tipo de acceso" value={accessTypeLabel(equipment.access_type)} />
           )}
-        </Section>
+        </Card>
 
         {(equipment.replaces || equipment.replaced_by) && (
-          <Section title="Cadena de reemplazos">
+          <Card className="flex flex-col gap-3 p-4">
+            <SectionHeading title="Cadena de reemplazos" />
             {equipment.replaces && (
               <Row
                 label="Reemplaza a"
@@ -178,10 +206,11 @@ export default function EquipoDetailPage() {
                 }
               />
             )}
-          </Section>
+          </Card>
         )}
 
-        <Section title="Historial">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Historial" />
           <div className="flex flex-col gap-3 text-sm">
             {timeline.map((e, i) => (
               <div key={`${e.label}-${i}`} className="flex gap-3">
@@ -198,10 +227,11 @@ export default function EquipoDetailPage() {
               </div>
             ))}
           </div>
-        </Section>
+        </Card>
       </div>
 
-      <Section title="Llaves autorizadas">
+      <Card className="flex flex-col gap-3 p-4">
+        <SectionHeading title="Llaves autorizadas" />
         {(() => {
           const activeKeys = equipment.authorized_keys.filter(
             (k) => k.sync_state === 'installed' && k.removed_at === null,
@@ -262,9 +292,10 @@ export default function EquipoDetailPage() {
             </>
           );
         })()}
-      </Section>
+      </Card>
 
-      <Section title="Órdenes técnicas asociadas">
+      <Card className="flex flex-col gap-3 p-4">
+        <SectionHeading title="Órdenes técnicas asociadas" />
         {equipment.associated_orders.length === 0 ? (
           <EmptyState message="No hay órdenes técnicas vinculadas a este equipo." />
         ) : (
@@ -299,26 +330,29 @@ export default function EquipoDetailPage() {
             ))}
           </ul>
         )}
-      </Section>
+      </Card>
 
       {equipment.status === 'active' && (
-        <Section title="Llaves pendientes de actualización">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Llaves pendientes de actualización" />
           <EquipmentKeySnapshotPanel
             equipmentId={equipment.id}
             buildingId={equipment.building?.id}
             administrationId={equipment.building?.administration?.id}
           />
-        </Section>
+        </Card>
       )}
 
-      <Section title="Historial de actualizaciones de firmware">
+      <Card className="flex flex-col gap-3 p-4">
+        <SectionHeading title="Historial de actualizaciones de firmware" />
         <EquipmentUpdateHistoryPanel equipmentId={equipment.id} />
-      </Section>
+      </Card>
 
       {equipment.notes && (
-        <Section title="Notas">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Notas" />
           <p className="whitespace-pre-wrap text-sm">{equipment.notes}</p>
-        </Section>
+        </Card>
       )}
     </div>
   );

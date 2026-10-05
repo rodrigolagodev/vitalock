@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Building2, CircleCheck } from 'lucide-react';
-import { Button, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState, SearchInput, StatCard } from '@vitalock/ui';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import { useDebounce } from '@/hooks/useDebounce';
 import { AdministrationsTable } from '@/components/administrations/AdministrationsTable';
@@ -18,12 +18,15 @@ export default function AdministrationsPage() {
     data: administrations = [],
     isFetching,
     isError,
+    refetch,
   } = useAdministrations({
     search: debouncedSearch,
   });
 
   if (isError) {
-    return <ErrorState message="Error al cargar las administraciones. Recargá la página." />;
+    return (
+      <ErrorState message="Error al cargar las administraciones." onRetry={() => void refetch()} />
+    );
   }
 
   return (
@@ -62,6 +65,14 @@ export default function AdministrationsPage() {
         administrations={administrations}
         isFetching={isFetching}
         search={debouncedSearch}
+        emptyState={
+          <EmptyState
+            icon={Building2}
+            title="Todavía no hay administraciones"
+            description="Creá la primera para cargar sus edificios."
+            action={<Button onClick={() => setCreateOpen(true)}>Nueva administración</Button>}
+          />
+        }
       />
 
       <AdministrationFormSheet open={createOpen} onOpenChange={setCreateOpen} />

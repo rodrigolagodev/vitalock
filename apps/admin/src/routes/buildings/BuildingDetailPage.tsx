@@ -22,7 +22,7 @@ export default function BuildingDetailPage() {
 
   const activeTab = searchParams.get('tab') ?? 'equipos';
 
-  const { data: building, isLoading, isError } = useBuilding(buildingId ?? '');
+  const { data: building, isLoading, isError, refetch } = useBuilding(buildingId ?? '');
   const { data: administration } = useAdministration(building?.administration_id ?? '');
   const { data: equipment = [], isFetching: equipmentFetching } = useEquipment(buildingId ?? '');
   const { data: keys = [], isFetching: keysFetching } = useKeys(buildingId);
@@ -56,6 +56,7 @@ export default function BuildingDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar el edificio."
+        onRetry={() => void refetch()}
         back={{ label: 'Volver a administraciones', to: '/administraciones' }}
         className="py-24"
       />
@@ -96,6 +97,7 @@ export default function BuildingDetailPage() {
                 to: `/administraciones/${building.administration_id}`,
               }
             : { label: 'Sin administración' },
+          { label: building.name },
         ]}
         titleAdornment={<buildingStatus.Badge status={building.status} />}
       />
@@ -103,14 +105,14 @@ export default function BuildingDetailPage() {
       {/* Section selector */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2" aria-label="Sección del edificio">
-          <TabsTrigger value="llaves">Llaves</TabsTrigger>
           <TabsTrigger value="equipos">Equipos</TabsTrigger>
+          <TabsTrigger value="llaves">Llaves</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {activeTab === 'llaves' && (
         <div className="mt-4 space-y-4">
-          <SectionHeading title="Llaves" variant="secondary" />
+          <SectionHeading title="Llaves" />
           <FilterBar>
             <FilterBar.Search
               placeholder="Buscar llaves por código o unidad..."
@@ -146,7 +148,7 @@ export default function BuildingDetailPage() {
 
       {activeTab === 'equipos' && (
         <div className="mt-4 space-y-4">
-          <SectionHeading title="Equipos" variant="secondary" />
+          <SectionHeading title="Equipos" />
           <FilterBar>
             <FilterBar.Search
               placeholder="Buscar equipos por serie o modelo..."

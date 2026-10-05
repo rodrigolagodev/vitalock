@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Navigate } from 'react-router-dom';
-import { BrandLogoImages, Button, Input, Label, PasswordInput } from '@vitalock/ui';
+import { BrandLogoImages, Button, FormField, Input, PasswordInput } from '@vitalock/ui';
 import { useAuthContext } from '@vitalock/shared';
 import { installerLogo } from '@/components/layout/brand';
 
@@ -41,10 +41,8 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          <div className="space-y-1">
-            <Label htmlFor="email">Email</Label>
+          <FormField label="Email" id="email" error={errors.email?.message}>
             <Input
-              id="email"
               type="email"
               autoComplete="email"
               autoCapitalize="none"
@@ -52,20 +50,11 @@ export default function LoginPage() {
               spellCheck={false}
               {...register('email')}
             />
-            {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
-          </div>
+          </FormField>
 
-          <div className="space-y-1">
-            <Label htmlFor="password">Contraseña</Label>
-            <PasswordInput
-              id="password"
-              autoComplete="current-password"
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-destructive text-xs">{errors.password.message}</p>
-            )}
-          </div>
+          <FormField label="Contraseña" id="password" error={errors.password?.message}>
+            <PasswordInput autoComplete="current-password" {...register('password')} />
+          </FormField>
 
           {error && (
             <p className="text-destructive text-sm" role="alert">

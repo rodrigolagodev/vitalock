@@ -7,8 +7,9 @@ import { ParticularFormSheet } from '@/components/particulares/ParticularFormShe
 import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
 import { AdministrationCombobox } from '@/components/administrations/AdministrationCombobox';
-import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { RadioGroup, RadioGroupItem, FormField } from '@vitalock/ui';
+import { Button, ConfirmDialog } from '@vitalock/ui';
+import { UNSAVED_CHANGES_COPY, useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
@@ -215,7 +216,7 @@ export function TechnicalOrderForm({
     control,
     watch,
     setValue,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting, isDirty, isSubmitSuccessful },
   } = useForm<TechnicalOrderFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
@@ -255,12 +256,10 @@ export function TechnicalOrderForm({
     }
   };
 
-  const handleCancel = () => {
-    if (isDirty && !window.confirm('Vas a perder los cambios. ¿Salir igual?')) {
-      return;
-    }
-    onCancel?.();
-  };
+  const guard = useUnsavedChangesGuard({
+    when: isDirty && !isSubmitting && !isSubmitSuccessful,
+  });
+  const handleCancel = () => guard.requestLeave(() => onCancel?.());
 
   const appendItem = (itemType: TechnicalItemType) => {
     append({
@@ -319,39 +318,44 @@ export function TechnicalOrderForm({
           </div>
 
           {clientType === 'administration' && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="administration_id">Administración *</Label>
-              <Controller
-                control={control}
-                name="administration_id"
-                render={({ field }) => (
-                  <AdministrationCombobox
-                    id="administration_id"
-                    administrations={administrations}
-                    value={field.value ?? null}
-                    onChange={(v) => field.onChange(v || null)}
-                    placeholder="Buscar por razón social o CUIT/CUIL"
-                  />
-                )}
-              />
-              {errors.administration_id && (
-                <p className="text-destructive text-sm">{errors.administration_id.message}</p>
+            <FormField
+              label="Administración *"
+              id="administration_id"
+              error={errors.administration_id?.message}
+            >
+              {(a11y) => (
+                <Controller
+                  control={control}
+                  name="administration_id"
+                  render={({ field }) => (
+                    <AdministrationCombobox
+                      {...a11y}
+                      administrations={administrations}
+                      value={field.value ?? null}
+                      onChange={(v) => field.onChange(v || null)}
+                      placeholder="Buscar por razón social o CUIT/CUIL"
+                    />
+                  )}
+                />
               )}
-            </div>
+            </FormField>
           )}
 
           {clientType === 'particular' && (
-            <div className="flex flex-col gap-2">
-              <Label>Particular *</Label>
-              <ParticularSelector
-                value={particular}
-                onChange={handleParticularChange}
-                onEdit={() => setEditParticularOpen(true)}
-              />
-              {errors.particular_id && (
-                <p className="text-destructive text-sm">{errors.particular_id.message}</p>
+            <FormField
+              label="Particular *"
+              id="particular_id"
+              error={errors.particular_id?.message}
+            >
+              {(a11y) => (
+                <ParticularSelector
+                  {...a11y}
+                  value={particular}
+                  onChange={handleParticularChange}
+                  onEdit={() => setEditParticularOpen(true)}
+                />
               )}
-            </div>
+            </FormField>
           )}
         </section>
 
@@ -388,7 +392,9 @@ export function TechnicalOrderForm({
           </div>
 
           {errors.items && !Array.isArray(errors.items) && (
-            <p className="text-destructive text-sm">{errors.items.message}</p>
+            <p role="alert" className="text-footnote text-destructive">
+              {errors.items.message}
+            </p>
           )}
 
           <div className="flex flex-col gap-3" data-testid="technical-order-items">
@@ -422,13 +428,13 @@ export function TechnicalOrderForm({
                       </span>
                       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                         <span className="shrink-0 text-sm font-medium">Ítem {index + 1}</span>
-                        <span className="max-w-[200px] truncate rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                        <span className="bg-info/10 text-info max-w-48 truncate rounded px-2 py-0.5 text-xs">
                           {itemTypeLabel}
                         </span>
                         {building && (
                           <>
                             <span className="text-muted-foreground text-xs">·</span>
-                            <span className="text-muted-foreground max-w-[200px] truncate text-xs">
+                            <span className="text-muted-foreground max-w-48 truncate text-xs">
                               {building.name}
                             </span>
                           </>
@@ -489,27 +495,28 @@ export function TechnicalOrderForm({
                       <input type="hidden" {...register(`items.${index}.item_type`)} />
 
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div className="flex flex-col gap-1">
-                          <Label htmlFor={`items.${index}.building_id`}>Edificio *</Label>
-                          <Controller
-                            control={control}
-                            name={`items.${index}.building_id`}
-                            render={({ field: f }) => (
-                              <BuildingCombobox
-                                id={`items.${index}.building_id`}
-                                buildings={buildings}
-                                value={f.value}
-                                onChange={(v) => f.onChange(v)}
-                                placeholder="Buscar por nombre o dirección"
-                              />
-                            )}
-                          />
-                          {errors.items?.[index]?.building_id && (
-                            <p className="text-destructive text-xs">
-                              {errors.items[index]?.building_id?.message}
-                            </p>
+                        <FormField
+                          label="Edificio *"
+                          id={`items.${index}.building_id`}
+                          error={errors.items?.[index]?.building_id?.message}
+                          className="gap-1"
+                        >
+                          {(a11y) => (
+                            <Controller
+                              control={control}
+                              name={`items.${index}.building_id`}
+                              render={({ field: f }) => (
+                                <BuildingCombobox
+                                  {...a11y}
+                                  buildings={buildings}
+                                  value={f.value}
+                                  onChange={(v) => f.onChange(v)}
+                                  placeholder="Buscar por nombre o dirección"
+                                />
+                              )}
+                            />
                           )}
-                        </div>
+                        </FormField>
 
                         {/*
                         Quantity is always 1 per item — the DB CHECK enforces this.
@@ -524,37 +531,36 @@ export function TechnicalOrderForm({
                       </div>
 
                       {/* Intended assignee — required for all types at confirm time */}
-                      <div className="flex flex-col gap-1">
-                        <Label htmlFor={`items.${index}.intended_assignee_staff_id`}>
-                          Responsable *
-                        </Label>
-                        <Controller
-                          control={control}
-                          name={`items.${index}.intended_assignee_staff_id`}
-                          render={({ field: f }) => (
-                            <Select
-                              value={f.value ?? ''}
-                              onValueChange={(v) => f.onChange(v || null)}
-                            >
-                              <SelectTrigger id={`items.${index}.intended_assignee_staff_id`}>
-                                <SelectValue placeholder="Seleccioná un responsable" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {staffList.map((s) => (
-                                  <SelectItem key={s.id} value={s.id}>
-                                    {s.full_name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                        {errors.items?.[index]?.intended_assignee_staff_id && (
-                          <p className="text-destructive text-xs">
-                            {errors.items[index]?.intended_assignee_staff_id?.message}
-                          </p>
+                      <FormField
+                        label="Responsable *"
+                        id={`items.${index}.intended_assignee_staff_id`}
+                        error={errors.items?.[index]?.intended_assignee_staff_id?.message}
+                        className="gap-1"
+                      >
+                        {(a11y) => (
+                          <Controller
+                            control={control}
+                            name={`items.${index}.intended_assignee_staff_id`}
+                            render={({ field: f }) => (
+                              <Select
+                                value={f.value ?? ''}
+                                onValueChange={(v) => f.onChange(v || null)}
+                              >
+                                <SelectTrigger {...a11y}>
+                                  <SelectValue placeholder="Seleccioná un responsable" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {staffList.map((s) => (
+                                    <SelectItem key={s.id} value={s.id}>
+                                      {s.full_name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
                         )}
-                      </div>
+                      </FormField>
 
                       {/* Intended equipment — required for maintain_equipment/replace_equipment; optional for others */}
                       <TechnicalItemEquipmentField
@@ -576,26 +582,24 @@ export function TechnicalOrderForm({
                       </div>
 
                       {/* Unit price — required for install/replace; may be 0 for maintenance (monthly plan) */}
-                      <div className="flex flex-col gap-1 sm:max-w-[200px]">
-                        <Label htmlFor={`items.${index}.unit_price`}>
-                          {item?.item_type === 'maintain_equipment'
+                      <FormField
+                        label={
+                          item?.item_type === 'maintain_equipment'
                             ? 'Precio unitario (0 = plan mensual)'
-                            : 'Precio unitario *'}
-                        </Label>
+                            : 'Precio unitario *'
+                        }
+                        id={`items.${index}.unit_price`}
+                        error={errors.items?.[index]?.unit_price?.message}
+                        className="gap-1 sm:max-w-48"
+                      >
                         <Input
-                          id={`items.${index}.unit_price`}
                           type="number"
                           min={0}
                           step="0.01"
                           placeholder="0.00"
                           {...register(`items.${index}.unit_price`)}
                         />
-                        {errors.items?.[index]?.unit_price && (
-                          <p className="text-destructive text-xs">
-                            {errors.items[index]?.unit_price?.message}
-                          </p>
-                        )}
-                      </div>
+                      </FormField>
                     </div>
                   )}
                 </div>
@@ -649,6 +653,8 @@ export function TechnicalOrderForm({
           </Button>
         </div>
       </form>
+
+      <ConfirmDialog {...UNSAVED_CHANGES_COPY} {...guard.dialogProps} variant="destructive" />
 
       {/* Particular edit sheet — outside form to avoid nesting issue */}
       <ParticularFormSheet
@@ -705,87 +711,93 @@ function TechnicalItemEquipmentField({
   return (
     <div className="flex flex-col gap-3">
       {showTargetEquipment && (
-        <div className="flex flex-col gap-1">
-          <Label htmlFor={`items.${index}.intended_equipment_id`}>{targetLabel}</Label>
-          <Controller
-            control={control}
-            name={`items.${index}.intended_equipment_id`}
-            render={({ field: f }) => (
-              <Select
-                value={f.value ?? ''}
-                onValueChange={(v) => f.onChange(v || null)}
-                disabled={!buildingId}
-              >
-                <SelectTrigger id={`items.${index}.intended_equipment_id`}>
-                  <SelectValue
-                    placeholder={buildingId ? 'Seleccioná un equipo' : 'Primero elegí un edificio'}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {equipment.length === 0 ? (
-                    <div className="text-muted-foreground px-2 py-1.5 text-xs">
-                      {buildingId
-                        ? 'No hay equipos instalados en este edificio.'
-                        : 'Primero elegí un edificio.'}
-                    </div>
-                  ) : (
-                    equipment.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {formatEquipmentLabel(e.model, e.serial_number)}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          {errors.items?.[index]?.intended_equipment_id && (
-            <p className="text-destructive text-xs">
-              {errors.items[index]?.intended_equipment_id?.message}
-            </p>
+        <FormField
+          label={targetLabel}
+          id={`items.${index}.intended_equipment_id`}
+          error={errors.items?.[index]?.intended_equipment_id?.message}
+          className="gap-1"
+        >
+          {(a11y) => (
+            <Controller
+              control={control}
+              name={`items.${index}.intended_equipment_id`}
+              render={({ field: f }) => (
+                <Select
+                  value={f.value ?? ''}
+                  onValueChange={(v) => f.onChange(v || null)}
+                  disabled={!buildingId}
+                >
+                  <SelectTrigger {...a11y}>
+                    <SelectValue
+                      placeholder={
+                        buildingId ? 'Seleccioná un equipo' : 'Primero elegí un edificio'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {equipment.length === 0 ? (
+                      <div className="text-muted-foreground px-2 py-1.5 text-xs">
+                        {buildingId
+                          ? 'No hay equipos instalados en este edificio.'
+                          : 'Primero elegí un edificio.'}
+                      </div>
+                    ) : (
+                      equipment.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {formatEquipmentLabel(e.model, e.serial_number)}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           )}
-        </div>
+        </FormField>
       )}
 
       {showStockProduct && (
-        <div className="flex flex-col gap-1">
-          <Label htmlFor={`items.${index}.product_id`}>{stockLabel}</Label>
-          <Controller
-            control={control}
-            name={`items.${index}.product_id`}
-            render={({ field: f }) => (
-              <Select value={f.value ?? ''} onValueChange={(v) => f.onChange(v || null)}>
-                <SelectTrigger id={`items.${index}.product_id`}>
-                  <SelectValue placeholder="Seleccioná un modelo del stock" />
-                </SelectTrigger>
-                <SelectContent>
-                  {stockProducts.length === 0 ? (
-                    <div className="text-muted-foreground px-2 py-1.5 text-xs">
-                      No hay productos de tipo equipo cargados en el stock.
-                    </div>
-                  ) : (
-                    stockProducts.map((p) => {
-                      const outOfStock = p.stock_disponible <= 0;
-                      return (
-                        <SelectItem key={p.id} value={p.id} disabled={outOfStock}>
-                          {p.name} · {p.stock_disponible} disp.
-                        </SelectItem>
-                      );
-                    })
-                  )}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          <p className="text-muted-foreground text-xs">
-            {isInstallationWork
+        <FormField
+          label={stockLabel}
+          id={`items.${index}.product_id`}
+          error={errors.items?.[index]?.product_id?.message}
+          description={
+            isInstallationWork
               ? 'El SKU reserva stock. El número de serie del equipo lo carga el instalador al resolver la tarea.'
-              : 'El número de serie del equipo lo carga el instalador al resolver la tarea (o el admin desde el panel de tareas).'}
-          </p>
-          {errors.items?.[index]?.product_id && (
-            <p className="text-destructive text-xs">{errors.items[index]?.product_id?.message}</p>
+              : 'El número de serie del equipo lo carga el instalador al resolver la tarea (o el admin desde el panel de tareas).'
+          }
+          className="gap-1"
+        >
+          {(a11y) => (
+            <Controller
+              control={control}
+              name={`items.${index}.product_id`}
+              render={({ field: f }) => (
+                <Select value={f.value ?? ''} onValueChange={(v) => f.onChange(v || null)}>
+                  <SelectTrigger {...a11y}>
+                    <SelectValue placeholder="Seleccioná un modelo del stock" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stockProducts.length === 0 ? (
+                      <div className="text-muted-foreground px-2 py-1.5 text-xs">
+                        No hay productos de tipo equipo cargados en el stock.
+                      </div>
+                    ) : (
+                      stockProducts.map((p) => {
+                        const outOfStock = p.stock_disponible <= 0;
+                        return (
+                          <SelectItem key={p.id} value={p.id} disabled={outOfStock}>
+                            {p.name} · {p.stock_disponible} disp.
+                          </SelectItem>
+                        );
+                      })
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           )}
-        </div>
+        </FormField>
       )}
     </div>
   );

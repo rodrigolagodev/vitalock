@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Trash2, PencilLine } from 'lucide-react';
 import {
@@ -25,6 +26,8 @@ interface ParticularTableProps {
   isFetching: boolean;
   hasFilters?: boolean;
   onEdit?: (particular: ParticularRow) => void;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 export function ParticularTable({
@@ -32,6 +35,7 @@ export function ParticularTable({
   isFetching,
   hasFilters = false,
   onEdit,
+  emptyState,
 }: ParticularTableProps) {
   const [deactivating, setDeactivating] = useState<ParticularRow | null>(null);
   const { deactivateParticular } = useMutateParticular();
@@ -104,6 +108,7 @@ export function ParticularTable({
           </div>
         )}
         emptyMessage="No hay particulares registrados."
+        emptyState={emptyState}
         filteredEmptyMessage="No se encontraron particulares con los filtros aplicados."
         hasFilters={hasFilters}
       />

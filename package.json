@@ -17,6 +17,8 @@
     "format:check": "prettier --check .",
     "gen:types": "bash scripts/gen-types.sh",
     "test:sql": "bash scripts/test-sql.sh",
+    "lint:hardcodes": "node scripts/lint-hardcodes.mjs",
+    "test:scripts": "node --test scripts/__tests__/*.test.mjs",
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky",
     "size": "turbo run size",
@@ -26,6 +28,7 @@
     "db:rehearse": "bash scripts/rehearse-migration.sh"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
     "@playwright/test": "1.48.2",
     "@types/node": "22.7.5",
     "@vitalock/config-typescript": "workspace:^",

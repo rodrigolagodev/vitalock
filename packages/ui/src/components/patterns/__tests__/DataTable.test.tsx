@@ -72,6 +72,31 @@ describe('DataTable', () => {
     expect(screen.getByText('No hay ítems registrados.')).toBeInTheDocument();
   });
 
+  it('shows the emptyState node instead of emptyMessage when there are no rows and no filters', () => {
+    renderTable({
+      rows: [],
+      emptyMessage: 'No hay ítems registrados.',
+      emptyState: <p>Todavía no hay ítems</p>,
+    });
+
+    expect(screen.getByText('Todavía no hay ítems')).toBeInTheDocument();
+    expect(screen.queryByText('No hay ítems registrados.')).not.toBeInTheDocument();
+  });
+
+  it('keeps the compact filteredEmptyMessage over emptyState when filters are applied', () => {
+    renderTable({
+      rows: [],
+      hasFilters: true,
+      emptyState: <p>Todavía no hay ítems</p>,
+      filteredEmptyMessage: 'No se encontraron ítems con los filtros aplicados.',
+    });
+
+    expect(
+      screen.getByText('No se encontraron ítems con los filtros aplicados.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Todavía no hay ítems')).not.toBeInTheDocument();
+  });
+
   it('shows filteredEmptyMessage when there are no rows and filters are applied', () => {
     renderTable({
       rows: [],
@@ -328,5 +353,22 @@ describe('DataTable', () => {
       expect(cells[0]).toHaveClass('text-right');
       expect(cells[1]).not.toHaveClass('text-right');
     });
+  });
+
+  it('spaces row actions 16px apart so 44px hit areas do not overlap', () => {
+    const actions: DataTableAction<Item>[] = [
+      { icon: PencilLine, label: 'Editar', onClick: vi.fn() },
+      { icon: Eye, label: 'Ver', onClick: vi.fn() },
+    ];
+    renderTable({ actions });
+    const row = screen.getAllByRole('button', { name: 'Editar' })[0]?.parentElement;
+    expect(row).toHaveClass('gap-4');
+    expect(row).not.toHaveClass('gap-1');
+  });
+
+  it('wraps the table in a container-radius border', () => {
+    renderTable();
+    const wrapper = screen.getByRole('table').closest('.overflow-x-auto');
+    expect(wrapper).toHaveClass('rounded-container');
   });
 });

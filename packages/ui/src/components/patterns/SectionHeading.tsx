@@ -5,30 +5,15 @@ export interface SectionHeadingProps {
   description?: string;
   /** Optional action slot rendered on the right of the heading. */
   children?: ReactNode;
-  /** `secondary` renders a compact page-level section heading (`text-lg`). */
-  variant?: 'default' | 'secondary';
 }
 
-export function SectionHeading({
-  title,
-  description,
-  children,
-  variant = 'default',
-}: SectionHeadingProps) {
+export function SectionHeading({ title, description, children }: SectionHeadingProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0">
-        <h2
-          className={
-            variant === 'secondary'
-              ? 'text-lg font-semibold'
-              : 'text-[28px] leading-[1.05] font-semibold'
-          }
-        >
-          {title}
-        </h2>
+        <h2 className="text-title-3">{title}</h2>
         {description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="text-callout text-muted-foreground mt-1">{description}</p>
         ) : null}
       </div>
       {children ? <div className="shrink-0">{children}</div> : null}

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Copy, Check, PlusCircle } from 'lucide-react';
-import { Button, EmptyState, ErrorState } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState, Skeleton } from '@vitalock/ui';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@vitalock/ui';
 import { usePendingKeysForEquipment } from '@/hooks/usePendingKeysForEquipment';
 import { useEquipmentUpdates } from '@/hooks/useEquipmentUpdates';
@@ -69,7 +69,7 @@ export function EquipmentKeySnapshotPanel({
   buildingId,
   administrationId,
 }: EquipmentKeySnapshotPanelProps) {
-  const { data, isLoading, isError } = usePendingKeysForEquipment(equipmentId);
+  const { data, isLoading, isError, refetch } = usePendingKeysForEquipment(equipmentId);
   const { data: updates = [] } = useEquipmentUpdates(equipmentId);
   const { data: buildingKeys = [] } = useKeys(buildingId);
   const [copied, setCopied] = useState(false);
@@ -97,16 +97,26 @@ export function EquipmentKeySnapshotPanel({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-6">
-        <div className="border-primary h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
+      <div role="status" aria-label="Cargando llaves pendientes" className="flex flex-col gap-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
     );
   }
 
   if (isError) {
     return (
-      <ErrorState message="No se pudo cargar el estado de llaves pendientes." className="py-4" />
+      <ErrorState
+        message="No se pudo cargar el estado de llaves pendientes."
+        className="py-4"
+        onRetry={() => void refetch()}
+      />
     );
+  }
+
+  if (!data) {
+    return <EmptyState message="No se encontró información de llaves pendientes." />;
   }
 
   const handleCopy = async () => {

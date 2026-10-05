@@ -1,3 +1,15 @@
+import {
+  controlHeight,
+  elevation,
+  fontFamily,
+  layoutSpacing,
+  motion,
+  radius,
+  safeArea,
+  tabBar,
+  typeScale,
+} from './tailwind.tokens.js';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
@@ -29,6 +41,7 @@ export default {
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
+          solid: 'hsl(var(--destructive-solid))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
@@ -51,7 +64,6 @@ export default {
           DEFAULT: 'hsl(var(--warning))',
           foreground: 'hsl(var(--warning-foreground))',
         },
-        'status-neutral': 'hsl(var(--status-neutral-foreground))',
         brand: {
           50: 'hsl(var(--brand-50))',
           100: 'hsl(var(--brand-100))',
@@ -66,7 +78,15 @@ export default {
           950: 'hsl(var(--brand-950))',
         },
       },
+      fontFamily,
+      fontSize: typeScale,
+      spacing: { ...controlHeight, ...layoutSpacing, ...safeArea, 'tab-bar': tabBar.height },
+      maxHeight: { sheet: '90dvh' },
+      boxShadow: elevation,
+      transitionDuration: motion.duration,
+      transitionTimingFunction: motion.timing,
       borderRadius: {
+        ...radius,
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',

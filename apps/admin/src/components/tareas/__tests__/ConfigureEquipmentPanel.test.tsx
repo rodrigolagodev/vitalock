@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
@@ -16,6 +16,7 @@ vi.mock('@/hooks/useConfigureTechnicalTicketEquipment', () => ({
 }));
 
 import { ConfigureEquipmentPanel } from '../ConfigureEquipmentPanel';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -169,5 +170,12 @@ describe('ConfigureEquipmentPanel — configured state', () => {
     expect(serial.value).toBe('SN-999');
     expect(model.value).toBe('Custom Model');
     expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<ConfigureEquipmentPanel tarea={makeTarea()} />, { wrapper: makeWrapper() });
+    await user.click(screen.getByRole('button', { name: /guardar equipo/i }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

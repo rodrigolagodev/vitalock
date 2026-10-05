@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Clock, PackageCheck } from 'lucide-react';
-import { Button, ErrorState, FilterBar, StatCard, TruncationNotice } from '@vitalock/ui';
+import { ClipboardList, Clock, KeyRound, PackageCheck } from 'lucide-react';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  FilterBar,
+  StatCard,
+  TruncationNotice,
+} from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useKeyOrders } from '@/hooks/useKeyOrders';
@@ -42,6 +49,7 @@ export default function KeyOrdersPage() {
     truncated,
     isFetching,
     isError,
+    refetch,
   } = useKeyOrders({
     search,
     status,
@@ -55,12 +63,17 @@ export default function KeyOrdersPage() {
   const countLabel = (n: number) => (truncated ? `${n}+` : String(n));
 
   if (isError) {
-    return <ErrorState message="Error al cargar las órdenes de llave. Recargá la página." />;
+    return (
+      <ErrorState message="Error al cargar las órdenes de llave." onRetry={() => void refetch()} />
+    );
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Llaves">
+      <PageHeader
+        title="Órdenes de llaves"
+        subtitle="Gestioná las órdenes de llaves de administraciones y particulares."
+      >
         <Button asChild>
           <Link to="/llaves/nueva">Nueva orden</Link>
         </Button>
@@ -148,7 +161,23 @@ export default function KeyOrdersPage() {
 
       <TruncationNotice truncated={truncated} shown={orders.length} total={total} />
 
-      <LlavesTable rows={orders} isFetching={isFetching} hasFilters={hasFilters} />
+      <LlavesTable
+        rows={orders}
+        isFetching={isFetching}
+        hasFilters={hasFilters}
+        emptyState={
+          <EmptyState
+            icon={KeyRound}
+            title="Todavía no hay órdenes de llaves"
+            description="Creá una orden para emitir llaves."
+            action={
+              <Button asChild>
+                <Link to="/llaves/nueva">Nueva orden</Link>
+              </Button>
+            }
+          />
+        }
+      />
     </div>
   );
 }

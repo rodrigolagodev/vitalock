@@ -39,6 +39,14 @@ describe('Sidebar', () => {
     expect(dark).toHaveAttribute('alt', '');
   });
 
+  it('gives the collapse toggle an inset keyboard focus ring', () => {
+    renderSidebar();
+    const cls = screen.getByRole('button', { name: 'Toggle sidebar' }).className.split(/\s+/);
+    expect(cls).toContain('focus-visible:ring-2');
+    expect(cls).toContain('focus-visible:ring-inset');
+    expect(cls).toContain('focus-visible:ring-ring');
+  });
+
   it('defaults the logo alt to Vitalock', () => {
     render(
       <MemoryRouter>

@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router-dom';
-import type { ErrorFallbackProps as BoundaryFallbackProps } from '@vitalock/shared';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Outlet, useNavigate, useRouteError } from 'react-router-dom';
+import { reportError, type ErrorFallbackProps as BoundaryFallbackProps } from '@vitalock/shared';
 import { ErrorFallback, Skeleton } from '@vitalock/ui';
 
 /** Shown while a lazy page chunk loads. */
@@ -10,6 +11,15 @@ export function PageFallback() {
       <Skeleton className="h-4 w-1/2" />
       <Skeleton className="h-64 w-full" />
     </div>
+  );
+}
+
+/** Root layout route: lazy page chunks suspend below Auth and above every route. */
+export function SuspenseOutlet() {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <Outlet />
+    </Suspense>
   );
 }
 
@@ -28,4 +38,28 @@ export function RootErrorFallback({ reset }: BoundaryFallbackProps) {
       className="min-h-screen"
     />
   );
+}
+
+/**
+ * `errorElement` of the root data route. Data routers catch render errors per
+ * route before an outer React boundary sees them, so this reports them (once)
+ * and renders the same UI as `RootErrorFallback`, with a reload as reset.
+ */
+export function RouteErrorFallback() {
+  const routeError = useRouteError();
+  const error = useMemo(
+    () => (routeError instanceof Error ? routeError : new Error(String(routeError))),
+    [routeError],
+  );
+  const reported = useRef<Error | null>(null);
+  useEffect(() => {
+    if (reported.current === error) return;
+    reported.current = error;
+    reportError('admin:route', 'Route render error', error);
+  }, [error]);
+  return <RootErrorFallback error={error} componentStack={null} reset={reloadPage} />;
+}
+
+function reloadPage() {
+  window.location.reload();
 }

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 
 // Hoist mock refs
 const { mockNavigate } = vi.hoisted(() => ({
@@ -90,11 +90,11 @@ function renderPage() {
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/llaves/nueva']}>
-        <Routes>
-          <Route path="/llaves/nueva" element={<KeyOrderNuevaPage />} />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider
+        router={createMemoryRouter([{ path: '/llaves/nueva', element: <KeyOrderNuevaPage /> }], {
+          initialEntries: ['/llaves/nueva'],
+        })}
+      />
     </QueryClientProvider>,
   );
 }
@@ -131,5 +131,17 @@ describe('KeyOrderNuevaPage', () => {
       expect(createKeyOrderMock).toHaveBeenCalledOnce();
       expect(mockNavigate).toHaveBeenCalledWith('/llaves/ko-new-1');
     });
+  });
+});
+
+describe('KeyOrderNuevaPage identity', () => {
+  it('uses the "Órdenes de llaves" crumb linking to the list', () => {
+    renderPage();
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    expect(within(nav).getByRole('link', { name: 'Órdenes de llaves' })).toHaveAttribute(
+      'href',
+      '/llaves',
+    );
+    expect(within(nav).queryByRole('link', { name: 'Llaves' })).not.toBeInTheDocument();
   });
 });

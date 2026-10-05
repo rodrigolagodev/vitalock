@@ -9,7 +9,7 @@ import type { BuildingRow } from '@/hooks/useBuildings';
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const mockDeactivateMutateAsync = vi.fn();
-const mockDeactivateIsPending = vi.fn(() => false);
+const mockDeactivateIsPending = false;
 
 vi.mock('@/hooks/useMutateAdministration', () => ({
   useMutateAdministration: () => ({
@@ -17,7 +17,7 @@ vi.mock('@/hooks/useMutateAdministration', () => ({
     updateAdministration: {},
     deactivateAdministration: {
       mutateAsync: mockDeactivateMutateAsync,
-      isPending: mockDeactivateIsPending(),
+      isPending: mockDeactivateIsPending,
     },
   }),
 }));
@@ -162,6 +162,25 @@ describe('AdministrationStatusToggle', () => {
     await waitFor(() => {
       expect(mockDeactivateMutateAsync).toHaveBeenCalledWith({ id: 'a-1' });
     });
+  });
+
+  it('confirms through a ConfirmDialog with the emphasised name and runs the mutation once', async () => {
+    const user = userEvent.setup();
+    render(<AdministrationStatusToggle administration={activeAdmin} />, {
+      wrapper: makeWrapper(),
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Desactivar Garcia S.A.' }));
+
+    const dialog = await screen.findByRole('dialog');
+    const description = document.getElementById(
+      dialog.getAttribute('aria-describedby') as string,
+    ) as HTMLElement;
+    expect(description.querySelector('strong')).toHaveTextContent('Garcia S.A.');
+    expect(within(dialog).getByRole('button', { name: 'Cancelar' })).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Desactivar' }));
+    await waitFor(() => expect(mockDeactivateMutateAsync).toHaveBeenCalledTimes(1));
   });
 
   it('ignores inactive buildings when counting active ones', async () => {

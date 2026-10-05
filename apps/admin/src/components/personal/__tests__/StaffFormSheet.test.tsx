@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -25,6 +25,7 @@ vi.mock('@/lib/errors/toast', async (importOriginal) => {
 });
 
 import { StaffFormSheet } from '../StaffFormSheet';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -96,5 +97,12 @@ describe('StaffFormSheet', () => {
 
     expect(await screen.findByText('Ese usuario ya existe.')).toBeInTheDocument();
     expect(mockToastMutationError).not.toHaveBeenCalled();
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<StaffFormSheet open onOpenChange={vi.fn()} />, { wrapper: makeWrapper() });
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

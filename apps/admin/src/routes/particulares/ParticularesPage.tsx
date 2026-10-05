@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, ErrorState, FilterBar } from '@vitalock/ui';
+import { Users } from 'lucide-react';
+import { Button, EmptyState, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useParticulares } from '@/hooks/useParticulares';
 import { ParticularTable } from '@/components/particulares/ParticularTable';
@@ -13,10 +14,12 @@ export default function ParticularesPage() {
 
   const hasFilters = search.trim() !== '';
 
-  const { data: particulares = [], isFetching, isError } = useParticulares({ search });
+  const { data: particulares = [], isFetching, isError, refetch } = useParticulares({ search });
 
   if (isError) {
-    return <ErrorState message="Error al cargar los particulares. Recargá la página." />;
+    return (
+      <ErrorState message="Error al cargar los particulares." onRetry={() => void refetch()} />
+    );
   }
 
   return (
@@ -44,6 +47,14 @@ export default function ParticularesPage() {
         isFetching={isFetching}
         hasFilters={hasFilters}
         onEdit={setEditing}
+        emptyState={
+          <EmptyState
+            icon={Users}
+            title="Todavía no hay particulares"
+            description="Los particulares se crean desde una orden o desde acá."
+            action={<Button onClick={() => setCreateOpen(true)}>Nuevo particular</Button>}
+          />
+        }
       />
 
       <ParticularFormSheet

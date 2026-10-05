@@ -1,11 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@vitalock/ui';
-import { StatusBadge } from '@vitalock/ui';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@vitalock/ui';
+import { EmptyState, Skeleton, StatusBadge } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { useOrderKeyDetails } from '@/hooks/useOrderKeyDetails';
 import type { KeyOrderItemRow } from '@/hooks/useKeyOrder';
@@ -31,11 +25,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
  * unit + building, authorized equipment, item-level authorized retirer, and
  * pickup state. Query runs lazily (only while the dialog is open).
  */
-export function KeyItemDetailsDialog({
-  open,
-  onOpenChange,
-  item,
-}: KeyItemDetailsDialogProps) {
+export function KeyItemDetailsDialog({ open, onOpenChange, item }: KeyItemDetailsDialogProps) {
   const keyId = open ? item.produced_key_id : null;
   const { data, isLoading, isError } = useOrderKeyDetails(keyId);
 
@@ -48,31 +38,33 @@ export function KeyItemDetailsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-mono">
-            {data?.rfid_code ?? 'Llave'}
-          </DialogTitle>
+          <DialogTitle className="font-mono">{data?.rfid_code ?? 'Llave'}</DialogTitle>
           <DialogDescription>Detalle de la llave configurada</DialogDescription>
         </DialogHeader>
 
         {isLoading && (
-          <div className="flex justify-center py-8">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div role="status" aria-label="Cargando detalle" className="flex flex-col gap-3">
+            {[0, 1, 2, 3].map((row) => (
+              <div key={row} className="flex justify-between gap-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+            ))}
           </div>
         )}
 
         {isError && (
-          <p className="text-sm text-destructive">
+          <p className="text-destructive text-sm">
             No se pudieron cargar los detalles de la llave.
           </p>
         )}
 
+        {!isLoading && !isError && !data && <EmptyState message="No se encontró la llave." />}
+
         {data && (
           <div className="flex flex-col gap-3">
             <Row label="Código RFID" value={<span className="font-mono">{data.rfid_code}</span>} />
-            <Row
-              label="Edificio"
-              value={data.unit?.building?.name ?? '—'}
-            />
+            <Row label="Edificio" value={data.unit?.building?.name ?? '—'} />
             <Row
               label="Unidad"
               value={
@@ -86,11 +78,11 @@ export function KeyItemDetailsDialog({
 
             <hr className="border-border" />
 
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
+            <p className="text-muted-foreground text-xs font-semibold uppercase">
               Equipos autorizados
             </p>
             {data.authorizations.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin equipos autorizados.</p>
+              <p className="text-muted-foreground text-sm">Sin equipos autorizados.</p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {data.authorizations.map((auth) => (
@@ -107,15 +99,15 @@ export function KeyItemDetailsDialog({
 
             <hr className="border-border" />
 
-            <p className="text-xs font-semibold uppercase text-muted-foreground">
-              Retiro
-            </p>
+            <p className="text-muted-foreground text-xs font-semibold uppercase">Retiro</p>
             <Row
               label="Autorizado"
               value={
-                pickup
-                  ? `${pickup.full_name} (DNI ${pickup.dni})`
-                  : <span className="text-muted-foreground">—</span>
+                pickup ? (
+                  `${pickup.full_name} (DNI ${pickup.dni})`
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )
               }
             />
             <Row

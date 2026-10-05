@@ -78,4 +78,29 @@ describe('PageHeader', () => {
     expect(screen.getByText('Sin administración')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Sin administración' })).not.toBeInTheDocument();
   });
+
+  it('renders the h1 at title-1 and still merges titleClassName', () => {
+    render(<PageHeader title="Edificio" titleClassName="font-mono" />, { wrapper: makeWrapper() });
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Edificio' });
+    expect(h1).toHaveClass('text-title-1', 'font-mono');
+    expect(h1).not.toHaveClass('text-2xl');
+  });
+
+  it('renders the breadcrumb at footnote with small chevrons', () => {
+    const { container } = render(
+      <PageHeader title="Edificio" breadcrumbs={[{ label: 'A', to: '/a' }, { label: 'B' }]} />,
+      { wrapper: makeWrapper() },
+    );
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveClass('text-footnote');
+    expect(container.querySelector('svg')).toHaveClass('h-3.5', 'w-3.5');
+  });
+
+  it('renders the h1 at large-title when titleSize is large-title', () => {
+    render(<PageHeader title="Inicio" titleSize="large-title" titleClassName="font-mono" />, {
+      wrapper: makeWrapper(),
+    });
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Inicio' });
+    expect(h1).toHaveClass('text-large-title', 'font-mono');
+    expect(h1).not.toHaveClass('text-title-1');
+  });
 });

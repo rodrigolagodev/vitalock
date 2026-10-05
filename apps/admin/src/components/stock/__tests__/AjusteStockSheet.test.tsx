@@ -31,6 +31,7 @@ vi.mock('@vitalock/shared', async () => {
 });
 
 import { AjusteStockSheet } from '../AjusteStockSheet';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -79,10 +80,9 @@ describe('AjusteStockSheet', () => {
     const onOpenChange = vi.fn();
     const user = userEvent.setup();
 
-    render(
-      <AjusteStockSheet {...baseProps} onOpenChange={onOpenChange} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<AjusteStockSheet {...baseProps} onOpenChange={onOpenChange} />, {
+      wrapper: makeWrapper(),
+    });
 
     await user.clear(screen.getByLabelText(/Cantidad/));
     await user.type(screen.getByLabelText(/Cantidad/), '3');
@@ -128,10 +128,7 @@ describe('AjusteStockSheet', () => {
 
   it('blocks submit when the resulting stock would go negative', async () => {
     const user = userEvent.setup();
-    render(
-      <AjusteStockSheet {...baseProps} stockDisponible={2} />,
-      { wrapper: makeWrapper() },
-    );
+    render(<AjusteStockSheet {...baseProps} stockDisponible={2} />, { wrapper: makeWrapper() });
 
     await user.click(screen.getByRole('combobox'));
     await user.click(await screen.findByRole('option', { name: 'Baja por pérdida' }));
@@ -146,5 +143,12 @@ describe('AjusteStockSheet', () => {
 
     const submit = screen.getByRole('button', { name: /Registrar movimiento/ });
     expect(submit).toBeDisabled();
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<AjusteStockSheet {...baseProps} />, { wrapper: makeWrapper() });
+    await user.click(screen.getByRole('button', { name: 'Registrar movimiento' }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

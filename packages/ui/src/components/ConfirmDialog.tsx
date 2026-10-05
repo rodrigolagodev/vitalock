@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import {
   Dialog,
   DialogContent,
@@ -12,12 +14,15 @@ export interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  /** Inline content only: it renders inside a `<p>`. */
+  description: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void;
   variant?: 'default' | 'destructive';
   isPending?: boolean;
+  /** Confirm button label while `isPending`. Defaults to "Procesando...". */
+  pendingLabel?: string;
 }
 
 export function ConfirmDialog({
@@ -30,6 +35,7 @@ export function ConfirmDialog({
   onConfirm,
   variant = 'default',
   isPending = false,
+  pendingLabel = 'Procesando...',
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(o) => !isPending && onOpenChange(o)}>
@@ -47,13 +53,8 @@ export function ConfirmDialog({
           >
             {cancelLabel}
           </Button>
-          <Button
-            type="button"
-            variant={variant}
-            onClick={onConfirm}
-            disabled={isPending}
-          >
-            {isPending ? 'Procesando...' : confirmLabel}
+          <Button type="button" variant={variant} onClick={onConfirm} disabled={isPending}>
+            {isPending ? pendingLabel : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  FormField,
 } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
@@ -116,23 +117,15 @@ export function PickupKeyDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          {item.description && (
-            <p className="text-sm text-muted-foreground">{item.description}</p>
-          )}
+          {item.description && <p className="text-muted-foreground text-sm">{item.description}</p>}
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pickup-key-name">Nombre *</Label>
-            <Input
-              id="pickup-key-name"
-              placeholder="Ej. Juan"
-              {...register('picked_up_by_name')}
-            />
-            {errors.picked_up_by_name && (
-              <p className="text-sm text-destructive">
-                {errors.picked_up_by_name.message}
-              </p>
-            )}
-          </div>
+          <FormField
+            label="Nombre *"
+            id="pickup-key-name"
+            error={errors.picked_up_by_name?.message}
+          >
+            <Input placeholder="Ej. Juan" {...register('picked_up_by_name')} />
+          </FormField>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="pickup-key-surname">Apellido</Label>
@@ -143,19 +136,9 @@ export function PickupKeyDialog({
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pickup-key-dni">DNI *</Label>
-            <Input
-              id="pickup-key-dni"
-              placeholder="Ej. 28123456"
-              {...register('picked_up_by_dni')}
-            />
-            {errors.picked_up_by_dni && (
-              <p className="text-sm text-destructive">
-                {errors.picked_up_by_dni.message}
-              </p>
-            )}
-          </div>
+          <FormField label="DNI *" id="pickup-key-dni" error={errors.picked_up_by_dni?.message}>
+            <Input placeholder="Ej. 28123456" {...register('picked_up_by_dni')} />
+          </FormField>
 
           <DialogFooter className="pt-2">
             <Button

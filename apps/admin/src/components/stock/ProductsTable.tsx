@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { DataTable, Badge } from '@vitalock/ui';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { CATEGORY_LABELS } from './ProductFormFields';
@@ -7,9 +8,16 @@ interface ProductsTableProps {
   rows: ProductRow[];
   isFetching: boolean;
   hasFilters?: boolean;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
-export function ProductsTable({ rows, isFetching, hasFilters = false }: ProductsTableProps) {
+export function ProductsTable({
+  rows,
+  isFetching,
+  hasFilters = false,
+  emptyState,
+}: ProductsTableProps) {
   return (
     <DataTable<ProductRow>
       rows={rows}
@@ -56,6 +64,7 @@ export function ProductsTable({ rows, isFetching, hasFilters = false }: Products
       firstCell="link"
       getRowHref={(product) => `/stock/${product.id}`}
       emptyMessage="No hay productos cargados."
+      emptyState={emptyState}
       filteredEmptyMessage="No se encontraron productos con los filtros aplicados."
       hasFilters={hasFilters}
     />

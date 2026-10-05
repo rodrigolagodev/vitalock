@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
+import { KeyRound } from 'lucide-react';
+import { Button, EmptyState, ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useKeysInventory } from '@/hooks/useKeysInventory';
 import { useAdministrations } from '@/hooks/useAdministrations';
@@ -101,6 +102,7 @@ export default function InventarioPage() {
     truncated,
     isFetching,
     isError,
+    refetch,
   } = useKeysInventory({
     administrationId: cascadeValue.administrationId,
     buildingId: cascadeValue.buildingId,
@@ -127,7 +129,12 @@ export default function InventarioPage() {
   }));
 
   if (isError) {
-    return <ErrorState message="Error al cargar el inventario de llaves. Recargá la página." />;
+    return (
+      <ErrorState
+        message="Error al cargar el inventario de llaves."
+        onRetry={() => void refetch()}
+      />
+    );
   }
 
   const hasFilters =
@@ -139,7 +146,7 @@ export default function InventarioPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Inventario de llaves">
+      <PageHeader title="Inventario de llaves" subtitle="Consultá las llaves emitidas y su estado.">
         <Button asChild>
           <Link to="/llaves/nueva">Crear orden de llave</Link>
         </Button>
@@ -197,7 +204,18 @@ export default function InventarioPage() {
 
       <TruncationNotice truncated={truncated} shown={rows.length} total={total} />
 
-      <KeysInventoryTable rows={rows} isFetching={isFetching} hasFilters={hasFilters} />
+      <KeysInventoryTable
+        rows={rows}
+        isFetching={isFetching}
+        hasFilters={hasFilters}
+        emptyState={
+          <EmptyState
+            icon={KeyRound}
+            title="Todavía no hay llaves"
+            description="Aparecen acá cuando se crean desde las órdenes."
+          />
+        }
+      />
     </div>
   );
 }

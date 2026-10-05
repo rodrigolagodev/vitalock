@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { PencilLine } from 'lucide-react';
 import { Button, DataCardList } from '@vitalock/ui';
 import { formatDate } from '@/lib/format';
@@ -9,6 +10,8 @@ interface TareasTableProps {
   isFetching: boolean;
   hasFilters: boolean;
   onEdit?: (tarea: TareaRow) => void;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 /**
@@ -20,7 +23,13 @@ interface TareasTableProps {
  * so the type has a real accessible text label too, not just the
  * `aria-hidden` icon (WCAG 1.4.1 — never color/icon-only).
  */
-export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTableProps) {
+export function TareasTable({
+  rows,
+  isFetching,
+  hasFilters,
+  onEdit,
+  emptyState,
+}: TareasTableProps) {
   return (
     <DataCardList<TareaRow>
       rows={rows}
@@ -99,6 +108,7 @@ export function TareasTable({ rows, isFetching, hasFilters, onEdit }: TareasTabl
           : undefined
       }
       emptyMessage="No hay tareas registradas."
+      emptyState={emptyState}
       filteredEmptyMessage="No se encontraron tareas con los filtros aplicados."
       hasFilters={hasFilters}
     />

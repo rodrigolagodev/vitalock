@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import TareasPage from '@/routes/TareasPage';
 import { categoryLabel } from '@/lib/status/tareaStatus';
@@ -133,5 +134,52 @@ describe('TareasPage', () => {
     });
     renderTareas();
     expect(screen.getByRole('heading', { name: 'Mis tareas' })).toBeInTheDocument();
+  });
+
+  it('renders its title as a large title', () => {
+    useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+    renderTareas();
+    expect(screen.getByRole('heading', { level: 1, name: 'Mis tareas' })).toHaveClass(
+      'text-large-title',
+    );
+  });
+
+  it('does not mount the connectivity banner itself (the shell owns it)', () => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    try {
+      useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+      renderTareas();
+      expect(screen.queryByText(/Sin conexión/)).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
+    }
+  });
+
+  it('shows the ErrorState with a retry that calls refetch once', async () => {
+    const refetch = vi.fn();
+    useAssignedTicketsMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+      refetch,
+    });
+    renderTareas();
+    expect(screen.getByText(/No se pudieron cargar/)).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps stale rows when a background refetch fails', () => {
+    useAssignedTicketsMock.mockReturnValue({
+      data: [makeTicket('t1')],
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+      refetch: vi.fn(),
+    });
+    renderTareas();
+    expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument();
+    expect(screen.getByText(categoryLabel('update_equipment'))).toBeInTheDocument();
   });
 });

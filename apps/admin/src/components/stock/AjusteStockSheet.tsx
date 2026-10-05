@@ -2,23 +2,11 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
+import { Button, FormField } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { useMutateStockMovement } from '@/hooks/useMutateStockMovement';
 import { useAuthContext } from '@vitalock/shared';
 import type { MovementType } from '@/types/stock';
@@ -68,7 +56,10 @@ const schema = z
     note: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    if ((data.movement_type === 'compra' || data.movement_type === 'devolucion') && data.quantity <= 0) {
+    if (
+      (data.movement_type === 'compra' || data.movement_type === 'devolucion') &&
+      data.quantity <= 0
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `${data.movement_type === 'compra' ? 'Compra' : 'Devolución'} requiere cantidad positiva`,
@@ -147,7 +138,8 @@ export function AjusteStockSheet({
       productId,
       movementType: values.movement_type,
       quantity: values.quantity,
-      unitCost: showCost && values.unit_cost != null && values.unit_cost > 0 ? values.unit_cost : null,
+      unitCost:
+        showCost && values.unit_cost != null && values.unit_cost > 0 ? values.unit_cost : null,
       note: values.note?.trim() || null,
       actor_staff_id: staff?.id ?? null,
     });
@@ -158,18 +150,15 @@ export function AjusteStockSheet({
 
   return (
     <Sheet open={open} onOpenChange={(o) => !isPending && onOpenChange(o)}>
-      <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-lg overflow-y-auto">
+      <SheetContent side="right" className="flex flex-col gap-0 overflow-y-auto sm:max-w-lg">
         <SheetHeader className="p-6 pb-4">
           <SheetTitle>Nuevo movimiento — {productName}</SheetTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Stock disponible actual: <span className="font-medium">{stockDisponible}</span>
           </p>
         </SheetHeader>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-1 flex-col gap-6 px-6"
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col gap-6 px-6">
           <div className="flex flex-col gap-2">
             <Label htmlFor="movement-type">Tipo *</Label>
             <Controller
@@ -194,64 +183,72 @@ export function AjusteStockSheet({
               )}
             />
             {activeTypeMeta && (
-              <p className="text-xs text-muted-foreground">{activeTypeMeta.hint}</p>
+              <p className="text-muted-foreground text-xs">{activeTypeMeta.hint}</p>
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="movement-quantity">Cantidad *</Label>
-            <Controller
-              control={control}
-              name="quantity"
-              render={({ field }) => (
-                <Input
-                  id="movement-quantity"
-                  type="number"
-                  step="1"
-                  value={field.value ?? ''}
-                  onChange={(e) => field.onChange(e.target.value === '' ? 0 : Number(e.target.value))}
-                />
-              )}
-            />
-            {errors.quantity && (
-              <p className="text-sm text-destructive">{errors.quantity.message}</p>
-            )}
-            {!errors.quantity && quantity !== 0 && (
-              <p className={`text-xs ${wouldGoNegative ? 'text-destructive' : 'text-muted-foreground'}`}>
-                Stock resultante: {projectedStock}
-                {wouldGoNegative && ' — el movimiento dejaría el stock en negativo'}
-              </p>
-            )}
-          </div>
-
-          {showCost && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="movement-cost">Costo unitario (opcional)</Label>
+          <FormField
+            label="Cantidad *"
+            id="movement-quantity"
+            error={errors.quantity?.message}
+            description={
+              !errors.quantity && quantity !== 0 ? (
+                <span className={wouldGoNegative ? 'text-destructive' : undefined}>
+                  Stock resultante: {projectedStock}
+                  {wouldGoNegative && ' — el movimiento dejaría el stock en negativo'}
+                </span>
+              ) : undefined
+            }
+          >
+            {(a11y) => (
               <Controller
                 control={control}
-                name="unit_cost"
+                name="quantity"
                 render={({ field }) => (
                   <Input
-                    id="movement-cost"
+                    {...a11y}
                     type="number"
-                    step="0.01"
-                    min="0"
+                    step="1"
                     value={field.value ?? ''}
                     onChange={(e) =>
-                      field.onChange(e.target.value === '' ? null : Number(e.target.value))
+                      field.onChange(e.target.value === '' ? 0 : Number(e.target.value))
                     }
                   />
                 )}
               />
-              {errors.unit_cost && (
-                <p className="text-sm text-destructive">{errors.unit_cost.message}</p>
+            )}
+          </FormField>
+
+          {showCost && (
+            <FormField
+              label="Costo unitario (opcional)"
+              id="movement-cost"
+              error={errors.unit_cost?.message}
+              description={
+                movementType === 'compra'
+                  ? 'Si el costo es mayor a 0, actualiza el precio de costo del producto.'
+                  : undefined
+              }
+            >
+              {(a11y) => (
+                <Controller
+                  control={control}
+                  name="unit_cost"
+                  render={({ field }) => (
+                    <Input
+                      {...a11y}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={field.value ?? ''}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === '' ? null : Number(e.target.value))
+                      }
+                    />
+                  )}
+                />
               )}
-              {movementType === 'compra' && (
-                <p className="text-xs text-muted-foreground">
-                  Si el costo es mayor a 0, actualiza el precio de costo del producto.
-                </p>
-              )}
-            </div>
+            </FormField>
           )}
 
           <div className="flex flex-col gap-2">

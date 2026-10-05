@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Power } from 'lucide-react';
-import { Button, cn } from '@vitalock/ui';
+import { Button, ConfirmDialog, cn } from '@vitalock/ui';
 import {
   Dialog,
   DialogContent,
@@ -54,50 +54,43 @@ export function AdministrationStatusToggle({ administration }: AdministrationSta
         Desactivar
       </Button>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {hasActiveBuildings ? 'No se puede desactivar' : 'Desactivar administración'}
-            </DialogTitle>
-            <DialogDescription>
-              {hasActiveBuildings ? (
-                <>
-                  La administración <strong>{administration.company_name}</strong> tiene{' '}
-                  {activeBuildings} edificio{activeBuildings !== 1 ? 's' : ''} activo
-                  {activeBuildings !== 1 ? 's' : ''}. Desactivá los edificios primero.
-                </>
-              ) : (
-                <>
-                  ¿Confirmás que querés desactivar la administración{' '}
-                  <strong>{administration.company_name}</strong>? Esta acción cambiará su estado a
-                  inactivo.
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            {hasActiveBuildings ? (
+      {hasActiveBuildings ? (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>No se puede desactivar</DialogTitle>
+              <DialogDescription>
+                La administración <strong>{administration.company_name}</strong> tiene{' '}
+                {activeBuildings} edificio{activeBuildings !== 1 ? 's' : ''} activo
+                {activeBuildings !== 1 ? 's' : ''}. Desactivá los edificios primero.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Entendido
               </Button>
-            ) : (
-              <>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => void handleConfirm()}
-                  disabled={deactivateAdministration.isPending}
-                >
-                  {deactivateAdministration.isPending ? 'Desactivando...' : 'Desactivar'}
-                </Button>
-              </>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <ConfirmDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          title="Desactivar administración"
+          description={
+            <>
+              ¿Confirmás que querés desactivar la administración{' '}
+              <strong>{administration.company_name}</strong>? Esta acción cambiará su estado a
+              inactivo.
+            </>
+          }
+          confirmLabel="Desactivar"
+          pendingLabel="Desactivando..."
+          variant="destructive"
+          isPending={deactivateAdministration.isPending}
+          onConfirm={() => void handleConfirm()}
+        />
+      )}
     </>
   );
 }

@@ -15,7 +15,7 @@ const TERMINAL_STATUSES = new Set(['invoiced', 'cancelled']);
 
 export default function TechnicalOrderDetailPage() {
   const { techOrderId } = useParams<{ techOrderId: string }>();
-  const { data: order, isLoading, isError } = useTechnicalOrder(techOrderId);
+  const { data: order, isLoading, isError, refetch } = useTechnicalOrder(techOrderId);
   const { cancelTechnicalOrder, markTechnicalOrderInvoiced } = useMutateTechnicalOrder();
   const { data: tickets = [], isLoading: ticketsLoading } = useTechnicalOrderTickets(techOrderId);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
@@ -45,6 +45,7 @@ export default function TechnicalOrderDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar la orden."
+        onRetry={() => void refetch()}
         back={{ label: 'Volver a servicio técnico', to: '/servicio-tecnico' }}
         className="py-24"
       />
@@ -145,13 +146,13 @@ export default function TechnicalOrderDetailPage() {
 
       {/* Items table */}
       <div className="flex flex-col gap-3">
-        <SectionHeading title="Ítems" variant="secondary" />
+        <SectionHeading title="Ítems" />
         <TechnicalOrderItemsTable items={order.technical_order_items} isFetching={isLoading} />
       </div>
 
       {/* Linked tickets */}
       <div className="flex flex-col gap-3">
-        <SectionHeading title="Tareas relacionadas" variant="secondary" />
+        <SectionHeading title="Tareas relacionadas" />
         <LinkedTicketsTable tickets={tickets} isLoading={ticketsLoading} />
       </div>
 

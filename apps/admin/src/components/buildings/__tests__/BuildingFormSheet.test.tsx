@@ -1,5 +1,6 @@
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
@@ -25,6 +26,7 @@ vi.mock('@/hooks/useAdministrations', () => ({
 }));
 
 import { BuildingFormSheet } from '../BuildingFormSheet';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -46,10 +48,7 @@ describe('BuildingFormSheet', () => {
 
   describe('without administrationId prop (backward-compatible)', () => {
     it('renders the administration Select when no administrationId is provided', () => {
-      render(
-        <BuildingFormSheet open={true} onOpenChange={vi.fn()} />,
-        { wrapper: makeWrapper() },
-      );
+      render(<BuildingFormSheet open={true} onOpenChange={vi.fn()} />, { wrapper: makeWrapper() });
 
       // The Select trigger is present when administrationId is not set
       expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -58,20 +57,18 @@ describe('BuildingFormSheet', () => {
 
   describe('with administrationId prop', () => {
     it('does NOT render the administration Select when administrationId is provided', () => {
-      render(
-        <BuildingFormSheet open={true} onOpenChange={vi.fn()} administrationId="adm-1" />,
-        { wrapper: makeWrapper() },
-      );
+      render(<BuildingFormSheet open={true} onOpenChange={vi.fn()} administrationId="adm-1" />, {
+        wrapper: makeWrapper(),
+      });
 
       // Select (combobox) must not appear
       expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     });
 
     it('pre-fills the hidden administration_id with the provided administrationId', () => {
-      render(
-        <BuildingFormSheet open={true} onOpenChange={vi.fn()} administrationId="adm-1" />,
-        { wrapper: makeWrapper() },
-      );
+      render(<BuildingFormSheet open={true} onOpenChange={vi.fn()} administrationId="adm-1" />, {
+        wrapper: makeWrapper(),
+      });
 
       // The Select is hidden but the form field must carry the pre-filled value.
       // Since the field is a hidden controller value (not a visible input),
@@ -80,5 +77,12 @@ describe('BuildingFormSheet', () => {
       // The name field should still be present
       expect(screen.getByLabelText(/nombre/i)).toBeInTheDocument();
     });
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    render(<BuildingFormSheet open onOpenChange={vi.fn()} />, { wrapper: makeWrapper() });
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

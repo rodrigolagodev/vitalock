@@ -249,5 +249,6 @@ describe('TechnicalOrderDetailPage — loading and error states', () => {
     });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });

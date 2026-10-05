@@ -96,7 +96,7 @@ describe('HistorialPage status filter', () => {
 describe('HistorialPage empty state', () => {
   it('renders empty state when no data', () => {
     renderPage();
-    expect(screen.getByText(/no hay órdenes en el historial/i)).toBeInTheDocument();
+    expect(screen.getByText('Todavía no hay órdenes')).toBeInTheDocument();
   });
 });
 
@@ -110,6 +110,7 @@ describe('HistorialPage error state', () => {
 
     renderPage();
     expect(screen.getByText(/error al cargar el historial/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
 
@@ -184,5 +185,23 @@ describe('/historial → /ordenes redirect', () => {
 
     // After redirect, the hub renders at /ordenes
     expect(screen.getByRole('heading', { name: /órdenes/i })).toBeInTheDocument();
+  });
+});
+
+describe('page subtitle', () => {
+  it('renders the one-line subtitle under the title', () => {
+    renderPage();
+    expect(
+      screen.getByText('Consultá el historial de órdenes de llaves y de servicio técnico.'),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title and description without a create action', () => {
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay órdenes')).toBeInTheDocument();
+    expect(screen.getByText('Aparecen acá cuando se crean desde las órdenes.')).toBeInTheDocument();
   });
 });

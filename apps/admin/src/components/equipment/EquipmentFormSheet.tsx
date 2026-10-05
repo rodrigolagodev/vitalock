@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, FormField } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
@@ -146,15 +146,13 @@ export function EquipmentFormSheet({
               className="flex flex-1 flex-col gap-6 overflow-y-auto px-6"
             >
               {/* Mutable: model */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-model">Modelo</Label>
-                <Input id="edit-model" disabled={isDead} {...editForm.register('model')} />
-                {editForm.formState.errors.model && (
-                  <p className="text-destructive text-sm">
-                    {editForm.formState.errors.model.message}
-                  </p>
-                )}
-              </div>
+              <FormField
+                label="Modelo"
+                id="edit-model"
+                error={editForm.formState.errors.model?.message}
+              >
+                <Input disabled={isDead} {...editForm.register('model')} />
+              </FormField>
 
               {/* Status select */}
               <div className="flex flex-col gap-2">
@@ -224,47 +222,29 @@ export function EquipmentFormSheet({
               onSubmit={createForm.handleSubmit(onCreateSubmit)}
               className="flex flex-1 flex-col gap-6 overflow-y-auto px-6"
             >
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="create-model">Modelo *</Label>
-                <Input
-                  id="create-model"
-                  placeholder="Ej. Smart Lock Pro"
-                  {...createForm.register('model')}
-                />
-                {createForm.formState.errors.model && (
-                  <p className="text-destructive text-sm">
-                    {createForm.formState.errors.model.message}
-                  </p>
-                )}
-              </div>
+              <FormField
+                label="Modelo *"
+                id="create-model"
+                error={createForm.formState.errors.model?.message}
+              >
+                <Input placeholder="Ej. Smart Lock Pro" {...createForm.register('model')} />
+              </FormField>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="create-serial">Número de serie *</Label>
-                <Input
-                  id="create-serial"
-                  placeholder="Ej. SN-123456789"
-                  {...createForm.register('serial_number')}
-                />
-                {createForm.formState.errors.serial_number && (
-                  <p className="text-destructive text-sm">
-                    {createForm.formState.errors.serial_number.message}
-                  </p>
-                )}
-              </div>
+              <FormField
+                label="Número de serie *"
+                id="create-serial"
+                error={createForm.formState.errors.serial_number?.message}
+              >
+                <Input placeholder="Ej. SN-123456789" {...createForm.register('serial_number')} />
+              </FormField>
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="create-installed-at">Fecha de instalación *</Label>
-                <Input
-                  id="create-installed-at"
-                  type="date"
-                  {...createForm.register('installed_at')}
-                />
-                {createForm.formState.errors.installed_at && (
-                  <p className="text-destructive text-sm">
-                    {createForm.formState.errors.installed_at.message}
-                  </p>
-                )}
-              </div>
+              <FormField
+                label="Fecha de instalación *"
+                id="create-installed-at"
+                error={createForm.formState.errors.installed_at?.message}
+              >
+                <Input type="date" {...createForm.register('installed_at')} />
+              </FormField>
 
               {/* building_id is intentionally hidden — passed as prop, never user-editable */}
 

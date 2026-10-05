@@ -16,6 +16,7 @@ vi.mock('@/hooks/useDecommissionImpact', () => ({
 // Mock useMutateEquipment is NOT needed here — DecommissionDialog takes onConfirm as prop
 
 import { DecommissionDialog } from '../DecommissionDialog';
+import { expectInvalidFieldWired } from '@/test/expectFieldErrorWiring';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -129,5 +130,12 @@ describe('DecommissionDialog', () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('wires the field error to its control on an invalid submit (FormField)', async () => {
+    const user = userEvent.setup();
+    renderDialog();
+    await user.click(screen.getByRole('button', { name: 'Confirmar baja' }));
+    await waitFor(() => expectInvalidFieldWired());
   });
 });

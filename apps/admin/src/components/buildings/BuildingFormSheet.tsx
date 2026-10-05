@@ -2,23 +2,10 @@ import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@vitalock/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, FormField } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Input } from '@vitalock/ui';
-import { Label } from '@vitalock/ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@vitalock/ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@vitalock/ui';
 import { useMutateBuilding } from '@/hooks/useMutateBuilding';
 import { useAdministrations } from '@/hooks/useAdministrations';
 import type { BuildingRow } from '@/hooks/useBuildings';
@@ -94,9 +81,7 @@ export function BuildingFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex flex-col gap-0 sm:max-w-md">
         <SheetHeader className="p-6 pb-4">
-          <SheetTitle>
-            {isEdit ? 'Editar edificio' : 'Nuevo edificio'}
-          </SheetTitle>
+          <SheetTitle>{isEdit ? 'Editar edificio' : 'Nuevo edificio'}</SheetTitle>
         </SheetHeader>
 
         <form
@@ -104,57 +89,49 @@ export function BuildingFormSheet({
           className="flex flex-1 flex-col gap-6 overflow-y-auto px-6"
         >
           {!isEdit && !administrationId && (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="administration_id">Administración *</Label>
-              <Controller
-                control={control}
-                name="administration_id"
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={adminsLoading}
-                  >
-                    <SelectTrigger id="administration_id">
-                      <SelectValue placeholder={adminsLoading ? 'Cargando...' : 'Elegí una administración'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {administrations.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.company_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.administration_id && (
-                <p className="text-sm text-destructive">{errors.administration_id.message}</p>
+            <FormField
+              label="Administración *"
+              id="administration_id"
+              error={errors.administration_id?.message}
+            >
+              {(a11y) => (
+                <Controller
+                  control={control}
+                  name="administration_id"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={adminsLoading}
+                    >
+                      <SelectTrigger {...a11y}>
+                        <SelectValue
+                          placeholder={adminsLoading ? 'Cargando...' : 'Elegí una administración'}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {administrations.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.company_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               )}
-            </div>
+            </FormField>
           )}
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Nombre *</Label>
-            <Input id="name" {...register('name')} placeholder="Ej. Torre Callao" />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
-          </div>
+          <FormField label="Nombre *" id="name" error={errors.name?.message}>
+            <Input {...register('name')} placeholder="Ej. Torre Callao" />
+          </FormField>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="address">Dirección</Label>
-            <Input
-              id="address"
-              {...register('address')}
-              placeholder="Ej. Av. Callao 1234, CABA"
-            />
-            {errors.address && (
-              <p className="text-sm text-destructive">{errors.address.message}</p>
-            )}
-          </div>
+          <FormField label="Dirección" id="address" error={errors.address?.message}>
+            <Input {...register('address')} placeholder="Ej. Av. Callao 1234, CABA" />
+          </FormField>
 
-          <SheetFooter className="mt-auto pt-4 pb-6">
+          <SheetFooter className="mt-auto pb-6 pt-4">
             <Button
               type="button"
               variant="outline"

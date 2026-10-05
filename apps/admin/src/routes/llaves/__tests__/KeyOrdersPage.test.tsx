@@ -105,12 +105,12 @@ describe('KeyOrdersPage list', () => {
 
   it('renders empty state when no data', () => {
     renderPage();
-    expect(screen.getByText(/no hay órdenes de llave/i)).toBeInTheDocument();
+    expect(screen.getByText('Todavía no hay órdenes de llaves')).toBeInTheDocument();
   });
 
   it('renders the Nueva orden link', () => {
     renderPage();
-    const link = screen.getByRole('link', { name: /nueva orden/i });
+    const [link] = screen.getAllByRole('link', { name: /nueva orden/i });
     expect(link).toHaveAttribute('href', '/llaves/nueva');
   });
 });
@@ -172,5 +172,31 @@ describe('KeyOrdersPage error state', () => {
 
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+});
+
+describe('KeyOrdersPage identity', () => {
+  it('titles the page "Órdenes de llaves" with a subtitle and no bare "Llaves" heading', () => {
+    renderPage();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Órdenes de llaves' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /^Llaves$/ })).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Gestioná las órdenes de llaves de administraciones y particulares.'),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title, description and a create link matching the header button', () => {
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay órdenes de llaves')).toBeInTheDocument();
+    expect(screen.getByText('Creá una orden para emitir llaves.')).toBeInTheDocument();
+    const links = screen.getAllByRole('link', { name: 'Nueva orden' });
+    expect(links).toHaveLength(2);
+    for (const link of links) expect(link).toHaveAttribute('href', '/llaves/nueva');
   });
 });

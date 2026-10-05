@@ -38,26 +38,33 @@ afterEach(() => {
   Object.defineProperty(window, 'matchMedia', { writable: true, value: originalMatchMedia });
 });
 
-function renderUserMenu(collapsed?: boolean) {
+function renderUserMenu(variant?: 'sidebar' | 'toolbar') {
   return render(
     <ThemeProvider attribute="class">
-      <UserMenu collapsed={collapsed} />
+      <UserMenu variant={variant} />
     </ThemeProvider>,
   );
 }
 
 describe('UserMenu (installer)', () => {
   it('shows name and @username subtitle when expanded', () => {
-    renderUserMenu(false);
+    renderUserMenu();
     expect(screen.getByText('Ana Alvarez')).toBeInTheDocument();
     expect(screen.getByText('@ana.alvarez')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Abrir menú de usuario' })).toBeInTheDocument();
   });
 
   it('never renders the session email, even though the session carries one', () => {
-    renderUserMenu(false);
+    renderUserMenu();
     expect(screen.getByText('@ana.alvarez')).toBeInTheDocument();
     expect(screen.queryByText(SESSION_EMAIL)).not.toBeInTheDocument();
     expect(screen.queryByText(SESSION_EMAIL, { exact: false })).not.toBeInTheDocument();
+  });
+
+  it('renders an avatar-only trigger in the toolbar variant', () => {
+    renderUserMenu('toolbar');
+    const trigger = screen.getByRole('button', { name: 'Abrir menú de usuario' });
+    expect(trigger).toHaveTextContent('AA');
+    expect(trigger).not.toHaveTextContent('Ana Alvarez');
   });
 });

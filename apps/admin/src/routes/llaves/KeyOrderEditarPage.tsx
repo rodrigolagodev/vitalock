@@ -11,7 +11,7 @@ import { toastMutationError } from '@/lib/errors/toast';
 export default function KeyOrderEditarPage() {
   const { keyOrderId } = useParams<{ keyOrderId: string }>();
   const navigate = useNavigate();
-  const { data: order, isLoading, isError } = useKeyOrder(keyOrderId);
+  const { data: order, isLoading, isError, refetch } = useKeyOrder(keyOrderId);
   const { updateDraftKeyOrder } = useMutateKeyOrder();
 
   if (isLoading) {
@@ -35,6 +35,7 @@ export default function KeyOrderEditarPage() {
       <div className="flex flex-col gap-6 pb-24">
         <ErrorState
           message="Error al cargar la orden."
+          onRetry={() => void refetch()}
           back={{ label: 'Volver al listado', to: '/llaves' }}
         />
       </div>
@@ -48,7 +49,7 @@ export default function KeyOrderEditarPage() {
         <PageHeader
           title="Editar orden de llaves"
           breadcrumbs={[
-            { label: 'Llaves', to: '/llaves' },
+            { label: 'Órdenes de llaves', to: '/llaves' },
             { label: order.order_number, to: `/llaves/${order.id}` },
             { label: 'Editar' },
           ]}
@@ -120,7 +121,7 @@ export default function KeyOrderEditarPage() {
         title="Editar orden de llaves"
         subtitle="Modificá el cliente o los items del borrador."
         breadcrumbs={[
-          { label: 'Llaves', to: '/llaves' },
+          { label: 'Órdenes de llaves', to: '/llaves' },
           { label: order.order_number, to: `/llaves/${order.id}` },
           { label: 'Editar' },
         ]}

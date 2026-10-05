@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { DataCardList } from '@vitalock/ui';
 import { formatCurrencyARS, formatDate } from '@/lib/format';
 import { technicalOrderStatus } from '@/lib/status/technicalOrderStatus';
@@ -7,6 +8,8 @@ interface ServicioTecnicoTableProps {
   rows: TechnicalOrderListRow[];
   isFetching: boolean;
   hasFilters?: boolean;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 function clientLabel(row: TechnicalOrderListRow): string {
@@ -27,6 +30,7 @@ export function ServicioTecnicoTable({
   rows,
   isFetching,
   hasFilters = false,
+  emptyState,
 }: ServicioTecnicoTableProps) {
   return (
     <DataCardList<TechnicalOrderListRow>
@@ -67,6 +71,7 @@ export function ServicioTecnicoTable({
       firstCell="link"
       getRowHref={(row) => `/servicio-tecnico/${row.id}`}
       emptyMessage="No hay órdenes de servicio técnico registradas."
+      emptyState={emptyState}
       filteredEmptyMessage="No se encontraron órdenes con los filtros aplicados."
       hasFilters={hasFilters}
     />

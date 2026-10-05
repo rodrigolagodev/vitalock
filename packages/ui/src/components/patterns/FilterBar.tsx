@@ -180,7 +180,7 @@ function FilterBarSearch({
       onChange={(event) => setDraft(event.target.value)}
       // Bounded/responsive width, never full-width: this control sits
       // inline as the first item of the single filter row, not its own row.
-      className={cn('w-full sm:w-[220px] lg:w-[260px]', className)}
+      className={cn('w-full sm:w-56 lg:w-64', className)}
       {...inputProps}
     />
   );
@@ -248,7 +248,7 @@ function FilterBarSelect({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           className={cn(
-            'border-input bg-card text-foreground ring-offset-background focus-visible:ring-ring flex h-11 appearance-none rounded-lg border py-2 pl-3 pr-9 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+            'border-input bg-card text-foreground ring-offset-background focus-visible:ring-ring h-control-md rounded-control flex appearance-none border py-2 pl-3 pr-9 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
             className,
           )}
         >
@@ -435,7 +435,7 @@ function FilterBarMultiSelect({
             <button
               type="button"
               onClick={clearFacet}
-              className="text-muted-foreground hover:bg-accent w-full rounded-md px-2 py-1.5 text-center text-sm"
+              className="text-muted-foreground hover:bg-accent focus-visible:ring-ring w-full rounded-md px-2 py-1.5 text-center text-sm focus-visible:outline-none focus-visible:ring-2"
             >
               Limpiar filtro
             </button>
@@ -645,7 +645,7 @@ function FilterBarDateRange({
             <button
               type="button"
               onClick={() => onChangeRef.current({ from: '', to: '' })}
-              className="text-muted-foreground hover:bg-accent w-full rounded-md px-2 py-1.5 text-center text-sm"
+              className="text-muted-foreground hover:bg-accent focus-visible:ring-ring w-full rounded-md px-2 py-1.5 text-center text-sm focus-visible:outline-none focus-visible:ring-2"
             >
               Limpiar filtro
             </button>

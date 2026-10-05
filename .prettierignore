@@ -7,3 +7,4 @@ pnpm-lock.yaml
 packages/supabase/src/database.types.ts
 supabase/.branches
 supabase/.temp
+scripts/__fixtures__

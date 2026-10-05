@@ -44,6 +44,11 @@ export {
 export { Input, type InputProps } from './components/input';
 export { Label } from './components/label';
 export {
+  FormField,
+  type FormFieldProps,
+  type FormFieldControlProps,
+} from './components/form-field';
+export {
   Select,
   SelectGroup,
   SelectValue,
@@ -144,6 +149,7 @@ export {
   type SidebarNavProps,
 } from './components/layout/Sidebar';
 export { MobileSidebar, type MobileSidebarProps } from './components/layout/MobileSidebar';
+export { TabBar, type TabBarItem, type TabBarProps } from './components/layout/TabBar';
 export { NavItem, type NavItemProps } from './components/layout/NavItem';
 export {
   PageHeader,

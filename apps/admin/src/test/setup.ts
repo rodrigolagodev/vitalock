@@ -64,3 +64,16 @@ if (typeof Element !== 'undefined' && typeof Element.prototype.hasPointerCapture
 if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !== 'function') {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// Data routers (createMemoryRouter) build a fetch `Request` with an
+// AbortSignal. jsdom ships its own AbortSignal, which Node's `Request` rejects
+// ("Expected signal to be an instance of AbortSignal"). Dropping the signal is
+// harmless in tests: no navigation here is ever aborted mid-flight.
+if (typeof globalThis.Request !== 'undefined') {
+  const NodeRequest = globalThis.Request;
+  globalThis.Request = class extends NodeRequest {
+    constructor(input: RequestInfo | URL, init?: RequestInit) {
+      super(input, init?.signal ? { ...init, signal: undefined } : init);
+    }
+  } as typeof Request;
+}

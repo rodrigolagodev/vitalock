@@ -61,7 +61,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function TareaDetailPage() {
   const { tareaId } = useParams<{ tareaId: string }>();
-  const { data: tarea, isLoading, isError } = useTarea(tareaId);
+  const { data: tarea, isLoading, isError, refetch } = useTarea(tareaId);
   const { data: comments = [], isLoading: commentsLoading } = useTicketComments(tarea?.id);
   const [editOpen, setEditOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -90,6 +90,7 @@ export default function TareaDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar la tarea."
+        onRetry={() => void refetch()}
         back={{ label: 'Volver a tareas', to: '/tareas' }}
         className="py-24"
       />
@@ -156,7 +157,6 @@ export default function TareaDetailPage() {
           <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
             <SectionHeading
               title={tarea.category === 'replace_equipment' ? 'Equipo actual' : 'Equipo'}
-              variant="secondary"
             >
               {tarea.building_id &&
                 tarea.status !== 'resolved' &&
