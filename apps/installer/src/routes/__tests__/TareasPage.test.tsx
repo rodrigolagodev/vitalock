@@ -134,4 +134,23 @@ describe('TareasPage', () => {
     renderTareas();
     expect(screen.getByRole('heading', { name: 'Mis tareas' })).toBeInTheDocument();
   });
+
+  it('renders its title as a large title', () => {
+    useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+    renderTareas();
+    expect(screen.getByRole('heading', { level: 1, name: 'Mis tareas' })).toHaveClass(
+      'text-large-title',
+    );
+  });
+
+  it('does not mount the connectivity banner itself (the shell owns it)', () => {
+    Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: false });
+    try {
+      useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+      renderTareas();
+      expect(screen.queryByText(/Sin conexión/)).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window.navigator, 'onLine', { configurable: true, value: true });
+    }
+  });
 });

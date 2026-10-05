@@ -53,6 +53,21 @@ export const controlHeight = {
   'control-lg': '3.25rem',
 };
 
+/**
+ * Safe-area insets (notch, Dynamic Island, home indicator). Registered under
+ * `spacing` so pt-, pb-, h-, bottom- and mb- utilities exist; the 0px
+ * fallback keeps them inert where no inset exists.
+ */
+export const safeArea = {
+  'safe-t': 'env(safe-area-inset-top, 0px)',
+  'safe-b': 'env(safe-area-inset-bottom, 0px)',
+};
+
+/** Content height of the bottom tab bar (49px), excluding the safe area. */
+export const tabBar = {
+  height: '3.0625rem',
+};
+
 export const elevation = {
   'elevation-0': 'none',
   'elevation-1': 'none',

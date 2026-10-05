@@ -43,7 +43,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={greeting} subtitle="Resumen de tu jornada">
+      <PageHeader title={greeting} titleSize="large-title" subtitle="Resumen de tu jornada">
         {assignedTickets.isFetching && !isLoading && (
           <Loader2
             className="text-muted-foreground h-4 w-4 animate-spin"

@@ -9,7 +9,7 @@ Phase F3 of the UI audit. Purely ADDED requirements; it touches none of the requ
 
 ### Requirement: TabBar
 
-`packages/ui` MUST provide a `TabBar` component, exported from the package, covered by a Vitest test (strict_tdd). It renders a `nav` landmark containing one link per item (icon plus visible label). Its content height is 49px, plus bottom safe-area padding via `pb-safe`. The active item MUST use the primary tint, MUST keep its text label visible and MUST expose `aria-current="page"`; inactive items MUST NOT set `aria-current`. Each item MUST have a touch target of at least 44px in both axes. The bar MUST use a translucent surface (backdrop blur) with a top hairline border and MUST show a visible focus ring (`--ring`) on keyboard focus. The component MUST be router-agnostic: the active state is determined from a prop or from the link primitive supplied by the app, not by importing the app's router. Controlled by `prefers-reduced-motion` through the global rule only.
+`packages/ui` MUST provide a `TabBar` component, exported from the package, covered by a Vitest test (strict_tdd). It renders a `nav` landmark containing one link per item (icon plus visible label). Its content height is 49px, plus bottom safe-area padding via `pb-safe-b`, with the row height from `h-tab-bar`. The active item MUST use the primary tint, MUST keep its text label visible and MUST expose `aria-current="page"`; inactive items MUST NOT set `aria-current`. Each item MUST have a touch target of at least 44px in both axes. The bar MUST use a translucent surface (backdrop blur) with a top hairline border and MUST show a visible focus ring (`--ring`) on keyboard focus. The active state comes from the router's `NavLink` (as `NavItem` already does), so it follows the current location including nested routes; the app supplies only the items. Controlled by `prefers-reduced-motion` through the global rule only.
 
 #### Scenario: Renders one link per item with label
 
@@ -28,8 +28,8 @@ Phase F3 of the UI audit. Purely ADDED requirements; it touches none of the requ
 
 - GIVEN a TabBar renders
 - WHEN the `nav` class list is inspected
-- THEN it includes `pb-safe`
-- AND the item row height class resolves to 49px
+- THEN it includes `pb-safe-b`
+- AND the item row carries `h-tab-bar`, which resolves to 49px
 
 #### Scenario: Touch target floor
 
@@ -43,21 +43,21 @@ Phase F3 of the UI audit. Purely ADDED requirements; it touches none of the requ
 - WHEN a link's class list is inspected
 - THEN it includes a `focus-visible` ring utility bound to the ring token
 
-#### Scenario: Active state comes from the app
+#### Scenario: Active state comes from the location
 
-- GIVEN `packages/ui` TabBar sources are searched
-- WHEN imports are listed
-- THEN no router package is imported by `packages/ui`
+- GIVEN a TabBar renders at a nested route of an item
+- WHEN the links are inspected
+- THEN that item has `aria-current="page"` and the others do not
 
 ### Requirement: Safe-area Utilities
 
-The Tailwind preset in `packages/ui` MUST expose utilities `safe-t`, `safe-b` and `pb-safe`, resolving to `env(safe-area-inset-top)`, `env(safe-area-inset-bottom)` and bottom padding of `env(safe-area-inset-bottom)` respectively, each with a `0px` fallback so they are inert where no inset exists. Both apps consume them from the preset; no app MAY define its own copy. Existing utilities MUST be unaffected.
+The Tailwind preset in `packages/ui` MUST expose the spacing tokens `safe-t`, `safe-b` and `tab-bar` (so `pt-safe-t`, `pb-safe-b`, `h-tab-bar` and friends exist), resolving to `env(safe-area-inset-top)`, `env(safe-area-inset-bottom)` and `3.0625rem` respectively, the insets each with a `0px` fallback so they are inert where no inset exists. `cn()` MUST treat them as spacing values. Both apps consume them from the preset; no app MAY define its own copy. Existing utilities MUST be unaffected.
 
 #### Scenario: Utilities are present in the preset
 
 - GIVEN the Tailwind preset is imported in a test
 - WHEN the safe-area utilities/plugins are resolved
-- THEN `safe-t`, `safe-b` and `pb-safe` each map to the matching `env(safe-area-inset-*)` value with a `0px` fallback
+- THEN `safe-t` and `safe-b` each map to the matching `env(safe-area-inset-*)` value with a `0px` fallback
 
 #### Scenario: Installer consumes the preset utilities
 
@@ -73,13 +73,13 @@ The Tailwind preset in `packages/ui` MUST expose utilities `safe-t`, `safe-b` an
 
 ### Requirement: Bottom Sheet Presentation
 
-`Sheet` (the `packages/ui` primitive) MUST support a bottom presentation (a `side="bottom"` variant, or an equivalent documented prop). In the bottom presentation the panel MUST: anchor to the bottom edge; have `rounded-sheet` top corners only; render a grabber (a centred, decorative, `aria-hidden` bar at the top of the panel); respect the bottom safe area (`pb-safe`); cap its height so the scrim stays visible; scroll its own content when it overflows; render over a dark scrim; and animate with the 250ms ease-out motion token (suppressed by the global reduced-motion rule). The close control keeps the accessible name "Cerrar". Existing `Sheet` sides and callers MUST be unchanged.
+`Sheet` (the `packages/ui` primitive) MUST support a bottom presentation (a `side="bottom"` variant, or an equivalent documented prop). In the bottom presentation the panel MUST: anchor to the bottom edge; have `rounded-sheet` top corners only; render a grabber (a centred, decorative, `aria-hidden` bar at the top of the panel); respect the bottom safe area (an `h-safe-b` spacer); cap its height so the scrim stays visible; scroll its own content when it overflows; render over a dark scrim; and animate with the 250ms ease-out motion token (suppressed by the global reduced-motion rule). The close control keeps the accessible name "Cerrar". Existing `Sheet` sides and callers MUST be unchanged.
 
 #### Scenario: Bottom variant has rounded top corners and grabber
 
 - GIVEN an open Sheet with the bottom presentation
 - WHEN the panel class list and content are inspected
-- THEN the panel includes `rounded-sheet` top-corner classes and `pb-safe`
+- THEN the panel includes `rounded-sheet` top-corner classes and an `h-safe-b` spacer
 - AND an `aria-hidden` grabber element is present
 
 #### Scenario: Bottom variant anchors to the bottom

@@ -3,7 +3,6 @@ import { Loader2 } from 'lucide-react';
 import { PageHeader } from '@vitalock/ui';
 import { useAssignedTickets } from '@/hooks/useAssignedTickets';
 import { sortActiveTickets } from '@/lib/status/tareaStatus';
-import { ConnectivityBanner } from '@/components/common/ConnectivityBanner';
 import { TareasTable } from '@/components/tareas/TareasTable';
 
 /**
@@ -25,7 +24,11 @@ export default function TareasPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Mis tareas" subtitle="Tareas asignadas, en curso primero.">
+      <PageHeader
+        title="Mis tareas"
+        titleSize="large-title"
+        subtitle="Tareas asignadas, en curso primero."
+      >
         {isFetching && !isLoading && (
           <Loader2
             className="text-muted-foreground h-4 w-4 animate-spin"
@@ -33,8 +36,6 @@ export default function TareasPage() {
           />
         )}
       </PageHeader>
-
-      <ConnectivityBanner />
 
       <TareasTable rows={sorted} isLoading={isLoading} />
     </div>

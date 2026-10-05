@@ -15,7 +15,7 @@ Phase F3 mobile ergonomics for `TaskDetailPage`. Purely ADDED requirements; the 
 
 - GIVEN `TaskDetailPage` renders a resolvable task
 - WHEN the action bar class list is inspected
-- THEN it is fixed/sticky to the bottom, includes a backdrop-blur class and `pb-safe`
+- THEN it is fixed/sticky to the bottom, includes a backdrop-blur class (it adds no safe-area padding of its own because the TabBar below it consumes the inset)
 - AND it sits above the TabBar so neither overlaps the other
 
 #### Scenario: Action is not duplicated at the top

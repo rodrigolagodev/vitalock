@@ -4,6 +4,8 @@ import {
   fontFamily,
   motion,
   radius,
+  safeArea,
+  tabBar,
   typeScale,
 } from './tailwind.tokens.js';
 
@@ -77,7 +79,8 @@ export default {
       },
       fontFamily,
       fontSize: typeScale,
-      spacing: controlHeight,
+      spacing: { ...controlHeight, ...safeArea, 'tab-bar': tabBar.height },
+      maxHeight: { sheet: '90dvh' },
       boxShadow: elevation,
       transitionDuration: motion.duration,
       transitionTimingFunction: motion.timing,

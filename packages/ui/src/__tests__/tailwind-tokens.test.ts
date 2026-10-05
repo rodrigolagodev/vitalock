@@ -7,6 +7,8 @@ import {
   fontFamily,
   motion,
   radius,
+  safeArea,
+  tabBar,
   touchTypeScale,
   typeScale,
   type TypeName,
@@ -103,6 +105,18 @@ describe('tailwind.tokens.js', () => {
   });
 });
 
+describe('safe-area and tab-bar tokens (installer-mobile-hig)', () => {
+  it('maps safe-t and safe-b to env() insets with a 0px fallback', () => {
+    expect(safeArea['safe-t']).toBe('env(safe-area-inset-top, 0px)');
+    expect(safeArea['safe-b']).toBe('env(safe-area-inset-bottom, 0px)');
+  });
+
+  it('sets the tab bar content height to 49px', () => {
+    expect(tabBar.height).toBe('3.0625rem');
+    expect(px(tabBar.height)).toBe(49);
+  });
+});
+
 describe('tailwind preset wiring', () => {
   it('spreads the tokens into theme.extend without touching existing keys', async () => {
     const { default: preset } = await import('../../tailwind.preset.js');
@@ -111,6 +125,7 @@ describe('tailwind preset wiring', () => {
       fontFamily: { sans: string[] };
       borderRadius: Record<string, string>;
       spacing: unknown;
+      maxHeight: unknown;
       boxShadow: unknown;
       transitionDuration: unknown;
       transitionTimingFunction: unknown;
@@ -126,7 +141,12 @@ describe('tailwind preset wiring', () => {
       md: 'calc(var(--radius) - 2px)',
       sm: 'calc(var(--radius) - 4px)',
     });
-    expect(extend.spacing).toEqual(controlHeight);
+    expect(extend.spacing).toEqual({
+      ...controlHeight,
+      ...safeArea,
+      'tab-bar': tabBar.height,
+    });
+    expect(extend.maxHeight).toEqual({ sheet: '90dvh' });
     expect(extend.boxShadow).toEqual(elevation);
     expect(extend.transitionDuration).toEqual(motion.duration);
     expect(extend.transitionTimingFunction).toEqual({ standard: 'cubic-bezier(0, 0, 0.2, 1)' });

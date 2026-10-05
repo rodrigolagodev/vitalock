@@ -3,7 +3,7 @@
 **Change**: installer-mobile-hig
 **Date**: 2026-10-05
 
-Phase F3 of the UI audit. New capability: the installer app shell. The installer is a phone PWA with three destinations (Inicio, Tareas, Historial); navigation is a bottom TabBar at every viewport width, the top bar carries the logo and UserMenu, and PWA chrome (viewport, safe areas, icons, meta, toasts, connectivity) is handled once at the shell. The admin app is not touched. All UI copy stays Spanish. Class names (`pb-safe`, `safe-t`, `safe-b`, `text-large-title`) refer to F0/F3 preset tokens; the `TabBar` component is specified in the `design-system` delta.
+Phase F3 of the UI audit. New capability: the installer app shell. The installer is a phone PWA with three destinations (Inicio, Tareas, Historial); navigation is a bottom TabBar at every viewport width, the top bar carries the logo and UserMenu, and PWA chrome (viewport, safe areas, icons, meta, toasts, connectivity) is handled once at the shell. The admin app is not touched. All UI copy stays Spanish. Class names (`pb-safe-b`, `pt-safe-t`, `text-large-title`) refer to F0/F3 preset tokens; the `TabBar` component is specified in the `design-system` delta.
 
 ## ADDED Requirements
 
@@ -71,7 +71,7 @@ The shell MUST render a `TabBar` with exactly three tabs, in this order: "Inicio
 
 ### Requirement: Top Bar with UserMenu
 
-The top bar MUST show the app logo and the `UserMenu`. Logout MUST be reachable from the UserMenu in the top bar; there MUST be no fourth "Perfil" tab. The UserMenu trigger MUST be at least 44px in both axes and keep its Spanish accessible name and visible focus ring. The top bar MUST respect the top safe area (`safe-t`).
+The top bar MUST show the app logo and the `UserMenu`. Logout MUST be reachable from the UserMenu in the top bar; there MUST be no fourth "Perfil" tab. The UserMenu trigger MUST be at least 44px in both axes and keep its Spanish accessible name and visible focus ring. The top bar MUST respect the top safe area (`pt-safe-t`).
 
 #### Scenario: Logout is reachable from the top bar
 
@@ -89,7 +89,7 @@ The top bar MUST show the app logo and the `UserMenu`. Logout MUST be reachable 
 
 - GIVEN the shell renders
 - WHEN the top bar class list is inspected
-- THEN it includes the `safe-t` utility
+- THEN it includes the `pt-safe-t` utility
 
 ### Requirement: Large Titles
 
@@ -103,7 +103,7 @@ The Inicio, Tareas and Historial pages MUST render their page title as a heading
 
 ### Requirement: Viewport and Safe Areas
 
-`apps/installer/index.html` MUST declare `viewport-fit=cover` in its viewport meta. The shell MUST apply safe-area insets so that no content or control sits under the notch, the Dynamic Island or the home indicator: the top bar uses `safe-t`, the TabBar uses bottom safe-area padding (`pb-safe`), and any sticky bottom element (see `installer-ticket-detail`) accounts for the bottom inset.
+`apps/installer/index.html` MUST declare `viewport-fit=cover` in its viewport meta. The shell MUST apply safe-area insets so that no content or control sits under the notch, the Dynamic Island or the home indicator: the top bar uses `pt-safe-t`, the TabBar uses bottom safe-area padding (`pb-safe-b`), and any sticky bottom element (see `installer-ticket-detail`) accounts for the bottom inset.
 
 #### Scenario: Viewport covers the screen
 
@@ -115,7 +115,7 @@ The Inicio, Tareas and Historial pages MUST render their page title as a heading
 
 - GIVEN the TabBar renders
 - WHEN its class list is inspected
-- THEN it includes `pb-safe`
+- THEN it includes `pb-safe-b`
 
 ### Requirement: PWA Icons and Meta
 

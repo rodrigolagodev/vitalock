@@ -30,6 +30,7 @@ import {
 import LoginPage from './routes/LoginPage';
 import NotFoundPage from './routes/NotFoundPage';
 import { DashboardPage, TareasPage, TaskDetailPage, HistorialPage } from './routes/lazy';
+import { toastOffset } from './lib/toastOffset';
 import './styles/globals.css';
 
 // Observability. The console sink is always on; the endpoint sink is a no-op
@@ -92,7 +93,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   </Route>
                 </Routes>
               </Suspense>
-              <Toaster richColors position="bottom-center" />
+              <Toaster
+                richColors
+                position="bottom-center"
+                offset={toastOffset}
+                mobileOffset={toastOffset}
+              />
             </AuthProvider>
           </BrowserRouter>
         </QueryClientProvider>

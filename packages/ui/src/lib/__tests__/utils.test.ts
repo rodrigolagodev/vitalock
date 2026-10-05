@@ -35,4 +35,16 @@ describe('cn()', () => {
     expect(cn('size-control-md', 'size-8')).toBe('size-8');
     expect(cn('h-9', 'h-control-lg')).toBe('h-control-lg');
   });
+
+  it('dedupes safe-area and tab-bar spacing tokens against default spacing', () => {
+    expect(cn('pb-4', 'pb-safe-b')).toBe('pb-safe-b');
+    expect(cn('pb-safe-b', 'pb-2')).toBe('pb-2');
+    expect(cn('pt-4', 'pt-safe-t')).toBe('pt-safe-t');
+    expect(cn('h-9', 'h-tab-bar')).toBe('h-tab-bar');
+  });
+
+  it('keeps safe-area tokens on different sides and axes', () => {
+    expect(cn('pt-safe-t', 'pb-safe-b')).toBe('pt-safe-t pb-safe-b');
+    expect(cn('pb-safe-b', 'px-4')).toBe('pb-safe-b px-4');
+  });
 });

@@ -72,3 +72,31 @@ describe('UserMenu', () => {
     expect(screen.getByRole('button', { name: /Salir/ })).toBeInTheDocument();
   });
 });
+
+describe('UserMenu toolbar variant', () => {
+  it('renders an avatar-only trigger with the same accessible name', () => {
+    render(
+      <UserMenu name="Ana Alvarez" subtitle="@ana.alvarez" onSignOut={vi.fn()} variant="toolbar" />,
+    );
+    const trigger = screen.getByRole('button', { name: 'Abrir menú de usuario' });
+    expect(trigger).toHaveTextContent('AA');
+    expect(trigger).not.toHaveTextContent('Ana Alvarez');
+    expect(trigger).toHaveClass('size-control-md');
+  });
+
+  it('still opens the popover with sign-out and calls onSignOut', async () => {
+    const onSignOut = vi.fn();
+    const user = userEvent.setup();
+    render(<UserMenu name="Ana Alvarez" onSignOut={onSignOut} variant="toolbar" />);
+    await user.click(screen.getByRole('button', { name: 'Abrir menú de usuario' }));
+    await user.click(screen.getByRole('button', { name: /Salir/ }));
+    expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the sidebar trigger by default (name and subtitle visible)', () => {
+    render(<UserMenu name="Ana Alvarez" subtitle="@ana" onSignOut={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Abrir menú de usuario' })).toHaveTextContent(
+      'Ana Alvarez',
+    );
+  });
+});

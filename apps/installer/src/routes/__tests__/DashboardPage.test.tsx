@@ -147,4 +147,12 @@ describe('DashboardPage', () => {
     expect(statCard).not.toBeNull();
     expect(within(statCard as HTMLElement).getByText('…')).toBeInTheDocument();
   });
+
+  it('renders its greeting as a large title', () => {
+    useAssignedTicketsMock.mockReturnValue({ data: [], isLoading: false, isFetching: false });
+    renderDashboard();
+    expect(screen.getByRole('heading', { level: 1, name: 'Hola, Juan' })).toHaveClass(
+      'text-large-title',
+    );
+  });
 });
