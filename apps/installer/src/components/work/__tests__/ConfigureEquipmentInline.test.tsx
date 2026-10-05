@@ -121,6 +121,15 @@ describe('ConfigureEquipmentInline — install_equipment category', () => {
   });
 });
 
+describe('ConfigureEquipmentInline — touch targets', () => {
+  it('renders the submit button at the 44px default control height', () => {
+    render(<ConfigureEquipmentInline ticket={makeTicket()} />, { wrapper: makeWrapper() });
+    const submit = screen.getByRole('button', { name: /guardar|configurar/i });
+    expect(submit).toHaveClass('h-control-md');
+    expect(submit).not.toHaveClass('h-control-sm');
+  });
+});
+
 describe('ConfigureEquipmentInline — configured state', () => {
   it('shows read-only serial/model with an "Editar" button', () => {
     render(

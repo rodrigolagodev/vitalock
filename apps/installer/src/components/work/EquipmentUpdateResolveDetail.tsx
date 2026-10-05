@@ -151,7 +151,6 @@ export function EquipmentUpdateResolveDetail({
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={() => snapshot && void downloadMdb(snapshot.mdb_storage_path, 'current')}
               className="w-fit"
             >
@@ -184,7 +183,6 @@ export function EquipmentUpdateResolveDetail({
                     <Button
                       type="button"
                       variant="outline"
-                      size="sm"
                       onClick={() => void downloadMdb(u.mdb_storage_path, u.id)}
                       disabled={downloadingPriorId === u.id}
                       className="h-7 px-2 text-xs"
@@ -202,13 +200,12 @@ export function EquipmentUpdateResolveDetail({
         <DialogFooter>
           <Button
             variant="outline"
-            size="sm"
             onClick={() => onOpenChange(false)}
             disabled={resolve.isPending}
           >
             Cancelar
           </Button>
-          <Button size="sm" onClick={handleResolve} disabled={!snapshot || resolve.isPending}>
+          <Button onClick={handleResolve} disabled={!snapshot || resolve.isPending}>
             {resolve.isPending ? 'Resolviendo...' : 'Resolver'}
           </Button>
         </DialogFooter>

@@ -1,0 +1,55 @@
+# Apply Progress: ui-components-hig (F1)
+
+Mode: Strict TDD. Delivery: single-pr on `feat/ui-components-hig` (stacked on F0, 6a99004). Nothing committed.
+Status: 35/36 tasks complete. 6.5 (before/after screenshots) is manual and not done.
+
+## TDD Cycle Evidence
+
+| Task    | Test File                                                                                                          | Layer            | Safety Net            | RED                            | GREEN                                                                                       | TRIANGULATE                                                                          | REFACTOR                                              |
+| ------- | ------------------------------------------------------------------------------------------------------------------ | ---------------- | --------------------- | ------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------- |
+| 0.1-0.3 | n/a (verification)                                                                                                 | n/a              | UI baseline 346/346   | n/a                            | Counts: 33 `size="sm"` admin/ui, 15 SectionHeading variants (+1 found), 2 files use Section | n/a                                                                                  | n/a                                                   |
+| 1.1/1.2 | `packages/ui/src/lib/__tests__/utils.test.ts`                                                                      | Unit             | 5/5                   | 2 failed (radius, height/size) | 7/7                                                                                         | 6 assertions across rounded/h/size                                                   | None needed                                           |
+| 1.3/1.4 | `components/__tests__/primitives.test.tsx`                                                                         | Unit             | 346 baseline          | 4 size cases failed            | passed (218 in ui components)                                                               | 4 sizes + consumer `h-9` override                                                    | None needed                                           |
+| 1.5/1.6 | `primitives.test.tsx` (IconButton)                                                                                 | Unit             | same                  | 1 failed                       | passed                                                                                      | `relative`, `after:size-control-md`, `rounded-control`                               | None needed                                           |
+| 1.7     | `primitives.test.tsx` (Input/Textarea/Select trigger)                                                              | Unit             | same                  | 1 failed                       | passed                                                                                      | 3 controls                                                                           | FilterBar select updated (covered by FilterBar tests) |
+| 1.8     | `DataTable.test.tsx`, `EditableTitle.test.tsx`                                                                     | Unit             | existing suites green | 2 failed + 1 failed            | passed                                                                                      | gap-4 + not gap-1                                                                    | None needed                                           |
+| 2.1/2.2 | `components/__tests__/form-field.test.tsx`                                                                         | Unit             | N/A (new)             | suite failed (export missing)  | 8/8                                                                                         | 8 cases: label, id, no-aria, error, describedby merge, desc only, ref, PasswordInput | None needed                                           |
+| 2.3/2.4 | admin + installer `LoginPage.test.tsx`                                                                             | Integration      | 6/6 each              | 1 failed each                  | 8/8 each                                                                                    | error case + untouched case                                                          | Removed per-field `<p>` markup                        |
+| 3.1/3.2 | `SectionHeading.test.tsx`                                                                                          | Unit             | 5/5                   | 2 failed                       | passed                                                                                      | title-3 + callout + `@ts-expect-error` on `variant`                                  | None needed                                           |
+| 3.3     | `pnpm typecheck` (checklist)                                                                                       | Typecheck        | n/a                   | TS2322 at 16 sites             | 8/8 tasks clean                                                                             | n/a                                                                                  | Prettier on touched lines                             |
+| 3.4/3.5 | `EquipoDetailPage.test.tsx`, `KeyDetailPage.test.tsx`                                                              | Integration      | N/A (no prior tests)  | 14 failed                      | 199 admin route tests pass                                                                  | 6+2+3 headings, optional sections present/absent                                     | Section.tsx deleted                                   |
+| 4.1/4.2 | `patterns/__tests__/EmptyState.test.tsx`                                                                           | Unit             | N/A (new)             | 2 failed                       | 3/3                                                                                         | compact, rich, rich without slots                                                    | None needed                                           |
+| 4.3/4.4 | `ErrorState.test.tsx`, `ErrorFallback.test.tsx`                                                                    | Unit             | 3/3 ErrorFallback     | 2 failed                       | 4/4 + 3/3                                                                                   | with/without onRetry, custom label, children, back link                              | ErrorFallback now delegates to ErrorState             |
+| 5.1     | `primitives.test.tsx` (Card)                                                                                       | Unit             | 346 baseline          | 1 failed                       | passed                                                                                      | rounded-container + no shadow-sm                                                     | Rewrote stale `--accent` comment                      |
+| 5.2     | `StatCard.test.tsx`, `DataTable.test.tsx`                                                                          | Unit             | N/A (new) / green     | 3 failed + 1 failed            | passed                                                                                      | label, value, dash, tile+container radius                                            | None needed                                           |
+| 5.3     | `PageHeader.test.tsx`, `EditableTitle.test.tsx`                                                                    | Unit             | green                 | 2 failed + 1 failed            | passed                                                                                      | title-1 + titleClassName merge; footnote + chevrons                                  | None needed                                           |
+| 5.4/5.5 | `StatusBadge.test.tsx`, `tokens.test.ts`                                                                           | Unit             | green                 | 1 failed                       | passed (362 then 377 total)                                                                 | neutral muted classes; token pair removed                                            | CSS vars + preset entry deleted                       |
+| 5.6     | `AddCommentForm.test.tsx` (new), `DashboardPage`, `ConfigureEquipmentInline`, `EquipmentUpdateResolveDetail` tests | Unit/Integration | existing green        | 4 failed                       | 127/127 installer                                                                           | 4 components, 10 sites                                                               | prettier                                              |
+| 6.1-6.4 | gate                                                                                                               | n/a              | n/a                   | n/a                            | rg clean; lint, typecheck, test green                                                       | n/a                                                                                  | n/a                                                   |
+
+Note on class assertions: strict-tdd.md discourages CSS class assertions, but design.md (authoritative) mandates class assertions because jsdom cannot measure layout. Behavioural assertions (roles, aria, handlers) are used wherever they exist.
+
+## Test Summary
+
+- UI 377, admin 846, installer 127, shared 205, supabase 80 passing (`pnpm test`, 8/8 tasks).
+- New test files: form-field, EmptyState, ErrorState, StatCard, EquipoDetailPage, KeyDetailPage, AddCommentForm.
+
+## Work Unit Evidence
+
+| Evidence             | Value                                                                       |
+| -------------------- | --------------------------------------------------------------------------- |
+| Focused test command | `pnpm --filter @vitalock/ui test` 377/377, admin 846/846, installer 127/127 |
+| Runtime harness      | N/A: no browser here; jsdom only. Screenshots (6.5) left to the maintainer  |
+| Rollback boundary    | Revert the PR; units are independent per Work Units table                   |
+
+## Deviations
+
+- Section migration counted 8 (Equipo) + 7 (Key) = 15 sites, not 9 + 7 (the extra were import lines).
+- SectionHeading `variant="secondary"` removal hit 16 sites (7 installer, 8 admin, 1 DataCardList), one more than the design's 15 (TaskDetailPage:106 was uncounted).
+- Installer `size="sm"` removal: TaskDetailPage "Descargar" keeps its `h-7` override, so it stays compact by design.
+- No `--status-neutral*` references remain.
+
+## Remaining
+
+- 6.5 manual screenshots.
+- Size: well over the forecast (see report).

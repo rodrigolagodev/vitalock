@@ -66,4 +66,27 @@ describe('LoginPage', () => {
     expect(await screen.findByText('Email inválido')).toBeInTheDocument();
     expect(mockSignIn).not.toHaveBeenCalled();
   });
+
+  it('announces field errors with role=alert and marks both fields invalid', async () => {
+    const user = userEvent.setup();
+    render(<LoginPage />);
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }));
+    const alerts = await screen.findAllByRole('alert');
+    expect(alerts.map((a) => a.textContent)).toEqual([
+      'Email inválido',
+      'La contraseña debe tener al menos 8 caracteres',
+    ]);
+    const email = screen.getByLabelText('Email');
+    const password = screen.getByLabelText('Contraseña');
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email.getAttribute('aria-describedby')).toBe(alerts[0]?.id);
+    expect(password).toHaveAttribute('aria-invalid', 'true');
+    expect(password.getAttribute('aria-describedby')).toBe(alerts[1]?.id);
+  });
+
+  it('leaves fields valid while untouched', () => {
+    render(<LoginPage />);
+    expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });

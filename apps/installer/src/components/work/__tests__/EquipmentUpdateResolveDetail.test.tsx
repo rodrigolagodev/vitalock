@@ -401,3 +401,27 @@ describe('EquipmentUpdateResolveDetail', () => {
     });
   });
 });
+
+describe('EquipmentUpdateResolveDetail touch targets', () => {
+  it('renders the dialog actions at the 44px default control height, never the 36px sm', () => {
+    mockIn.mockResolvedValue({ data: [], error: null });
+    mockPriorUpdatesOrder.mockResolvedValue({ data: [], error: null });
+    const Wrapper = makeWrapper();
+    render(
+      React.createElement(
+        Wrapper,
+        null,
+        React.createElement(EquipmentUpdateResolveDetail, {
+          open: true,
+          onOpenChange: vi.fn(),
+          ticket: makeTicket(),
+        }),
+      ),
+    );
+    for (const name of [/descargar/i, 'Cancelar', 'Resolver']) {
+      const btn = screen.getByRole('button', { name });
+      expect(btn).toHaveClass('h-control-md');
+      expect(btn).not.toHaveClass('h-control-sm');
+    }
+  });
+});

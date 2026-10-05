@@ -354,7 +354,7 @@ export function DataCardList<T>({
       {groups ? (
         groups.map(([key, groupRows]) => (
           <section key={key} className="flex flex-col gap-3">
-            <SectionHeading title={groupLabel ? groupLabel(key) : key} variant="secondary" />
+            <SectionHeading title={groupLabel ? groupLabel(key) : key} />
             <ul role="list" className={gridClassName}>
               {groupRows.map((row) => renderCard(row))}
             </ul>

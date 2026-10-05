@@ -46,7 +46,7 @@ export function TaskResolutionCard({ ticket }: TaskResolutionCardProps) {
 
   return (
     <section className="bg-card flex flex-col gap-3 rounded-md border p-4" aria-label={copy.title}>
-      <SectionHeading title={copy.title} variant="secondary" />
+      <SectionHeading title={copy.title} />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Row label={copy.dateLabel} value={formatDateTime(ticketClosedAt(ticket))} />
         <Row label={copy.notesLabel} value={notes?.trim() ? notes : '—'} />

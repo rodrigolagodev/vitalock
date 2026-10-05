@@ -1,6 +1,7 @@
 import { createRef } from 'react';
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { Pencil } from 'lucide-react';
 
 // Import the shared primitives through the package entry point — this is the
 // public contract consumers (admin + installer) will rely on.
@@ -17,6 +18,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  IconButton,
   Input,
   Select,
   SelectContent,
@@ -164,12 +166,58 @@ describe('shared primitives from @vitalock/ui', () => {
   });
 });
 
+describe('control sizing tokens', () => {
+  it.each([
+    ['default', 'h-control-md'],
+    ['sm', 'h-control-sm'],
+    ['lg', 'h-control-lg'],
+    ['icon', 'size-control-md'],
+  ] as const)('maps Button size %s to %s', (size, cls) => {
+    render(<Button size={size}>Acción</Button>);
+    const btn = screen.getByRole('button');
+    expect(btn).toHaveClass(cls);
+    expect(btn).toHaveClass('rounded-control');
+    expect(btn.className).not.toMatch(/h-\[\d+px\]/);
+  });
+
+  it('lets a consumer height override the Button size token', () => {
+    render(<Button className="h-9">Acción</Button>);
+    const btn = screen.getByRole('button');
+    expect(btn).toHaveClass('h-9');
+    expect(btn).not.toHaveClass('h-control-md');
+  });
+
+  it('extends the IconButton hit area to 44px with an after: pseudo-element', () => {
+    render(<IconButton icon={Pencil} label="Editar" />);
+    const btn = screen.getByRole('button', { name: 'Editar' });
+    expect(btn).toHaveClass('relative');
+    expect(btn).toHaveClass('after:size-control-md');
+    expect(btn).toHaveClass('rounded-control');
+  });
+
+  it('uses the control radius on Input, Textarea and the Select trigger', () => {
+    render(
+      <>
+        <Input placeholder="i" />
+        <Textarea placeholder="t" />
+        <Select>
+          <SelectTrigger aria-label="s" />
+        </Select>
+      </>,
+    );
+    expect(screen.getByPlaceholderText('i')).toHaveClass('rounded-control', 'h-control-md');
+    expect(screen.getByPlaceholderText('t')).toHaveClass('rounded-control');
+    expect(screen.getByRole('combobox')).toHaveClass('rounded-control', 'h-control-md');
+  });
+});
+
 describe('Card primitives from @vitalock/ui', () => {
   it('renders Card content and merges a custom className', () => {
     render(<Card className="custom-card">Contenido</Card>);
     const card = screen.getByText('Contenido');
     expect(card).toHaveClass('custom-card');
-    expect(card).toHaveClass('rounded-xl');
+    expect(card).toHaveClass('rounded-container');
+    expect(card).not.toHaveClass('shadow-sm');
   });
 
   it('forwards a ref to the underlying div on Card', () => {

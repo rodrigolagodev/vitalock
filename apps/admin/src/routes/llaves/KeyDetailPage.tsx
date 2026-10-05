@@ -1,8 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
-import { Button, EmptyState, ErrorState } from '@vitalock/ui';
+import { Button, Card, EmptyState, ErrorState, SectionHeading } from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@vitalock/ui';
-import { Section } from '@/components/common/Section';
 import { useKeyById } from '@/hooks/useKeyById';
 import { useKeyEvents, type KeyEventRow } from '@/hooks/useKeyEvents';
 import { keyStatus } from '@/lib/status/keyStatus';
@@ -108,7 +107,8 @@ export default function KeyDetailPage() {
 
       {/* 2-column grid on desktop, single column on mobile */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Section title="Ubicación">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Ubicación" />
           <Row
             label="Administración"
             value={
@@ -140,9 +140,10 @@ export default function KeyDetailPage() {
             }
           />
           <Row label="Unidad" value={unitDescription} />
-        </Section>
+        </Card>
 
-        <Section title="Custodia">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Custodia" />
           <Row
             label="Retirada por"
             value={pickedUpFullName || <span className="text-muted-foreground">Sin retirar</span>}
@@ -155,9 +156,10 @@ export default function KeyDetailPage() {
               keyDetail.delivered_by?.full_name ?? <span className="text-muted-foreground">—</span>
             }
           />
-        </Section>
+        </Card>
 
-        <Section title="Equipos autorizados">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Equipos autorizados" />
           {keyDetail.authorized_equipment.length === 0 ? (
             <EmptyState message="Sin equipos autorizados." />
           ) : (
@@ -175,18 +177,20 @@ export default function KeyDetailPage() {
               ))}
             </ul>
           )}
-        </Section>
+        </Card>
 
-        <Section title="Ciclo de vida">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Ciclo de vida" />
           <Row label="Creada" value={formatDateTime(keyDetail.activated_at)} />
           {keyDetail.deactivated_at && (
             <Row label="Dada de baja" value={formatDateTime(keyDetail.deactivated_at)} />
           )}
-        </Section>
+        </Card>
       </div>
 
       {/* Full width sections below */}
-      <Section title="Órdenes asociadas">
+      <Card className="flex flex-col gap-3 p-4">
+        <SectionHeading title="Órdenes asociadas" />
         {keyDetail.associated_orders.length === 0 ? (
           <EmptyState message="No hay órdenes vinculadas a esta llave." />
         ) : (
@@ -216,9 +220,10 @@ export default function KeyDetailPage() {
             ))}
           </ul>
         )}
-      </Section>
+      </Card>
 
-      <Section title="Historial">
+      <Card className="flex flex-col gap-3 p-4">
+        <SectionHeading title="Historial" />
         <div className="flex flex-col gap-3 text-sm">
           <div className="flex gap-3">
             <span className="bg-primary mt-1.5 h-2 w-2 shrink-0 rounded-full" />
@@ -258,12 +263,13 @@ export default function KeyDetailPage() {
             </div>
           ))}
         </div>
-      </Section>
+      </Card>
 
       {keyDetail.notes && (
-        <Section title="Notas">
+        <Card className="flex flex-col gap-3 p-4">
+          <SectionHeading title="Notas" />
           <p className="whitespace-pre-wrap text-sm">{keyDetail.notes}</p>
-        </Section>
+        </Card>
       )}
     </div>
   );

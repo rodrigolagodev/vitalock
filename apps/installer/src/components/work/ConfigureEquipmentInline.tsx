@@ -72,7 +72,6 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
           <Button
             type="button"
             variant="outline"
-            size="sm"
             onClick={() => setEditing(true)}
             disabled={isPending}
           >
@@ -120,14 +119,13 @@ export function ConfigureEquipmentInline({ ticket }: ConfigureEquipmentInlinePro
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
                 onClick={() => setEditing(false)}
                 disabled={isPending}
               >
                 Cancelar
               </Button>
             )}
-            <Button type="submit" size="sm" disabled={isPending}>
+            <Button type="submit" disabled={isPending}>
               {isPending ? 'Guardando…' : 'Guardar equipo'}
             </Button>
           </div>

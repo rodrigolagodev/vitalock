@@ -101,7 +101,7 @@ export default function AdministrationDetailPage() {
 
       {/* Buildings section */}
       <div className="flex flex-col gap-4">
-        <SectionHeading title="Edificios" variant="secondary" />
+        <SectionHeading title="Edificios" />
         <SearchInput
           placeholder="Buscar edificios por nombre o dirección..."
           value={buildingSearch}

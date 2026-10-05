@@ -32,12 +32,12 @@ export function PageHeader({
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav
           aria-label="Breadcrumb"
-          className="text-muted-foreground flex items-center gap-1.5 text-xs"
+          className="text-muted-foreground text-footnote flex items-center gap-1.5"
         >
           {breadcrumbs.map((crumb, index) => (
             <span key={index} className="flex items-center gap-1.5">
               {index > 0 && (
-                <ChevronRight aria-hidden="true" className="text-muted-foreground h-6 w-6" />
+                <ChevronRight aria-hidden="true" className="text-muted-foreground h-3.5 w-3.5" />
               )}
               {crumb.to ? (
                 <Link to={crumb.to} className="hover:text-foreground transition-colors">
@@ -53,9 +53,7 @@ export function PageHeader({
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h1 className={cn('text-foreground text-2xl font-semibold', titleClassName)}>
-              {title}
-            </h1>
+            <h1 className={cn('text-foreground text-title-1', titleClassName)}>{title}</h1>
             {titleAdornment}
           </div>
           {subtitle != null && <div className="text-muted-foreground text-sm">{subtitle}</div>}

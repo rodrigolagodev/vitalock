@@ -6,6 +6,10 @@ import { extendTailwindMerge } from 'tailwind-merge';
 // `text-foreground`, and `shadow-elevation-2` as a shadow colour.
 const twMerge = extendTailwindMerge({
   extend: {
+    theme: {
+      spacing: ['control-sm', 'control-md', 'control-lg'],
+      borderRadius: ['control', 'container', 'sheet'],
+    },
     classGroups: {
       'font-size': [
         {

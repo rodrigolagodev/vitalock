@@ -66,4 +66,14 @@ describe('EditableTitle', () => {
     await user.click(screen.getByRole('button', { name: 'Cancelar' }));
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });
+
+  it('spaces edit controls 16px apart and matches the h1 type in edit mode', async () => {
+    const user = userEvent.setup();
+    render(<EditableTitle value="Cerradura" onSave={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Renombrar' }));
+    const input = screen.getByRole('textbox', { name: 'Nombre del producto' });
+    expect(input.closest('form')).toHaveClass('gap-4');
+    expect(input).toHaveClass('text-title-1');
+    expect(input).not.toHaveClass('text-2xl');
+  });
 });

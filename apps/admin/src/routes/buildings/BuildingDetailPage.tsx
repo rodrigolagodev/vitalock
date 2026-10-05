@@ -110,7 +110,7 @@ export default function BuildingDetailPage() {
 
       {activeTab === 'llaves' && (
         <div className="mt-4 space-y-4">
-          <SectionHeading title="Llaves" variant="secondary" />
+          <SectionHeading title="Llaves" />
           <FilterBar>
             <FilterBar.Search
               placeholder="Buscar llaves por código o unidad..."
@@ -146,7 +146,7 @@ export default function BuildingDetailPage() {
 
       {activeTab === 'equipos' && (
         <div className="mt-4 space-y-4">
-          <SectionHeading title="Equipos" variant="secondary" />
+          <SectionHeading title="Equipos" />
           <FilterBar>
             <FilterBar.Search
               placeholder="Buscar equipos por serie o modelo..."

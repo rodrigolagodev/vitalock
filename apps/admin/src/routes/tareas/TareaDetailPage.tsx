@@ -156,7 +156,6 @@ export default function TareaDetailPage() {
           <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
             <SectionHeading
               title={tarea.category === 'replace_equipment' ? 'Equipo actual' : 'Equipo'}
-              variant="secondary"
             >
               {tarea.building_id &&
                 tarea.status !== 'resolved' &&

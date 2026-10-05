@@ -191,7 +191,7 @@ export function DataTable<T>({
     }
     const rowActions = (actions ?? []).filter((action) => action.show?.(row) !== false);
     return (
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex items-center justify-end gap-4">
         {rowActions.map((action, index) => {
           const label = typeof action.label === 'function' ? action.label(row) : action.label;
           const isDisabled = action.disabled?.(row) ?? false;
@@ -218,7 +218,7 @@ export function DataTable<T>({
     // overflow-x-auto keeps horizontal overflow scoped to the table card:
     // wide tables scroll inside their rounded border instead of stretching
     // the surrounding layout. Requires min-w-0 on the flex ancestor.
-    <div className="bg-card overflow-x-auto rounded-xl border">
+    <div className="bg-card rounded-container overflow-x-auto border">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">

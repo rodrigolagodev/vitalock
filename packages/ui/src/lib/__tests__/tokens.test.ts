@@ -214,7 +214,6 @@ describe('contrast floors (computed from globals.css)', () => {
   for (const tone of ['info', 'success', 'warning'])
     add('TEXT', both, `${tone}-foreground`, [tone]);
   for (const tone of tones) add('TEXT', both, tone, ['card', 'popover', 'content']);
-  add('TEXT', both, 'status-neutral-foreground', ['card', 'muted']);
   add('TEXT', ['dark'], 'destructive', ['background']);
   // Soft badges: tone text on its 10% tint composited over the card (light).
   for (const tone of tones) {

@@ -23,4 +23,16 @@ describe('cn()', () => {
   it('keeps an elevation shadow next to a shadow colour', () => {
     expect(cn('shadow-elevation-2', 'shadow-primary')).toBe('shadow-elevation-2 shadow-primary');
   });
+
+  it('dedupes control radius tokens against default radii', () => {
+    expect(cn('rounded-control', 'rounded-md')).toBe('rounded-md');
+    expect(cn('rounded-md', 'rounded-control')).toBe('rounded-control');
+    expect(cn('rounded-container', 'rounded-lg')).toBe('rounded-lg');
+  });
+
+  it('dedupes control height and size tokens against default scales', () => {
+    expect(cn('h-control-md', 'h-9')).toBe('h-9');
+    expect(cn('size-control-md', 'size-8')).toBe('size-8');
+    expect(cn('h-9', 'h-control-lg')).toBe('h-control-lg');
+  });
 });

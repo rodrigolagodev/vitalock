@@ -87,14 +87,14 @@ export function EditableTitle({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={cn('inline-flex items-center gap-2', className)}>
+    <form onSubmit={handleSubmit} className={cn('inline-flex items-center gap-4', className)}>
       <Input
         ref={inputRef}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={handleKeyDown}
         aria-label="Nombre del producto"
-        className="h-9 text-2xl font-semibold"
+        className="text-title-1 h-9"
         maxLength={120}
       />
       <IconButton icon={Check} label="Guardar nombre" type="submit" loading={isSaving} />

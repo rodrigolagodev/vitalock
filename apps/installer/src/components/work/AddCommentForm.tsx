@@ -40,11 +40,7 @@ export function AddCommentForm({ ticketId }: AddCommentFormProps) {
         className="text-sm"
         disabled={addComment.isPending}
       />
-      <Button
-        type="submit"
-        size="sm"
-        disabled={!body.trim() || addComment.isPending}
-      >
+      <Button type="submit" disabled={!body.trim() || addComment.isPending}>
         {addComment.isPending ? 'Enviando…' : 'Comentar'}
       </Button>
     </form>

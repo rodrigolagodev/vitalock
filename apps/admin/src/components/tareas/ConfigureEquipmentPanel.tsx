@@ -80,15 +80,10 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
   const modelPlaceholder = tarea.intended_product_name ?? 'Ej. Smart Lock Pro v2';
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
-      <SectionHeading title={heading} variant="secondary">
+    <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
+      <SectionHeading title={heading}>
         {configured && !editing && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(true)}
-            disabled={isPending}
-          >
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)} disabled={isPending}>
             Editar
           </Button>
         )}
@@ -97,11 +92,11 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
       {!showForm && configured && (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs uppercase text-muted-foreground">Serie</span>
+            <span className="text-muted-foreground text-xs uppercase">Serie</span>
             <span className="text-sm">{tarea.pending_new_serial}</span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-xs uppercase text-muted-foreground">Modelo</span>
+            <span className="text-muted-foreground text-xs uppercase">Modelo</span>
             <span className="text-sm">
               {tarea.pending_new_model ?? tarea.intended_product_name ?? '—'}
             </span>
@@ -111,9 +106,7 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
 
       {showForm && (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          {!configured && (
-            <p className="text-sm text-muted-foreground">{help}</p>
-          )}
+          {!configured && <p className="text-muted-foreground text-sm">{help}</p>}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="pending_new_serial">Número de serie *</Label>
@@ -123,9 +116,7 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
               disabled={isPending}
               {...register('serial')}
             />
-            {errors.serial && (
-              <p className="text-sm text-destructive">{errors.serial.message}</p>
-            )}
+            {errors.serial && <p className="text-destructive text-sm">{errors.serial.message}</p>}
           </div>
 
           <div className="flex flex-col gap-2">
@@ -138,7 +129,7 @@ export function ConfigureEquipmentPanel({ tarea }: ConfigureEquipmentPanelProps)
               disabled={isPending}
               {...register('model')}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Si lo dejás vacío se usa el modelo del producto pedido en la orden.
             </p>
           </div>

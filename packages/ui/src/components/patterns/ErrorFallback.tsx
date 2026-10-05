@@ -23,17 +23,12 @@ export function ErrorFallback({
   className,
 }: ErrorFallbackProps) {
   return (
-    <ErrorState message={message} className={className}>
-      <div className="mt-4 flex gap-2">
-        <Button type="button" variant="outline" onClick={onRetry}>
-          Reintentar
+    <ErrorState message={message} className={className} onRetry={onRetry}>
+      {onGoHome ? (
+        <Button type="button" variant="ghost" onClick={onGoHome}>
+          Ir al inicio
         </Button>
-        {onGoHome ? (
-          <Button type="button" variant="ghost" onClick={onGoHome}>
-            Ir al inicio
-          </Button>
-        ) : null}
-      </div>
+      ) : null}
     </ErrorState>
   );
 }

@@ -71,9 +71,9 @@ export default function DashboardPage() {
       </div>
 
       <section className="flex flex-col gap-3">
-        <SectionHeading title="Acceso rápido" variant="secondary">
+        <SectionHeading title="Acceso rápido">
           {sorted.length > 0 && (
-            <Button asChild variant="ghost" size="sm" className="gap-1">
+            <Button asChild variant="ghost" className="gap-1">
               <Link to="/tareas">
                 Ver todas
                 <ArrowRight className="h-3.5 w-3.5" />

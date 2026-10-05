@@ -123,6 +123,9 @@ describe('DashboardPage', () => {
     renderDashboard();
     const link = screen.getByRole('link', { name: /Ver todas/ });
     expect(link).toHaveAttribute('href', '/tareas');
+    // Touch target: default control height (44px), not the 36px `sm` density.
+    expect(link).toHaveClass('h-control-md');
+    expect(link).not.toHaveClass('h-control-sm');
   });
 
   it('shows a refresh indicator on background refetch', () => {

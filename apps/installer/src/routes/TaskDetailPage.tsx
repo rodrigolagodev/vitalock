@@ -101,10 +101,7 @@ function ConfiguredEquipmentSummary({
   if (!serial) return null;
   return (
     <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
-      <SectionHeading
-        title={CONFIGURED_EQUIPMENT_HEADING[category] ?? 'Equipo'}
-        variant="secondary"
-      />
+      <SectionHeading title={CONFIGURED_EQUIPMENT_HEADING[category] ?? 'Equipo'} />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Row label="Serie" value={serial} />
         <Row label="Modelo" value={model ?? '—'} />
@@ -245,7 +242,7 @@ export default function TaskDetailPage() {
       {category === EQUIPMENT_UPDATE &&
         (snapshot ? (
           <div className="bg-card flex flex-col gap-4 rounded-md border p-4">
-            <SectionHeading title="Actualización" variant="secondary">
+            <SectionHeading title="Actualización">
               <Button
                 type="button"
                 variant="outline"
@@ -300,7 +297,6 @@ export default function TaskDetailPage() {
                         <Button
                           type="button"
                           variant="outline"
-                          size="sm"
                           onClick={() => void downloadMdb(u.mdb_storage_path, u.id)}
                           disabled={downloadingPriorId === u.id}
                           className="h-7 px-2 text-xs"
@@ -328,7 +324,7 @@ export default function TaskDetailPage() {
         <section className="flex flex-col gap-6">
           {category === EQUIPMENT_REPLACEMENT && equipment && (
             <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
-              <SectionHeading title="Equipo a reemplazar" variant="secondary" />
+              <SectionHeading title="Equipo a reemplazar" />
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <Row label="Serie" value={equipment.serial_number} />
                 {equipment.model && <Row label="Modelo" value={equipment.model} />}
@@ -357,7 +353,7 @@ export default function TaskDetailPage() {
         <section className="flex flex-col gap-6">
           {equipment && (
             <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
-              <SectionHeading title="Equipo a mantener" variant="secondary" />
+              <SectionHeading title="Equipo a mantener" />
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <Row label="Serie" value={equipment.serial_number} />
                 {equipment.model && <Row label="Modelo" value={equipment.model} />}
@@ -394,7 +390,7 @@ export default function TaskDetailPage() {
 
       {/* Task history — comments */}
       <div className="bg-card flex flex-col gap-3 rounded-md border p-4">
-        <SectionHeading title="Historial" variant="secondary" />
+        <SectionHeading title="Historial" />
         <TicketCommentsList comments={comments} />
         {!isClosed && <AddCommentForm ticketId={ticket.id} />}
       </div>

@@ -142,7 +142,7 @@ export default function KeyOrderDetailPage() {
 
       {/* Items table */}
       <div className="flex flex-col gap-3">
-        <SectionHeading title="Ítems" variant="secondary" />
+        <SectionHeading title="Ítems" />
         <KeyOrderItemsTable
           items={order.key_order_items}
           orderId={order.id}

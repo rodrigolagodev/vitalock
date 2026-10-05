@@ -71,13 +71,6 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 29%;
     --warning-foreground: 0 0% 100%;
-
-    /*
-     * Redundant: `--muted-foreground` now clears 4.5:1 on card and muted too.
-     * Kept (value unchanged) until F1 migrates StatusBadge's `neutral` tone to
-     * `text-muted-foreground`, then remove this token.
-     */
-    --status-neutral-foreground: 215.3 25% 45%;
   }
 
   .dark {
@@ -125,10 +118,6 @@
     --success-foreground: 158 80% 10%;
     --warning: 48 96% 53%;
     --warning-foreground: 38 92% 12%;
-
-    /* Reuses the existing dark-mode --muted-foreground value; dark `--card`
-     * already gives it ample contrast, so no separate audit was needed. */
-    --status-neutral-foreground: 224 12% 68%;
   }
 }
 

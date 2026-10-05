@@ -248,7 +248,7 @@ function FilterBarSelect({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           className={cn(
-            'border-input bg-card text-foreground ring-offset-background focus-visible:ring-ring flex h-11 appearance-none rounded-lg border py-2 pl-3 pr-9 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+            'border-input bg-card text-foreground ring-offset-background focus-visible:ring-ring h-control-md rounded-control flex appearance-none border py-2 pl-3 pr-9 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
             className,
           )}
         >

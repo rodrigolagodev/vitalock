@@ -145,13 +145,13 @@ export default function TechnicalOrderDetailPage() {
 
       {/* Items table */}
       <div className="flex flex-col gap-3">
-        <SectionHeading title="Ítems" variant="secondary" />
+        <SectionHeading title="Ítems" />
         <TechnicalOrderItemsTable items={order.technical_order_items} isFetching={isLoading} />
       </div>
 
       {/* Linked tickets */}
       <div className="flex flex-col gap-3">
-        <SectionHeading title="Tareas relacionadas" variant="secondary" />
+        <SectionHeading title="Tareas relacionadas" />
         <LinkedTicketsTable tickets={tickets} isLoading={ticketsLoading} />
       </div>
 

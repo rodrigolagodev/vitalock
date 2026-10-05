@@ -57,4 +57,12 @@ describe('StatusBadge', () => {
     expect(badge).not.toBeNull();
     expect(badge!.className).toContain('uppercase');
   });
+
+  it('paints the neutral tone with the muted foreground, not a dedicated token', () => {
+    render(<StatusBadge tone="neutral">Pendiente</StatusBadge>);
+    const cls = screen.getByText('Pendiente').className.split(/\s+/);
+    expect(cls).toContain('text-muted-foreground');
+    expect(cls).toContain('bg-muted');
+    expect(cls.filter((c) => c.startsWith('text-status'))).toEqual([]);
+  });
 });

@@ -16,14 +16,13 @@ import { Badge, type BadgeProps } from './badge';
  *
  * Every tone's text color clears WCAG 1.4.3 (>=4.5:1) against the white
  * `--card` background — see `globals.css` for the measured contrast ratios.
- * `neutral` renders via the dedicated `--status-neutral-foreground` token,
- * not the app-wide `--muted-foreground` (which stays lighter for
- * non-status secondary text).
+ * `neutral` uses the app-wide `muted-foreground` on `muted`, which measures
+ * about 5:1 in both themes.
  */
 export type StatusTone = 'neutral' | 'info' | 'brand' | 'warning' | 'success' | 'danger';
 
 const STATUS_TONE_CLASSES: Record<StatusTone, string> = {
-  neutral: 'border-transparent bg-muted text-status-neutral',
+  neutral: 'border-transparent bg-muted text-muted-foreground',
   info: 'border-transparent bg-info/10 text-info',
   brand: 'border-transparent bg-brand-500/10 text-brand-600 dark:text-brand-300',
   warning: 'border-transparent bg-warning/10 text-warning',

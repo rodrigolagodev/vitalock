@@ -329,4 +329,21 @@ describe('DataTable', () => {
       expect(cells[1]).not.toHaveClass('text-right');
     });
   });
+
+  it('spaces row actions 16px apart so 44px hit areas do not overlap', () => {
+    const actions: DataTableAction<Item>[] = [
+      { icon: PencilLine, label: 'Editar', onClick: vi.fn() },
+      { icon: Eye, label: 'Ver', onClick: vi.fn() },
+    ];
+    renderTable({ actions });
+    const row = screen.getAllByRole('button', { name: 'Editar' })[0]?.parentElement;
+    expect(row).toHaveClass('gap-4');
+    expect(row).not.toHaveClass('gap-1');
+  });
+
+  it('wraps the table in a container-radius border', () => {
+    renderTable();
+    const wrapper = screen.getByRole('table').closest('.overflow-x-auto');
+    expect(wrapper).toHaveClass('rounded-container');
+  });
 });

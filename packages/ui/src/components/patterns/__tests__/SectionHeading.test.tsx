@@ -8,9 +8,7 @@ import { SectionHeading } from '@vitalock/ui';
 describe('SectionHeading', () => {
   it('renders the title as an h2 heading', () => {
     render(<SectionHeading title="Tipo de orden" />);
-    expect(
-      screen.getByRole('heading', { level: 2, name: 'Tipo de orden' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Tipo de orden' })).toBeInTheDocument();
   });
 
   it('renders the description when provided', () => {
@@ -44,14 +42,21 @@ describe('SectionHeading', () => {
 
   it('renders a different title with a different description', () => {
     render(
-      <SectionHeading
-        title="Equipo"
-        description="Cada ítem genera una tarea del área técnica."
-      />,
+      <SectionHeading title="Equipo" description="Cada ítem genera una tarea del área técnica." />,
     );
     expect(screen.getByRole('heading', { level: 2, name: 'Equipo' })).toBeInTheDocument();
-    expect(
-      screen.getByText('Cada ítem genera una tarea del área técnica.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Cada ítem genera una tarea del área técnica.')).toBeInTheDocument();
+  });
+
+  it('renders the h2 at the title-3 step and the description at callout', () => {
+    render(<SectionHeading title="Equipo" description="Detalle" />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Equipo' })).toHaveClass('text-title-3');
+    expect(screen.getByText('Detalle')).toHaveClass('text-callout');
+  });
+
+  it('does not accept the retired variant prop', () => {
+    // @ts-expect-error `variant` was removed; a single heading convention remains.
+    render(<SectionHeading title="Notas" variant="secondary" />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Notas' })).toHaveClass('text-title-3');
   });
 });
