@@ -255,7 +255,7 @@ All admin form fields that show validation or server errors MUST render through 
 
 - GIVEN `apps/admin/src` form files are searched for hand-rolled error paragraphs using a destructive text class beside a control
 - WHEN the matches are listed
-- THEN none remain outside FormField
+- THEN none remain outside FormField, except the documented non-field carve-outs (task 3.7): list-level item errors (rendered with `role="alert"`), collapsed order-item error summaries, Editar-page banners and the `CargarProductoSheet` duplicate notice, which describe a group or the page rather than one control
 
 #### Scenario: Existing form tests pass
 
@@ -265,7 +265,7 @@ All admin form fields that show validation or server errors MUST render through 
 
 ### Requirement: Accessibility E2E Gate
 
-The repository MUST include an axe accessibility check for the admin app using `@axe-core/playwright`, added as a dev-only dependency of the workspace that owns the Playwright e2e suite (no runtime dependency, lockfile updated). The check MUST run axe against the main admin routes (at minimum: administraciones list, administration detail, building detail, ordenes list, key orders list, servicio técnico list, inventario, historial, the KeyOrderForm and TechnicalOrderForm pages, and login) in the light theme, and MUST fail on any `critical` or `serious` violation. Colour-contrast results MUST NOT be disabled. Any waived rule MUST be listed by id with a written reason in the spec file. The check MUST run in the same CI path as the existing admin e2e checks.
+The repository MUST include an axe accessibility check for the admin app using `@axe-core/playwright`, added as a dev-only dependency of the workspace that owns the Playwright e2e suite (no runtime dependency, lockfile updated). The check MUST run axe against the main admin routes (at minimum: the ten list routes in `e2e/admin/routes.ts`, including administraciones, ordenes, key orders, servicio técnico, inventario and historial, plus the KeyOrderForm and TechnicalOrderForm pages after an empty submit) in the light and dark themes. Administration detail, building detail and login are out of scope until the e2e seed carries administration and building fixtures (design Decision 12, task 4.5), and MUST fail on any `critical` or `serious` violation. Colour-contrast results MUST NOT be disabled. Any waived rule MUST be listed by id with a written reason in the spec file. The check MUST run in the same CI path as the existing admin e2e checks.
 
 #### Scenario: Main routes have no serious violations
 
