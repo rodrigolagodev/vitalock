@@ -53,6 +53,11 @@ export const controlHeight = {
   'control-lg': '3.25rem',
 };
 
+/** Layout sizes with no exact Tailwind scale step (60px sits between 56 and 64). */
+export const layoutSpacing = {
+  topbar: '3.75rem',
+};
+
 export const elevation = {
   'elevation-0': 'none',
   'elevation-1': 'none',

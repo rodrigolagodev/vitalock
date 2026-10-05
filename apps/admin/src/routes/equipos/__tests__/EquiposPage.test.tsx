@@ -89,6 +89,23 @@ describe('EquiposPage rendering', () => {
     });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+
+  it('clicking "Reintentar" refetches the failed query exactly once and drops the reload hint', async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn();
+    useEquipmentInventoryMock.mockReturnValueOnce({
+      data: [],
+      isFetching: false,
+      isError: true,
+      refetch,
+    });
+    renderPage();
+
+    expect(screen.queryByText(/recargá la página/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -204,5 +221,34 @@ describe('EquiposPage FilterBar.Summary', () => {
     expect(lastCall?.administrationId).toBeUndefined();
     expect(lastCall?.status).toBe('all');
     expect(screen.queryByRole('button', { name: /limpiar todo/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('page subtitle', () => {
+  it('renders the one-line subtitle under the title', () => {
+    renderPage();
+    expect(screen.getByText('Consultá los equipos instalados y su estado.')).toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title and description without a create action', () => {
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay equipos')).toBeInTheDocument();
+    expect(screen.getByText('Aparecen acá cuando se crean desde las órdenes.')).toBeInTheDocument();
+  });
+
+  it('shows the compact filtered message instead of the zero-state once a filter is applied', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('combobox', { name: /^estado del equipo$/i }));
+    await user.click(screen.getByRole('option', { name: /^mantenimiento$/i }));
+
+    expect(screen.queryByText('Todavía no hay equipos')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('No se encontraron equipos con los filtros aplicados.'),
+    ).toBeInTheDocument();
   });
 });

@@ -216,6 +216,27 @@ describe('DataCardList', () => {
     expect(screen.getByText('Sin resultados')).toBeInTheDocument();
   });
 
+  it('renders the emptyState node instead of emptyMessage when there are no rows and no filters', () => {
+    renderList({
+      rows: [],
+      emptyMessage: 'Sin resultados',
+      emptyState: <p>Todavía no hay nada</p>,
+    });
+    expect(screen.getByText('Todavía no hay nada')).toBeInTheDocument();
+    expect(screen.queryByText('Sin resultados')).not.toBeInTheDocument();
+  });
+
+  it('keeps filteredEmptyMessage over emptyState when filters are active', () => {
+    renderList({
+      rows: [],
+      hasFilters: true,
+      emptyState: <p>Todavía no hay nada</p>,
+      filteredEmptyMessage: 'Nada coincide con el filtro',
+    });
+    expect(screen.getByText('Nada coincide con el filtro')).toBeInTheDocument();
+    expect(screen.queryByText('Todavía no hay nada')).not.toBeInTheDocument();
+  });
+
   it('renders filteredEmptyMessage when there are no rows and filters are active', () => {
     renderList({
       rows: [],

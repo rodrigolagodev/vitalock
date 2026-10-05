@@ -15,7 +15,7 @@ const TERMINAL_STATUSES = new Set(['invoiced', 'cancelled']);
 
 export default function TechnicalOrderDetailPage() {
   const { techOrderId } = useParams<{ techOrderId: string }>();
-  const { data: order, isLoading, isError } = useTechnicalOrder(techOrderId);
+  const { data: order, isLoading, isError, refetch } = useTechnicalOrder(techOrderId);
   const { cancelTechnicalOrder, markTechnicalOrderInvoiced } = useMutateTechnicalOrder();
   const { data: tickets = [], isLoading: ticketsLoading } = useTechnicalOrderTickets(techOrderId);
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
@@ -45,6 +45,7 @@ export default function TechnicalOrderDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar la orden."
+        onRetry={() => void refetch()}
         back={{ label: 'Volver a servicio técnico', to: '/servicio-tecnico' }}
         className="py-24"
       />

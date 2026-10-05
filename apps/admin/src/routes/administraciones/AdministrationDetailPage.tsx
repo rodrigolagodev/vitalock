@@ -23,7 +23,7 @@ export default function AdministrationDetailPage() {
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [buildingSearch, setBuildingSearch] = useState('');
 
-  const { data: administration, isLoading, isError } = useAdministration(adminId ?? '');
+  const { data: administration, isLoading, isError, refetch } = useAdministration(adminId ?? '');
   const { data: buildings = [], isFetching: buildingsFetching } = useBuildings({
     administrationId: adminId,
   });
@@ -53,6 +53,7 @@ export default function AdministrationDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar la administración."
+        onRetry={() => void refetch()}
         back={{ label: 'Volver a administraciones', to: '/administraciones' }}
         className="py-24"
       />
@@ -90,7 +91,10 @@ export default function AdministrationDetailPage() {
       <PageHeader
         title={administration.company_name}
         subtitle={subtitle}
-        breadcrumbs={[{ label: 'Administraciones', to: '/administraciones' }]}
+        breadcrumbs={[
+          { label: 'Administraciones', to: '/administraciones' },
+          { label: administration.company_name },
+        ]}
         titleAdornment={<administrationStatus.Badge status={administration.status} />}
       >
         <Button variant="outline" onClick={() => setEditSheetOpen(true)}>

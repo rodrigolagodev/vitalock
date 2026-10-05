@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { KeyOrderDetailRow } from '@/hooks/useKeyOrder';
@@ -302,5 +302,28 @@ describe('KeyOrderDetailPage — loading and error states', () => {
     });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+});
+
+describe('KeyOrderDetailPage — page identity', () => {
+  it('uses "Órdenes de llaves" for the breadcrumb and no "Llaves" link', () => {
+    renderPage();
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    const crumb = within(nav).getByRole('link', { name: 'Órdenes de llaves' });
+    expect(crumb).toHaveAttribute('href', '/llaves');
+    expect(within(nav).queryByRole('link', { name: 'Llaves' })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['error', { data: undefined, isLoading: false, isError: true }],
+    ['not found', { data: null, isLoading: false, isError: false }],
+  ])('back link reads "Volver a órdenes de llaves" on %s', (_label, state) => {
+    useKeyOrderMock.mockReturnValue(state);
+    renderPage();
+    expect(screen.getByRole('link', { name: 'Volver a órdenes de llaves' })).toHaveAttribute(
+      'href',
+      '/llaves',
+    );
   });
 });

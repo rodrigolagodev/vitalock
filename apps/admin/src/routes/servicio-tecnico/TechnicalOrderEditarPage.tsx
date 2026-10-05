@@ -11,7 +11,7 @@ import { toastMutationError } from '@/lib/errors/toast';
 export default function TechnicalOrderEditarPage() {
   const { techOrderId } = useParams<{ techOrderId: string }>();
   const navigate = useNavigate();
-  const { data: order, isLoading, isError } = useTechnicalOrder(techOrderId);
+  const { data: order, isLoading, isError, refetch } = useTechnicalOrder(techOrderId);
   const { updateDraftTechnicalOrder } = useMutateTechnicalOrder();
 
   if (isLoading) {
@@ -35,6 +35,7 @@ export default function TechnicalOrderEditarPage() {
       <div className="flex flex-col gap-6 pb-24">
         <ErrorState
           message="Error al cargar la orden."
+          onRetry={() => void refetch()}
           back={{ label: 'Volver al listado', to: '/servicio-tecnico' }}
         />
       </div>

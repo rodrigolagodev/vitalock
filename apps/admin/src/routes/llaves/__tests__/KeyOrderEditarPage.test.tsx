@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -222,4 +222,25 @@ describe('KeyOrderEditarPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/llaves/ko-1');
   });
+});
+
+describe('KeyOrderEditarPage identity', () => {
+  it.each(['draft', 'confirmed'] as const)(
+    'uses the "Órdenes de llaves" crumb linking to the list (%s order)',
+    (status) => {
+      useMutateKeyOrderMock.mockReturnValue(defaultMutations);
+      useKeyOrderMock.mockReturnValue({
+        data: makeOrder({ status }),
+        isLoading: false,
+        isError: false,
+      });
+      renderPage();
+      const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+      expect(within(nav).getByRole('link', { name: 'Órdenes de llaves' })).toHaveAttribute(
+        'href',
+        '/llaves',
+      );
+      expect(within(nav).queryByRole('link', { name: 'Llaves' })).not.toBeInTheDocument();
+    },
+  );
 });

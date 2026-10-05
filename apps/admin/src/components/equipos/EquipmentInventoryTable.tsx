@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataCardList } from '@vitalock/ui';
 import type { EquipmentInventoryRow } from '@/hooks/useEquipmentInventory';
@@ -6,6 +7,9 @@ import { equipmentStatus } from '@/lib/status/equipmentStatus';
 interface EquipmentInventoryTableProps {
   rows: EquipmentInventoryRow[];
   isFetching?: boolean;
+  hasFilters?: boolean;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 /**
@@ -18,6 +22,8 @@ interface EquipmentInventoryTableProps {
 export function EquipmentInventoryTable({
   rows,
   isFetching = false,
+  hasFilters = false,
+  emptyState,
 }: EquipmentInventoryTableProps) {
   const navigate = useNavigate();
 
@@ -27,6 +33,9 @@ export function EquipmentInventoryTable({
       isFetching={isFetching}
       rowKey={(r) => r.id ?? ''}
       emptyMessage="No hay equipos registrados en el inventario."
+      emptyState={emptyState}
+      filteredEmptyMessage="No se encontraron equipos con los filtros aplicados."
+      hasFilters={hasFilters}
       firstCell="button"
       onFirstCellClick={(r) => {
         if (r.id) navigate(`/equipos/${r.id}`);

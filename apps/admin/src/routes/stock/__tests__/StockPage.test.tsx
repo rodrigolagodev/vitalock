@@ -10,7 +10,8 @@ const { useProductsMock } = vi.hoisted(() => ({ useProductsMock: vi.fn() }));
 
 vi.mock('@/hooks/useProducts', () => ({ useProducts: useProductsMock }));
 vi.mock('@/components/stock/CargarProductoSheet', () => ({
-  CargarProductoSheet: () => null,
+  CargarProductoSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="cargar-sheet" /> : null,
 }));
 
 import StockPage from '../StockPage';
@@ -144,5 +145,31 @@ describe('StockPage FilterBar.Summary', () => {
     expect(lastCall?.search).toBe('');
     expect(lastCall?.category).toBeUndefined();
     expect(screen.queryByRole('button', { name: /limpiar todo/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title, description and a create action that opens the same sheet as the header button', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay productos')).toBeInTheDocument();
+    expect(screen.getByText('Cargá el catálogo para registrar movimientos.')).toBeInTheDocument();
+    expect(screen.queryByTestId('cargar-sheet')).not.toBeInTheDocument();
+
+    const buttons = screen.getAllByRole('button', { name: 'Cargar producto' });
+    expect(buttons).toHaveLength(2);
+    await user.click(buttons[1]!);
+    expect(screen.getByTestId('cargar-sheet')).toBeInTheDocument();
+  });
+
+  it('keeps the compact filtered message and no zero-state while filters are active', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByRole('searchbox'), 'zzz');
+
+    await waitFor(() =>
+      expect(screen.queryByText('Todavía no hay productos')).not.toBeInTheDocument(),
+    );
   });
 });

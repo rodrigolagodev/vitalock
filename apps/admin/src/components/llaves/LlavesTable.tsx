@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { DataCardList } from '@vitalock/ui';
 import { formatCurrencyARS, formatDate } from '@/lib/format';
 import { keyOrderStatus } from '@/lib/status/keyOrderStatus';
@@ -7,6 +8,8 @@ interface LlavesTableProps {
   rows: KeyOrderListRow[];
   isFetching: boolean;
   hasFilters?: boolean;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 function clientLabel(row: KeyOrderListRow): string {
@@ -23,7 +26,12 @@ function clientLabel(row: KeyOrderListRow): string {
  * for closed/all orders, so this stays a flat list like installer's
  * `TareasTable` and admin's `EquipmentUpdateHistoryPanel`.
  */
-export function LlavesTable({ rows, isFetching, hasFilters = false }: LlavesTableProps) {
+export function LlavesTable({
+  rows,
+  isFetching,
+  hasFilters = false,
+  emptyState,
+}: LlavesTableProps) {
   return (
     <DataCardList<KeyOrderListRow>
       rows={rows}
@@ -63,6 +71,7 @@ export function LlavesTable({ rows, isFetching, hasFilters = false }: LlavesTabl
       firstCell="link"
       getRowHref={(row) => `/llaves/${row.id}`}
       emptyMessage="No hay órdenes de llave registradas."
+      emptyState={emptyState}
       filteredEmptyMessage="No se encontraron órdenes con los filtros aplicados."
       hasFilters={hasFilters}
     />

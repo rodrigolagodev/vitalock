@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '@vitalock/ui';
 import type { KeysInventoryRow } from '@/hooks/useKeysInventory';
@@ -8,12 +9,15 @@ interface KeysInventoryTableProps {
   rows: KeysInventoryRow[];
   isFetching?: boolean;
   hasFilters?: boolean;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 export function KeysInventoryTable({
   rows,
   isFetching = false,
   hasFilters = false,
+  emptyState,
 }: KeysInventoryTableProps) {
   const navigate = useNavigate();
 
@@ -23,6 +27,7 @@ export function KeysInventoryTable({
       isFetching={isFetching}
       rowKey={(r) => r.id ?? ''}
       emptyMessage="No hay llaves registradas en el inventario."
+      emptyState={emptyState}
       hasFilters={hasFilters}
       filteredEmptyMessage="No se encontraron llaves con los filtros aplicados."
       firstCell="button"

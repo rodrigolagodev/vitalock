@@ -52,6 +52,11 @@ export interface DataCardListProps<T> {
   actions?: DataTableAction<T>[];
   renderActions?: (row: T) => React.ReactNode;
   emptyMessage?: string;
+  /**
+   * Rich zero-state (EmptyState v2) shown when there are no rows and no filters.
+   * Takes precedence over `emptyMessage`; the filtered-empty case keeps the compact message.
+   */
+  emptyState?: React.ReactNode;
   filteredEmptyMessage?: string;
   hasFilters?: boolean;
   paginated?: boolean;
@@ -130,6 +135,7 @@ export function DataCardList<T>({
   actions,
   renderActions,
   emptyMessage,
+  emptyState,
   filteredEmptyMessage,
   hasFilters = false,
   paginated = true,
@@ -335,6 +341,7 @@ export function DataCardList<T>({
   }
 
   if (rows.length === 0) {
+    if (!hasFilters && emptyState != null) return <>{emptyState}</>;
     return (
       <div className="text-muted-foreground flex justify-center rounded-md border border-dashed px-4 py-8 text-center text-sm">
         {hasFilters ? (filteredEmptyMessage ?? emptyMessage) : emptyMessage}

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { PencilLine } from 'lucide-react';
 import { Button, DataCardList } from '@vitalock/ui';
@@ -10,12 +11,15 @@ interface AdministrationsTableProps {
   administrations: AdministrationRow[];
   isFetching: boolean;
   search?: string;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 export function AdministrationsTable({
   administrations,
   isFetching,
   search = '',
+  emptyState,
 }: AdministrationsTableProps) {
   const [editingAdmin, setEditingAdmin] = useState<AdministrationRow | null>(null);
 
@@ -46,6 +50,7 @@ export function AdministrationsTable({
         firstCell="link"
         getRowHref={(admin) => `/administraciones/${admin.id}`}
         emptyMessage="No hay administraciones registradas."
+        emptyState={emptyState}
         hasFilters={search !== ''}
         filteredEmptyMessage={`No se encontraron resultados para \u201C${search}\u201D.`}
         renderActions={(admin) => (

@@ -1,5 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
-import { Button, Card, EmptyState, ErrorState, SectionHeading } from '@vitalock/ui';
+import {
+  Card,
+  EmptyState,
+  ErrorState,
+  NotFoundState,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@vitalock/ui';
 import { useEquipmentById } from '@/hooks/useEquipmentById';
@@ -36,23 +43,43 @@ function EquipmentLabel({ serial_number, model }: { serial_number: string; model
 
 export default function EquipoDetailPage() {
   const { equipoId } = useParams<{ equipoId: string }>();
-  const { data: equipment, isLoading, isError } = useEquipmentById(equipoId);
+  const { data: equipment, isLoading, isError, refetch } = useEquipmentById(equipoId);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+      <div role="status" aria-label="Cargando equipo" className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
       </div>
     );
   }
 
-  if (isError || !equipment) {
+  if (isError) {
     return (
-      <ErrorState message="No se pudo cargar la información del equipo." className="gap-4 py-16">
-        <Button asChild variant="outline" size="sm">
-          <Link to="/equipos">Volver al inventario</Link>
-        </Button>
-      </ErrorState>
+      <ErrorState
+        message="No se pudo cargar la información del equipo."
+        className="gap-4 py-16"
+        onRetry={() => void refetch()}
+        back={{ label: 'Volver al inventario', to: '/equipos' }}
+      />
+    );
+  }
+
+  if (!equipment) {
+    return (
+      <NotFoundState
+        message="Equipo no encontrado."
+        back={{ label: 'Volver al inventario', to: '/equipos' }}
+      />
     );
   }
 

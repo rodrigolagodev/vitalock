@@ -8,7 +8,8 @@ import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
 import { AdministrationCombobox } from '@/components/administrations/AdministrationCombobox';
 import { QuickUnitCreateDialog } from '@/components/llaves/QuickUnitCreateDialog';
-import { Button } from '@vitalock/ui';
+import { Button, ConfirmDialog } from '@vitalock/ui';
+import { UNSAVED_CHANGES_COPY, useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
@@ -172,7 +173,7 @@ export function KeyOrderForm({
     control,
     watch,
     setValue,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting, isDirty, isSubmitSuccessful },
   } = useForm<KeyOrderFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
@@ -250,12 +251,10 @@ export function KeyOrderForm({
     }
   };
 
-  const handleCancel = () => {
-    if (isDirty && !window.confirm('Vas a perder los cambios. ¿Salir igual?')) {
-      return;
-    }
-    onCancel?.();
-  };
+  const guard = useUnsavedChangesGuard({
+    when: isDirty && !isSubmitting && !isSubmitSuccessful,
+  });
+  const handleCancel = () => guard.requestLeave(() => onCancel?.());
 
   const isFormPending = isPending || isSubmitting;
   const submitLabel = mode === 'edit' ? 'Guardar cambios' : 'Crear y confirmar orden';
@@ -392,7 +391,7 @@ export function KeyOrderForm({
                       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                         <span className="shrink-0 text-sm font-medium">Ítem {index + 1}</span>
                         {product && (
-                          <span className="max-w-[200px] truncate rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                          <span className="bg-info/10 text-info max-w-48 truncate rounded px-2 py-0.5 text-xs">
                             {product.name}
                           </span>
                         )}
@@ -402,7 +401,7 @@ export function KeyOrderForm({
                         {building && (
                           <>
                             <span className="text-muted-foreground text-xs">·</span>
-                            <span className="text-muted-foreground max-w-[200px] truncate text-xs">
+                            <span className="text-muted-foreground max-w-48 truncate text-xs">
                               {building.name}
                             </span>
                           </>
@@ -620,6 +619,8 @@ export function KeyOrderForm({
           </Button>
         </div>
       </form>
+
+      <ConfirmDialog {...UNSAVED_CHANGES_COPY} {...guard.dialogProps} variant="destructive" />
 
       {/* Particular edit sheet — outside form to avoid nesting issue */}
       <ParticularFormSheet

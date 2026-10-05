@@ -44,7 +44,7 @@ function endOfDay(iso: string): number {
 
 export default function StockDetailPage() {
   const { productId } = useParams<{ productId: string }>();
-  const { data: product, isLoading, isError } = useProduct(productId);
+  const { data: product, isLoading, isError, refetch } = useProduct(productId);
   const { updateProduct } = useMutateProduct();
   const {
     data: movements = [],
@@ -82,6 +82,7 @@ export default function StockDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar el producto."
+        onRetry={() => void refetch()}
         back={{ label: 'Volver a stock', to: '/stock' }}
         className="py-24"
       />

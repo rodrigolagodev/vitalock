@@ -97,7 +97,7 @@ describe('TechnicalOrdersPage list', () => {
 
   it('renders the Nueva orden link pointing to /servicio-tecnico/nueva', () => {
     renderPage();
-    const link = screen.getByRole('link', { name: /nueva orden/i });
+    const [link] = screen.getAllByRole('link', { name: /nueva orden/i });
     expect(link).toHaveAttribute('href', '/servicio-tecnico/nueva');
   });
 });
@@ -159,5 +159,25 @@ describe('TechnicalOrdersPage error state', () => {
 
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+});
+
+describe('page subtitle', () => {
+  it('renders the one-line subtitle under the title', () => {
+    renderPage();
+    expect(screen.getByText('Gestioná las órdenes de servicio técnico.')).toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title, description and a create link matching the header button', () => {
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay órdenes de servicio técnico')).toBeInTheDocument();
+    expect(screen.getByText('Creá una orden para registrar trabajos.')).toBeInTheDocument();
+    const links = screen.getAllByRole('link', { name: 'Nueva orden' });
+    expect(links).toHaveLength(2);
+    for (const link of links) expect(link).toHaveAttribute('href', '/servicio-tecnico/nueva');
   });
 });

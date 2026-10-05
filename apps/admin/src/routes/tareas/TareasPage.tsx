@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
+import { ClipboardList } from 'lucide-react';
+import { Button, EmptyState, ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useTareas } from '@/hooks/useTareas';
 import { useStaff } from '@/hooks/useStaff';
@@ -35,6 +36,7 @@ export default function TareasPage() {
     truncated,
     isFetching,
     isError,
+    refetch,
   } = useTareas({
     search,
     status,
@@ -43,7 +45,7 @@ export default function TareasPage() {
   });
 
   if (isError) {
-    return <ErrorState message="Error al cargar las tareas. Recargá la página." />;
+    return <ErrorState message="Error al cargar las tareas." onRetry={() => void refetch()} />;
   }
 
   return (
@@ -100,6 +102,14 @@ export default function TareasPage() {
         isFetching={isFetching}
         hasFilters={hasFilters}
         onEdit={setEditing}
+        emptyState={
+          <EmptyState
+            icon={ClipboardList}
+            title="Todavía no hay tareas"
+            description="Creá la primera para registrar trabajos de mantenimiento o instalación."
+            action={<Button onClick={() => setCreateOpen(true)}>Nueva tarea</Button>}
+          />
+        }
       />
 
       <TareaFormSheet

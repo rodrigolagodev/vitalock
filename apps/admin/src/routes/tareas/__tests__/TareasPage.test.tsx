@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -19,6 +19,10 @@ vi.mock('@/hooks/useBuildings', () => ({
   useBuildings: useBuildingsMock,
 }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
+vi.mock('@/components/tareas/TareaFormSheet', () => ({
+  TareaFormSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="tarea-sheet" /> : null,
+}));
 
 import TareasPage from '../TareasPage';
 
@@ -48,7 +52,8 @@ describe('TareasPage rendering', () => {
 
   it('renders the "Nueva tarea" button', () => {
     renderPage();
-    expect(screen.getByRole('button', { name: /nueva tarea/i })).toBeInTheDocument();
+    // Header button plus the zero-state action (no rows in this fixture).
+    expect(screen.getAllByRole('button', { name: /nueva tarea/i })).toHaveLength(2);
   });
 
   it('renders the search input', () => {
@@ -62,6 +67,7 @@ describe('TareasPage rendering', () => {
     useTareasMock.mockReturnValueOnce({ data: [], isFetching: false, isError: true });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
 
@@ -162,5 +168,33 @@ describe('TareasPage FilterBar.Summary', () => {
     expect(lastCall?.buildingId).toBeUndefined();
     expect(lastCall?.status).toEqual([]);
     expect(screen.queryByRole('button', { name: /limpiar todo/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title, description and a create action that opens the same sheet as the header button', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay tareas')).toBeInTheDocument();
+    expect(
+      screen.getByText('Creá la primera para registrar trabajos de mantenimiento o instalación.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('tarea-sheet')).not.toBeInTheDocument();
+
+    const buttons = screen.getAllByRole('button', { name: 'Nueva tarea' });
+    expect(buttons).toHaveLength(2);
+    await user.click(buttons[1]!);
+    expect(screen.getByTestId('tarea-sheet')).toBeInTheDocument();
+  });
+
+  it('keeps the compact filtered message and no zero-state while filters are active', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByRole('searchbox'), 'zzz');
+
+    await waitFor(() =>
+      expect(screen.queryByText('Todavía no hay tareas')).not.toBeInTheDocument(),
+    );
   });
 });

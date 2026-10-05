@@ -5,6 +5,7 @@ import {
   controlHeight,
   elevation,
   fontFamily,
+  layoutSpacing,
   motion,
   radius,
   touchTypeScale,
@@ -74,6 +75,11 @@ describe('tailwind.tokens.js', () => {
       expect(touchTypeScale[name as TypeName]).toBeDefined();
   });
 
+  it('exposes the topbar height as a spacing token (3.75rem = 60px)', () => {
+    expect(layoutSpacing).toEqual({ topbar: '3.75rem' });
+    expect(px(layoutSpacing.topbar)).toBe(60);
+  });
+
   it('exposes radius tiers, control heights, elevation and motion', () => {
     expect(radius).toEqual({ control: '0.5rem', container: '0.75rem', sheet: '1rem' });
     expect(controlHeight).toEqual({
@@ -126,7 +132,7 @@ describe('tailwind preset wiring', () => {
       md: 'calc(var(--radius) - 2px)',
       sm: 'calc(var(--radius) - 4px)',
     });
-    expect(extend.spacing).toEqual(controlHeight);
+    expect(extend.spacing).toEqual({ ...controlHeight, ...layoutSpacing });
     expect(extend.boxShadow).toEqual(elevation);
     expect(extend.transitionDuration).toEqual(motion.duration);
     expect(extend.transitionTimingFunction).toEqual({ standard: 'cubic-bezier(0, 0, 0.2, 1)' });

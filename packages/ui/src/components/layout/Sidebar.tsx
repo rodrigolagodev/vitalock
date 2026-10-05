@@ -142,7 +142,7 @@ export function Sidebar({
       aria-expanded={!collapsed}
       className={cn(
         'bg-card hidden shrink-0 flex-col overflow-hidden border-r transition-[width] duration-300 ease-in-out motion-reduce:transition-none md:flex',
-        collapsed ? 'w-[64px]' : 'w-[240px]',
+        collapsed ? 'w-16' : 'w-60',
         className,
       )}
     >

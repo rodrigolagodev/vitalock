@@ -18,23 +18,16 @@ export interface TopbarProps {
 export function Topbar({ leading, avatar, children, className }: TopbarProps) {
   return (
     <header
-      className={cn(
-        'flex h-[60px] shrink-0 items-center gap-4 border-b bg-card px-6',
-        className,
-      )}
+      className={cn('h-topbar bg-card flex shrink-0 items-center gap-4 border-b px-6', className)}
     >
       {leading && <div className="flex items-center gap-2">{leading}</div>}
       <div className="ml-auto flex items-center gap-3">
         {avatar && (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+          <span className="bg-muted text-muted-foreground flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium">
             {avatar}
           </span>
         )}
-        <div
-          data-testid="topbar-divider"
-          aria-hidden="true"
-          className="h-[32px] w-px bg-border"
-        />
+        <div data-testid="topbar-divider" aria-hidden="true" className="bg-border h-8 w-px" />
         {children}
       </div>
     </header>

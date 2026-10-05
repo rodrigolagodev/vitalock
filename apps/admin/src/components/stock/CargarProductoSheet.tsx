@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Loader2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@vitalock/ui';
 import { Button } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
@@ -337,7 +338,12 @@ export function CargarProductoSheet({ open, onOpenChange }: CargarProductoSheetP
               Cancelar
             </Button>
             <Button type="submit" disabled={isPending || isSubmitting}>
-              {isPending || isSubmitting ? 'Cargando...' : 'Cargar'}
+              {isPending || isSubmitting ? (
+                <span role="status" aria-label="Cargando producto" className="mr-2 inline-flex">
+                  <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+                </span>
+              ) : null}
+              Cargar
             </Button>
           </SheetFooter>
         </form>

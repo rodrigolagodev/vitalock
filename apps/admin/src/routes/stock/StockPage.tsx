@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Package, TriangleAlert } from 'lucide-react';
-import { Button, ErrorState, FilterBar, StatCard } from '@vitalock/ui';
+import { Button, EmptyState, ErrorState, FilterBar, StatCard } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useProducts } from '@/hooks/useProducts';
 import { ProductsTable } from '@/components/stock/ProductsTable';
@@ -25,13 +25,14 @@ export default function StockPage() {
     data: products = [],
     isFetching,
     isError,
+    refetch,
   } = useProducts({
     category: category === '' ? undefined : (category as ProductCategory),
     search,
   });
 
   if (isError) {
-    return <ErrorState message="Error al cargar los productos. Recargá la página." />;
+    return <ErrorState message="Error al cargar los productos." onRetry={() => void refetch()} />;
   }
 
   return (
@@ -73,7 +74,19 @@ export default function StockPage() {
         <FilterBar.Summary />
       </FilterBar>
 
-      <ProductsTable rows={products} isFetching={isFetching} hasFilters={hasFilters} />
+      <ProductsTable
+        rows={products}
+        isFetching={isFetching}
+        hasFilters={hasFilters}
+        emptyState={
+          <EmptyState
+            icon={Package}
+            title="Todavía no hay productos"
+            description="Cargá el catálogo para registrar movimientos."
+            action={<Button onClick={() => setCreateOpen(true)}>Cargar producto</Button>}
+          />
+        }
+      />
 
       <CargarProductoSheet open={createOpen} onOpenChange={setCreateOpen} />
     </div>

@@ -180,7 +180,7 @@ function FilterBarSearch({
       onChange={(event) => setDraft(event.target.value)}
       // Bounded/responsive width, never full-width: this control sits
       // inline as the first item of the single filter row, not its own row.
-      className={cn('w-full sm:w-[220px] lg:w-[260px]', className)}
+      className={cn('w-full sm:w-56 lg:w-64', className)}
       {...inputProps}
     />
   );

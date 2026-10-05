@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
+import { ClipboardList } from 'lucide-react';
+import { EmptyState, ErrorState, FilterBar, TruncationNotice } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { useAllOrders } from '@/hooks/useAllOrders';
 import { HistorialTable } from '@/components/historial/HistorialTable';
@@ -40,6 +41,7 @@ export default function HistorialPage() {
     truncated,
     isFetching,
     isError,
+    refetch,
   } = useAllOrders({
     search,
     status: statuses,
@@ -49,12 +51,15 @@ export default function HistorialPage() {
   });
 
   if (isError) {
-    return <ErrorState message="Error al cargar el historial. Recargá la página." />;
+    return <ErrorState message="Error al cargar el historial." onRetry={() => void refetch()} />;
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Órdenes" />
+      <PageHeader
+        title="Órdenes"
+        subtitle="Consultá el historial de órdenes de llaves y de servicio técnico."
+      />
 
       <FilterBar>
         <FilterBar.Search
@@ -83,7 +88,18 @@ export default function HistorialPage() {
 
       <TruncationNotice truncated={truncated} shown={orders.length} total={total} />
 
-      <HistorialTable orders={orders} isFetching={isFetching} hasFilters={hasFilters} />
+      <HistorialTable
+        orders={orders}
+        isFetching={isFetching}
+        hasFilters={hasFilters}
+        emptyState={
+          <EmptyState
+            icon={ClipboardList}
+            title="Todavía no hay órdenes"
+            description="Aparecen acá cuando se crean desde las órdenes."
+          />
+        }
+      />
     </div>
   );
 }

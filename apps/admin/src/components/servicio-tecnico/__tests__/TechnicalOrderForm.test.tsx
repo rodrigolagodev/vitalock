@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
@@ -623,5 +623,79 @@ describe('TechnicalOrderForm', () => {
     expect(calledWith.items[0]!.item_type).toBe('maintain_equipment');
     expect(calledWith.items[0]!.intended_equipment_id).toBe('equip-1');
     expect(calledWith.items[0]!.intended_assignee_staff_id).toBe('staff-1');
+  });
+
+  describe('unsaved changes guard (Cancelar)', () => {
+    it('opens a ConfirmDialog instead of window.confirm when dirty, then leaves on confirm', async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+      const confirmSpy = vi.spyOn(window, 'confirm');
+      render(<TechnicalOrderForm mode="create" onSubmit={vi.fn()} onCancel={onCancel} />, {
+        wrapper: makeWrapper(),
+      });
+
+      await user.type(screen.getByPlaceholderText(/observaciones adicionales/i), 'algo');
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByText('¿Descartar los cambios?')).toBeInTheDocument();
+      expect(confirmSpy).not.toHaveBeenCalled();
+      expect(onCancel).not.toHaveBeenCalled();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Descartar cambios' }));
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      confirmSpy.mockRestore();
+    });
+
+    it('keeps the user and the typed input when the dialog is dismissed', async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+      render(<TechnicalOrderForm mode="create" onSubmit={vi.fn()} onCancel={onCancel} />, {
+        wrapper: makeWrapper(),
+      });
+
+      const notes = screen.getByPlaceholderText(/observaciones adicionales/i);
+      await user.type(notes, 'algo');
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+      const dialog = await screen.findByRole('dialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Seguir editando' }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(onCancel).not.toHaveBeenCalled();
+      expect(notes).toHaveValue('algo');
+    });
+
+    it('leaves immediately with no dialog when the form is clean', async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+      const confirmSpy = vi.spyOn(window, 'confirm');
+      render(<TechnicalOrderForm mode="create" onSubmit={vi.fn()} onCancel={onCancel} />, {
+        wrapper: makeWrapper(),
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(confirmSpy).not.toHaveBeenCalled();
+      confirmSpy.mockRestore();
+    });
+  });
+
+  describe('item chip tokens', () => {
+    it('renders the item chip with info token classes and no raw palette or arbitrary px', () => {
+      render(
+        <TechnicalOrderForm mode="edit" initialOrder={makeInitialOrder()} onSubmit={vi.fn()} />,
+        {
+          wrapper: makeWrapper(),
+        },
+      );
+
+      const chip = screen.getByText('Ítem 1').nextElementSibling as HTMLElement;
+      expect(chip.textContent?.trim()).not.toBe('');
+      expect(chip).toHaveClass('bg-info/10', 'text-info', 'max-w-48');
+      expect(chip.className).not.toMatch(/blue-/);
+      expect(chip.className).not.toMatch(/\[\d+px\]/);
+    });
   });
 });

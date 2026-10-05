@@ -15,7 +15,7 @@ function isTerminalOrder(status: string): boolean {
 
 export default function KeyOrderDetailPage() {
   const { keyOrderId } = useParams<{ keyOrderId: string }>();
-  const { data: order, isLoading, isError } = useKeyOrder(keyOrderId);
+  const { data: order, isLoading, isError, refetch } = useKeyOrder(keyOrderId);
   const { cancelKeyOrder, markKeyOrderInvoiced } = useMutateKeyOrder();
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
@@ -23,7 +23,7 @@ export default function KeyOrderDetailPage() {
     return (
       <ErrorState
         message="ID de orden inválido."
-        back={{ label: 'Volver a llaves', to: '/llaves' }}
+        back={{ label: 'Volver a órdenes de llaves', to: '/llaves' }}
         className="py-24"
       />
     );
@@ -44,13 +44,14 @@ export default function KeyOrderDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar la orden."
-        back={{ label: 'Volver a llaves', to: '/llaves' }}
+        onRetry={() => void refetch()}
+        back={{ label: 'Volver a órdenes de llaves', to: '/llaves' }}
         className="py-24"
       />
     ) : (
       <NotFoundState
         message="Orden no encontrada."
-        back={{ label: 'Volver a llaves', to: '/llaves' }}
+        back={{ label: 'Volver a órdenes de llaves', to: '/llaves' }}
       />
     );
   }
@@ -87,7 +88,7 @@ export default function KeyOrderDetailPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title={order.order_number}
-        breadcrumbs={[{ label: 'Llaves', to: '/llaves' }, { label: order.order_number }]}
+        breadcrumbs={[{ label: 'Órdenes de llaves', to: '/llaves' }, { label: order.order_number }]}
         titleAdornment={<keyOrderStatus.Badge status={order.status} />}
         subtitle={
           <div className="flex flex-col gap-0.5">

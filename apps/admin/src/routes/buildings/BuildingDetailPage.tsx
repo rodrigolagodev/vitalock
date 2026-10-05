@@ -22,7 +22,7 @@ export default function BuildingDetailPage() {
 
   const activeTab = searchParams.get('tab') ?? 'equipos';
 
-  const { data: building, isLoading, isError } = useBuilding(buildingId ?? '');
+  const { data: building, isLoading, isError, refetch } = useBuilding(buildingId ?? '');
   const { data: administration } = useAdministration(building?.administration_id ?? '');
   const { data: equipment = [], isFetching: equipmentFetching } = useEquipment(buildingId ?? '');
   const { data: keys = [], isFetching: keysFetching } = useKeys(buildingId);
@@ -56,6 +56,7 @@ export default function BuildingDetailPage() {
     return isError ? (
       <ErrorState
         message="Error al cargar el edificio."
+        onRetry={() => void refetch()}
         back={{ label: 'Volver a administraciones', to: '/administraciones' }}
         className="py-24"
       />
@@ -96,6 +97,7 @@ export default function BuildingDetailPage() {
                 to: `/administraciones/${building.administration_id}`,
               }
             : { label: 'Sin administración' },
+          { label: building.name },
         ]}
         titleAdornment={<buildingStatus.Badge status={building.status} />}
       />

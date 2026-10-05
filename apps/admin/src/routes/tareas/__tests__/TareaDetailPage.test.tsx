@@ -157,6 +157,7 @@ describe('TareaDetailPage — basic rendering', () => {
     });
     renderPage();
     expect(screen.getByText(/error al cargar la tarea/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
 

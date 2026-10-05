@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Key, Wrench } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { DataCardList, StatusBadge, formatMonthHeading, monthKey } from '@vitalock/ui';
@@ -11,6 +12,8 @@ interface HistorialTableProps {
   orders: AllOrderRow[];
   isFetching: boolean;
   hasFilters?: boolean;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 function OrderKindBadge({ kind }: { kind: AllOrderRow['order_kind'] }) {
@@ -50,7 +53,12 @@ function AllOrderStatusBadge({ row }: { row: AllOrderRow }) {
  * as card meta), freeing `card: 'status'` for Estado alone — the same
  * icon/status-slot split already shipped in installer TareasTable/HistorialPage.
  */
-export function HistorialTable({ orders, isFetching, hasFilters = false }: HistorialTableProps) {
+export function HistorialTable({
+  orders,
+  isFetching,
+  hasFilters = false,
+  emptyState,
+}: HistorialTableProps) {
   return (
     <DataCardList<AllOrderRow>
       rows={orders}
@@ -91,6 +99,7 @@ export function HistorialTable({ orders, isFetching, hasFilters = false }: Histo
       groupBy={(row) => monthKey(row.created_at)}
       groupLabel={(key) => formatMonthHeading(key)}
       emptyMessage="No hay órdenes en el historial."
+      emptyState={emptyState}
       filteredEmptyMessage="No se encontraron órdenes con los filtros aplicados."
       hasFilters={hasFilters}
     />

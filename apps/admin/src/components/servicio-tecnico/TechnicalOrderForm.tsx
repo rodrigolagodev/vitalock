@@ -8,7 +8,8 @@ import type { ParticularRow } from '@/hooks/useParticulares';
 import { BuildingCombobox } from '@/components/buildings/BuildingCombobox';
 import { AdministrationCombobox } from '@/components/administrations/AdministrationCombobox';
 import { RadioGroup, RadioGroupItem } from '@vitalock/ui';
-import { Button } from '@vitalock/ui';
+import { Button, ConfirmDialog } from '@vitalock/ui';
+import { UNSAVED_CHANGES_COPY, useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { Input } from '@vitalock/ui';
 import { SectionHeading } from '@vitalock/ui';
 import { Label } from '@vitalock/ui';
@@ -215,7 +216,7 @@ export function TechnicalOrderForm({
     control,
     watch,
     setValue,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting, isDirty, isSubmitSuccessful },
   } = useForm<TechnicalOrderFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
@@ -255,12 +256,10 @@ export function TechnicalOrderForm({
     }
   };
 
-  const handleCancel = () => {
-    if (isDirty && !window.confirm('Vas a perder los cambios. ¿Salir igual?')) {
-      return;
-    }
-    onCancel?.();
-  };
+  const guard = useUnsavedChangesGuard({
+    when: isDirty && !isSubmitting && !isSubmitSuccessful,
+  });
+  const handleCancel = () => guard.requestLeave(() => onCancel?.());
 
   const appendItem = (itemType: TechnicalItemType) => {
     append({
@@ -422,13 +421,13 @@ export function TechnicalOrderForm({
                       </span>
                       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                         <span className="shrink-0 text-sm font-medium">Ítem {index + 1}</span>
-                        <span className="max-w-[200px] truncate rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                        <span className="bg-info/10 text-info max-w-48 truncate rounded px-2 py-0.5 text-xs">
                           {itemTypeLabel}
                         </span>
                         {building && (
                           <>
                             <span className="text-muted-foreground text-xs">·</span>
-                            <span className="text-muted-foreground max-w-[200px] truncate text-xs">
+                            <span className="text-muted-foreground max-w-48 truncate text-xs">
                               {building.name}
                             </span>
                           </>
@@ -576,7 +575,7 @@ export function TechnicalOrderForm({
                       </div>
 
                       {/* Unit price — required for install/replace; may be 0 for maintenance (monthly plan) */}
-                      <div className="flex flex-col gap-1 sm:max-w-[200px]">
+                      <div className="flex flex-col gap-1 sm:max-w-48">
                         <Label htmlFor={`items.${index}.unit_price`}>
                           {item?.item_type === 'maintain_equipment'
                             ? 'Precio unitario (0 = plan mensual)'
@@ -649,6 +648,8 @@ export function TechnicalOrderForm({
           </Button>
         </div>
       </form>
+
+      <ConfirmDialog {...UNSAVED_CHANGES_COPY} {...guard.dialogProps} variant="destructive" />
 
       {/* Particular edit sheet — outside form to avoid nesting issue */}
       <ParticularFormSheet

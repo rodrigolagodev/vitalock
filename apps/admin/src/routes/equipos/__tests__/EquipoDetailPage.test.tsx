@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import type { EquipmentDetail } from '@/hooks/useEquipmentById';
 
@@ -76,5 +77,47 @@ describe('EquipoDetailPage sections', () => {
     renderPage(BASE);
     expect(screen.queryByRole('heading', { name: 'Notas' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Cadena de reemplazos' })).not.toBeInTheDocument();
+  });
+});
+
+describe('EquipoDetailPage states', () => {
+  beforeEach(() => useEquipmentByIdMock.mockReset());
+
+  function renderState(state: Record<string, unknown>) {
+    useEquipmentByIdMock.mockReturnValue(state);
+    return render(
+      <MemoryRouter>
+        <EquipoDetailPage />
+      </MemoryRouter>,
+    );
+  }
+
+  it('shows a labelled skeleton and no spinner while loading', () => {
+    const { container } = renderState({ data: undefined, isLoading: true, isError: false });
+
+    expect(screen.getByRole('status', { name: 'Cargando equipo' })).toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(3);
+    expect(container.querySelector('.animate-spin')).toBeNull();
+  });
+
+  it('shows ErrorState with a retry that refetches exactly once', async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn();
+    renderState({ data: undefined, isLoading: false, isError: true, refetch });
+
+    expect(screen.getByText('No se pudo cargar la información del equipo.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows NotFoundState with a way back when the record does not exist', () => {
+    renderState({ data: null, isLoading: false, isError: false });
+
+    expect(screen.getByText('Equipo no encontrado.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver al inventario' })).toHaveAttribute(
+      'href',
+      '/equipos',
+    );
+    expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument();
   });
 });

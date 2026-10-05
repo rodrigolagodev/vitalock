@@ -5,18 +5,25 @@ description: Recurring UI patterns in the Vitalock admin app (apps/admin). Load 
 
 # admin-ui-patterns
 
-Six patterns already discovered and validated in Vitalock's admin app. Apply them **before** proposing an alternative — an alternative is what caused the last three regressions this file exists to prevent.
+Twelve patterns already discovered and validated in Vitalock's admin app. Apply them **before** proposing an alternative — an alternative is what caused the last three regressions this file exists to prevent.
 
 ## Component sources
 
-| Component               | Path                                                                       |
-| ----------------------- | -------------------------------------------------------------------------- |
-| `PageHeader`            | `apps/admin/src/components/layout/PageHeader.tsx`                          |
-| `EditableTitle`         | `apps/admin/src/components/layout/EditableTitle.tsx`                       |
-| `SectionHeading`        | `packages/ui/src/components/patterns/SectionHeading.tsx`                   |
-| `StatCard`              | `packages/ui/src/components/patterns/StatCard.tsx` (or nearest equivalent) |
-| `StatusBadge` / `Badge` | `packages/ui/src/components/`                                              |
-| Reference: full example | `apps/admin/src/routes/stock/StockDetailPage.tsx`                          |
+| Component                | Path                                                                       |
+| ------------------------ | -------------------------------------------------------------------------- |
+| `PageHeader`             | `apps/admin/src/components/layout/PageHeader.tsx`                          |
+| `EditableTitle`          | `apps/admin/src/components/layout/EditableTitle.tsx`                       |
+| `SectionHeading`         | `packages/ui/src/components/patterns/SectionHeading.tsx`                   |
+| `StatCard`               | `packages/ui/src/components/patterns/StatCard.tsx` (or nearest equivalent) |
+| `StatusBadge` / `Badge`  | `packages/ui/src/components/`                                              |
+| `ConfirmDialog`          | `packages/ui/src/components/ConfirmDialog.tsx`                             |
+| `FormField`              | `packages/ui/src/components/form-field.tsx`                                |
+| `EmptyState`             | `packages/ui/src/components/patterns/EmptyState.tsx`                       |
+| `ErrorState`             | `packages/ui/src/components/patterns/ErrorState.tsx`                       |
+| `Skeleton`               | `packages/ui/src/components/patterns/Skeleton.tsx`                         |
+| `NotFoundState`          | `packages/ui/src/components/patterns/NotFoundState.tsx`                    |
+| `useUnsavedChangesGuard` | `apps/admin/src/hooks/useUnsavedChangesGuard.ts`                           |
+| Reference: full example  | `apps/admin/src/routes/stock/StockDetailPage.tsx`                          |
 
 ## Pattern 1 — Status badges in `titleAdornment`, not `children`
 
@@ -99,13 +106,46 @@ Rule: category is identity, not attribute. Once set at create-time, it does not 
 
 Evidence: memory obs #343 (ProductFormFields segmented control).
 
+## Pattern 7 — Type ladder and sections
+
+Use the type ladder tokens (`text-title-1..3`, `text-headline`, `text-body`, `text-callout`, `text-footnote`), never raw sizes. A section heading is `SectionHeading` at the default `text-title-3` with no `variant`. The old `common/Section` wrapper is gone; do not bring it back.
+
+## Pattern 8 — Page identity
+
+- The page title equals the navigation label that reaches it ("Órdenes de llaves", not "Llaves").
+- Breadcrumbs end at the current item, rendered as non-link text (`{ label: record.name }` after the parent links). Do not render a crumb until the record has loaded.
+- Every list page has a one-line Spanish `subtitle` under the title.
+
+## Pattern 9 — Confirmation rule
+
+- A destructive or irreversible action uses `ConfirmDialog variant="destructive"` (pass `pendingLabel` for the in-flight copy, `description` may be inline JSX such as a `<strong>` name).
+- An informational notice with nothing to confirm uses a plain `Dialog` with a single "Entendido" button.
+- A dirty form uses `useUnsavedChangesGuard({ when })`: Cancel calls `guard.requestLeave(() => onCancel?.())` and the form renders `<ConfirmDialog {...UNSAVED_CHANGES_COPY} {...guard.dialogProps} variant="destructive" />`. The hook also blocks in-app navigation through the data router.
+- Never `window.confirm`.
+
+## Pattern 10 — Loading, error and not-found
+
+- Loading: a layout-matching `Skeleton` block inside `role="status"` with an `aria-label` ("Cargando equipo"). No bare spinner.
+- Load failure: `ErrorState` with `onRetry={() => void refetch()}`. A "ID inválido" error has no retry because a retry cannot succeed.
+- Missing record: `NotFoundState` with a way back to the list.
+- Button spinners keep their label: prepend `<span role="status" aria-label="Cargando ..."><Loader2 className="animate-spin" /></span>` and disable the button. This is the only allowed `animate-spin`.
+
+## Pattern 11 — Empty states
+
+Lists pass an `emptyState` (EmptyState v2: `icon`, `title`, `description`, and an `action` that reuses the page's create handler) to the table, which forwards it to `DataTable` / `DataCardList`. It shows only when there are no rows and no filters; a filtered-empty list keeps the compact `filteredEmptyMessage`. Sections inside detail pages keep the compact `message` form.
+
+## Pattern 12 — Form fields
+
+Every field with a label and an error goes through `FormField`: `<FormField label="Cantidad *" id=... error={errors.x?.message}><Input {...register('x')} /></FormField>`. Composite controls (Radix `Select`, comboboxes, `Controller`) use the render-prop child: `{(p) => <SelectTrigger {...p}>...}` so `id`, `aria-invalid` and `aria-describedby` land on the focusable node. Never write an ad-hoc `<p className="text-destructive">` beside a control. Mutation-error banners are not field errors and stay as they are.
+
 ## Anti-patterns to reject
 
 - Duplicating a `PageHeader` layout instead of using the shared component.
 - Rebuilding a `Badge` locally in `apps/admin/src/components/ui/` — `packages/ui` owns primitives; local re-exports were removed in the Fase D cleanup (memory obs #296).
 - Adding a "Download .mdb" button when the firmware-update history table already exposes downloads.
 - Adding a duplicate "update history" panel when the main history section already includes updates.
-- Any `w-[347px]` or `text-[#a13c22]` — extend the token/preset instead.
+- Any `w-[347px]`, `text-[#a13c22]` or raw palette class (`bg-blue-100`) — use the Tailwind scale, a token or the preset. `pnpm lint:hardcodes` enforces this in CI; a one-off needs `// lint-hardcodes-ignore-next-line: <reason>`.
+- `window.confirm`, hand-rolled confirmation `Dialog`s for destructive actions, and hand-rolled spinners.
 
 ## When in doubt
 

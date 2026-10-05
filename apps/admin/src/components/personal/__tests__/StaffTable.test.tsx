@@ -1,17 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import type { ReactNode } from 'react';
 
 const mockDeactivateStaff = vi.fn();
+let mockIsPending = false;
 
 vi.mock('@/hooks/useMutateStaff', () => ({
   useMutateStaff: () => ({
     deactivateStaff: {
       mutateAsync: mockDeactivateStaff,
-      isPending: false,
+      isPending: mockIsPending,
     },
   }),
 }));
@@ -69,6 +70,7 @@ function makeWrapper() {
 describe('StaffTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsPending = false;
     mockDeactivateStaff.mockResolvedValue({ id: 's-1', status: 'inactive' });
   });
 
@@ -140,15 +142,33 @@ describe('StaffTable', () => {
     await user.click(screen.getByRole('button', { name: /dar de baja a ana gómez/i }));
 
     expect(await screen.findByText('¿Dar de baja a Ana Gómez?')).toBeInTheDocument();
-    expect(
-      screen.getByText('El registro se conserva pero deja de aparecer y pierde acceso.'),
-    ).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    const description = document.getElementById(
+      dialog.getAttribute('aria-describedby') as string,
+    ) as HTMLElement;
+    expect(description).toHaveTextContent(
+      'El registro de Ana Gómez se conserva pero deja de aparecer y pierde acceso.',
+    );
+    expect(description.querySelector('strong')).toHaveTextContent('Ana Gómez');
 
-    await user.click(screen.getByRole('button', { name: /^dar de baja$/i }));
+    await user.click(within(dialog).getByRole('button', { name: /^dar de baja$/i }));
+    expect(mockDeactivateStaff).toHaveBeenCalledTimes(1);
 
     await waitFor(() => {
       expect(mockDeactivateStaff).toHaveBeenCalledWith({ id: 's-1' });
     });
+  });
+
+  it('disables both dialog buttons and shows the pending label while deactivating', async () => {
+    mockIsPending = true;
+    const user = userEvent.setup();
+    render(<StaffTable rows={[ana]} isFetching={false} />, { wrapper: makeWrapper() });
+
+    await user.click(screen.getByRole('button', { name: /dar de baja a ana gómez/i }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('button', { name: 'Dando de baja...' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Cancelar' })).toBeDisabled();
   });
 
   it('cancelling the dialog does not call deactivateStaff', async () => {

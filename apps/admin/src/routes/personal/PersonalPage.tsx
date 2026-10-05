@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, ErrorState, FilterBar } from '@vitalock/ui';
+import { UserCog } from 'lucide-react';
+import { Button, EmptyState, ErrorState, FilterBar } from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { usePersonal } from '@/hooks/usePersonal';
 import { StaffTable } from '@/components/personal/StaffTable';
@@ -25,13 +26,14 @@ export default function PersonalPage() {
     data: staff = [],
     isFetching,
     isError,
+    refetch,
   } = usePersonal({
     search,
     role: role === '' ? undefined : (role as StaffRole),
   });
 
   if (isError) {
-    return <ErrorState message="Error al cargar el personal. Recargá la página." />;
+    return <ErrorState message="Error al cargar el personal." onRetry={() => void refetch()} />;
   }
 
   return (
@@ -64,6 +66,14 @@ export default function PersonalPage() {
         isFetching={isFetching}
         hasFilters={hasFilters}
         onEdit={setEditing}
+        emptyState={
+          <EmptyState
+            icon={UserCog}
+            title="Todavía no hay personal"
+            description="Agregá a las personas que usan el sistema."
+            action={<Button onClick={() => setCreateOpen(true)}>Nuevo integrante</Button>}
+          />
+        }
       />
 
       <StaffFormSheet

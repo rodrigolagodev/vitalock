@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -206,5 +206,32 @@ describe('BuildingDetailPage', () => {
       expect(await screen.findByText('SN-AAA')).toBeInTheDocument();
       await waitFor(() => expect(screen.queryByText('SN-BBB')).not.toBeInTheDocument());
     });
+  });
+});
+
+describe('BuildingDetailPage breadcrumb', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useBuildingMock.mockReturnValue({
+      data: { ...building, name: 'Edificio Sur' },
+      isLoading: false,
+      isError: false,
+    });
+    useAdministrationMock.mockReturnValue({ data: { company_name: 'Admin Uno' } });
+    useKeysMock.mockReturnValue({ data: [], isFetching: false });
+    useEquipmentMock.mockReturnValue({ data: [], isFetching: false });
+  });
+
+  it('lists administrations link, administration link and the non-link building as the tail', () => {
+    render(<BuildingDetailPage />, { wrapper: makeWrapper('llaves') });
+
+    const nav = screen.getByRole('navigation', { name: 'Breadcrumb' });
+    const links = within(nav).getAllByRole('link');
+    expect(links.map((l) => l.textContent)).toEqual(['Administraciones', 'Admin Uno']);
+    expect(links[0]).toHaveAttribute('href', '/administraciones');
+    expect(links[1]).toHaveAttribute('href', '/administraciones/a1');
+    const tail = within(nav).getByText('Edificio Sur');
+    expect(tail.closest('a')).toBeNull();
+    expect(nav.textContent?.endsWith('Edificio Sur')).toBe(true);
   });
 });

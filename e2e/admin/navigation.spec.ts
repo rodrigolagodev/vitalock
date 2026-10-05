@@ -9,7 +9,7 @@ import { expect, login, test } from '../fixtures';
 // a renamed page should fail here, not silently match a looser pattern.
 const ROUTES: ReadonlyArray<[path: string, heading: string]> = [
   ['/administraciones', 'Administraciones'],
-  ['/llaves', 'Llaves'],
+  ['/llaves', 'Órdenes de llaves'],
   ['/llaves/inventario', 'Inventario de llaves'],
   ['/equipos', 'Inventario de equipos'],
   ['/servicio-tecnico', 'Servicio técnico'],

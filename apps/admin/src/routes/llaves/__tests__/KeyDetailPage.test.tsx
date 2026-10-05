@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import type { KeyDetail } from '@/hooks/useKeyById';
 
@@ -76,5 +77,50 @@ describe('KeyDetailPage sections', () => {
   it('omits Notas when notes are empty', () => {
     renderPage(BASE);
     expect(screen.queryByRole('heading', { name: 'Notas' })).not.toBeInTheDocument();
+  });
+});
+
+describe('KeyDetailPage states', () => {
+  beforeEach(() => {
+    useKeyByIdMock.mockReset();
+    useKeyEventsMock.mockReset();
+    useKeyEventsMock.mockReturnValue({ data: [], isLoading: false });
+  });
+
+  function renderState(state: Record<string, unknown>) {
+    useKeyByIdMock.mockReturnValue(state);
+    return render(
+      <MemoryRouter>
+        <KeyDetailPage />
+      </MemoryRouter>,
+    );
+  }
+
+  it('shows a labelled skeleton and no spinner while loading', () => {
+    const { container } = renderState({ data: undefined, isLoading: true, isError: false });
+
+    expect(screen.getByRole('status', { name: 'Cargando llave' })).toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(3);
+    expect(container.querySelector('.animate-spin')).toBeNull();
+  });
+
+  it('shows ErrorState with a retry that refetches exactly once', async () => {
+    const user = userEvent.setup();
+    const refetch = vi.fn();
+    renderState({ data: undefined, isLoading: false, isError: true, refetch });
+
+    expect(screen.getByText('No se pudo cargar la información de la llave.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows NotFoundState with a way back when the record does not exist', () => {
+    renderState({ data: null, isLoading: false, isError: false });
+
+    expect(screen.getByText('Llave no encontrada.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver al inventario' })).toHaveAttribute(
+      'href',
+      '/llaves/inventario',
+    );
   });
 });

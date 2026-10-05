@@ -75,7 +75,7 @@ export function UserMenu({
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" sideOffset={8} className="w-[248px] p-0">
+      <PopoverContent side="top" align="start" sideOffset={8} className="w-60 p-0">
         <div className="flex flex-col gap-0.5 border-b px-3 py-3">
           <span className="truncate text-sm font-medium">{name}</span>
           {subtitle && <span className="text-muted-foreground truncate text-xs">{subtitle}</span>}

@@ -1,5 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
-import { Button, Card, EmptyState, ErrorState, SectionHeading } from '@vitalock/ui';
+import {
+  Card,
+  EmptyState,
+  ErrorState,
+  NotFoundState,
+  SectionHeading,
+  Skeleton,
+} from '@vitalock/ui';
 import { formatDateTime } from '@/lib/format';
 import { PageHeader } from '@vitalock/ui';
 import { useKeyById } from '@/hooks/useKeyById';
@@ -41,24 +48,44 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function KeyDetailPage() {
   const { keyId } = useParams<{ keyId: string }>();
-  const { data: keyDetail, isLoading, isError } = useKeyById(keyId);
+  const { data: keyDetail, isLoading, isError, refetch } = useKeyById(keyId);
   const { data: events = [], isLoading: eventsLoading } = useKeyEvents(keyId);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+      <div role="status" aria-label="Cargando llave" className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
       </div>
     );
   }
 
-  if (isError || !keyDetail) {
+  if (isError) {
     return (
-      <ErrorState message="No se pudo cargar la información de la llave." className="gap-4 py-16">
-        <Button asChild variant="outline" size="sm">
-          <Link to="/llaves/inventario">Volver al inventario</Link>
-        </Button>
-      </ErrorState>
+      <ErrorState
+        message="No se pudo cargar la información de la llave."
+        className="gap-4 py-16"
+        onRetry={() => void refetch()}
+        back={{ label: 'Volver al inventario', to: '/llaves/inventario' }}
+      />
+    );
+  }
+
+  if (!keyDetail) {
+    return (
+      <NotFoundState
+        message="Llave no encontrada."
+        back={{ label: 'Volver al inventario', to: '/llaves/inventario' }}
+      />
     );
   }
 

@@ -1,15 +1,7 @@
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Trash2, PencilLine } from 'lucide-react';
-import {
-  DataCardList,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@vitalock/ui';
+import { ConfirmDialog, DataCardList, Button } from '@vitalock/ui';
 import { staffRole } from '@/lib/status/staffRole';
 import { useMutateStaff } from '@/hooks/useMutateStaff';
 import type { StaffRow } from '@/hooks/usePersonal';
@@ -19,6 +11,8 @@ interface StaffTableProps {
   isFetching: boolean;
   hasFilters?: boolean;
   onEdit?: (staff: StaffRow) => void;
+  /** Rich zero-state shown when there are no rows and no filters. */
+  emptyState?: ReactNode;
 }
 
 /**
@@ -33,7 +27,13 @@ interface StaffTableProps {
  * call as `EquipmentUpdateHistoryPanel` (Phase 3), just for a different
  * reason (redundant signal here vs. no type field there).
  */
-export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: StaffTableProps) {
+export function StaffTable({
+  rows,
+  isFetching,
+  hasFilters = false,
+  onEdit,
+  emptyState,
+}: StaffTableProps) {
   const [deactivating, setDeactivating] = useState<StaffRow | null>(null);
   const { deactivateStaff } = useMutateStaff();
 
@@ -105,45 +105,29 @@ export function StaffTable({ rows, isFetching, hasFilters = false, onEdit }: Sta
           </div>
         )}
         emptyMessage="No hay personal registrado."
+        emptyState={emptyState}
         filteredEmptyMessage="No se encontró personal con los filtros aplicados."
         hasFilters={hasFilters}
       />
 
-      <Dialog
+      <ConfirmDialog
         open={deactivating !== null}
         onOpenChange={(open) => {
           if (!open) setDeactivating(null);
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {deactivating ? `¿Dar de baja a ${deactivating.full_name}?` : ''}
-            </DialogTitle>
-            <DialogDescription>
-              El registro se conserva pero deja de aparecer y pierde acceso.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeactivating(null)}
-              disabled={deactivateStaff.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleConfirmDeactivate}
-              disabled={deactivateStaff.isPending}
-            >
-              {deactivateStaff.isPending ? 'Dando de baja...' : 'Dar de baja'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={deactivating ? `¿Dar de baja a ${deactivating.full_name}?` : ''}
+        description={
+          <>
+            El registro de <strong>{deactivating?.full_name}</strong> se conserva pero deja de
+            aparecer y pierde acceso.
+          </>
+        }
+        confirmLabel="Dar de baja"
+        pendingLabel="Dando de baja..."
+        variant="destructive"
+        isPending={deactivateStaff.isPending}
+        onConfirm={() => void handleConfirmDeactivate()}
+      />
     </>
   );
 }

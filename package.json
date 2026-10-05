@@ -17,6 +17,8 @@
     "format:check": "prettier --check .",
     "gen:types": "bash scripts/gen-types.sh",
     "test:sql": "bash scripts/test-sql.sh",
+    "lint:hardcodes": "node scripts/lint-hardcodes.mjs",
+    "test:scripts": "node --test scripts/__tests__/*.test.mjs",
     "clean": "turbo run clean && rm -rf node_modules",
     "prepare": "husky",
     "size": "turbo run size",

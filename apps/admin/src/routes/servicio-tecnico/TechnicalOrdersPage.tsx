@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Clock, CheckCircle2 } from 'lucide-react';
-import { Button, ErrorState, FilterBar, StatCard, TruncationNotice } from '@vitalock/ui';
+import { ClipboardList, Clock, CheckCircle2, Wrench } from 'lucide-react';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  FilterBar,
+  StatCard,
+  TruncationNotice,
+} from '@vitalock/ui';
 import { PageHeader } from '@vitalock/ui';
 import { CascadeFilter } from '@/components/filters/CascadeFilter';
 import { useTechnicalOrders } from '@/hooks/useTechnicalOrders';
@@ -41,6 +48,7 @@ export default function TechnicalOrdersPage() {
     truncated,
     isFetching,
     isError,
+    refetch,
   } = useTechnicalOrders({
     search,
     status,
@@ -55,13 +63,16 @@ export default function TechnicalOrdersPage() {
 
   if (isError) {
     return (
-      <ErrorState message="Error al cargar las órdenes de servicio técnico. Recargá la página." />
+      <ErrorState
+        message="Error al cargar las órdenes de servicio técnico."
+        onRetry={() => void refetch()}
+      />
     );
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Servicio técnico">
+      <PageHeader title="Servicio técnico" subtitle="Gestioná las órdenes de servicio técnico.">
         <Button asChild>
           <Link to="/servicio-tecnico/nueva">Nueva orden</Link>
         </Button>
@@ -149,7 +160,23 @@ export default function TechnicalOrdersPage() {
 
       <TruncationNotice truncated={truncated} shown={orders.length} total={total} />
 
-      <ServicioTecnicoTable rows={orders} isFetching={isFetching} hasFilters={hasFilters} />
+      <ServicioTecnicoTable
+        rows={orders}
+        isFetching={isFetching}
+        hasFilters={hasFilters}
+        emptyState={
+          <EmptyState
+            icon={Wrench}
+            title="Todavía no hay órdenes de servicio técnico"
+            description="Creá una orden para registrar trabajos."
+            action={
+              <Button asChild>
+                <Link to="/servicio-tecnico/nueva">Nueva orden</Link>
+              </Button>
+            }
+          />
+        }
+      />
     </div>
   );
 }

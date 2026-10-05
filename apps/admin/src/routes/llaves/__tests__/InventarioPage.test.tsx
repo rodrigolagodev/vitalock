@@ -95,7 +95,7 @@ describe('InventarioPage rendering', () => {
 
   it('renders empty state when no data', () => {
     renderPage();
-    expect(screen.getByText(/no hay llaves/i)).toBeInTheDocument();
+    expect(screen.getByText('Todavía no hay llaves')).toBeInTheDocument();
   });
 
   it('renders rows when data is present', () => {
@@ -117,6 +117,7 @@ describe('InventarioPage rendering', () => {
     });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
 
@@ -281,5 +282,22 @@ describe('InventarioPage error state', () => {
     });
     renderPage();
     expect(screen.getByText(/error al cargar/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+});
+
+describe('page subtitle', () => {
+  it('renders the one-line subtitle under the title', () => {
+    renderPage();
+    expect(screen.getByText('Consultá las llaves emitidas y su estado.')).toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title and description without a create action', () => {
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay llaves')).toBeInTheDocument();
+    expect(screen.getByText('Aparecen acá cuando se crean desde las órdenes.')).toBeInTheDocument();
   });
 });

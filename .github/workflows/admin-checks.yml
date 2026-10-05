@@ -38,6 +38,9 @@ jobs:
               - 'turbo.json'
               - 'tsconfig.json'
               - 'vitest.config.ts'
+              - 'scripts/lint-hardcodes.mjs'
+              - 'scripts/__tests__/**'
+              - 'scripts/__fixtures__/**'
               - '.github/workflows/admin-checks.yml'
 
   admin-checks:
@@ -74,6 +77,13 @@ jobs:
       # actually checked, because every step filtered to the app alone.
       - name: Lint, typecheck and test
         run: pnpm exec turbo run lint typecheck test --filter=@vitalock/admin... --cache-dir=.turbo/cache
+
+      # Design values must come from tokens: no raw palette, hex or px classes.
+      - name: Hardcoded design values gate
+        run: pnpm lint:hardcodes
+
+      - name: Test the hardcode gate
+        run: pnpm test:scripts
 
       # Production build + bundle budget (apps/admin/bundle-budget.json). A size
       # regression fails the PR instead of surfacing weeks later in Lighthouse.

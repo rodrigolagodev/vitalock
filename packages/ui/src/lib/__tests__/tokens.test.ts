@@ -229,6 +229,18 @@ describe('contrast floors (computed from globals.css)', () => {
         ),
     });
   }
+  // Order-form product chip: `bg-info/10 text-info`, in dark as well as light.
+  pairs.push({
+    kind: 'TEXT',
+    theme: 'dark',
+    fg: 'info',
+    bg: 'info/10 over card',
+    ratio: () =>
+      contrastRatio(
+        color('dark', 'info'),
+        composite(color('dark', 'info'), color('dark', 'card'), 0.1),
+      ),
+  });
   add('BOUNDARY', both, 'input', ['card', 'background', 'popover']);
   add('BOUNDARY', both, 'ring', ['card', 'background']);
   add('HAIRLINE', both, 'border', ['card']);

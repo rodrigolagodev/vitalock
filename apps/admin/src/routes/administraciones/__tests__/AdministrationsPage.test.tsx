@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
@@ -14,7 +15,8 @@ vi.mock('@/hooks/useAdministrations', () => ({
 }));
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 vi.mock('@/components/administrations/AdministrationFormSheet', () => ({
-  AdministrationFormSheet: () => null,
+  AdministrationFormSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="administration-sheet" /> : null,
 }));
 
 import AdministrationsPage from '../AdministrationsPage';
@@ -95,5 +97,31 @@ describe('AdministrationsPage stat cards', () => {
     expect(within(cards).getByText('3')).toBeInTheDocument();
     expect(within(cards).getByText('Activas')).toBeInTheDocument();
     expect(within(cards).getByText('2')).toBeInTheDocument();
+  });
+});
+
+describe('zero state', () => {
+  it('shows the title, description and a create action that opens the same sheet as the header button', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(screen.getByText('Todavía no hay administraciones')).toBeInTheDocument();
+    expect(screen.getByText('Creá la primera para cargar sus edificios.')).toBeInTheDocument();
+    expect(screen.queryByTestId('administration-sheet')).not.toBeInTheDocument();
+
+    const buttons = screen.getAllByRole('button', { name: 'Nueva administración' });
+    expect(buttons).toHaveLength(2);
+    await user.click(buttons[1]!);
+    expect(screen.getByTestId('administration-sheet')).toBeInTheDocument();
+  });
+
+  it('keeps the compact filtered message and no zero-state while filters are active', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.type(screen.getByRole('searchbox'), 'zzz');
+
+    await waitFor(() =>
+      expect(screen.queryByText('Todavía no hay administraciones')).not.toBeInTheDocument(),
+    );
   });
 });

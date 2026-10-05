@@ -49,7 +49,7 @@ export default function KeyOrderNuevaPage() {
       <PageHeader
         title="Nueva orden de llaves"
         subtitle="Completá los datos del cliente y las llaves. La orden se confirma automáticamente al guardar."
-        breadcrumbs={[{ label: 'Llaves', to: '/llaves' }, { label: 'Nueva orden' }]}
+        breadcrumbs={[{ label: 'Órdenes de llaves', to: '/llaves' }, { label: 'Nueva orden' }]}
       />
 
       <KeyOrderForm
