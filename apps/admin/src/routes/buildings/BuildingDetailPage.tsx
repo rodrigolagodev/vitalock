@@ -105,8 +105,8 @@ export default function BuildingDetailPage() {
       {/* Section selector */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2" aria-label="Sección del edificio">
-          <TabsTrigger value="llaves">Llaves</TabsTrigger>
           <TabsTrigger value="equipos">Equipos</TabsTrigger>
+          <TabsTrigger value="llaves">Llaves</TabsTrigger>
         </TabsList>
       </Tabs>
 
