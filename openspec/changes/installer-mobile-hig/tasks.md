@@ -38,7 +38,7 @@ Branch stacked on F1 (`ui-components-hig`), stacked on F0 (`ui-foundations-hig`)
 ## Phase 2 · C2 RED
 
 - [x] 2.1 RED `tokens.test.ts`: `safe-t`/`safe-b` env values with `0px` fallback; `tab-bar` = 3.0625rem.
-- [x] 2.2 RED `utils.test.ts`: `cn('pb-4','pb-safe-b')` keeps both.
+- [x] 2.2 RED `utils.test.ts`: `cn('pb-4','pb-safe-b')` resolves to `pb-safe-b` (safe-area tokens are registered as spacing, so the later class wins, like `h-control-md` over `h-9`).
 - [x] 2.3 RED `layout/__tests__/TabBar.test.tsx`: hrefs, `aria-current` only on active, `text-primary` active, `pb-safe-b` on nav, default label "Principal".
 - [x] 2.4 RED `UserMenu` toolbar variant, `PageHeader titleSize` tests (ui).
 - [x] 2.5 RED `pwa-manifest` test: separate `any` and `maskable` PNG entries; `index.html` meta test (viewport-fit, apple tags); `toastOffset` test.
